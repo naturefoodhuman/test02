@@ -1,39 +1,44 @@
-诊断时间: 2026-06-11 15:13:54 CST
-GLM_API_KEY 是否设置: yes (长度 38)
+诊断时间: 2026-06-11 15:35:06 CST
+GLM_API_KEY 是否设置: yes (长度 39)
 
 ==================== A1 直连 ModelScope【非流式】（关键对照！上一版漏了这项） ====================
 [完整响应]
-{"error":{"message":"Authentication failed, please make sure that a valid ModelScope token is supplied.","request_id":"ce4cabe8-4432-4638-b2e4-26dd5c144dc7"}}
-real	0m1.382s
-user	0m0.015s
-sys	0m0.012s
+{"id":"chatcmpl-709e72bd-86a8-92e7-b573-9e795c865bfa","object":"chat.completion","created":1781163313,"model":"ZhipuAI/GLM-5","system_fingerprint":"","choices":[{"index":0,"delta":{"role":null,"content":"","tool_calls":null,"function_calls":null,"reasoning_content":""},"finish_reason":"stop","message":{"role":"assistant","content":"你好","tool_calls":null,"function_calls":null,"reasoning_content":"用户希望我只用两个字回复：“你好”。\n用户的提示词是“只回复两个字：你好”（Only reply with two characters: Hello）。\n\n1. **分析约束条件：**回复必须准确包含两个字。内容必须是“你好”。\n2. **构思回复：**“你好”是中文里标准的问候语。它恰好由两个字组成。\n3. **验证：**“你好”算两个字吗？是的。它满足约束条件“只回复两个字”吗？是的。\n4. **最终输出生成：**输出“你好”。"}}],"usage":{"prompt_tokens":10,"completion_tokens":117,"total_tokens":127}}
+real	0m7.614s
+user	0m0.016s
+sys	0m0.011s
 
 ==================== A2 直连 ModelScope【流式】 ====================
 [只显示前若干行]
-{"error":{"message":"Authentication failed, please make sure that a valid ModelScope token is supplied.","request_id":"1b42f82f-fe21-4bf4-8762-bdc68cc68b5c"}}
-real	0m1.482s
-user	0m0.019s
-sys	0m0.014s
+data: {"id":"chatcmpl-83785813-d497-941e-92b7-1574e16009b0","object":"chat.completion.chunk","created":1781163322,"model":"ZhipuAI/GLM-5","system_fingerprint":"","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":null,"function_calls":null,"reasoning_content":"1"},"finish_reason":null,"message":{"role":null,"content":"","tool_calls":null,"function_calls":null,"reasoning_content":""}}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}
+
+data: {"id":"chatcmpl-83785813-d497-941e-92b7-1574e16009b0","object":"chat.completion.chunk","created":1781163322,"model":"ZhipuAI/GLM-5","system_fingerprint":"","choices":[{"index":0,"delta":{"role":null,"content":"","tool_calls":null,"function_calls":null,"reasoning_content":". **分析用户"},"finish_reason":null,"message":{"role":null,"content":"","tool_calls":null,"function_calls":null,"reasoning_content":""}}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}
+
+data: {"id":"chatcmpl-83785813-d497-941e-92b7-1574e16009b0","object":"chat.completion.chunk","created":1781163322,"model":"ZhipuAI/GLM-5","system_fingerprint":"","choices":[{"index":0,"delta":{"role":null,"content":"","tool_calls":null,"function_calls":null,"reasoning_content":"请求：**\n"},"finish_reason":null,"message":{"role":null,"content":"","tool_calls":null,"function_calls":null,"reasoning_content":""}}],"usage":{"prompt_tokens":0,"completion_tokens":0,"total_tokens":0}}
+
+real	0m10.037s
+user	0m0.027s
+sys	0m0.024s
 
 ==================== B1 经网关 glm-debug【非流式】(无fallback，会暴露真实错误) ====================
-{"error":{"message":"litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.No fallback model group found for original model_group=cloud/glm-debug. Fallbacks=[{'cloud/glm-primary': ['local/primary', 'local/fallback']}, {'local/primary': ['local/fallback']}]. Received Model Group=cloud/glm-debug\nAvailable Model Group Fallbacks=None\nError doing the fallback: litellm.InternalServerError: InternalServerError: OpenAIException - Missing credentials. Please pass an `api_key`, `workload_identity`, `admin_api_key`, or set the `OPENAI_API_KEY` or `OPENAI_ADMIN_KEY` environment variable.No fallback model group found for original model_group=cloud/glm-debug. Fallbacks=[{'cloud/glm-primary': ['local/primary', 'local/fallback']}, {'local/primary': ['local/fallback']}] LiteLLM Retried: 2 times, LiteLLM Max Retries: 2","type":null,"param":null,"code":"500"}}
-real	0m15.792s
-user	0m0.008s
-sys	0m0.009s
+{"id":"chatcmpl-ff39cba4-642c-9082-9df9-3bcb9639679b","created":1781163340,"model":"cloud/glm-debug","object":"chat.completion","system_fingerprint":"","choices":[{"finish_reason":"stop","index":0,"message":{"content":"你好","role":"assistant","reasoning_content":"1. **分析用户请求：**\n    *   用户说：“只回复两个字：你好”（仅用两个字回复：‘你好’）。\n    *   限制：回复必须正好是两个汉字。\n    *   内容：指定的内容是“你好”（Hello）。\n\n2.  **识别核心任务：**\n    *   这是一个严格的格式限制任务。我需要输出请求的特定文本。\n\n3.  **构思回复：**\n    *   目标文本：“你好”\n    *   长度检查：2个字符。\n    *   是否符合限制？是。\n\n4.  **生成最终输出：**\n    *   出：你好\n\n5.  **自我纠正/完善：**\n    *   我是否包含了其他内容？没有。\n    *   是两个字吗？是。\n    *   是“你好”吗？是。\n\n6.  **最终决定：** 出“你好”。","provider_specific_fields":{"function_calls":null,"refusal":null,"reasoning_content":"1. **分析用户请求：**\n    *   用户说：“只回复两个字：你好”（仅用两个字回复：‘你好’）。\n    *   限制：回复必须正好是两个汉字。\n    *   内容：指定的内容是“你好”（Hello）。\n\n2.  **识别核心任务：**\n    *   这是一个严格的格式限制任务。我需要输出请求的特定文本。\n\n3.  **构思回复：**\n    *   目标文本：“你好”\n    *   长度检查：2个字符。\n    *   是否符合限制？是。\n\n4.  **生成最终输出：**\n    *   出：你好\n\n5.  **自我纠正/完善：**\n    *   我是否包含了其他内容？没有。\n    *   是两个字吗？是。\n    *   是“你好”吗？是。\n\n6.  **最终决定：** 出“你好”。"}},"provider_specific_fields":{"delta":{"role":null,"content":"","tool_calls":null,"function_calls":null,"reasoning_content":""}}}],"usage":{"completion_tokens":197,"prompt_tokens":10,"total_tokens":207}}
+real	0m16.617s
+user	0m0.010s
+sys	0m0.011s
 
 ==================== B2 经网关 glm-primary【流式】实际命中哪个模型 ====================
 "model":"cloud/glm-primary"
 
-real	0m25.974s
-user	0m0.019s
-sys	0m0.023s
+real	0m22.320s
+user	0m0.011s
+sys	0m0.015s
 
 ==================== B3 经网关 glm-primary【非流式】实际命中哪个模型 ====================
-"model":"ollama/qwen3.6:35b-a3b-q8_0"
+"model":"cloud/glm-primary"
 
-real	0m25.489s
-user	0m0.006s
-sys	0m0.010s
+real	0m11.042s
+user	0m0.014s
+sys	0m0.018s
 
 ==================== DONE — 请把 diag-glm-v2-output.txt push 回来，我据此对症修复 ====================
 判读指引（给老板看）：
