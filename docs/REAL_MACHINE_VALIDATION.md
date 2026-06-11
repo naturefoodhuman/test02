@@ -135,6 +135,29 @@ curl -s http://localhost:4000/v1/chat/completions \
 
 > 排障完成后，日常仍用 `cloud/glm-primary`（带 fallback，更稳）。`cloud/glm-debug` 留着备用无害。
 
+## [V-LocalModels] 新增本地模型验证（第7轮）
+> 用 start-litellm.sh 启动网关后，逐一验证新加的 3 个本地模型。
+```bash
+# 编程专用模型（chat）
+curl -s http://localhost:4000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"local/coder","messages":[{"role":"user","content":"用Python写一个判断质数的函数"}]}'
+
+# 向量嵌入（首选 bge-m3）—— 注意走 /embeddings 端点
+curl -s http://localhost:4000/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"model":"local/embedding","input":"你好世界"}'
+
+# 向量嵌入（备选 qwen3-embedding:8b）
+curl -s http://localhost:4000/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"model":"local/embedding-large","input":"你好世界"}'
+```
+- [ ] local/coder 返回代码
+- [ ] local/embedding 返回向量数组（data[0].embedding）
+- [ ] local/embedding-large 返回向量数组
+- [ ] 若 embedding 报错：确认 Ollama 已拉取 bge-m3 / qwen3-embedding:8b（ollama list）
+
 ## [V-Fallback] GLM 不可用自动切本地（C2）
 ```bash
 # 临时把 GLM_API_KEY 改成错误值，重启 litellm，再调 cloud/glm-primary
@@ -182,7 +205,8 @@ code /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 | V-2 | ✅ | 真机 5 passed，uvicorn 起服务成功 |
 | V-Ollama | ✅ | 真机 qwen3:14b 对话正常 |
 | V-LiteLLM | ✅ | 真机 local/primary 经网关返回正常 |
-| V-GLM | 🟡 | 流式 ✅（Claude Code 默认）；非流式经 ModelScope 不稳→fallback 本地。第7轮用 diag-glm.sh v2 定位根治中（verify-glm.sh v1 只测非流式曾误报，已修） |
+| V-GLM | ✅ | 第7轮闭环：根因=Key 填错；填对后 diag-glm-v2 全绿（A1/A2/B1/B2/B3），流式+非流式均命中真 GLM。"非流式不稳"是 Key 错误的假象 |
+| V-LocalModels | ⬜ | 第7轮新增 local/coder + local/embedding(+large)，待真机各测一次 |
 | V-GLM-DEBUG | ✅ | 第4轮诊断已跑（T3 暴露 Missing credentials，定位成功） |
 | V-Fallback | ✅ | 已观察到 fallback 生效（GLM 非流式失败→自动回退本地，工作流不中断） |
 | V-ClaudeCode | ⬜ | |

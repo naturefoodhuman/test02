@@ -8,6 +8,21 @@
 > 这份文档是给人看的"为什么这样路由"。机器可读的路由由 `litellm-config.yaml` 的 fallbacks 实现。
 > 原则：**高频任务用零成本本地模型；架构/安全等高质量节点用 GLM；GLM 挂了自动回退本地，不中断。**
 
+## 可用模型清单（第7轮起，7 个）
+
+| model_name | 底层 | 类型 | 用途 |
+|---|---|---|---|
+| `local/primary` | qwen3.6:35b-a3b-q8_0 | chat | 本地主力，全阶段高频任务 |
+| `local/fallback` | qwen3:14b | chat | 本地备用，35b 超时/失败时降级 |
+| `local/coder` | qwen3-coder-next:q4_K_M | chat | **编程专用**，BUILD 阶段写代码可优先 |
+| `local/embedding` | bge-m3 | embedding | 向量检索/RAG（中文友好，首选） |
+| `local/embedding-large` | qwen3-embedding:8b | embedding | 向量备选（维度更大） |
+| `cloud/glm-primary` | ModelScope GLM-5 | chat | 云端最强，架构/安全/复杂推理 |
+| `cloud/glm-debug` | ModelScope GLM-5 | chat | 诊断专用（无 fallback，暴露真实错误） |
+
+> embedding 模型用 `/v1/embeddings` 端点调用，为未来 RAG/本地知识库类项目（KR-004 模式库）打底。
+> `local/coder` 何时用 vs `local/primary`：纯代码生成/补全用 coder；需要推理+写代码混合时用 primary。可在试点中实测对比，结论写入 RETRO。
+
 ## 路由决策矩阵
 
 | 任务类型 | 首选 | Fallback-1 | Fallback-2 |

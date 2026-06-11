@@ -142,3 +142,140 @@
 - 非流式不稳的根治方案待 diag v2 输出确认后实施；本轮聚焦"把诊断做准"。
 
 ---
+
+## [第 8 轮] 2026-06-11
+
+### 需求变动
+- **明确定位**：工厂本身=产品，试点项目=陪练（非正式开发目标）。角色=教练&陪练。
+- **闭环**：GLM 非流式问题根因=Key 填错，已解决，全链路正常。
+- **新增**：3 个本地模型接入（编程专用 + 2 个向量嵌入）。
+
+### 文件影响
+- **改动**：`_infra/litellm-config.yaml`（新增 local/coder、local/embedding、local/embedding-large；GLM 注释更新）
+- **改动**：`_infra/model-routing-rules.md`（新增模型清单表 + 用法）
+- **改动**：`HANDOFF.md`（新增 0.0 项目定位）、`docs/DECISIONS.md`（D-007、D-008）
+- **改动**：`docs/REAL_MACHINE_VALIDATION.md`（V-GLM✅、新增 V-LocalModels）
+- **改动**：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`
+
+### 说明
+- 第7-8两轮合并记录（GLM诊断收尾 + 模型扩充 + 定位澄清）。
+
+---
+
+## [第 9 轮] 2026-06-11
+
+### 需求变动
+- **新增**：试点项目 debt-collection（个人合法讨债助手），用于压测工厂 DISCOVERY 阶段。
+- **明确边界**：仅合法路径；查财产=指引合法渠道/律师调查令，不自行非法查询；不做施压催收。
+- **新增**：工厂能力评估文档 FACTORY_ASSESSMENT.md（陪练核心产出）。
+
+### 文件影响
+- **新增**：projects/debt-collection/（复制 _TEMPLATE）+ docs/DISCOVERY.md（填充）+ AGENTS.md（更新项目身份/红线）
+- **新增**：docs/FACTORY_ASSESSMENT.md（工厂能力评估 + 改进 backlog FB-1~FB-4）
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+### 说明
+- 进入 Phase 2 试点。重心是压测工厂、记录能力边界与缺陷，非交付讨债系统本身。
+
+---
+
+## [第 10 轮] 2026-06-11
+
+### 需求变动（老板补充 6 点）
+- **新增(工厂级)**：数据收集/整理/提炼/复用能力 + 多源权重 + 数据质量把控（FB-5）。
+- **新增(工厂级)**：本地模型联网取数抽象层；授权账号登录须保账号安全（FB-6）。
+- **新增(工厂级)**：DISCOVERY 深度讨论自检（FB-7）。
+- **新增(工厂级)**：通用 Ingestion 能力层（图片/PDF/录音→结构化），已选型（FB-8）。
+- **改动(讨债项目)**：核心标准=实际讨回率；新增 AC-6（执行可行性+回款概率优先，反老赖执行难）。
+- **流程**：按老板要求 DISCOVERY 延长，暂不进 SPEC。
+
+### 文件影响
+- **新增**：docs/research/ingestion-tools-comparison.md（资料整理工具横向对比）
+- **改动**：projects/debt-collection/docs/DISCOVERY.md（第8/9节 + AC-6）
+- **改动**：docs/FACTORY_ASSESSMENT.md（FB-5~FB-8 + 要点映射）
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+---
+
+## [第 11 轮] 2026-06-11
+
+### 需求变动（老板决策）
+- **FB-6 取数**：定为三层方案(L1公开/L2人在环/L3授权账号默认关)；强风控平台优先官方API不用账号爬。
+- **FB-5 数据质量**：定为来源分级+定性转量化(老板打定性标签/黑名单，系统量化)+多源交叉+忠实度校验。
+- **优先级**：先建 Ingestion 层(FB-8)作为工厂第一个新增通用能力。
+
+### 文件影响
+- **新增**：docs/research/data-acquisition-feasibility.md（取数+数据质量可行性评估）
+- **改动**：projects/debt-collection/docs/DISCOVERY.md（要点2/3 调研结论）
+- **改动**：docs/FACTORY_ASSESSMENT.md（FB-5/FB-6 状态）
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+---
+
+## [第 12 轮] 2026-06-11
+
+### 需求变动
+- **实现**：FB-8 工厂通用 Ingestion 层（多格式→结构化）。
+- **新增**：data-ingestion / data-quality 两个工厂 skill。
+- **新增**：系统调研产出的 sources.yaml 初版（老板后续微调共同维护）。
+
+### 文件影响
+- **新增**：_factory/patterns/ingestion-pipeline/（models/processors/pipeline/cli + tests + README + pyproject）
+- **新增**：_factory/skills/data-ingestion.skill.md、_factory/skills/data-quality.skill.md
+- **新增**：projects/debt-collection/sources.yaml（数据源可信度初版）
+- **改动**：docs/FACTORY_ASSESSMENT.md（FB-8✅ + 新增能力节）
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+### 说明
+- 工厂首次完成"调研→落地通用能力"闭环。数据源/质量按老板要求重点对待。
+
+---
+
+## [第 13 轮] 2026-06-11
+
+### 需求变动（老板三件）
+- **实现**：FB-6 取数层 L1（官方公开渠道合规取数协调器，不爬不封号）。
+- **新增**：sources.yaml 系统审阅建议（拉黑标准/评级原则）。
+- **新增**：Ingestion 真机验证脚本（老板装库后验真实解析）。
+
+### 文件影响
+- **新增**：_factory/patterns/data-acquisition/（registry/models/planner/cli + tests + README + pyproject）
+- **新增**：_factory/skills/data-acquisition.skill.md
+- **新增**：_factory/patterns/ingestion-pipeline/verify-real.sh
+- **改动**：projects/debt-collection/sources.yaml（审阅建议+黑名单填法）
+- **改动**：docs/FACTORY_ASSESSMENT.md（FB-6 L1✅）、DEV_LOG/CHANGELOG/PROJECT_STATE
+
+### 说明
+- 取数层坚持"协调器而非爬虫"，落实账号安全+合规硬约束。
+
+---
+
+## [第 14 轮] 2026-06-11
+
+### 需求变动
+- **修复**：Ingestion 处理器从"占位"改为"真实调用"(MarkItDown/FunASR/MinerU/pypdf)；空内容问题解决。
+- **实现**：FB-6 L2 浏览器辅助(人在环)——browser-use 接 GLM，遇验证码/登录停下等人工。
+- **改进**：跳过 .DS_Store 等垃圾文件；markitdown 安装提示改 [all]。
+
+### 文件影响
+- **改动**：_factory/patterns/ingestion-pipeline/src/ingestion/processors.py（真实接入重写）、pipeline.py（跳垃圾文件）、verify-real.sh、pyproject、tests
+- **新增**：_factory/patterns/data-acquisition/src/acquisition/browser_assist.py（L2）
+- **改动**：data-acquisition 的 cli.py(--l2)、tests、README、data-acquisition.skill.md
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md、docs/FACTORY_ASSESSMENT.md
+
+---
+
+## [第 15 轮] 2026-06-12
+
+### 需求变动
+- **新增**：真机安装指南 SETUP_GUIDE.md(MinerU/FunASR torch/browser-use 模型选型)。
+- **新增**：data-acquisition CLI --bu-model 切换 L2 模型。
+- **产出**：debt-collection SPEC(架构+5 ADR+RISK+10任务 TASK_GRAPH)，待 HITL Gate-2。
+
+### 文件影响
+- **新增**：docs/SETUP_GUIDE.md
+- **改动**：_factory/patterns/data-acquisition/src/acquisition/cli.py(--bu-model)
+- **新增/改动**：projects/debt-collection/docs/{SPEC.md, RISK.md, TASK_GRAPH.md, adr/ADR-001~005}, AGENTS.md(phase)
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md、docs/FACTORY_ASSESSMENT.md
+
+---

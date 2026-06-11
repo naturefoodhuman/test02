@@ -13,7 +13,7 @@
 
 **演进路线**（来自架构书第 9 章）：
 - **Phase 1：基础设施**（搭骨架）← ✅ 核心链路全部打通（本地/网关/GLM流式/Fallback/CLI/Pattern）
-- Phase 2：首个试点项目（走通五阶段）← 🟢 即将开始（下一轮选型）
+- Phase 2：首个试点项目（走通五阶段）← 🟡 进行中：debt-collection **SPEC 完成，待 HITL Gate-2 → BUILD**
 - Phase 2：首个试点项目（走通五阶段）← ⬜ 未开始
 - Phase 3：多项目并行 ← ⬜ 未开始
 
@@ -26,8 +26,9 @@
 | Ollama 模型已就绪（35b + 14b 在列） | ✅ 真机确认 | 待验对话 V-Ollama |
 | LiteLLM Proxy 启动成功（3 模型加载） | ✅ 真机确认 | 终端 A 已跑通 |
 | LiteLLM Proxy → Ollama 链路 | ⬜ 待真机 | 待跑 V-LiteLLM 的 curl |
-| LiteLLM → GLM 链路 | ✅ | start-litellm.sh 加载Key成功；流式经网关返回真·GLM(带reasoning_content) |
+| LiteLLM → GLM 链路 | ✅ | 第8轮闭环：Key 填对后流式+非流式全绿(diag-v2 A1~B3)。旧"非流式不稳"是 Key 错误假象 |
 | Fallback (GLM挂切本地) | ✅ | 已观察生效 |
+| 本地扩充模型(coder+2 embedding) | ⬜ 待真机 | 配置已加，待跑 V-LocalModels |
 | forge CLI / Pattern 真机测试 | ✅ 真机确认 | 19 passed / 5 passed |
 | Fallback 验证（GLM 挂自动切本地） | ⬜ 待真机 | 配置已写 |
 | Hooks：测试自动运行 + 熔断 | ✅ 沙箱已验证 | 熔断第5次 exit 2 已实测通过，真机复核 V-Hooks |
@@ -59,8 +60,13 @@
 
 **✅ Phase 1 已收尾。下一步 = Phase 2：** 选一个真实小项目当试点，用 `projects/_TEMPLATE` 起步，
 完整走通五阶段（DISCOVERY→SPEC→BUILD→HARDEN→RETRO）。
-**接续 Agent 下一轮动作**：用 ask_user 给老板几个试点项目候选方向，选定后进入 DISCOVERY 阶段
-（加载 `_factory/skills/discovery-interview.skill.md`，产出 `projects/{name}/docs/DISCOVERY.md`）。
+**✅ 已建成两个工厂通用能力**：FB-8 Ingestion 层(7 passed) + FB-6 L1 取数层(8 passed)，均 CLI 实跑通过。
+**待老板真机**：① 跑 `ingestion-pipeline/verify-real.sh` 验真实解析(装 markitdown/funasr 后)；② 微调 sources.yaml 黑名单。
+**接续 Agent 下一轮可选方向**：
+1. FB-6 L2 增强（browser-use 接 GLM，人在环辅助打开+遇验证码停下）；
+2. 继续 debt-collection：DISCOVERY 收尾 → 过 Gate-1 → SPEC（此时取数层+ingestion 已可支撑策略报告）；
+3. FB-7 DISCOVERY 深度自检清单。
+方案依据见 docs/research/。
 
 ---
 
@@ -75,3 +81,12 @@
 | 2026-06-11 12:30:00 | 第4轮：GLM链路诊断(stream_timeout+glm-debug+diag脚本)；两条新流程规则 | Claude Sonnet 4.5 |
 | 2026-06-11 15:10:00 | 第5轮：GLM根因定位(缺export Key)；新增 start-litellm.sh；流式已通 | Claude Sonnet 4.5 |
 | 2026-06-11 15:45:00 | 第6轮：澄清GLM身份偏差；新增 verify-glm.sh；**Phase 1 收尾** | Claude Sonnet 4.5 |
+| 2026-06-11 16:30:00 | 第7轮：诊断脚本 v2（流式/非流式分测+ModelScope对照） | Claude Sonnet 4.5 |
+| 2026-06-11 17:00:00 | 第8轮：GLM根因闭环(Key错)；扩充本地模型coder+embedding；固化"工厂是产品"定位 | Claude Sonnet 4.5 |
+| 2026-06-11 17:30:00 | 第9轮：用debt-collection沙包压测DISCOVERY；产出DISCOVERY.md+FACTORY_ASSESSMENT；待GATE-1 | Claude Sonnet 4.5 |
+| 2026-06-11 18:10:00 | 第10轮：老板补充6点；资料整理工具横向对比；DISCOVERY深挖+AC-6；工厂backlog FB-5~8 | Claude Sonnet 4.5 |
+| 2026-06-11 18:40:00 | 第11轮：取数(browser-use/封号)+数据质量可行性评估；定L1/L2/L3取数方案；定先建FB-8 | Claude Sonnet 4.5 |
+| 2026-06-11 22:10:00 | 第12轮：建成FB-8 Ingestion层(7passed+CLI实跑)；data-ingestion/quality skill；sources.yaml初版 | Claude Sonnet 4.5 |
+| 2026-06-11 23:10:00 | 第13轮：建成FB-6 L1取数层(8passed+CLI实跑)；sources.yaml审阅建议；Ingestion真机验证脚本 | Claude Sonnet 4.5 |
+
+| 2026-06-12 00:10:00 | 第15轮：SETUP_GUIDE(MinerU/torch/browser-use选型)；--bu-model切换；产出SPEC+5ADR+TASK_GRAPH(待Gate-2) | Claude Sonnet 4.5 |
