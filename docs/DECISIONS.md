@@ -47,11 +47,17 @@
 - **理由**：老板要求，减少手动复制成本、提升排错效率。
 - **状态**：生效中。
 
-## D-006 · GLM 经 LiteLLM 调用的稳定性处理（第4轮）
-- **时间**：2026-06-11
-- **背景**：直连 ModelScope 秒回，但经 LiteLLM 非流式调用卡住后被 fallback 静默切本地。
-- **决策**：给 cloud/glm-primary 加 `stream_timeout: 20` + `drop_params: true`；新增无 fallback 的 `cloud/glm-debug` 用于排障。
-- **状态**：诊断中，待 diag-glm 输出确认根因后可能进一步调整（如默认流式）。
+## D-006 · GLM 经 LiteLLM 调用的稳定性处理（第4-5轮）
+- **时间**：2026-06-11（第5轮定论）
+- **背景**：直连 ModelScope 秒回，但经 LiteLLM 调用卡住后被 fallback 静默切本地。
+- **诊断结论（diag-glm-output.txt）**：
+  1. 主因 = 启动 litellm 的进程**没 export GLM_API_KEY**（`source` 不 export）→ Missing credentials → fallback 本地。
+  2. 次因 = GLM 经 ModelScope **流式稳定（T4 通过）、非流式不稳（T5 回退）**。
+- **决策**：
+  - 新增 `_infra/start-litellm.sh`，用 `set -a` 自动 export .env 后启动 litellm（**今后启动 litellm 一律用它**）。
+  - glm-primary：timeout 60 / stream_timeout 30 / drop_params true；保留 fallback。
+  - 日常使用走流式（Claude Code 默认流式），不受非流式不稳影响。
+- **状态**：根因已定位，流式已验证通过；待老板用启动脚本复验后标记完工。
 
 ---
 

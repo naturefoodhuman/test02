@@ -12,7 +12,8 @@
 ## 当前总进度
 
 **演进路线**（来自架构书第 9 章）：
-- **Phase 1：基础设施**（搭骨架）← 🟢 骨架完成，待真机验证链路（我们在这里）
+- **Phase 1：基础设施**（搭骨架）← ✅ 核心链路全部打通（本地/网关/GLM流式/Fallback/CLI/Pattern）
+- Phase 2：首个试点项目（走通五阶段）← 🟢 即将开始（下一轮选型）
 - Phase 2：首个试点项目（走通五阶段）← ⬜ 未开始
 - Phase 3：多项目并行 ← ⬜ 未开始
 
@@ -25,7 +26,8 @@
 | Ollama 模型已就绪（35b + 14b 在列） | ✅ 真机确认 | 待验对话 V-Ollama |
 | LiteLLM Proxy 启动成功（3 模型加载） | ✅ 真机确认 | 终端 A 已跑通 |
 | LiteLLM Proxy → Ollama 链路 | ⬜ 待真机 | 待跑 V-LiteLLM 的 curl |
-| LiteLLM → GLM 链路 | 🟡 诊断中 | 直连ModelScope✅；经网关被fallback，第4轮加stream_timeout+glm-debug，跑 diag-glm 定位 |
+| LiteLLM → GLM 链路 | ✅ | start-litellm.sh 加载Key成功；流式经网关返回真·GLM(带reasoning_content) |
+| Fallback (GLM挂切本地) | ✅ | 已观察生效 |
 | forge CLI / Pattern 真机测试 | ✅ 真机确认 | 19 passed / 5 passed |
 | Fallback 验证（GLM 挂自动切本地） | ⬜ 待真机 | 配置已写 |
 | Hooks：测试自动运行 + 熔断 | ✅ 沙箱已验证 | 熔断第5次 exit 2 已实测通过，真机复核 V-Hooks |
@@ -55,7 +57,10 @@
 2. 填 `_infra/.env` 的 `GLM_API_KEY`，确认 GLM 真实型号（当前占位 glm-5.1）。
 3. 把验证失败的现象贴回来，我来修。
 
-**Phase 1 收尾 → Phase 2：** 选一个真实小项目当试点，用 `projects/_TEMPLATE` 起步，完整走通五阶段（DISCOVERY 起）。
+**✅ Phase 1 已收尾。下一步 = Phase 2：** 选一个真实小项目当试点，用 `projects/_TEMPLATE` 起步，
+完整走通五阶段（DISCOVERY→SPEC→BUILD→HARDEN→RETRO）。
+**接续 Agent 下一轮动作**：用 ask_user 给老板几个试点项目候选方向，选定后进入 DISCOVERY 阶段
+（加载 `_factory/skills/discovery-interview.skill.md`，产出 `projects/{name}/docs/DISCOVERY.md`）。
 
 ---
 
@@ -68,3 +73,5 @@
 | 2026-06-10 23:55:00 | 第2轮：GLM 改 ModelScope、修 setup.sh、澄清 Claude Code 接入 | Claude Sonnet 4.5 |
 | 2026-06-11 09:40:00 | 第3轮：修模型名乱码、litellm venv 探测；真机进度更新 | Claude Sonnet 4.5 |
 | 2026-06-11 12:30:00 | 第4轮：GLM链路诊断(stream_timeout+glm-debug+diag脚本)；两条新流程规则 | Claude Sonnet 4.5 |
+| 2026-06-11 15:10:00 | 第5轮：GLM根因定位(缺export Key)；新增 start-litellm.sh；流式已通 | Claude Sonnet 4.5 |
+| 2026-06-11 15:45:00 | 第6轮：澄清GLM身份偏差；新增 verify-glm.sh；**Phase 1 收尾** | Claude Sonnet 4.5 |

@@ -91,3 +91,54 @@
 - 本轮聚焦 GLM 链路诊断与流程优化，对应特殊要求 #2。
 
 ---
+
+## [第 5 轮] 2026-06-11
+
+### 需求变动
+- **修复**：GLM 经网关失败根因 = 启动进程缺 export GLM_API_KEY（非 ModelScope 问题）。
+- **新增**：LiteLLM 启动脚本 `_infra/start-litellm.sh`（自动 export .env）。
+- **明确**：GLM 流式可用、非流式不稳（Claude Code 默认流式，不影响日常）。
+
+### 文件影响
+- **新增**：`_infra/start-litellm.sh`
+- **改动**：`_infra/litellm-config.yaml`（glm-primary 诊断结论注释、timeout/stream_timeout 调整）
+- **改动**：`docs/REAL_MACHINE_VALIDATION.md`（V-GLM 改启动脚本+流式；状态汇总）
+- **改动**：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`docs/DECISIONS.md`
+
+### 说明
+- 首次走通"老板 push 产物 → Agent git pull 分析"流程（D-005）。
+
+---
+
+## [第 6 轮] 2026-06-11
+
+### 需求变动
+- **澄清**：GLM 自报"通义千问"是模型身份认知偏差，非 fallback、非调用错误。
+- **新增**：GLM 终极验证脚本 `_infra/verify-glm.sh`（基于 x-litellm-model-id）。
+- **里程碑**：Phase 1 基础设施核心链路全部打通。
+
+### 文件影响
+- **新增**：`_infra/verify-glm.sh`
+- **改动**：`docs/REAL_MACHINE_VALIDATION.md`（V-GLM 标记✅ + 身份偏差澄清 + x-litellm-model-id 方法）
+- **改动**：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`
+
+### 说明
+- 本轮以澄清+验证工具为主，无功能性需求增删。
+
+---
+
+## [第 7 轮] 2026-06-11
+
+### 需求变动
+- **修复**：verify-glm.sh 误报"被 fallback"（v1 只测非流式的设计缺陷）。
+- **改进**：diag-glm.sh 增加"直连 ModelScope 非流式"对照项，精准分离根因。
+
+### 文件影响
+- **改动**：`_infra/diag-glm.sh`（v2 重写，新增 A1 对照 + 判读指引）
+- **改动**：`_infra/verify-glm.sh`（v2 重写，流式/非流式分别判定）
+- **改动**：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/REAL_MACHINE_VALIDATION.md`
+
+### 说明
+- 非流式不稳的根治方案待 diag v2 输出确认后实施；本轮聚焦"把诊断做准"。
+
+---

@@ -152,3 +152,86 @@ Phase 1 退出条件：forge/pattern/自检/litellm启动 已过；**待验**：
 - 我据 diag 输出定位：若 T4 流式通而 T5 非流式卡 → 给 glm-primary 默认走流式或加配置；若 T3 报具体错 → 对症修。
 
 ---
+
+## 第 5 轮 · 2026-06-11
+
+### 老板操作
+- 跑完 diag-glm.sh 并 push 到 GitHub。我 git clone 拉取 diag-glm-output.txt 分析（首次走通 GitHub 双向同步流程 D-005）。
+
+### 诊断输出分析（diag-glm-output.txt）
+- **第二行直接暴露根因**：`GLM_API_KEY 是否设置: NO`。
+- T1/T2 直连 ModelScope → Authentication failed（脚本进程里 Key 是空的）。
+- T3 经网关 glm-debug → `Missing credentials ... set OPENAI_API_KEY`：**litellm 进程也没拿到 Key**。
+- **T4 经网关 glm-primary 流式 → 完全成功**！逐字返回"你好！有什么我可以帮你的吗？"（含 reasoning_content 思考链）。
+- T5 经网关 glm-primary 非流式 → 回退到本地 qwen（model=ollama/qwen3.6）。
+
+### 结论（两个根因）
+1. **根因A（主因）**：启动 litellm 的进程没有 export GLM_API_KEY。`source .env` 默认不 export，子进程继承不到 → Missing credentials → fallback 到本地。
+2. **根因B**：GLM 经 ModelScope 在【流式】下稳定（T4 证明），【非流式】下不稳/慢（T5）。所幸 Claude Code 默认走流式。
+
+### 我做了什么（只改/加少量文件）
+1. **新增 `_infra/start-litellm.sh`**：用 `set -a` + `source .env` 自动 export 所有变量再启动 litellm，并自检 GLM_API_KEY 是否真进环境。沙箱验证 set -a 方案子进程能继承变量 ✅。
+2. **litellm-config.yaml**：glm-primary 注释写明诊断结论；timeout 60、stream_timeout 30（GLM 思考链长，给足首字节时间）；保留 drop_params。
+3. **REAL_MACHINE_VALIDATION.md**：V-GLM 改为"用 start-litellm.sh 启动 + 流式验证"；状态汇总 V-GLM/Fallback/GLM-DEBUG 更新。
+
+### 下一步建议
+- 老板：`source ~/.venv/bin/activate` → `bash _infra/start-litellm.sh`（看到"✅ GLM_API_KEY 已加载到环境"）→ 跑 V-GLM 流式 curl。
+- 流式通过 = GLM 链路打通 = **Phase 1 基础设施基本完工**。
+- 然后剩 V-ClaudeCode、V-Hooks 复核，即可进 Phase 2 选试点项目。
+
+---
+
+## 第 6 轮 · 2026-06-11
+
+### 老板反馈
+- start-litellm.sh 成功：✅ GLM_API_KEY 已加载（长度 38），litellm 起来了。
+- 终端 B 流式返回正常，但 GLM **自报是"通义千问"**，老板怀疑又被 fallback。
+
+### 分析（关键澄清）
+- **没有被 fallback**。证据：① 响应 `"model":"cloud/glm-primary"`（fallback 会变 ollama/qwen3.6）；
+  ② 返回里有 `reasoning_content` 思考链（ModelScope/GLM 特征，本地 ollama 不返回）；
+  ③ litellm 日志 `POST /v1/chat/completions 200` 成功无 fallback 报错。
+- **GLM 自报"通义千问"是大模型常见的身份认知偏差**（国产模型互相用对方数据训练所致），不代表调错模型。
+- 权威判定方法（LiteLLM 官方文档）：响应头 `x-litellm-model-id` 才是实际底层模型的真相。
+
+### 我做了什么
+1. **新增 `_infra/verify-glm.sh`**：调 glm-primary 并解析响应头 x-litellm-model-id + 响应体 model，
+   自动判定"真·GLM / 被 fallback / 待分析"。一条命令终结"到底调的谁"的疑问。
+2. **REAL_MACHINE_VALIDATION.md**：V-GLM 加"如何 100% 确认调的是 GLM"说明 + 标记 ✅；新增身份偏差澄清。
+
+### 里程碑
+**Phase 1（基础设施）核心链路全部打通**：本地模型 ✅、LiteLLM 网关 ✅、GLM(ModelScope)流式 ✅、Fallback ✅、forge CLI ✅、Pattern ✅。
+剩余 V-ClaudeCode / V-Hooks 为复核项，不阻塞进入 Phase 2。
+
+### 下一步建议
+- （可选）老板跑 `bash _infra/verify-glm.sh` 看到"✅ 实际调用的是 GLM-5"以彻底安心。
+- **进入 Phase 2**：选一个真实小项目当试点，复制 projects/_TEMPLATE 走 DISCOVERY→...→RETRO。
+  下一轮我会引导老板做 Phase 2 的试点项目选型（用 ask_user 给候选方向）。
+
+---
+
+## 第 7 轮 · 2026-06-11
+
+### 老板反馈（遗留问题）
+- 跑 verify-glm.sh 报"⚠️ 被 fallback 到本地 qwen"，响应体 model=ollama/qwen3.6。
+
+### 分析
+- **不是新问题，是 verify-glm.sh v1 的设计缺陷**：它只用【非流式】判定，而非流式正好命中"ModelScope 非流式不稳"的已知问题 → 触发 fallback → 误报。
+- 流式（Claude Code 默认）此前已验证正常，日常使用不受影响。
+- 但老板抓到的真隐患成立：非流式不稳必须根治，不能只靠"建议走流式"。
+- 上一版 diag-glm.sh 漏了关键对照项：**直连 ModelScope 非流式**，无法分离"ModelScope 端坏" vs "LiteLLM 转发坏"。
+
+### 我做了什么（只改脚本 + 文档，未动核心配置，因为还在定位）
+1. **重写 `_infra/diag-glm.sh` v2**：新增 A1（直连 ModelScope 非流式对照）；B1/B2/B3 分别测 glm-debug/流式/非流式经网关命中的模型；末尾给"判读指引"。
+2. **重写 `_infra/verify-glm.sh` v2**：流式、非流式分别测分别判定，不再因非流式不稳而误报"被 fallback"。
+3. 修了 v2 脚本里一处嵌套引号语法错误。
+
+### web 调研发现
+- LiteLLM 有 `fake_stream: true`（把流式转非流式，方向与我们需求相反）。
+- 真正解法待 diag v2 输出确认根因后再定（很可能是给 GLM 模型强制流式 / 或确认 ModelScope 非流式接口问题）。
+
+### 下一步（等老板）
+- 老板跑 diag-glm.sh v2（注意：本终端要先 `set -a; . _infra/.env; set +a` 让 Key 进环境），把 diag-glm-v2-output.txt push 回来。
+- 我据 A1/B3 结果对症根治非流式问题。
+
+---

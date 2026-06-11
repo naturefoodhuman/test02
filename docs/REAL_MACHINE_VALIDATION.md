@@ -83,13 +83,30 @@ curl -s https://api-inference.modelscope.cn/v1/chat/completions \
 - [ ] 直连 ModelScope 返回 GLM 回复（确认 Token 与型号有效）
 
 再通过 LiteLLM 网关验证：
+> ⚠️⚠️ 第5轮关键修复：启动 litellm **必须用启动脚本**，否则 GLM_API_KEY 进不了进程环境
+> （光 `source _infra/.env` 默认不 export，litellm 会报 Missing credentials）。
 ```bash
-litellm --config _infra/litellm-config.yaml --port 4000 &
-curl -s http://localhost:4000/v1/chat/completions \
+source ~/.venv/bin/activate            # 激活装了 litellm 的 venv
+bash _infra/start-litellm.sh           # ← 用这个启动（自动 export .env），不要再裸跑 litellm
+# 它会打印 "✅ GLM_API_KEY 已加载到环境"，看到这行才说明 Key 进去了
+
+# 另开终端测试（GLM 默认走流式最稳）：
+curl -N -s http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"cloud/glm-primary","messages":[{"role":"user","content":"你好，报一下你是哪个模型"}]}'
+  -d '{"model":"cloud/glm-primary","stream":true,"messages":[{"role":"user","content":"你好，报一下你是哪个模型"}]}'
 ```
 - [ ] 经网关返回 **GLM** 回复（返回 JSON 里 `"model"` 应是 ModelScope/GLM，而不是 ollama/qwen）
+
+> 🔑 **怎么 100% 确认调的是 GLM 而不是被 fallback？**（第6轮）
+> 不要看模型嘴上说自己是谁——**GLM-5 常自报为"通义千问/GPT"，这是训练数据导致的认知偏差，不代表调错**。
+> 权威依据是 LiteLLM 的**响应头 `x-litellm-model-id`**（官方文档指定的 fallback 验证方法）。
+> 一条命令搞定：
+> ```bash
+> bash _infra/verify-glm.sh
+> # 输出 "✅ 实际调用的是 ModelScope 的 GLM-5" = 链路正确
+> ```
+> 或手动看响应头：`curl -i ...` 然后找 `x-litellm-model-id`，含 `GLM-5` 即对。
+> 另两个 GLM 特征：响应里有 `reasoning_content`（思考链）、`"model":"cloud/glm-primary"`（被 fallback 会变成 `ollama/qwen3.6`）。
 - [ ] **若 `"model"` 是 `ollama/qwen3.6...`**：说明 GLM 调用失败被 fallback 切到本地了 → 用下面 V-GLM-DEBUG 看真实错误。
 - [ ] **若报 "LLM Provider NOT provided"**：检查 model 是否带了 `openai/` 前缀（应为 `openai/ZhipuAI/GLM-5`）。
 - [ ] **若 404**：检查 api_base 是否为 `.../v1`（ModelScope 必须带 /v1）。
@@ -165,9 +182,9 @@ code /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 | V-2 | ✅ | 真机 5 passed，uvicorn 起服务成功 |
 | V-Ollama | ✅ | 真机 qwen3:14b 对话正常 |
 | V-LiteLLM | ✅ | 真机 local/primary 经网关返回正常 |
-| V-GLM | 🟡 | 直连 ModelScope ✅；经网关被 fallback 到本地，第4轮加 stream_timeout+debug 模型待复验 |
-| V-GLM-DEBUG | ⬜ | 第4轮新增，待跑 |
-| V-Fallback | 🟡 | 已间接观察到 fallback 生效（GLM 失败→回退本地） |
+| V-GLM | 🟡 | 流式 ✅（Claude Code 默认）；非流式经 ModelScope 不稳→fallback 本地。第7轮用 diag-glm.sh v2 定位根治中（verify-glm.sh v1 只测非流式曾误报，已修） |
+| V-GLM-DEBUG | ✅ | 第4轮诊断已跑（T3 暴露 Missing credentials，定位成功） |
+| V-Fallback | ✅ | 已观察到 fallback 生效（GLM 非流式失败→自动回退本地，工作流不中断） |
 | V-ClaudeCode | ⬜ | |
 | V-Hooks | ⬜ | 沙箱已逻辑验证 |
 
@@ -176,3 +193,6 @@ code /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 |---|---|---|
 | 2026-06-10 23:03:36 | 初版 | Claude Sonnet 4.5 |
 | 2026-06-11 12:30:00 | 第4轮：更新真机进度；GLM 诊断（stream_timeout+glm-debug），新增 V-GLM-DEBUG | Claude Sonnet 4.5 |
+| 2026-06-11 15:10:00 | 第5轮：诊断定位根因(缺export Key+非流式不稳)；新增 start-litellm.sh；V-GLM 改用启动脚本+流式 | Claude Sonnet 4.5 |
+| 2026-06-11 15:45:00 | 第6轮：澄清 GLM 自报身份偏差；新增 verify-glm.sh（x-litellm-model-id 终极判定）；V-GLM 标记通过 | Claude Sonnet 4.5 |
+| 2026-06-11 16:30:00 | 第7轮：非流式不稳遗留问题；diag-glm.sh/verify-glm.sh v2 重写（流式/非流式分别测+ModelScope 非流式对照） | Claude Sonnet 4.5 |
