@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from debt import integrations  # noqa: F401  # 副作用：把工厂遥测/能力 path 注入
 from debt import knowledge
 from debt.compliance import check_text
 from debt.llm_client import LLMConfig, available, chat
@@ -113,17 +114,52 @@ def generate_report(debt: Debt, intels: list[Intel] | None = None,
     body: str
     model_used: str
     if available(cfg):
-        out = chat(prompt, system=STRATEGY_SYSTEM, cfg=cfg)
-        if out:
-            body, model_used = out, cfg.model
-        else:
-            body, model_used = _offline_template(debt, intels), "offline-template"
+        # 递归整改：生成→合规检查→不合规则把整改指令回传重生成，最多 N 轮（老板第21轮需求）
+        body, model_used = _generate_with_recheck(prompt, cfg, max_rounds=3)
     else:
         body, model_used = _offline_template(debt, intels), "offline-template"
 
-    # 合规自检（红线守门人）
+    # 最终合规自检（红线守门人）
     cr = check_text(body)
     return StrategyReport(
         debt_id=debt.id, debtor_name=debt.debtor_name, body=body, model_used=model_used,
         compliance_passed=cr.passed, compliance_note=cr.report(), update_reason=update_reason,
     )
+
+
+def _generate_with_recheck(prompt: str, cfg: LLMConfig, *, max_rounds: int = 3) -> tuple[str, str]:
+    """生成 + 合规递归整改：不合规则把结构化整改指令回传 LLM 重生成，直至合规或达上限。
+
+    Returns: (报告正文, 模型标识)
+    """
+    # 带遥测计时（终端实时计时器 + 落盘事件）
+    try:
+        from llm_telemetry.telemetry import track  # 工厂遥测（路径由 integrations 注入）
+    except Exception:  # noqa: BLE001
+        track = None  # 遥测不可用不阻塞
+
+    cur_prompt = prompt
+    last = ""
+    for rnd in range(1, max_rounds + 1):
+        event = f"strategy_report(r{rnd})"
+        if track:
+            with track(event, cfg.model, project="debt-collection", phase="BUILD",
+                       prompt_chars=len(cur_prompt)) as t:
+                out = chat(cur_prompt, system=STRATEGY_SYSTEM, cfg=cfg)
+                t["output_chars"] = len(out or "")
+                t["ok"] = bool(out)
+        else:
+            out = chat(cur_prompt, system=STRATEGY_SYSTEM, cfg=cfg)
+        if not out:
+            return (last or ""), (cfg.model if last else "offline-fallback")
+        last = out
+        cr = check_text(out)
+        if cr.passed:
+            return out, cfg.model
+        # 不合规 → 把整改指令拼回，重生成
+        fix = cr.fix_instruction()
+        if not fix:
+            return out, cfg.model
+        cur_prompt = (prompt + "\n\n【合规整改要求（第" + str(rnd) + "轮未通过）】\n" + fix)
+    # 达上限仍不合规：返回最后一版（上层会标注未通过，并附整改理由）
+    return last, cfg.model

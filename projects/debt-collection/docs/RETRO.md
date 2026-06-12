@@ -81,14 +81,15 @@
 
 ---
 
-## D. 🟦 真机验证结果（等老板 push 后填）
-> 老板 push `runtime/retro-data/*.txt` 后，Agent git pull 拉取，把以下填实：
-- [ ] BUILD 测试结果（pytest，期望 18 passed）：________
-- [ ] security_scan 结果（期望 11 项全过）：________
-- [ ] GLM 策略报告样例（report --model cloud/glm-primary）：________
-- [ ] 离线/本地 策略报告样例（对比用）：________
-- [ ] GLM vs 本地 质量主观对比结论：________
-- [ ] Ingestion 真实解析效果（MinerU 扫描件 / FunASR 录音）：________
+## D. ✅ 真机验证结果（第21轮已拉取 retro-data-share 填实）
+- **BUILD 测试**：真机 `1 failed, 17 passed`（failed=test_strategy_offline_report，因旧 compliance 误判；第21轮重构 compliance v2 后**已修，现 22 passed**）。
+- **security_scan**：11 项全过（中文有终端编码乱码，不影响判定；第21轮已加 UTF-8 处理建议）。
+- **GLM 策略报告**：**质量极高**——含证据补强、时效中断策略、执行可行性(村支书工资可提取)、合法博弈筹码(向乡镇党委合法反映)、五阶段回款概率表(综合约70-80%)、分场景话术、文书要点。**远超离线模板**。
+- **离线/本地报告**：结构完整但内容是规则模板(无具体推理)。
+- **GLM vs 本地/离线 质量结论**：GLM 在"策略深度、本地化执行洞察、话术"上质的领先；离线兜底保证可用下限。→ **结论：策略推理高价值场景必须用 GLM/强模型；本地仅作隐私兜底**（印证了 --model 可选设计）。
+- **🔴 重大发现(老板提出)**：compliance v1 把 GLM 报告里『绝不威胁恐吓』误判为违规。**根因=纯关键词匹配无否定语境识别**。
+  → 第21轮重构 compliance v2(否定语境识别+分级+结构化整改反馈+递归重生成)，已用 GLM 那两句原文验证不再误判，真违法句仍拦截。
+- [ ] Ingestion 真机(MinerU 扫描件/FunASR 录音)：老板已装好 mineru/funasr 并 mv 进 runtime；待下次跑 verify-real 出样例。
 
 ## 退出门控
 - 强制产出：本 RETRO + _factory/lessons/ 的 lesson 文件。

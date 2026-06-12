@@ -115,21 +115,40 @@ def test_intel_and_timeline(tmp_path) -> None:
 def test_compliance_blocks_illegal() -> None:
     r = compliance.check_text("给他发威胁短信，爆通讯录，查银行流水")
     assert not r.passed
-    assert any("威胁" in v for v in r.violations)
-    assert any("爆通讯录" in v for v in r.violations)
-    assert any("流水" in v for v in r.violations)
+    kws = [f.keyword for f in r.blocks]
+    assert "威胁" in kws and "爆通讯录" in kws and "查银行流水" in kws
+
+
+def test_compliance_negation_not_flagged() -> None:
+    # ⭐ 老板真机发现的核心 bug：『绝不威胁恐吓』是合法表述，不应被判违规
+    r = compliance.check_text("必须客观陈述事实，绝不捏造，绝不威胁恐吓，仅要求组织协调督促履行")
+    assert r.passed, f"否定语境被误判：{r.report()}"
+
+
+def test_compliance_negation_variants() -> None:
+    for txt in ["严禁威胁恐吓行为", "不得辱骂债务人", "禁止爆通讯录", "切勿骚扰其家人"]:
+        r = compliance.check_text(txt)
+        assert r.passed, f"误判：{txt} -> {r.report()}"
 
 
 def test_compliance_allows_legal_pressure_with_caution() -> None:
-    # 依法向单位/上级反映真实欠债 = 正当维权，放行但给注意提示
     r = compliance.check_text("先告知利弊，若不还则依法向其任职单位和上级反映真实欠债事实")
-    assert r.passed                      # 无违法词
-    assert any("单位" in c or "上级" in c for c in r.cautions)  # 有合规注意
+    assert r.passed
+    kws = [f.keyword for f in r.warns]
+    assert "单位" in kws or "上级" in kws
+
+
+def test_compliance_fix_instruction() -> None:
+    # 真违法(无否定) → 给出可回传 LLM 的整改指令
+    r = compliance.check_text("建议你去威胁他，再爆通讯录")
+    assert not r.passed
+    fix = r.fix_instruction()
+    assert "整改" in fix and ("威胁" in fix or "爆通讯录" in fix)
 
 
 def test_compliance_clean_text() -> None:
     r = compliance.check_text("整理借条和转账记录，发起诉前财产保全")
-    assert r.passed and not r.cautions
+    assert r.passed and not r.warns
 
 
 # ── knowledge（法务知识防幻觉）──
@@ -188,3 +207,19 @@ def test_cli_smoke(tmp_path, capsys) -> None:
     assert main(["--db", db, "report", "1"]) == 0
     out2 = capsys.readouterr().out
     assert "合规" in out2
+
+
+# ── LLM 遥测（R4：事件/耗时记录）──
+def test_telemetry_track_and_summarize(tmp_path) -> None:
+    import sys as _s
+    _s.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[3]
+                        / "_factory" / "patterns" / "llm-telemetry" / "src"))
+    from llm_telemetry.telemetry import summarize, track
+    log = tmp_path / "ev.jsonl"
+    with track("unit_test", "local/primary", project="t", show_timer=False, log_path=log) as box:
+        box["output_chars"] = 42
+    assert log.exists()
+    s = summarize(log)
+    assert s["total"] == 1
+    assert "local/primary" in s["by_model"]
+    assert s["by_model"]["local/primary"]["count"] == 1

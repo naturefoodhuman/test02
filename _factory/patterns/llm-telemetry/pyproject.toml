@@ -1,0 +1,18 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间，精确到秒）：2026-06-12 16:00:00 CST
+[project]
+name = "forge-llm-telemetry"
+version = "0.1.0"
+description = "FORGE 工厂通用能力：LLM 事件/耗时记录 + 终端实时计时器 + JSONL 储备(模型对比)"
+requires-python = ">=3.11"
+dependencies = []
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_telemetry"]
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

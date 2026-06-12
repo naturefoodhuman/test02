@@ -15,6 +15,13 @@ from typing import Any
 _FACTORY = Path(__file__).resolve().parents[4] / "_factory"
 _INGEST_SRC = _FACTORY / "patterns" / "ingestion-pipeline" / "src"
 _ACQ_SRC = _FACTORY / "patterns" / "data-acquisition" / "src"
+_TELEMETRY_SRC = _FACTORY / "patterns" / "llm-telemetry" / "src"
+
+# 启动即把工厂遥测能力(R4)加入 path，供 strategy/llm_client 复用
+if _TELEMETRY_SRC.exists():
+    _tp = str(_TELEMETRY_SRC)
+    if _tp not in sys.path:
+        sys.path.insert(0, _tp)
 
 
 def _ensure_path(p: Path) -> bool:

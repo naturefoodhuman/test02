@@ -126,9 +126,10 @@ def cmd_report(args) -> int:
     print("=" * 60)
     print(rep.body)
     print("=" * 60)
-    print(f"模型：{rep.model_used} | 合规：{'✅通过' if rep.compliance_passed else '⛔未通过'}")
+    print(f"模型：{rep.model_used} | 合规：{'✅通过' if rep.compliance_passed else '⛔未通过(已尝试递归整改仍未通过)'}")
     if not rep.compliance_passed:
         print(rep.compliance_note)
+        print("ℹ️ 以上为结构化整改理由，可据此人工修改或重跑(系统已自动递归整改最多3轮)。")
     s.close()
     return 0
 

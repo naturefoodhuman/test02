@@ -1,4 +1,6 @@
 #!/bin/bash
+# 确保中文不乱码
+export LANG=${LANG:-en_US.UTF-8}
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
 # 创建时间（北京时间，精确到秒）：2026-06-12 02:10:00 CST
 #

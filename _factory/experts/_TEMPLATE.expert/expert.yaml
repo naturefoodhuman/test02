@@ -1,0 +1,21 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间，精确到秒）：2026-06-12 18:30:00 CST
+# 专家角色画像模板（复制本目录创建新专家）
+expert_id: TEMPLATE
+name: <专家名，如 债务律师 / 育儿专家 / 顶级内科医生>
+expertise: [<专长1>, <专长2>]
+persona: |
+  <身份与思维方式：你是谁、怎么思考、追求什么>
+taboos: |
+  <禁忌与红线：绝不做什么（如医疗专家不得替代诊断、债务专家不得建议违法催收）>
+output_spec: |
+  <输出规范：结构、引用要求(须引知识库来源)、免责声明>
+# 模型路由：本专家用哪个模型最合适（可不同于工厂默认）
+model:
+  primary: cloud/glm-primary        # 或 local/primary / 某个更强的本机模型
+  fallback: local/primary
+# 知识库：本专家依赖哪些知识（书籍/指南/论文/论坛...）
+knowledge_dir: knowledge/
+require_citation: true              # 回答须引用知识库来源，防幻觉
+update_policy: |
+  <知识更新策略：多久刷新、从哪更新>

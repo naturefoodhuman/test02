@@ -353,3 +353,49 @@
 - **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
 
 ---
+
+## [第 21 轮] 2026-06-12
+
+### 需求变动
+- **新增规则 R4**：所有 LLM 工作记录遥测(事件+耗时+实时计时器+JSONL储备)。
+- **重构**：合规判定 v2(否定语境识别修复误判+分级+结构化整改+递归重生成)。
+- **新增**：工厂 Pattern llm-telemetry。
+
+### 文件影响
+- **新增**：_factory/patterns/llm-telemetry/(telemetry.py+pyproject+README+tests)
+- **改动**：HANDOFF.md(R4)
+- **重构**：projects/debt-collection/src/debt/compliance.py(v2)
+- **改动**：projects/debt-collection/src/debt/{strategy.py(递归整改+遥测), integrations.py(注入遥测path), cli.py(整改理由)}
+- **改动**：projects/debt-collection/tests/test_debt.py(22 passed)、docs/harden/security_scan.sh(UTF-8)
+- **改动**：docs/RETRO.md(真机结果)、FACTORY_ASSESSMENT.md、DEV_LOG.md、CHANGELOG.md、PROJECT_STATE.md
+
+---
+
+## [第 22 轮] 2026-06-12
+
+### 需求变动
+- **新增**：反封号爬取详尽调研报告(含 Higgsfield 澄清)。
+- **新增**：Claude 独立策略报告样例(对比 GLM)。
+- **新增**：工厂 backlog FB-10(反封号取数+数据流水线)。
+
+### 文件影响
+- **新增**：docs/research/anti-ban-crawling-strategy.md
+- **新增**：projects/debt-collection/docs/strategy-sample-claude.md
+- **改动**：docs/FACTORY_ASSESSMENT.md、DEV_LOG.md、CHANGELOG.md、PROJECT_STATE.md
+
+---
+
+## [第 23 轮] 2026-06-12
+
+### 需求变动(方法论级)
+- **新增规则 R5(调研穷尽)、R6(缺知识求助不假装)**。
+- **新增工厂核心能力 FB-11：专家系统/决策大脑**(独立可复用领域专家)。
+- **新增**：开源模型全景调研、专家系统设计、专家模板、工厂运转手册。
+
+### 文件影响
+- **改动**：HANDOFF.md(R5/R6)
+- **新增**：docs/research/expert-system-design.md、docs/FACTORY_OPERATIONS.md
+- **新增**：_factory/experts/_TEMPLATE.expert/(expert.yaml/README/knowledge/_gaps.md/_sources.yaml)
+- **改动**：docs/FACTORY_ASSESSMENT.md(FB-11+方法论修正)、DEV_LOG.md、CHANGELOG.md、PROJECT_STATE.md
+
+---
