@@ -13,7 +13,7 @@
 
 **演进路线**（来自架构书第 9 章）：
 - **Phase 1：基础设施**（搭骨架）← ✅ 核心链路全部打通（本地/网关/GLM流式/Fallback/CLI/Pattern）
-- Phase 2：首个试点项目（走通五阶段）← 🟡 进行中：debt-collection **SPEC 完成，待 HITL Gate-2 → BUILD**
+- Phase 2：首个试点项目（走通五阶段）← 🟡 **BUILD 骨架完成**：debt-collection 13任务完成12(55测试全绿)，仅剩 model-ab-test(需真机)
 - Phase 2：首个试点项目（走通五阶段）← ⬜ 未开始
 - Phase 3：多项目并行 ← ⬜ 未开始
 
@@ -90,3 +90,13 @@
 | 2026-06-11 23:10:00 | 第13轮：建成FB-6 L1取数层(8passed+CLI实跑)；sources.yaml审阅建议；Ingestion真机验证脚本 | Claude Sonnet 4.5 |
 
 | 2026-06-12 00:10:00 | 第15轮：SETUP_GUIDE(MinerU/torch/browser-use选型)；--bu-model切换；产出SPEC+5ADR+TASK_GRAPH(待Gate-2) | Claude Sonnet 4.5 |
+
+| 2026-06-12 00:50:00 | 第16轮：R1/R2规则；MinerU真实接入；修根目录污染；SPEC升级动态博弈(ADR-006)；进BUILD(核心7任务,13passed) | Claude Sonnet 4.5 |
+
+| 2026-06-12 01:30:00 | 第17轮：浏览器工具三条腿选型；BUILD搭满(knowledge/strategy/cli端到端,18passed) | Claude Sonnet 4.5 |
+
+| 2026-06-12 02:10:00 | 第18轮：规则R3；RUNBOOK保姆级验证步骤；HARDEN清单+自检脚本(11项全过) | Claude Sonnet 4.5 |
+
+| 2026-06-12 02:40:00 | 第19轮：HARDEN决策落地(report --model可选)；SECURITY_REVIEW(无高危)；五阶段进HARDEN | Claude Sonnet 4.5 |
+
+| 2026-06-12 03:00:00 | 第20轮：RETRO模板+lesson草稿+真机数据收集脚本；待老板push真机数据 | Claude Sonnet 4.5 |

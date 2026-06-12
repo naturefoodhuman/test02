@@ -80,8 +80,8 @@ model_list:
   #     验证方法见 docs/REAL_MACHINE_VALIDATION.md 的 [V-GLM]。
   - model_name: "cloud/glm-primary"
     litellm_params:
-      model: "openai/ZhipuAI/GLM-5"                        # ModelScope 上的 GLM-5（带 openai/ 前缀给 LiteLLM）
-      api_base: "https://api-inference.modelscope.cn/v1"   # ModelScope OpenAI 兼容端点（带 /v1）
+      model: "openai/z-ai/glm-5.1"                        # ModelScope 上的 GLM-5（带 openai/ 前缀给 LiteLLM）
+      api_base: "https://integrate.api.nvidia.com/v1"   # ModelScope OpenAI 兼容端点（带 /v1）
       api_key: "os.environ/GLM_API_KEY"                    # ⚠️ 用 _infra/start-litellm.sh 启动才能保证 export 进环境
       # ── 诊断定论（第5-7轮，已闭环）──
       #   根因 = 启动 litellm 的进程没拿到正确 GLM_API_KEY（① 光 source 不 export；② 一度把 Key 填错）。

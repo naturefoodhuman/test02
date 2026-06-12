@@ -1,0 +1,26 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间，精确到秒）：2026-06-12 00:50:00 CST
+
+[project]
+name = "debt-collection"
+version = "0.1.0"
+description = "个人合法讨债助手（试点/工厂陪练）：本地台账+情报库+动态策略，仅合法路径"
+requires-python = ">=3.11"
+dependencies = []   # 核心零依赖（SQLite 用标准库）；LLM 走 LiteLLM 网关、资料整理复用工厂 Pattern
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+debt = "debt.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/debt"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

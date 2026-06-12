@@ -68,21 +68,66 @@ def _run_markitdown(path: Path, doc: StructuredDoc) -> bool:
 def _run_mineru(path: Path, doc: StructuredDoc) -> bool:
     """用 MinerU 真实解析（PDF/图片，中文复杂版面/扫描件首选）。
 
-    MinerU 不同版本 API 不一，这里做稳健适配：优先 SDK，失败则提示用 CLI。
+    MinerU 3.x：优先调 SDK `do_parse`，失败回退调 CLI `mineru -p -o`，
+    两者都把生成的 .md 读回填充 doc。再不行才降级提示。
     """
-    try:
-        # MinerU 2.x SDK 形态较多，做防御性导入；不同版本可能是 mineru 或 magic_pdf
-        # 这里给出最常见的 SDK 调用骨架；若版本不匹配则抛异常进降级，并提示用 CLI。
-        from mineru.cli.common import do_parse  # type: ignore  # noqa: F401
+    import subprocess
+    import tempfile
 
-        # 真机若此路径可用，按其签名解析；因版本差异大，保守起见提示走 CLI 更稳。
-        raise RuntimeError("建议用 MinerU CLI 解析以保证稳定：mineru -p <file> -o <out>")
-    except Exception as e:  # noqa: BLE001
-        doc.warnings.append(
-            f"MinerU SDK 直调未启用（{e}）。建议命令行：mineru -p '{path}' -o <输出目录>，"
-            f"再把生成的 markdown 读回。"
+    out_dir = Path(tempfile.mkdtemp(prefix="mineru_"))
+
+    def _read_back(base: Path) -> str:
+        """从 MinerU 输出目录读回生成的 markdown。"""
+        mds = sorted(base.rglob("*.md"))
+        for m in mds:
+            txt = m.read_text(encoding="utf-8", errors="replace").strip()
+            if txt:
+                return txt
+        return ""
+
+    # ① 优先 SDK（MinerU 3.x: mineru.cli.common.do_parse）
+    try:
+        from mineru.cli.common import do_parse, read_fn  # type: ignore
+
+        pdf_bytes = read_fn(path)
+        do_parse(
+            output_dir=str(out_dir),
+            pdf_file_names=[path.stem],
+            pdf_bytes_list=[pdf_bytes],
+            p_lang_list=["ch"],
+            backend="pipeline",
+            parse_method="auto",
         )
-        return False
+        md = _read_back(out_dir)
+        if md:
+            doc.markdown = md
+            doc.segments = _segments_from_markdown(md)
+            doc.meta["processor"] = "MinerU(SDK)"
+            return True
+    except Exception as e:  # noqa: BLE001
+        doc.warnings.append(f"MinerU SDK 调用未成功（{e}），尝试 CLI…")
+
+    # ② 回退 CLI（你已验证 mineru 3.2.3 CLI 可用）
+    try:
+        import shutil
+
+        if shutil.which("mineru"):
+            subprocess.run(
+                ["mineru", "-p", str(path), "-o", str(out_dir), "--source", "local"],
+                check=True, capture_output=True, timeout=1800,
+            )
+            md = _read_back(out_dir)
+            if md:
+                doc.markdown = md
+                doc.segments = _segments_from_markdown(md)
+                doc.meta["processor"] = "MinerU(CLI)"
+                return True
+            doc.warnings.append("MinerU CLI 运行了但未读到 markdown 输出。")
+        else:
+            doc.warnings.append("未找到 mineru 命令（确认在装了 mineru 的环境里运行）。")
+    except Exception as e:  # noqa: BLE001
+        doc.warnings.append(f"MinerU CLI 调用失败: {e}")
+    return False
 
 
 def _run_funasr(path: Path, doc: StructuredDoc) -> bool:

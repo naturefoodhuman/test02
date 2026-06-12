@@ -50,6 +50,7 @@
   - 配套 skill：`_factory/skills/data-ingestion.skill.md`、`data-quality.skill.md`。
 - ✅ **FB-5 数据质量机制（初步）**：data-quality.skill + 项目级 sources.yaml（系统调研初版，老板微调）。
   - 首例：`projects/debt-collection/sources.yaml`（含官方权威源分级 + 取数风险提示）。
+- ✅ **FB-6 取数升级**（第17轮）：浏览器工具三条腿选型(browser-use/browser-act/MediaCrawler)，见 docs/research/browser-automation-tools-selection.md。
 - 这是工厂"从调研→落地一个新通用能力"的首个完整闭环，验证了工厂的造血能力。
 - ✅ **FB-6 取数层 L1**（第13轮）：`_factory/patterns/data-acquisition`
   - 合规取数协调器：给债务人生成官方渠道"待查清单"+结果结构化归档；**不暴力爬/不封号/不替登录账号**。

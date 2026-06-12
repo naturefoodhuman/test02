@@ -279,3 +279,77 @@
 - **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md、docs/FACTORY_ASSESSMENT.md
 
 ---
+
+## [第 16 轮] 2026-06-12
+
+### 需求变动
+- **新增规则**：R1 模型选型不限本地、R2 决断前先调研主流方案(HANDOFF 0.0.1)。
+- **升级**：debt-collection 从"一次性报告"→"动态案件博弈"(情报库+时间线+动态重算+合法筹码，ADR-006)。
+- **修复**：MinerU 真实接入 ingestion(SDK+CLI)；根目录污染(产物移至项目 runtime/)。
+- **进入 BUILD**：实现 models/ledger/timeline/intel/compliance(13 passed)。
+
+### 文件影响
+- **改动**：HANDOFF.md(R1/R2)、docs/SETUP_GUIDE.md(项目内环境+清理)、.gitignore(runtime/)
+- **改动**：_factory/patterns/ingestion-pipeline/{processors.py(MinerU真实接入), verify-real.sh}
+- **改动/新增**：projects/debt-collection/docs/{SPEC.md(动态升级), TASK_GRAPH.md, adr/ADR-006}
+- **新增**：projects/debt-collection/{pyproject.toml, .gitignore, src/debt/{models,ledger,timeline,intel,compliance}.py, tests/test_debt.py}
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+---
+
+## [第 17 轮] 2026-06-12
+
+### 需求变动
+- **新增**：浏览器工具三条腿选型(browser-use+browser-act+MediaCrawler)，社交情报源纳入。
+- **完成**：BUILD 骨架搭满(knowledge/llm_client/strategy/integrations/cli)，13任务完成12。
+
+### 文件影响
+- **新增**：docs/research/browser-automation-tools-selection.md
+- **新增**：projects/debt-collection/src/debt/{knowledge,llm_client,strategy,integrations,cli}.py
+- **改动**：projects/debt-collection/tests/test_debt.py(18 passed)、docs/TASK_GRAPH.md
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md、docs/FACTORY_ASSESSMENT.md
+
+---
+
+## [第 18 轮] 2026-06-12
+
+### 需求变动
+- **新增规则 R3**：操作指示必须保姆级详细。
+- **新增**：RUNBOOK_BUILD_VERIFY.md(真机验BUILD/GLM对比/工具安装 逐步)。
+- **HARDEN 准备**：HARDEN_CHECKLIST.md + security_scan.sh(自检11项全过)。
+
+### 文件影响
+- **改动**：HANDOFF.md(R3)
+- **新增**：docs/RUNBOOK_BUILD_VERIFY.md
+- **新增**：projects/debt-collection/docs/harden/{HARDEN_CHECKLIST.md, security_scan.sh}
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+---
+
+## [第 19 轮] 2026-06-12
+
+### 需求变动
+- **HARDEN 决策**：策略模型每次可选(--model)；DB 暂明文。
+- **实现**：report --model 隐私/质量切换。
+- **产出**：SECURITY_REVIEW.md(威胁建模,无高危,待GLM复核)。
+
+### 文件影响
+- **改动**：projects/debt-collection/src/debt/cli.py(--model)
+- **改动**：projects/debt-collection/docs/harden/HARDEN_CHECKLIST.md(决策落地)
+- **新增**：projects/debt-collection/docs/harden/SECURITY_REVIEW.md
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+---
+
+## [第 20 轮] 2026-06-12
+
+### 需求变动
+- **新增**：RETRO 复盘模板(双视角+待真机占位) + lesson 草稿 + 真机数据一键收集脚本。
+
+### 文件影响
+- **新增**：projects/debt-collection/docs/RETRO.md
+- **新增**：_factory/lessons/2026-Q2-debt-collection.lesson.md
+- **新增**：projects/debt-collection/docs/collect-retro-data.sh
+- **改动**：docs/DEV_LOG.md、docs/CHANGELOG.md、docs/PROJECT_STATE.md
+
+---

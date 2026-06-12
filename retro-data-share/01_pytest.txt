@@ -1,0 +1,24 @@
+【1/5】BUILD 测试
+...............F..                                                       [100%]
+=================================== FAILURES ===================================
+_________________________ test_strategy_offline_report _________________________
+
+    def test_strategy_offline_report() -> None:
+        from debt.strategy import generate_report
+        d = Debt(debtor_name="张三", amount=50000, due_date="2025-01-01",
+                 evidence=["借条", "转账记录"])
+        intels = [Intel(debt_id=1, content="债务人当选村支书", source="朋友",
+                        credibility=IntelCredibility.MEDIUM, created_at="2026-05-01")]
+        rep = generate_report(d, intels)
+        assert rep.debtor_name == "张三"
+        assert rep.model_used in ("offline-template", "cloud/glm-primary", "local/primary")
+        assert "执行可行性" in rep.body or "执行" in rep.body
+>       assert rep.compliance_passed   # 离线模板不含违法词
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert False
+E        +  where False = StrategyReport(debt_id=None, debtor_name='张三', body='**讨债策略报告**\n\n**债务人**：张三\n**债务性质**：民间借贷\n**本金**：50,000元（已还0元）\n**... 需人工注意（合规边界）：\n  - 涉及『单位』：向任职单位反映需依法依规、只陈述真实事实，不得捏造/骚扰(注意分寸)\n  - 涉及『上级』：向上级反映需基于真实欠债事实、正当维权，不得威胁恐吓', update_reason='').compliance_passed
+
+tests/test_debt.py:165: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_debt.py::test_strategy_offline_report - AssertionError: ass...
+1 failed, 17 passed in 41.34s

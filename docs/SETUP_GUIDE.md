@@ -15,10 +15,18 @@
 > 你的检验报告.jpg、血常规.pdf 是**扫描/图片版**（无文本层），MarkItDown 提不出字，必须 MinerU OCR。
 > M1 Max 走 MPS/CPU（无 CUDA）。Python 需 3.10–3.12（⚠️ 不要用 3.13）。
 
-### 推荐：独立隔离环境装（避免污染你现有 .venv）
+> ⚠️ 第16轮修正：**不要把环境/输出放在用户根目录**（会搞乱 ~）。统一放到**项目内**。
+> 你之前在根目录产生的可以清理：
+> ```bash
+> # 确认无用后删除根目录残留（mineru_env 是 venv，删前确认不再需要）
+> rm -rf ~/mineru_out ~/forge_ingest_out ~/forge_test_data ~/mineru.json
+> # mineru_env 若想保留就移进项目：mv ~/mineru_env <项目>/runtime/mineru_env
+> ```
+
+### 推荐：在项目内的 runtime/ 建隔离环境（不污染用户根目录）
 ```bash
-# 1) 建一个独立目录和 venv（Python 3.10~3.12）
-mkdir -p ~/mineru_env && cd ~/mineru_env
+cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
+mkdir -p runtime/mineru_env && cd runtime/mineru_env   # runtime/ 已被 .gitignore 忽略
 uv venv --python 3.12
 source .venv/bin/activate
 

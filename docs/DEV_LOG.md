@@ -466,3 +466,129 @@ ingestion 8 / acquisition 11 / forge_tools 19 / fastapi 3 全过。
 
 ### 下一步
 - 老板：① 按 SETUP_GUIDE 补 torch(立刻能转录音)+装 MinerU(读扫描件)；② 过 HITL Gate-2 确认 SPEC 架构 → 进 BUILD。
+
+## 第 16 轮 · 2026-06-12
+
+### 老板 6 点
+1. 模型选型不限本地已有，有更好开源模型(本机能跑)就建议→沉淀为规则 R1。
+2. 需我决断前先调研最新主流方案→沉淀为规则 R2。
+3. 资料整理验证：mineru 3.2.3 CLI 可用、FunASR 可转写；但 ingestion 仍走 MarkItDown 返回空(因在没装mineru的.venv跑)。
+4. 根目录被 mineru_env/mineru_out/forge_test_data 等搞乱→产物不应放根目录。
+5. SPEC 补充：讨债是持续动态博弈，不能只一次性出报告；要像真律师持续更新法务知识、追踪债务人动态(如当选村支书→合法施压)、随新情报重算策略。
+6. 整合升级后直接进 BUILD。
+
+### 我做了什么
+1. **沉淀两条规则**到 HANDOFF 0.0.1：R1(模型选型不限本地)、R2(决断前先调研主流方案)。
+2. **MinerU 真实接入 ingestion**：processors._run_mineru 改为 MinerU 3.x SDK(do_parse)优先 + CLI(mineru -p -o)兜底 + 读回 md。装了 mineru 的环境跑即可 OCR 扫描件。
+3. **修根目录污染**：verify-real.sh 默认输出改到项目内 runtime/(已加 .gitignore)；SETUP_GUIDE 改为项目内建环境 + 给出根目录残留清理命令。
+4. **SPEC 升级为"动态案件博弈"**(ADR-006)：新增 情报库(intel)+案件时间线+策略动态重算+合法筹码识别+knowledge法务知识；策略报告加"合法博弈筹码"段(村支书例)；compliance 把关施压合法性。
+5. **进 BUILD，实现并测试核心模块**(13 passed)：
+   - models(债务/情报/SQLite/身份证脱敏)、ledger(台账CRUD,≥8笔)、timeline(诉讼时效+案件时间线聚合)、intel(情报库)、compliance(红线守门人,拦违法/放行合法施压)。
+   - TASK_GRAPH 13 任务完成 7(setup/models/ledger/timeline/compliance/intel/case-timeline)。
+   - 验证了"村支书→依法向单位反映"被 compliance 判为合法放行+给注意。
+
+### 调研(遵守R2)
+- 案件管理业界做法=案件全周期+时间线动态跟踪+财产/情报线索动态清单(印证老板第5点)。
+- MinerU 3.x 集成=do_parse SDK 或 CLI。
+
+### 下一步(BUILD 续)
+- 剩余任务：knowledge-legal、integrate-ingestion、integrate-acquisition、strategy-dynamic、cli-wireup、model-ab-test。
+- strategy-dynamic 需调 GLM；model-ab-test 压测本地35b vs GLM。
+
+## 第 17 轮 · 2026-06-12
+
+### 老板指令
+- A：继续把 BUILD 骨架搭满。
+- 浏览器工具：分析两个链接(30款横评+browser-act)，给可靠选型；老板补充"抓社交平台也重要(博主信息实时真实)"。
+
+### 浏览器工具选型(遵守R2，产出 docs/research/browser-automation-tools-selection.md)
+- 30 款分 5 派系；针对我们场景(政务网站+验证码+本机+GLM+社交情报)分析。
+- **三条腿结论**(老板拍板)：
+  1. browser-use(接GLM) = L2 程序化取数(已建)；
+  2. browser-act = 交互式查询首选(内置验证码人工协助+Confirmation Gate+数据本地，贴合人在环+账号安全)；
+  3. MediaCrawler = 社交平台情报源(抖音/小红书/知乎/B站)。
+- 合规联动：社交情报经 sources.yaml 分级(博主=self_media 0.3)+多源交叉+去软文，写入 intel 触发策略重算；诚实提示社交抓取法律灰度最高，个人自用研究为限。
+
+### BUILD 续(搭满骨架，18 passed)
+新增并测试：
+- knowledge.py(法务知识防幻觉，内置核心法条要点+可信法条上下文)
+- llm_client.py(走 LiteLLM 网关，沙箱无网关优雅降级返回None)
+- strategy.py(策略生成+动态重算+合法筹码；GLM优先,离线模板兜底;过compliance)
+- integrations.py(接工厂 ingestion/acquisition，路径复用，不可用降级)
+- cli.py(add/list/intel/timeline/acquire/report 全命令)
+- **端到端演示通过**：录债务→加"村支书"情报→出策略报告(含执行可行性+合法筹码+时效)，合规✅，离线兜底完美。
+- TASK_GRAPH 13任务完成12，仅剩 model-ab-test(需真机GLM/Ollama)。
+
+### 全工厂回归
+ingestion 7(+1skip) / acquisition 11 / forge_tools 19 / debt-collection 18 = 全绿。
+
+### 下一步(需真机)
+- model-ab-test：真机起 LiteLLM 网关，跑 debt report 对比 local/primary vs cloud/glm 的策略质量，结论写 RETRO。
+- 老板可装 browser-act / MediaCrawler(按选型文档)；社交情报接入 intel 可作下一个增量。
+- HARDEN 阶段：安全审查(敏感数据/合规)。
+
+## 第 18 轮 · 2026-06-12
+
+### 老板指令
+1. 操作指示要保姆级详细(终端/cd/venv/预期/报错)→沉淀规则 R3；HARDEN 检查清单同步准备。
+2. 给出真机验 BUILD 的详细步骤。
+3. browser-act/MediaCrawler 安装步骤。
+
+### 我做了什么
+1. **沉淀规则 R3**(HANDOFF 0.0.1)：操作指示必须含 终端编号/绝对路径cd/venv激活/预期输出/报错处理。
+2. **docs/RUNBOOK_BUILD_VERIFY.md**(保姆级)：
+   - 任务一：验 BUILD(终端A→cd→激活venv→uv pip install→pytest 18 passed)。
+   - 任务二：GLM 真实策略 vs 离线兜底对比(终端A 起网关 start-litellm，终端B 跑 debt report)=model-ab-test。
+   - 任务三：browser-act(uv tool install) / MediaCrawler(runtime/独立venv) 安装步骤+合规提示。
+   - 任务四：push 结果给我分析的方法。
+   - 每步含预期输出+常见报错。
+3. **HARDEN 准备**：
+   - docs/harden/HARDEN_CHECKLIST.md(隐私/合规/健壮/性能/自检 五大类 + 2 个待老板决断点)。
+   - docs/harden/security_scan.sh：自动自检(gitignore覆盖/无DB被跟踪/compliance关键词/strategy过合规/脱敏/免责)。
+   - **沙箱实跑 security_scan：11 项全过**。
+
+### 待老板决断(HARDEN HITL Gate-4 前)
+- 敏感案件用 GLM(质量) 还是本地模型(隐私不出本机)？
+- DB 是否加密？
+
+### 下一步
+- 老板按 RUNBOOK 真机验 BUILD + 跑 security_scan + 决断两个 HARDEN 问题。
+- 之后进 RETRO(复盘+沉淀 lesson)，五阶段走完。
+
+## 第 19 轮 · 2026-06-12
+
+### 老板 HARDEN 决断
+- 决策1：策略推理"每次让我选"模型(敏感用本地/一般用GLM)。
+- 决策2：DB 加密以后再说，V1 明文+本地+gitignore。
+
+### 我做了什么
+1. **实现 report --model 选项**：cloud/glm-primary(质量,提示出云端) | local/primary(隐私,提示不出本机)；18 passed，--model 验证生效。
+2. **HARDEN_CHECKLIST 标记决策**(决策1/2 已定)。
+3. **产出 SECURITY_REVIEW.md**：威胁建模6项(均缓解,无高危)；标注"待真机GLM复核"。
+4. security_scan.sh 沙箱 11 项全过。
+
+### 五阶段进度
+DISCOVERY✅→SPEC✅(Gate-2待真机确认)→BUILD✅(12/13,model-ab-test待真机)→HARDEN🟡(自检过+决策定,待真机GLM复核+Gate-4)→RETRO⬜。
+
+### 下一步
+- 老板真机：按 RUNBOOK 验 BUILD + 跑 security_scan + 体验 --model 隐私/质量对比。
+- 然后进 RETRO：复盘+沉淀 lesson(把工厂能力边界/FB-1~9 改进/试点经验结构化)。
+
+## 第 20 轮 · 2026-06-12
+
+### 老板指令
+- 准备 RETRO 复盘模板 + 待沉淀清单；老板真机数据出来后 push 到 GitHub，Agent 拉取填入。
+
+### 我做了什么
+1. **projects/debt-collection/docs/RETRO.md**：双视角复盘(试点项目 + 工厂)，预留 🟦 待真机数据占位(BUILD结果/安全自检/GLM vs本地策略/Ingestion效果/耗时/成本/本地占比)。
+2. **_factory/lessons/2026-Q2-debt-collection.lesson.md**：lesson 草稿(5核心字段+决策回顾)，状态=草稿待真机补全+HITL Gate-5。
+3. **projects/debt-collection/docs/collect-retro-data.sh**：真机数据一键收集脚本(保姆级R3)——
+   收集 pytest/security_scan/GLM策略/本地策略 到 retro-data-share/，用演示数据(不碰真实案件隐私)，结尾提示 git push 命令。
+4. 确认 retro-data-share/ 不被 gitignore(可 push)；回归 18 passed。
+
+### 待办（老板真机 → push → Agent 拉取填 RETRO/lesson）
+- 老板跑 collect-retro-data.sh → push retro-data-share/ → 我 git pull 填实 RETRO 的 🟦 占位 + lesson 的真机字段。
+- 然后 HITL Gate-5 审批 lesson 写入 _factory/ → 五阶段正式走完。
+
+### 五阶段进度
+DISCOVERY✅ SPEC✅ BUILD✅(12/13) HARDEN✅(待真机GLM复核) RETRO🟡(模板就绪,待真机数据)。

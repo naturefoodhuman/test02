@@ -79,3 +79,7 @@ node_modules/
 
 # ========== 例外（强制保留模板）==========
 !_infra/.env.example
+
+# 运行时产物（资料整理输出、缓存等，不入库，不污染根目录）
+runtime/
+*/runtime/

@@ -12,8 +12,12 @@
 set -o pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DATA_DIR="${1:-$HOME/forge_test_data}"
-OUT_DIR="${2:-$HOME/forge_ingest_out}"
+# 找到项目根（含 _infra 的目录），把产物放项目内 runtime/，不污染用户根目录
+PROJECT_ROOT="$(cd "$HERE/../../.." && pwd)"
+RUNTIME_DIR="$PROJECT_ROOT/runtime/ingestion"
+# 默认：测试数据和输出都放项目内 runtime/（可被 .gitignore 忽略），不再用 ~ 根目录
+DATA_DIR="${1:-$RUNTIME_DIR/test_data}"
+OUT_DIR="${2:-$RUNTIME_DIR/out}"
 
 echo "================ Ingestion 真机验证 ================"
 echo "资料目录: $DATA_DIR"
