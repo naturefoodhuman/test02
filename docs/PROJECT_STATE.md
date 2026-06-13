@@ -53,20 +53,20 @@
 
 ## 下一步（接续 Agent / 老板从这里继续）
 
-**等老板做的事：**
-1. 在 Mac 上解压补丁，按 `docs/REAL_MACHINE_VALIDATION.md` 逐项验证（尤其 V-Ollama / V-LiteLLM / V-GLM）。
-2. 填 `_infra/.env` 的 `GLM_API_KEY`，确认 GLM 真实型号（当前占位 glm-5.1）。
-3. 把验证失败的现象贴回来，我来修。
+**1. 收官 Phase 2 试点项目 (debt-collection)**
+- ✅ 核心功能/安全自检/RETRO 记录。
+- ✅ **HITL Gate-5 已通过**：项目正式结项，Lesson 已沉淀。
+- ✅ **模型路由修复**：已实现“在线(GLM) -> 本地(35b) -> 离线模板”的三级降级机制。
 
-**✅ Phase 1 已收尾。下一步 = Phase 2：** 选一个真实小项目当试点，用 `projects/_TEMPLATE` 起步，
-完整走通五阶段（DISCOVERY→SPEC→BUILD→HARDEN→RETRO）。
-**✅ 已建成两个工厂通用能力**：FB-8 Ingestion 层(7 passed) + FB-6 L1 取数层(8 passed)，均 CLI 实跑通过。
-**待老板真机**：① 跑 `ingestion-pipeline/verify-real.sh` 验真实解析(装 markitdown/funasr 后)；② 微调 sources.yaml 黑名单。
-**接续 Agent 下一轮可选方向**：
-1. FB-6 L2 增强（browser-use 接 GLM，人在环辅助打开+遇验证码停下）；
-2. 继续 debt-collection：DISCOVERY 收尾 → 过 Gate-1 → SPEC（此时取数层+ingestion 已可支撑策略报告）；
-3. FB-7 DISCOVERY 深度自检清单。
-方案依据见 docs/research/。
+**2. 启动 Phase 2.5: 工厂智力升级 (FB-11 专家系统)**
+- ✅ **债务律师专家已初始化**：完成目录结构、`expert.yaml`、路由配置（新增 DeepSeek-R1）。
+- ✅ **知识库库 A/B 初始化**：录入民间借贷/执行程序司法解释、92 条实务问答。
+- ⏳ **知识获取**：按照 R6 规则，已在 `_gaps.md` 列出《民间借贷纠纷办案手册》等缺口，待老板提供。
+
+**3. 持续打补丁 (FB-1/2/9/10)**
+- 改进 forge CLI 校验深度 (FB-1)。
+- 引入显式阶段状态 `.forge_phase` (FB-2)。
+- 探索项目级存储 Pattern (FB-9)。
 
 ---
 
@@ -106,3 +106,4 @@
 | 2026-06-12 17:30:00 | 第22轮：真机修复确认；Claude策略报告对比;反封号详尽调研+Higgsfield澄清;FB-10 | Claude Sonnet 4.5 |
 
 | 2026-06-12 18:30:00 | 第23轮：规则R5/R6;开源模型全景调研;专家系统FB-11(设计+模板);工厂运转手册 | Claude Sonnet 4.5 |
+| 2026-06-13 09:00:00 | 第24轮：接续 Agent 接手；确认 Phase 2 试点项目收官；提议启动 FB-11 专家系统 | Claude Sonnet 4.5 |

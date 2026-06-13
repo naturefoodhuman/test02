@@ -87,19 +87,14 @@ def _offline_template(debt: Debt, intels: list[Intel]) -> str:
 
 def generate_report(debt: Debt, intels: list[Intel] | None = None,
                     *, cfg: LLMConfig | None = None, update_reason: str = "") -> StrategyReport:
-    """生成策略报告（GLM 优先，离线兜底），并过合规自检。
+    """生成策略报告（三级路由：GLM/在线 -> 本地主力 -> 离线模板），并过合规自检。
 
-    Args:
-        debt: 债务。
-        intels: 情报列表。
-        cfg: LLM 配置（默认 GLM）。
-        update_reason: 动态重算时说明因哪条情报触发。
-
-    Returns:
-        StrategyReport。
+    三级路由逻辑（老板第24轮明确）：
+    1. 尝试在线模型 (cloud/glm-primary)；
+    2. 若不可用或失败，尝试本地主力模型 (local/primary)；
+    3. 若本地也故障，降级至离线模板 (offline-template)。
     """
     intels = intels or []
-    cfg = cfg or LLMConfig()
     facts = _facts_block(debt, intels)
     legal = knowledge.legal_context_for_strategy()
 
@@ -111,13 +106,24 @@ def generate_report(debt: Debt, intels: list[Intel] | None = None,
         + (f"\n【本次为动态更新，因新情报：{update_reason}，请重点说明策略调整】" if update_reason else "")
     )
 
-    body: str
-    model_used: str
-    if available(cfg):
-        # 递归整改：生成→合规检查→不合规则把整改指令回传重生成，最多 N 轮（老板第21轮需求）
-        body, model_used = _generate_with_recheck(prompt, cfg, max_rounds=3)
-    else:
-        body, model_used = _offline_template(debt, intels), "offline-template"
+    body: str | None = None
+    model_used: str = "unknown"
+
+    # 第一级：在线模型 (GLM)
+    online_cfg = cfg or LLMConfig(model="cloud/glm-primary")
+    if available(online_cfg):
+        body, model_used = _generate_with_recheck(prompt, online_cfg, max_rounds=3)
+    
+    # 第二级：本地主力（若第一级失败或不可用）
+    if not body or model_used == "offline-fallback":
+        local_cfg = LLMConfig(model="local/primary")
+        if available(local_cfg):
+            body, model_used = _generate_with_recheck(prompt, local_cfg, max_rounds=3)
+
+    # 第三级：离线模板（若前两级均失败）
+    if not body or model_used == "offline-fallback":
+        body = _offline_template(debt, intels)
+        model_used = "offline-template"
 
     # 最终合规自检（红线守门人）
     cr = check_text(body)

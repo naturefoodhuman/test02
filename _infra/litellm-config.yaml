@@ -1,30 +1,15 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
 # 创建时间（北京时间，精确到秒）：2026-06-10 23:03:36 CST
-#
-# ============================================================================
-# FORGE Factory · LiteLLM 路由配置
-# 作用：统一网关，让 Claude Code 通过 http://localhost:4000 调用本地/云端模型，
-#       自动 Fallback、成本追踪、日志。
-# 部署位置（真机）：~/forge/_infra/litellm-config.yaml
-# 启动命令（真机）：litellm --config ~/forge/_infra/litellm-config.yaml --port 4000
-# ----------------------------------------------------------------------------
-# ⚠️ 本地覆盖：敏感/机器相关参数请放到 litellm-config.local.yaml（不提交 Git），
-#    用 `litellm --config ... --config litellm-config.local.yaml` 叠加，或直接改本文件。
-# ============================================================================
 
 model_list:
-  # ═══════════ LOCAL PRIMARY（本地主力，cost=0）═══════════
-  # C3：主力模型 qwen3.6:35b-a3b-q8_0，承担所有高频任务（代码生成/测试/探索/复盘）
   - model_name: "local/primary"
     litellm_params:
       model: "ollama/qwen3.6:35b-a3b-q8_0"
       api_base: "http://localhost:11434"
-      timeout: 300            # 35b 较慢，给足超时
+      timeout: 300
     model_info:
       cost_per_token: 0
 
-  # ═══════════ LOCAL FALLBACK（本地备用，cost=0）═══════════
-  # C4：当 35b 超时/连续失败时自动降级到 14b
   - model_name: "local/fallback"
     litellm_params:
       model: "ollama/qwen3:14b"
@@ -33,20 +18,14 @@ model_list:
     model_info:
       cost_per_token: 0
 
-  # ═══════════ LOCAL CODER（编程专用，cost=0）═══════════
-  # qwen3-coder-next:q4_K_M（51GB）专为代码任务训练，BUILD 阶段写代码可优先用它。
-  # 用法：在 Claude Code / 调用方把模型名指定为 "local/coder" 即可。
   - model_name: "local/coder"
     litellm_params:
       model: "ollama/qwen3-coder-next:q4_K_M"
       api_base: "http://localhost:11434"
-      timeout: 300            # 模型大，给足超时
+      timeout: 300
     model_info:
       cost_per_token: 0
 
-  # ═══════════ LOCAL EMBEDDING（向量嵌入，cost=0）═══════════
-  # bge-m3（1.2GB）：高质量多语言/中文向量，适合 RAG 检索、文档相似度。
-  # 用 /v1/embeddings 端点调用；为未来"本地知识库/RAG"类项目打底（KR-004 模式库）。
   - model_name: "local/embedding"
     litellm_params:
       model: "ollama/bge-m3:latest"
@@ -56,53 +35,39 @@ model_list:
       mode: embedding
       cost_per_token: 0
 
-  # ═══════════ LOCAL EMBEDDING（备选，更大维度，cost=0）═══════════
-  # qwen3-embedding:8b（4.7GB）：维度/容量更大的备选嵌入模型。
-  - model_name: "local/embedding-large"
-    litellm_params:
-      model: "ollama/qwen3-embedding:8b"
-      api_base: "http://localhost:11434"
-      timeout: 120
-    model_info:
-      mode: embedding
-      cost_per_token: 0
-
-  # ═══════════ CLOUD PRIMARY（GLM via ModelScope 魔搭）═══════════
-  # C2：可自动调用的最强云端。老板选择走 ModelScope 接入 GLM。
-  # Key 来自 ModelScope（魔搭）账号的 SDK Token，填到 .env 的 GLM_API_KEY。
-  #
-  # ⚠️ 关键写法：ModelScope 是 OpenAI 兼容接口，base_url=.../v1，模型名带前缀 ZhipuAI/GLM-5。
-  #     在 LiteLLM 里必须给 model 再加一层 "openai/" 前缀，告诉 LiteLLM 走 OpenAI 协议，
-  #     即最终 model = "openai/ZhipuAI/GLM-5"。漏掉 openai/ 会报 "LLM Provider NOT provided"。
-  #
-  # ⚠️ base_url 这里已带 /v1（ModelScope 规范如此）。LiteLLM 走 openai/ 协议时直接 POST 到
-  #     api_base + /chat/completions，得到 .../v1/chat/completions（正确）。
-  #     验证方法见 docs/REAL_MACHINE_VALIDATION.md 的 [V-GLM]。
   - model_name: "cloud/glm-primary"
     litellm_params:
-      model: "openai/z-ai/glm-5.1"                        # ModelScope 上的 GLM-5（带 openai/ 前缀给 LiteLLM）
-      api_base: "https://integrate.api.nvidia.com/v1"   # ModelScope OpenAI 兼容端点（带 /v1）
-      api_key: "os.environ/GLM_API_KEY"                    # ⚠️ 用 _infra/start-litellm.sh 启动才能保证 export 进环境
-      # ── 诊断定论（第5-7轮，已闭环）──
-      #   根因 = 启动 litellm 的进程没拿到正确 GLM_API_KEY（① 光 source 不 export；② 一度把 Key 填错）。
-      #   → 必须用 `_infra/start-litellm.sh` 启动（set -a 自动 export）；.env 里的 Key 要确保正确。
-      #   填对 Key 后：直连/经网关、流式/非流式【全部正常】（diag-glm-v2 A1/A2/B1/B2/B3 全绿）。
-      #   之前所谓"非流式不稳/被 fallback"都是 Key 错误导致的假象，非 ModelScope 或 LiteLLM 的问题。
+      model: "openai/z-ai/glm-5.1"
+      api_base: "https://integrate.api.nvidia.com/v1"
+      api_key: "os.environ/GLM_API_KEY"
       timeout: 60
-      stream_timeout: 30        # 等首字节最大 30s（GLM 思考链较长，给足首字节时间）
-      drop_params: true         # 丢弃 ModelScope 不支持的 OpenAI 参数
-      # ⚠️ 若遇 tool_choice:"auto" 报错，可解开下一行（让服务端自决）：
-      # tool_choice: null
+      stream_timeout: 30
+      drop_params: true
     model_info:
-      # ModelScope 免费额度内 cost=0；超额按实际填写。先按 0 记，便于成本统计不误报。
       input_cost_per_token: 0
       output_cost_per_token: 0
 
-  # ═══════════ CLOUD GLM DEBUG（诊断专用，无 fallback）═══════════
-  # 用途：定位 ModelScope 经 LiteLLM 调用的真实错误。它【没有】fallback，
-  #   调用失败会直接把错误返回给你，而不是静默切到本地 qwen（便于排错）。
-  #   验证命令见 docs/REAL_MACHINE_VALIDATION.md 的 [V-GLM-DEBUG]。
-  #   排障结束后日常用 cloud/glm-primary 即可，本条留着备用无害。
+  - model_name: "cloud/gpt-5.5"
+    litellm_params:
+      model: "openai/gpt-5.5"
+      api_base: "https://aiapiv2.pekpik.com/v1"
+      api_key: "os.environ/PEKPIK_API_KEY"
+      timeout: 120
+    model_info:
+      input_cost_per_token: 0
+      output_cost_per_token: 0
+
+  - model_name: "cloud/deepseek-r1"
+    litellm_params:
+      model: "openai/deepseek-ai/DeepSeek-R1"
+      api_base: "https://api.siliconflow.cn/v1"
+      api_key: "os.environ/DEEPSEEK_API_KEY"
+      timeout: 300
+      stream_timeout: 60
+    model_info:
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.00000218
+
   - model_name: "cloud/glm-debug"
     litellm_params:
       model: "openai/ZhipuAI/GLM-5"
@@ -117,24 +82,12 @@ model_list:
 
 router_settings:
   routing_strategy: "latency-based-routing"
-
-  # Fallback 链：GLM 不可用 → 本地主力 → 本地备用；本地主力失败 → 本地备用
-  # 满足 C2：GLM 挂了不中断工作流，自动切本地
   fallbacks:
     - "cloud/glm-primary": ["local/primary", "local/fallback"]
     - "local/primary": ["local/fallback"]
-
-  # 调用前健康检查 + 重试
   enable_pre_call_checks: true
   num_retries: 2
   retry_after: 5
 
-# ═══════════ 成本追踪 / 日志 ═══════════
-# 默认用本地文件日志（零依赖、不联网）。如需可视化看板，真机可改为 langfuse/prometheus。
 litellm_settings:
-  # 把每次调用写到本地，便于 RETRO 阶段统计成本与 GLM 调用次数
   json_logs: true
-  # success_callback / failure_callback 可选：["langfuse"] 或 ["prometheus"]
-  # 默认留空，保持零外部依赖；真机想要看板时再开。
-  # success_callback: ["langfuse"]
-  # failure_callback: ["langfuse"]

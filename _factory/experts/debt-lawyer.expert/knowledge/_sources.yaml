@@ -1,0 +1,28 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间，精确到秒）：2026-06-13 09:16:00 CST
+
+sources:
+  - id: "statutes_01"
+    name: "《最高人民法院关于审理民间借贷案件适用法律若干问题的规定》（2020修正）"
+    tier: "official"
+    weight: 1.0
+    reliability: "absolute"
+
+  - id: "statutes_02"
+    name: "《最高人民法院关于适用〈中华人民共和国民事诉讼法〉执行程序若干问题的解释》（2020修正）"
+    tier: "official"
+    weight: 1.0
+    reliability: "absolute"
+
+  - id: "qa_92_topics"
+    name: "民间借贷纠纷92条实务问答（最高院口径/主流法院共识）"
+    tier: "expert_consensus"
+    weight: 0.8
+    reliability: "high"
+
+  - id: "handbook_unreached"
+    name: "《民间借贷纠纷办案手册》（法律出版社/最高院法官编著）"
+    tier: "practical_handbook"
+    weight: 0.9
+    reliability: "very_high"
+    status: "gap"  # 标记为知识缺口
