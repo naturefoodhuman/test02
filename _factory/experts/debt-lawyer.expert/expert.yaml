@@ -15,7 +15,7 @@ role:
   output_style: "结构化报告，含法律依据、执行概率预判与话术建议"
 
 routing:
-  primary_reasoning: "openai/deepseek-ai/DeepSeek-R1"  # 推理能力天花板，负责复杂策略
+  primary_reasoning: "local/r1"  # 推理能力天花板，负责复杂策略
   execution_logic: "local/primary"              # Qwen3.5 负责常规文书与数据整合
   fallback: "cloud/glm-primary"
 

@@ -1,22 +1,12 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建/修改时间（北京时间，精确到秒）：2026-06-11 23:40:00 CST
+# 创建时间：2026-06-13 15:20:00
 """各类型处理器：把原始资料转为 StructuredDoc（真实调用，非占位）。
-
-第13轮修复：上一版只"检测到库"但没真正调用 → 输出空内容。
-本版改为：检测到库 → **真实调用解析** → 填充 markdown/segments；
-调用失败或无库 → 降级并记录真实错误/提示。
-
-优先级：
-- PDF：MinerU > MarkItDown > pypdf > 占位
-- 图片：MinerU > (OCR) > 占位
-- 音频：FunASR(转写+说话人分离) > 占位
-- Office：MarkItDown > 占位
-零核心依赖：缺库自动降级，不影响整体流程。
 """
 from __future__ import annotations
 
 import abc
 import importlib.util
+import os
 from pathlib import Path
 
 from ingestion.models import Segment, SourceType, StructuredDoc
@@ -68,16 +58,20 @@ def _run_markitdown(path: Path, doc: StructuredDoc) -> bool:
 def _run_mineru(path: Path, doc: StructuredDoc) -> bool:
     """用 MinerU 真实解析（PDF/图片，中文复杂版面/扫描件首选）。
 
-    MinerU 3.x：优先调 SDK `do_parse`，失败回退调 CLI `mineru -p -o`，
-    两者都把生成的 .md 读回填充 doc。再不行才降级提示。
+    针对老板第25轮反馈的 Hub 报错修复：
+    1. 优先从环境变量读取 MINERU_MODEL_SOURCE (默认 modelscope)。
+    2. SDK 调用时不再强制 backend="pipeline"，允许内部自适应。
+    3. CLI 调用时使用正确的 --source 参数。
     """
     import subprocess
     import tempfile
+    import os
 
+    # 从环境获取模型源，默认走 modelscope (符合老板安装习惯)
+    m_source = os.environ.get("MINERU_MODEL_SOURCE", "modelscope")
     out_dir = Path(tempfile.mkdtemp(prefix="mineru_"))
 
     def _read_back(base: Path) -> str:
-        """从 MinerU 输出目录读回生成的 markdown。"""
         mds = sorted(base.rglob("*.md"))
         for m in mds:
             txt = m.read_text(encoding="utf-8", errors="replace").strip()
@@ -85,18 +79,17 @@ def _run_mineru(path: Path, doc: StructuredDoc) -> bool:
                 return txt
         return ""
 
-    # ① 优先 SDK（MinerU 3.x: mineru.cli.common.do_parse）
+    # ① 优先 SDK
     try:
         from mineru.cli.common import do_parse, read_fn  # type: ignore
 
         pdf_bytes = read_fn(path)
+        # SDK 调用时不传递复杂的 backend 参数，减少 Hub 触发概率
         do_parse(
             output_dir=str(out_dir),
             pdf_file_names=[path.stem],
             pdf_bytes_list=[pdf_bytes],
             p_lang_list=["ch"],
-            backend="pipeline",
-            parse_method="auto",
         )
         md = _read_back(out_dir)
         if md:
@@ -107,26 +100,26 @@ def _run_mineru(path: Path, doc: StructuredDoc) -> bool:
     except Exception as e:  # noqa: BLE001
         doc.warnings.append(f"MinerU SDK 调用未成功（{e}），尝试 CLI…")
 
-    # ② 回退 CLI（你已验证 mineru 3.2.3 CLI 可用）
+    # ② 回退 CLI
     try:
         import shutil
 
         if shutil.which("mineru"):
-            subprocess.run(
-                ["mineru", "-p", str(path), "-o", str(out_dir), "--source", "local"],
-                check=True, capture_output=True, timeout=1800,
-            )
+            # 修正：根据模型源选择 --source 参数
+            cmd = ["mineru", "-p", str(path), "-o", str(out_dir), "--source", m_source]
+            subprocess.run(cmd, check=True, capture_output=True, timeout=1800)
             md = _read_back(out_dir)
             if md:
                 doc.markdown = md
                 doc.segments = _segments_from_markdown(md)
-                doc.meta["processor"] = "MinerU(CLI)"
+                doc.meta["processor"] = f"MinerU(CLI:{m_source})"
                 return True
             doc.warnings.append("MinerU CLI 运行了但未读到 markdown 输出。")
         else:
             doc.warnings.append("未找到 mineru 命令（确认在装了 mineru 的环境里运行）。")
     except Exception as e:  # noqa: BLE001
         doc.warnings.append(f"MinerU CLI 调用失败: {e}")
+        doc.warnings.append("提示：如果是 Hub 报错，请执行 'export MINERU_MODEL_SOURCE=modelscope' 并确保模型已下好。")
     return False
 
 
