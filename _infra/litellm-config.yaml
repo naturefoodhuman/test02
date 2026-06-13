@@ -1,7 +1,18 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间，精确到秒）：2026-06-10 23:03:36 CST
+# 创建时间（北京时间，精确到秒）：2026-06-13 14:20:00 CST
 
 model_list:
+  # ═══════════ LOCAL REASONING（DeepSeek-R1 32B 本地版）═══════════
+  # 老板已通过 ollama run deepseek-r1:32b 拉取。
+  # 显存占用 ~20GB，适合 64GB Mac。
+  - model_name: "local/r1"
+    litellm_params:
+      model: "ollama/deepseek-r1:32b"
+      api_base: "http://localhost:11434"
+      timeout: 300
+    model_info:
+      cost_per_token: 0
+
   - model_name: "local/primary"
     litellm_params:
       model: "ollama/qwen3.6:35b-a3b-q8_0"
@@ -35,6 +46,18 @@ model_list:
       mode: embedding
       cost_per_token: 0
 
+  # ═══════════ CLOUD REASONING（DeepSeek-R1 云端备份）═══════════
+  - model_name: "cloud/deepseek-r1"
+    litellm_params:
+      model: "openai/deepseek-ai/DeepSeek-R1"
+      api_base: "https://api.siliconflow.cn/v1"
+      api_key: "os.environ/DEEPSEEK_API_KEY"
+      timeout: 300
+      stream_timeout: 60
+    model_info:
+      input_cost_per_token: 0.0000005
+      output_cost_per_token: 0.00000218
+
   - model_name: "cloud/glm-primary"
     litellm_params:
       model: "openai/z-ai/glm-5.1"
@@ -57,32 +80,10 @@ model_list:
       input_cost_per_token: 0
       output_cost_per_token: 0
 
-  - model_name: "cloud/deepseek-r1"
-    litellm_params:
-      model: "openai/deepseek-ai/DeepSeek-R1"
-      api_base: "https://api.siliconflow.cn/v1"
-      api_key: "os.environ/DEEPSEEK_API_KEY"
-      timeout: 300
-      stream_timeout: 60
-    model_info:
-      input_cost_per_token: 0.0000005
-      output_cost_per_token: 0.00000218
-
-  - model_name: "cloud/glm-debug"
-    litellm_params:
-      model: "openai/ZhipuAI/GLM-5"
-      api_base: "https://api-inference.modelscope.cn/v1"
-      api_key: "os.environ/GLM_API_KEY"
-      timeout: 60
-      stream_timeout: 20
-      drop_params: true
-    model_info:
-      input_cost_per_token: 0
-      output_cost_per_token: 0
-
 router_settings:
   routing_strategy: "latency-based-routing"
   fallbacks:
+    - "local/r1": ["cloud/deepseek-r1", "local/primary"]
     - "cloud/glm-primary": ["local/primary", "local/fallback"]
     - "local/primary": ["local/fallback"]
   enable_pre_call_checks: true

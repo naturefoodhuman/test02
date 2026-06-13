@@ -2940,6 +2940,6 @@
   },
   "warnings": [
     "MinerU SDK 调用未成功（An error happened while trying to locate the files on the Hub and we cannot find the appropriate snapshot folder for the specified revision on the local disk. Please check your internet connection and try again.），尝试 CLI…",
-    "MinerU CLI 调用失败: Command '['mineru', '-p', 'runtime/ingestion/民间借贷纠纷办案手册（1.0版） (法信).pdf', '-o', '/var/folders/bd/z5r5hpm9699g34pbp3jvktch0000gn/T/mineru_m3fhyhqa', '--source', 'local']' returned non-zero exit status 1."
+    "MinerU CLI 调用失败: Command '['mineru', '-p', 'runtime/ingestion/民间借贷纠纷办案手册（1.0版） (法信).pdf', '-o', '/var/folders/bd/z5r5hpm9699g34pbp3jvktch0000gn/T/mineru_hj4t2yp1', '--source', 'local']' returned non-zero exit status 1."
   ]
 }

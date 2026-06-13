@@ -1,85 +1,24 @@
-# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间，精确到秒）：2026-06-10 23:03:36 CST
+# Created by FORGE Factory Agent
+# Timestamp: 2026-06-13 14:15:00 CST
 
-# ========== Python ==========
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.egg-info/
-*.egg
-.eggs/
-build/
-dist/
-*.so
-.Python
-
-# ========== 虚拟环境 ==========
 .venv/
-venv/
-ENV/
-env/
-.python-version
-
-# ========== uv ==========
-.uv-cache/
-
-# ========== 测试 / 覆盖率 ==========
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-.coverage.*
-htmlcov/
-.tox/
-.nox/
-coverage.xml
-
-# ========== IDE ==========
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# ========== FORGE 运行时与密钥（绝不入库）==========
-# 环境变量与密钥
 .env
-_infra/.env
-.env.local
-.env.*.local
-*.key
-*.pem
-.netrc
 
-# LiteLLM 本地覆盖配置（机器相关）
-_infra/litellm-config.local.yaml
-
-# 补丁包（老板本地应用即可，不传 GitHub）
-patches/
-
-# 熔断计数临时文件
-.forge_fail_*
-
-# ========== macOS / Windows / Linux ==========
-.AppleDouble
-.LSOverride
-Thumbs.db
-Desktop.ini
-
-# ========== 临时文件 ==========
-*.tmp
-*.bak
-*.log
-
-# ========== Node / 前端（暂未用，留作未来）==========
-node_modules/
-.next/
-.nuxt/
-.output/
-
-# ========== 例外（强制保留模板）==========
-!_infra/.env.example
-
-# 运行时产物（资料整理输出、缓存等，不入库，不污染根目录）
+# Project Runtime (Private PDFs, Local Databases, Logs)
 runtime/
 */runtime/
+projects/*/runtime/
+mineru_out/
+
+# OS
+.DS_Store
+
+# Patches
+patches/
+
+# Models (Local weights should not be committed)
+models/
