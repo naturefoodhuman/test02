@@ -26,6 +26,7 @@
 ### 同步方式
 - Agent 改完后生成 ZIP 补丁 → 老板 `unzip -o patch_xxx.zip` 覆盖
 - 或者老板 `git pull` 拉取最新代码
+- **标准化发布流程**：`make release` 或 `bash release.sh [patch|minor|major] "发布说明"` → 自动更新版本号、CHANGELOG、git tag → `git push origin main --tags`
 
 ### 虚拟环境 (Venv) 矩阵
 | 环境 | 路径 | 用途 |
@@ -104,8 +105,9 @@
 终端 C:
 1. cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 2. source .venv/bin/activate
-3. export PYTHONPATH=$PYTHONPATH:$(pwd)/projects/debt-collection/src:$(pwd)/_factory/patterns/peer-review/src
-4. python3 -m debt.cli --db projects/debt-collection/runtime/debt.db review 1 --model local/primary
+3. 
+4. debt review 1 --model local/primary
+   > **注意**：v1.0.5+ 已通过 `pip install -e .` 编译安装，无需手动设置 PYTHONPATH。`debt` 命令直接可用。
    → 预期输出：
      📚 正在构建专家 [risk-assessor] 向量索引...
      🤖 加载专家 Agent: 债务风险评估专家 (reviewer)
@@ -116,7 +118,7 @@
 ### 录入测试债务
 ```
 终端 C:
-python3 -m debt.cli --db projects/debt-collection/runtime/debt.db add "张三" 50000 --evidence "微信转账"
+debt add "张三" 50000 --evidence "微信转账"
 → 预期输出：✅ 已录入债务 #1：张三 50000.0元
 ```
 

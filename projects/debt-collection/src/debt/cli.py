@@ -141,17 +141,8 @@ def cmd_report(args) -> int:
 def cmd_review(args) -> int:
     """FB-14: Peer-Review 多专家评审 (Agno + LlamaIndex + ChromaDB v1.0.5)"""
     print("🔍 启动 Peer-Review 模块...")
-    print(f"📂 当前目录: {os.getcwd()}")
 
-    # 1. 正确计算项目根目录（cli.py 在 projects/debt-collection/src/debt/）
-    ROOT = Path(__file__).resolve().parents[4]
-    PR_SRC = ROOT / "_factory" / "patterns" / "peer-review" / "src"
-
-    if str(PR_SRC) not in sys.path:
-        sys.path.insert(0, str(PR_SRC))
-    print(f"🔗 模块路径: {PR_SRC}")
-
-    # 2. 导入 orchestrator
+    # 1. 直接导入（已通过 editable install 安装）
     try:
         from peer_review.orchestrator import (
             PeerReviewOrchestrator, build_review_team,
