@@ -1,0 +1,108 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间）：2026-06-14 14:20:00 CST
+# config/privacy_policy.yaml
+# 数据出境策略：项目负责人定义，DataPrivacyGate 执行
+# ─────────────────────────────────────────────────────
+# 设计原则：
+# 1. 政策类型只有 4 种：local_only / human_approve / mask_then_allow / allow
+# 2. 未定义字段默认 human_approve（最保守）
+# 3. 每季度执行 forge privacy-audit 检查策略是否仍然适用
+# 4. 此文件只能人工修改，AI 无权修改
+
+version: "1.0"
+project: "debt-collection"
+last_reviewed: "2026-06-14"
+reviewed_by: "项目负责人"
+
+# ── 数据字段分级定义 ─────────────────────────────────────────────
+fields:
+  debtor_name:
+    label: "债务人姓名"
+    policy: local_only
+    note: "真实姓名不出本地；如需分析时可在 prompt 中替换为代称"
+
+  id_number:
+    label: "身份证号"
+    policy: human_approve
+    mask_rule: "keep_first_6_last_4"
+    note: "脱敏版（前6后4）经人工确认后可出境；如接入特定法律分析 API 可能需要原始值"
+
+  phone_number:
+    label: "联系电话"
+    policy: human_approve
+    mask_rule: "keep_first_3_last_4"
+    note: "同身份证号处理原则"
+
+  amount:
+    label: "债务金额（精确）"
+    policy: mask_then_allow
+    mask_rule: "round_to_nearest_10000"
+    note: "精确金额不出境，四舍五入到万元后自动允许出境"
+
+  case_evidence:
+    label: "案件证据材料"
+    policy: local_only
+    note: "证据内容仅本地处理，含证据的摘要经脱敏后可 human_approve"
+
+  legal_strategy:
+    label: "法律策略建议"
+    policy: mask_then_allow
+    mask_rule: "remove_personal_identifiers"
+    note: "去除个人标识符后的策略框架可出境"
+
+  compliance_analysis:
+    label: "合规分析结果"
+    policy: allow
+    note: "通用合规结论，无个人信息，直接可出境"
+
+  general_legal_knowledge:
+    label: "通用法律知识问答"
+    policy: allow
+    note: "完全通用内容，无任何个人信息"
+
+  debtor_region:
+    label: "债务人所在省份"
+    policy: allow
+    note: "省级地域信息，无法识别个人"
+
+# ── 目标端点策略 ─────────────────────────────────────────────────
+endpoints:
+  chinese_api:
+    display_name: "中国商业 API（DeepSeek/Qwen/GLM）"
+    allowed_policies: [allow, mask_then_allow]
+    requires_human_for: [human_approve]
+    data_residency: "中国境内服务器"
+
+  overseas_web_manual:
+    display_name: "境外网页手动（ChatGPT/Claude，人工粘贴）"
+    allowed_policies: [allow, mask_then_allow, human_approve]
+    requires_human_for: [human_approve]
+    note: "人工操作，用户自行判断粘贴内容"
+
+  local_model:
+    display_name: "本地 Ollama 模型"
+    allowed_policies: [allow, mask_then_allow, human_approve, local_only]
+    note: "数据不离本机，任何数据均可"
+
+# ── 人工审核触发规则 ─────────────────────────────────────────────
+human_approval_triggers:
+  - condition: "policy == human_approve AND target != local_model"
+    message: "字段 {field_label} 将发送到 {endpoint_name}，请确认"
+    action: "显示数据预览，要求显式输入 yes"
+
+  - condition: "首次使用新的 API 端点"
+    message: "首次调用 {endpoint_name}，请确认数据政策"
+    action: "显示策略摘要，记录同意时间戳到审计日志"
+
+  - condition: "批量出境 > 100 条记录"
+    message: "批量出境 {count} 条记录"
+    action: "显示字段摘要，要求显式确认"
+
+# ── 脱敏管道配置 ─────────────────────────────────────────────────
+masking_pipeline:
+  steps:
+    - remove_personal_identifiers
+    - round_amounts
+    - keep_first_6_last_4
+    - keep_first_3_last_4
+  verify_before_send: true

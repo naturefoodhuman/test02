@@ -1,0 +1,137 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间）：2026-06-14 14:10:00 CST
+# config/routing_plans.yaml
+# B 文件：各节点模型调用方案
+# 切换方案只改 active_plan 这一个字段
+
+active_plan: default
+
+plans:
+  # ── 默认方案：本地为主，外源 API 增强评审质量 ─────────────────
+  default:
+    description: "本地模型为主，DeepSeek Flash 增强评审质量"
+    estimated_total_time: "约 12-18 分钟"
+    estimated_cost: "$0.01-0.03/次"
+    nodes:
+      primary_expert:
+        model: local-qwen35b
+        note: "主分析，本地主力"
+      reviewer_1:
+        model: deepseek-flash
+        role: "风险评估"
+        execution: sequential
+        note: "外源 API 独立评审，不受本地模型偏见影响"
+      reviewer_2:
+        model: local-deepseek-r1
+        role: "合规审查"
+        execution: sequential
+        note: "本地推理模型，深度分析"
+      reviewer_3:
+        model: local-qwen35b
+        role: "执行策略"
+        execution: sequential
+        note: "本地主力，独立视角"
+      consensus:
+        model: deepseek-flash
+        note: "外源模型汇总，客观性更好"
+      fast_classify:
+        model: local-fast
+
+  # ── 高质量方案：多外源 API 并行，最高评审质量，顺从性最低 ──────
+  high-quality:
+    description: "多外源 API 独立并行评审，最高质量，顺从性最低"
+    estimated_total_time: "约 8-12 分钟（API 并行执行）"
+    estimated_cost: "$0.05-0.15/次"
+    notes: "3 个独立 API 模型评审，偏见多样性最高"
+    nodes:
+      primary_expert:
+        model: local-qwen35b
+      reviewer_1:
+        model: deepseek-pro
+        role: "深度推理评审"
+        execution: parallel
+      reviewer_2:
+        model: deepseek-flash
+        role: "快速风险评审"
+        execution: parallel
+      reviewer_3:
+        model: qwen-plus
+        role: "中文法律专项"
+        execution: parallel
+      consensus:
+        model: deepseek-pro
+        note: "高质量模型做最终决断"
+      fast_classify:
+        model: local-fast
+
+  # ── 全本地方案：零成本，数据完全不出本地 ──────────────────────
+  all-local:
+    description: "全部本地模型，零 API 成本，数据完全不出本地"
+    estimated_total_time: "约 18-25 分钟"
+    estimated_cost: "$0"
+    notes: "信息屏蔽顺序模式，评审者只看案件上下文"
+    nodes:
+      primary_expert:
+        model: local-qwen35b
+      reviewer_1:
+        model: local-deepseek-r1
+        role: "风险评估"
+        execution: sequential_isolated
+      reviewer_2:
+        model: local-qwen35b
+        role: "合规审查"
+        execution: sequential_isolated
+      reviewer_3:
+        model: local-coder
+        role: "技术可行性"
+        execution: sequential_isolated
+      consensus:
+        model: local-deepseek-r1
+      fast_classify:
+        model: local-fast
+
+  # ── 快速方案：单评审，最快速度，适合低风险场景 ─────────────────
+  fast:
+    description: "单评审+汇总，最快完成，适合低风险初步判断"
+    estimated_total_time: "约 5-8 分钟"
+    estimated_cost: "$0.005/次"
+    nodes:
+      primary_expert:
+        model: local-qwen35b
+      reviewer_1:
+        model: deepseek-flash
+        role: "综合评审"
+        execution: sequential
+        note: "单一评审，速度快但多角度覆盖不足"
+      consensus:
+        model: local-qwen35b
+      fast_classify:
+        model: local-fast
+
+  # ── 手动方案：快速自定义模板 ─────────────────────────────────
+  # 使用方法：复制此方案，修改 model 字段名，设 enabled: true
+  # 然后修改 active_plan 为此方案 ID 即可生效
+  manual-override:
+    description: "手动配置方案（修改此方案的模型名即可）"
+    estimated_total_time: "根据配置模型而定"
+    estimated_cost: "根据配置模型而定"
+    enabled: false
+    nodes:
+      primary_expert:
+        model: local-qwen35b
+      reviewer_1:
+        model: local-qwen35b
+        role: "初步评审"
+        execution: sequential_isolated
+      reviewer_2:
+        model: local-deepseek-r1
+        role: "批判性审查"
+        execution: sequential_isolated
+      reviewer_3:
+        model: deepseek-flash
+        role: "综合决断"
+        execution: sequential_isolated
+      consensus:
+        model: deepseek-flash
+      fast_classify:
+        model: local-fast

@@ -4,7 +4,7 @@ id: execution-strategist
 name: 执行策略专家
 role: reviewer
 specialization: debt_execution_strategy
-model: qwen3.6:35b-a3b-q8_0
+model: local-qwen35b
 knowledge_sources:
   - knowledge/execution_playbook.md
   - knowledge/local_enforcement.md

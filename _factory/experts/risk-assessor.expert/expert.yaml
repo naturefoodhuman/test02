@@ -4,7 +4,7 @@ id: risk-assessor
 name: 债务风险评估专家
 role: reviewer
 specialization: debt_risk_assessment
-model: qwen3.6:35b-a3b-q8_0
+model: local-qwen35b
 knowledge_sources:
   - knowledge/risk_framework.md
   - knowledge/case_patterns.md

@@ -9,6 +9,7 @@ description: "精通中国大陆债权债务法律法规、审判实务与执行
 
 # 注意：这里必须是扁平的 primary，代码才能识别
 role: primary 
+model: local-qwen35b
 
 # 将原本的嵌套属性合并到系统提示词中，Agent 能看懂
 system_prompt: |
@@ -19,8 +20,8 @@ system_prompt: |
 
 # 路由配置（代码会读取这里的 model）
 routing:
-  primary_reasoning: "qwen3.6:35b-a3b-q8_0"
-  execution_logic: "qwen3.6:35b-a3b-q8_0"
+  primary_reasoning: "local-qwen35b"
+  execution_logic: "local-qwen35b"
   fallback: "cloud/glm-primary"
 
 knowledge_config:

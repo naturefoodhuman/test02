@@ -1,0 +1,110 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间）：2026-06-14 14:00:00 CST
+# config/models.yaml
+# A 文件：所有可用模型的接入信息
+# API Key 引用环境变量，不明文写在此文件中
+
+models:
+  # ── 本地模型（Ollama + MLX 后端）──────────────────────────────
+  local-qwen35b:
+    display_name: "Qwen3.5 35B MoE（本地主力）"
+    provider: ollama
+    model_id: qwen3.5:35b-a3b-q8_0
+    base_url: http://localhost:11434
+    type: local
+    estimated_speed: "~50 tok/s (MLX)"
+    memory_required_gb: 22
+    capabilities: [general, reasoning, chinese]
+
+  local-deepseek-r1:
+    display_name: "DeepSeek-R1 32B（本地推理）"
+    provider: ollama
+    model_id: deepseek-r1:32b
+    base_url: http://localhost:11434
+    type: local
+    estimated_speed: "~40 tok/s"
+    memory_required_gb: 20
+    capabilities: [deep_reasoning, strategy]
+
+  local-coder:
+    display_name: "Qwen2.5-Coder 32B（本地代码）"
+    provider: ollama
+    model_id: qwen2.5-coder:32b
+    base_url: http://localhost:11434
+    type: local
+    estimated_speed: "~40 tok/s"
+    memory_required_gb: 20
+    capabilities: [code_generation, code_review]
+
+  local-70b:
+    display_name: "Llama3.3 70B Q4（本地顶配）"
+    provider: ollama
+    model_id: llama3.3:70b-q4_K_M
+    base_url: http://localhost:11434
+    type: local
+    estimated_speed: "~20 tok/s"
+    memory_required_gb: 48
+    capabilities: [general, high_quality]
+    note: "需手动触发加载，启动慢约 60 秒"
+
+  local-fast:
+    display_name: "Qwen2.5 7B（本地快速）"
+    provider: ollama
+    model_id: qwen2.5:7b
+    base_url: http://localhost:11434
+    type: local
+    estimated_speed: "~120 tok/s"
+    memory_required_gb: 6
+    capabilities: [classify, summarize, route]
+
+  embedding:
+    display_name: "bge-m3（向量嵌入）"
+    provider: ollama
+    model_id: bge-m3
+    base_url: http://localhost:11434
+    type: embedding
+
+  # ── 中国商业 API ─────────────────────────────────────────────
+  deepseek-flash:
+    display_name: "DeepSeek V4 Flash（API 快速）"
+    provider: deepseek
+    model_id: deepseek-chat
+    base_url: https://api.deepseek.com/v1
+    api_key: ${DEEPSEEK_API_KEY}
+    type: api
+    estimated_cost: "$0.002/1k tokens"
+    capabilities: [general, reasoning, fast]
+    data_policy: requires_privacy_check
+
+  deepseek-pro:
+    display_name: "DeepSeek V4 Pro（API 高质量）"
+    provider: deepseek
+    model_id: deepseek-reasoner
+    base_url: https://api.deepseek.com/v1
+    api_key: ${DEEPSEEK_API_KEY}
+    type: api
+    estimated_cost: "$0.015/1k tokens"
+    capabilities: [deep_reasoning, high_quality]
+    data_policy: requires_privacy_check
+
+  qwen-plus:
+    display_name: "Qwen 3.6 Plus（API 超长上下文）"
+    provider: alibaba
+    model_id: qwen-plus
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api_key: ${QWEN_API_KEY}
+    type: api
+    estimated_cost: "$0.005/1k tokens"
+    capabilities: [long_context, chinese]
+    data_policy: requires_privacy_check
+
+  glm-5:
+    display_name: "GLM-5.1（API 中文专项）"
+    provider: zhipu
+    model_id: glm-4-plus
+    base_url: https://open.bigmodel.cn/api/paas/v4
+    api_key: ${GLM_API_KEY}
+    type: api
+    estimated_cost: "$0.007/1k tokens"
+    capabilities: [chinese, legal]
+    data_policy: requires_privacy_check
