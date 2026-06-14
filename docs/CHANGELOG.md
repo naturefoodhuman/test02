@@ -399,3 +399,39 @@
 - **改动**：docs/FACTORY_ASSESSMENT.md(FB-11+方法论修正)、DEV_LOG.md、CHANGELOG.md、PROJECT_STATE.md
 
 ---
+
+---
+
+## [第 29 轮 · Wave 1 + Wave 2 Task 1] 2026-06-14
+
+### 需求变动
+- **Wave 1 基础设施稳定化**：
+  - 测试阻塞修复：`__init__.py` HTML 注释 → Python 注释
+  - Editable Install：`pip install -e .` 成功，移除 `cli.py` 中 `sys.path.insert`
+  - Git 发布流程：`Makefile` + `release.sh` (语义化版本 + CHANGELOG + git tag)
+  - 数据备份自动化：`backup.sh` 每日备份 runtime/，保留 30 天
+  - Baseline Benchmark：`docs/benchmark.md` 记录 MLX 基线指标
+- **Wave 2 Task 1 Pydantic 配置体系 (双文件模型管理)**：
+  - `config/models.yaml` (A 文件)：10 模型定义 (本地 6 + 中国 API 4)
+  - `config/routing_plans.yaml` (B 文件)：5 方案 (default/high-quality/all-local/fast/manual-override)
+  - `config/privacy_policy.yaml`：9 字段 × 3 端点，4 种策略类型
+  - `peer_review.config.schemas`：完整 Pydantic Schema (ExpertConfig, ModelConfig, PlanConfig 等)
+  - `peer_review.config.loader`：统一加载入口 `load_all_configs()`，启动时交叉验证
+  - 专家 ID 强制校验格式，模板目录 `_TEMPLATE.expert` 自动跳过
+  - 专家 YAML 统一引用 `local-qwen35b` (models.yaml 键名)
+
+### 文件影响
+- **新增**：`config/models.yaml`、`config/routing_plans.yaml`、`config/privacy_policy.yaml`
+- **新增**：`_factory/patterns/peer-review/src/peer_review/config/{schemas.py, loader.py, __init__.py}`
+- **新增**：`Makefile`、`backup.sh`、`release.sh`、`docs/benchmark.md`
+- **改动**：`_factory/patterns/peer-review/src/peer_review/__init__.py` (修复语法)
+- **改动**：`projects/debt-collection/src/debt/cli.py` (移除 sys.path.insert)
+- **改动**：4 个专家 YAML (统一 model 键名)
+- **改动**：`HANDOFF.md` (发布流程、CLI 使用方式)、`docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、`docs/DECISIONS.md`
+- **Git 标签**：`v1.1.0-wave1-complete` 已推送
+
+### 验收
+- `make test` 全通过 (verify_architecture + 22 debt tests)
+- 配置加载成功：10 模型、5 方案、4 专家
+- 交叉验证通过 (A/B 文件一致性、专家引用检查)
+- CLI 正常运行：`debt review 1 --model local/primary`
