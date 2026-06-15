@@ -9,14 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-# --- 防御性导入 ---
-try:
-    from agno.agent import Agent
-    from agno.models.ollama import Ollama
-except ImportError as e:
-    from rich.console import Console
-    Console().print(f"[bold red]❌ Agno 导入失败: {e}[/bold red]")
-    raise
+# Agno 导入移至具体函数内部，避免在 LangGraph 纯净环境下启动崩溃
 
 AgentKnowledge = None
 try:
@@ -56,7 +49,7 @@ class ExpertFactory:
     """专家 Agent 工厂：根据配置创建配置好知识库的 Agent"""
 
     @staticmethod
-    def create_agent(config: ExpertConfig, kb: Any) -> Agent:
+    def create_agent(config: ExpertConfig, kb: Any) -> Any:
         """创建专家 Agent
 
         Args:
@@ -66,6 +59,9 @@ class ExpertFactory:
         Returns:
             配置完成的 Agent 实例
         """
+        from agno.agent import Agent
+        from agno.models.ollama import Ollama
+
         sys_prompt = config.system_prompt if config.system_prompt else f"你是 {config.name}。"
         agent_kb = None
         if kb and AgentKnowledge:

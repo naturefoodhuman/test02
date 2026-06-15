@@ -29,4 +29,22 @@ class ReviewState(TypedDict, total=False):
     models_used: Annotated[dict[str, str], operator.or_]   # 各节点实际使用的模型
     iron_gate_triggered: bool      # 铁闸是否触发
     iron_gate_reason: str          # 铁闸触发原因
+class ReviewState(TypedDict, total=False):
+    """HUB-SPOKE 评审图状态"""
+
+    case_context: str              # 案件上下文（原始输入）
+    data_fields: dict[str, Any]    # 原始数据字段（用于 DataPrivacyGate 节点级校验）
+    privacy_endpoint: str            # 目标出境端点（如 chinese_api）
+    privacy_approved: bool          # CLI 是否已通过 DataPrivacyGate 人工确认
+    primary_analysis: str          # 主专家分析结论
+    reviewer_opinions: Annotated[list[str], operator.add]   # 各评审独立意见（HUB-SPOKE 收集）
+    reviewer_roles: Annotated[list[str], operator.add]       # 对应角色标签
+    consensus: str                 # 最终汇总结论
+    divergence_score: float        # 评审间分歧度（0-1）
+    requires_human: bool           # 是否触发人工仲裁
+    model_plan_id: str             # 本次使用的方案 ID（用于对比记录）
+    models_used: Annotated[dict[str, str], operator.or_]   # 各节点实际使用的模型
+    iron_gate_triggered: bool      # 铁闸是否触发
+    iron_gate_reason: str          # 铁闸触发原因
     privacy_preview: dict[str, str]  # 出境数据预览（人工确认用）
+    start_time: float              # 评审开始时间戳（用于计算耗时）

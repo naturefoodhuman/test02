@@ -8,6 +8,7 @@ import sys
 import os
 import json
 import yaml
+import time
 from pathlib import Path
 from typing import Any, List
 from dataclasses import dataclass, field
@@ -15,10 +16,8 @@ from dataclasses import dataclass, field
 from rich.console import Console
 console = Console()
 
-# --- 核心修复 1: 禁用 Agno 遥测 (数据不出本机) ---
-os.environ["AGNO_TELEMETRY"] = "false"
 
-# --- 核心修复 2: 兼容导入层 (Defensive Imports) ---
+# --- 兼容导入层 (Defensive Imports) ---
 SimpleDirectoryReader = None
 try:
     from llama_index.core.readers import SimpleDirectoryReader
@@ -28,13 +27,7 @@ except ImportError:
     except ImportError:
         pass
 
-try:
-    from agno.agent import Agent
-    from agno.team import Team
-    from agno.models.ollama import Ollama
-except ImportError as e:
-    console.print(f"[bold red]❌ Agno 核心导入失败: {e}[/bold red]")
-    sys.exit(1)
+# 注意：Agno 的导入被移至具体函数内部，避免在非 Agno 环境下启动崩溃
 
 ChromaDb = None
 try:
@@ -50,6 +43,7 @@ try:
     from agno.knowledge.agent import AgentKnowledge
 except ImportError:
     pass
+
 
 # --- 模型别名映射 (解决 404 Not Found) ---
 MODEL_ALIAS_MAP = {
@@ -101,7 +95,10 @@ class KnowledgeLoader:
 # --- 专家工厂 ---
 class ExpertFactory:
     @staticmethod
-    def create_agent(config: ExpertConfig, kb: Any) -> Agent:
+    def create_agent(config: ExpertConfig, kb: Any) -> Any:
+        from agno.agent import Agent
+        from agno.models.ollama import Ollama
+        
         sys_prompt = config.system_prompt if config.system_prompt else f"你是 {config.name}。"
         agent_kb = None
         if kb and AgentKnowledge:
@@ -117,12 +114,14 @@ class ExpertFactory:
 
 # --- 编排器 ---
 class PeerReviewOrchestrator:
-    def __init__(self, primary: Agent, reviewers: list[Agent], model_override: str = None):
+    def __init__(self, primary: Any, reviewers: list[Any], model_override: str = None):
         self.primary = primary
         self.reviewers = reviewers
         active_id = resolve_model_id(model_override) if model_override else primary.model.id
         console.print(f"[dim]🤖 Team 模型: {active_id}[/dim]")
 
+        from agno.team import Team
+        from agno.models.ollama import Ollama
         self.team = Team(
             name="ReviewTeam", mode="sequential", 
             members=[primary] + reviewers, 
@@ -242,7 +241,9 @@ def run_langgraph_review(
         "data_fields": data_fields,
         "privacy_endpoint": privacy_endpoint,
         "privacy_approved": privacy_approved,
+        "start_time": time.time(),
     }
+
 
     # 收集所有节点名用于 Live 进度表
     node_names = ["primary_expert"] + [
@@ -365,8 +366,12 @@ def continue_langgraph_review(
     return result
 
 
-def build_review_team(experts_dir: Path) -> tuple[Agent, list[Agent]]:
+def build_review_team(experts_dir: Path) -> tuple[Any, list[Any]]:
     """Agno 旧版入口（保留兼容，待 LangGraph 验证后删除）"""
+    from agno.agent import Agent
+    from agno.team import Team
+    from agno.models.ollama import Ollama
+
     primary, reviewers = None, []
     if not experts_dir.exists(): raise ValueError(f"目录不存在: {experts_dir}")
 

@@ -32,3 +32,5 @@ _factory/experts/**/index.json
 .mypy_cache/
 *.log
 .ipynb_checkpoints/
+.ssh/
+.gitconfig

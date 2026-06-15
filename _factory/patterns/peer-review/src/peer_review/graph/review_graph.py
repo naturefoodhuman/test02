@@ -17,6 +17,8 @@ from langgraph.types import Send
 
 from peer_review.graph.checkpointer import make_checkpointer
 from peer_review.graph.nodes.consensus import make_consensus_node
+from peer_review.graph.nodes.decision import make_decision_node
+from peer_review.graph.nodes.memory import make_record_run_node
 from peer_review.graph.nodes.primary_expert import make_primary_node
 from peer_review.graph.nodes.reviewer import make_reviewer_node
 from peer_review.graph.state import ReviewState
@@ -60,6 +62,12 @@ def build_review_graph(
     # 注册汇总节点
     builder.add_node("consensus_builder", make_consensus_node(routing_engine))
 
+    # 注册决策节点（分层决策引擎）
+    builder.add_node("decision_engine", make_decision_node())
+
+    # 注册记忆记录节点
+    builder.add_node("record_run", make_record_run_node(routing_engine))
+
     # 注册人工审核门（HITL 中断点）
     builder.add_node("human_review_gate", lambda state: state)
 
@@ -79,16 +87,22 @@ def build_review_graph(
     for node in reviewer_nodes:
         builder.add_edge(node, "consensus_builder")
 
-    # 汇总节点 -> 人工审核或结束
-    def route_consensus(state: ReviewState) -> str:
+    # 汇总节点 -> 决策节点
+    builder.add_edge("consensus_builder", "decision_engine")
+
+    # 决策节点 -> 人工审核 或 记录并结束
+    def route_decision(state: ReviewState) -> str:
         if state.get("requires_human") or state.get("iron_gate_triggered"):
             return "human_review_gate"
-        return END
+        return "record_run"
 
-    builder.add_conditional_edges("consensus_builder", route_consensus)
+    builder.add_conditional_edges("decision_engine", route_decision)
 
-    # 人工审核 -> 结束
-    builder.add_edge("human_review_gate", END)
+    # 人工审核 -> 记录并结束
+    builder.add_edge("human_review_gate", "record_run")
+
+    # 记录节点 -> 结束
+    builder.add_edge("record_run", END)
 
     # 设置入口
     builder.set_entry_point("primary_expert")
