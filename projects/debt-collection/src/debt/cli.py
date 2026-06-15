@@ -31,9 +31,60 @@ from debt.models import (
 from debt.strategy import generate_report
 from debt.timeline import build_timeline, prescription_status
 
+# Peer-Review 平台层（LangGraph v1.1.0）
+from peer_review.platform.data_privacy_gate import DataPrivacyGate
+from peer_review.platform.memory_store import MemoryStore, ModelRunRecord
+from peer_review.platform.routing_plan_engine import RoutingPlanEngine
+
 
 def _store(args) -> Store:
     return Store(db_path=args.db)
+
+
+def _extract_privacy_fields(d: Debt) -> dict:
+    """从 Debt 模型提取隐私策略字段（映射到 privacy_policy.yaml 中的字段名）"""
+    fields = {
+        "debtor_region": d.debtor_region,
+    }
+    if d.debtor_name:
+        fields["debtor_name"] = d.debtor_name
+    if d.debtor_id:
+        fields["id_number"] = d.debtor_id
+    if d.amount:
+        fields["amount"] = d.amount
+    if d.evidence:
+        fields["case_evidence"] = ", ".join(d.evidence)
+    return fields
+
+
+def _plan_uses_api(project_root: Path, plan_id: str | None) -> bool:
+    """检查指定方案是否使用任何 API 模型（即数据可能出境）"""
+    engine = RoutingPlanEngine(project_root)
+    if plan_id and plan_id in engine.config.routing.plans:
+        engine.config.routing.active_plan = plan_id
+    plan = engine.get_active_plan()
+    for node_cfg in plan.nodes.values():
+        model_cfg = engine.config.models.models.get(node_cfg.model)
+        if model_cfg and model_cfg.type.value == "api":
+            return True
+    return False
+
+
+def _estimate_cost(plan_id: str, project_root: Path) -> float:
+    """从 routing_plans.yaml 的 estimated_cost 字段提取预估成本（USD）"""
+    engine = RoutingPlanEngine(project_root)
+    plan = engine.config.routing.plans.get(plan_id or engine.config.routing.active_plan)
+    if not plan:
+        return 0.0
+    cost_str = plan.estimated_cost
+    # 示例：$0.01-0.03/次 或 $0.05-0.15/次 或 $0.005/次 或 $0
+    import re
+    nums = re.findall(r"[0-9.]+", cost_str)
+    if not nums:
+        return 0.0
+    if len(nums) == 1:
+        return float(nums[0])
+    return (float(nums[0]) + float(nums[1])) / 2
 
 
 def cmd_add(args) -> int:
@@ -143,6 +194,8 @@ def cmd_report(args) -> int:
 
 def cmd_review(args) -> int:
     """FB-14: Peer-Review 多专家评审 (LangGraph v1.1.0)"""
+    import time
+
     print("🔍 启动 Peer-Review 模块 (LangGraph)...")
 
     try:
@@ -178,10 +231,40 @@ def cmd_review(args) -> int:
             query_lines.append(f"  - [{it.source}/{cred}] {it.content}")
 
     query = "\n".join(query_lines)
-    print(f"\n🚀 激活方案: {args.plan or 'default'}")
+    active_plan = args.plan or "default"
+    print(f"\n🚀 激活方案: {active_plan}")
 
-    # 运行 LangGraph 评审
+    # ── DataPrivacyGate 实时确认门 ──
+    if _plan_uses_api(ROOT, args.plan):
+        privacy_fields = _extract_privacy_fields(d)
+        gate = DataPrivacyGate(ROOT / "config" / "privacy_policy.yaml")
+        result = gate.check(privacy_fields, "chinese_api")
+
+        if result.blocked_fields:
+            print("\n⛔ 数据出境被阻断：")
+            for field in result.blocked_fields:
+                decision = next((dec for dec in result.decisions if dec.field == field), None)
+                print(f"  • {field}: {decision.reason if decision else '策略禁止'}")
+            print("\n请修改 privacy_policy.yaml 或选择 all-local 方案（数据完全不出本地）。")
+            s.close()
+            return 1
+
+        if result.requires_human_fields:
+            approved = DataPrivacyGate.request_human_approval(
+                result.requires_human_fields,
+                result.preview,
+                "中国商业 API（DeepSeek/Qwen/GLM）",
+            )
+            if not approved:
+                print("\n❌ 已取消数据出境，评审中止。")
+                s.close()
+                return 1
+            print("\n✅ 数据出境已获人工确认。")
+
+    # 运行 LangGraph 评审（计时）
+    start_time = time.time()
     final_state = run_langgraph_review(query, project_root=ROOT, plan_id=args.plan)
+    elapsed = int(time.time() - start_time)
 
     print("\n" + "=" * 60)
     print("【主专家分析】")
@@ -195,6 +278,25 @@ def cmd_review(args) -> int:
         print(f"\n⚠️ 分歧度 {final_state.get('divergence_score', 0)} 超过阈值，已触发人工审核中断点")
 
     print("=" * 60)
+
+    # ── MemoryStore 记录运行 ──
+    try:
+        memory = MemoryStore(ROOT / "runtime" / "memory.db")
+        import hashlib
+        case_hash = hashlib.md5(query.encode("utf-8")).hexdigest()[:16]
+        record = ModelRunRecord(
+            run_id=f"{active_plan}-{case_hash}-{int(time.time())}",
+            case_hash=case_hash,
+            plan_id=active_plan,
+            models_used=final_state.get("models_used", {}),
+            total_time_seconds=elapsed,
+            total_cost_usd=_estimate_cost(active_plan, ROOT),
+            divergence_score=final_state.get("divergence_score", 0.0),
+        )
+        memory.record_run(record)
+        print(f"\n📝 已记录运行到 MemoryStore：方案 {active_plan} | 耗时 {elapsed}s | 分歧度 {record.divergence_score}")
+    except Exception as e:
+        print(f"\n⚠️ MemoryStore 记录失败（非阻塞）: {e}")
 
     s.close()
     return 0

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间：2026-06-13 23:55:00 CST
+创建时间：2026-06-15 03:10:00 CST
 -->
 
 # HANDOFF —— 接力交接文档（v2.0 第28轮修订版）
@@ -118,6 +118,7 @@
 4. debt review 1
    > **注意**：v1.1.0+ 已迁移到 LangGraph，`debt review` 默认使用 config/routing_plans.yaml 中的 active_plan。
    > 如需临时切换方案：debt review 1 --plan high-quality
+   > 使用 API 模型时，若含 human_approve 字段会强制要求输入 yes 确认；local_only 字段会被阻断。
    → 预期输出：
      🔍 启动 Peer-Review 模块 (LangGraph)...
      ✅ peer_review 模块加载成功
@@ -128,6 +129,14 @@
      → reviewer_3 完成
      → 汇总完成 (分歧度: 0.00)
      （主专家分析 + 最终汇总结论）
+     📝 已记录运行到 MemoryStore：方案 default | 耗时 Xs | 分歧度 0.00
+```
+
+### 运行隐私安全模式（全部本地，无数据出境）
+```
+终端 C:
+1. debt review 1 --plan all-local
+   → 预期输出：使用 all-local 方案，数据完全不出本地，不触发确认门
 ```
 
 ### 录入测试债务

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-15 02:40:00 CST
+创建时间（北京时间，精确到秒）：2026-06-15 03:10:00 CST
 -->
 
 # PROJECT STATE —— 当前进度快照
@@ -32,8 +32,8 @@
 
 ## 已知限制 / 待完成
 - [ ] 真实 LLM 调用需启动 LiteLLM 网关或 Ollama 服务（当前降级为提示信息）
-- [ ] 评审节点尚未接入 DataPrivacyGate 在运行时的人工确认门（策略层已就绪，执行层待挂）
-- [ ] MemoryStore 尚未在 `debt review` 结束后自动写入记录（类已就绪，CLI 待挂）
+- [x] 评审节点已接入 CLI 级 DataPrivacyGate 实时确认门 ✅
+- [x] MemoryStore 已在 `debt review` 结束后自动写入记录 ✅
 - [ ] 流式输出体验待优化（当前已有节点级进度打印）
 - [ ] HITL 中断后恢复流程待补充文档与 CLI 指令
 - [ ] 旧 Agno 文件 (`agent_factory.py`, `knowledge_loader.py`, `team_orchestrator.py`) 仍保留，待 LangGraph 稳定 2 周后删除

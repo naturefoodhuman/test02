@@ -1,9 +1,40 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-15 02:45:00 CST
+创建时间（北京时间，精确到秒）：2026-06-15 03:10:00 CST
 -->
 
 # DEV LOG —— 逐轮开发日志
+
+## 第 30 轮 · 2026-06-15
+### DataPrivacyGate 实时确认门 + MemoryStore 自动记录
+
+**已完成：**
+1. **`debt review` 挂接 DataPrivacyGate 实时确认门**
+   - 在 `projects/debt-collection/src/debt/cli.py` 中新增：
+     - `_extract_privacy_fields()`: 将 `Debt` 字段映射到 `privacy_policy.yaml` 字段名
+     - `_plan_uses_api()`: 判断激活方案是否使用任何 API 模型
+   - 若方案使用 API 模型，启动图前自动检查 `chinese_api` 端点的数据出境策略
+   - `local_only` 字段被阻断 → 中止并提示改用 `all-local` 方案
+   - `human_approve` 字段 → 强制要求输入 `yes` 确认，否则中止
+2. **`debt review` 结束后写入 MemoryStore**
+   - 计时图执行总耗时
+   - 从 `routing_plans.yaml` 解析预估成本
+   - 生成 `ModelRunRecord` 并写入 `runtime/memory.db`
+   - 输出提示："已记录运行到 MemoryStore：方案 X | 耗时 Ys | 分歧度 Z"
+3. **测试补充**
+   - 新增 `projects/debt-collection/tests/test_debt_review.py` 10 cases，全部通过
+
+**验证结果：**
+- `debt-collection` 32 个测试 ✅ 全通过（原 22 + 新增 10）
+- `peer-review` 16 个测试 ✅ 全通过
+- `make test` 全量通过 ✅
+
+**遗留到下轮：**
+- 真实 LLM 环境下验证 DataPrivacyGate 确认门与 HITL 中断点
+- 在 `llm_client.py` 中做节点级数据出境二次校验（当前为 CLI 入口级）
+- 删除旧 Agno 文件（待 LangGraph 稳定 2 周后）
+
+---
 
 ## 第 29 轮 · 2026-06-15
 ### 架构升级：LangGraph 迁移启动（路径 A）
@@ -41,9 +72,9 @@
 - `peer-review` 16 个新测试 ✅ 全通过
 - `run_langgraph_review()` 在无 LLM 环境下可完成端到端图执行并返回完整状态
 
-**遗留到下轮：**
-- 在 `debt review` 调用链中挂接 DataPrivacyGate 运行时确认门
-- 在 `debt review` 结束后自动写入 MemoryStore
+**遗留到下轮（第 30 轮已完成）：**
+- ~~在 `debt review` 调用链中挂接 DataPrivacyGate 运行时确认门~~ ✅
+- ~~在 `debt review` 结束后自动写入 MemoryStore~~ ✅
 - 真实 LLM 环境下验证 HUB-SPOKE 并行输出质量
 - 删除旧 Agno 文件（待稳定 2 周后）
 
