@@ -282,6 +282,79 @@ def cmd_compare_plans(root: Path, days: int) -> int:
     return 0
 
 
+def _generate_ai_analysis(root: Path, stats_text: str) -> str:
+    """调用 LLM 对项目构建日志和数据进行分析，生成复盘建议"""
+    # 1. 动态加载依赖
+    peer_review_path = root / "_factory" / "patterns" / "peer-review" / "src"
+    if str(peer_review_path) not in sys.path:
+        sys.path.append(str(peer_review_path))
+    
+    try:
+        import yaml
+        from peer_review.llm_client import chat
+        from peer_review.config.schemas import ModelConfig, ModelType
+    except ImportError as e:
+        return f"❌ 无法加载 AI 分析依赖: {e}"
+
+    # 2. 加载模型配置 (默认使用 local-qwen35b)
+    models_path = root / "config" / "models.yaml"
+    if not models_path.exists():
+        return "❌ 未找到 config/models.yaml，无法启动 AI 分析。"
+    
+    with open(models_path, "r", encoding="utf-8") as f:
+        config_data = yaml.safe_load(f)
+    
+    model_info = config_data["models"].get("local-qwen35b")
+    if not model_info:
+        return "❌ models.yaml 中缺失 local-qwen35b 配置。"
+    
+    model_cfg = ModelConfig(
+        model_id=model_info["model_id"],
+        type=ModelType(model_info["type"]),
+        provider=model_info["provider"],
+        base_url=model_info.get("base_url", ""),
+    )
+
+    # 3. 收集分析上下文
+    build_log_path = root / "docs" / "BUILD_LOG.md"
+    build_log_content = build_log_path.read_text(encoding="utf-8") if build_log_path.exists() else "无构建日志。"
+    
+    prompt = f"""你是一个 AI 项目架构师和复盘专家。请根据提供的【构建日志】和【运行数据】，为该项目生成一份经验教训复盘报告的初稿。
+
+【运行数据汇总】:
+{stats_text}
+
+【构建日志】:
+{build_log_content}
+
+请严格按照以下格式输出（不要输出 Markdown 标题，直接输出内容）：
+
+## 1. 成功经验（可复用的）
+- [分析点] -> [具体建议]
+...
+
+## 2. 失败经验（避坑的）
+- [痛点] -> [教训]
+...
+
+## 3. 改进建议（未来可做的）
+- [优化方向] -> [具体操作]
+...
+
+## 4. 本项目产出的新 Skill / Pattern
+- 新 Skill: [名称] - [作用]
+- 新 Pattern: [名称] - [作用]
+...
+"""
+    
+    messages = [{"role": "user", "content": prompt}]
+    resp = chat(model_cfg, messages)
+    
+    if resp.error:
+        return f"❌ AI 分析失败: {resp.error}"
+    return resp.content
+
+
 def cmd_retro(args, root: Path) -> int:
     """生成项目复盘报告草稿"""
     # 1. 准备路径
@@ -331,9 +404,59 @@ def cmd_retro(args, root: Path) -> int:
     content = content.replace("<用到的模型版本，如 qwen3.6-35b / glm-5.1>", model_versions)
     
     # Update Section 5 (Model and Cost)
-    # We look for the specific line and replace it
     if "- 各 Phase 耗时：…" in content:
         content = content.replace("- 各 Phase 耗时：…", f"- 运行数据汇总：\n{stats_text}")
+
+    # 4. AI-assisted analysis
+    if getattr(args, "ai", False):
+        print("🤖 正在调用 AI 分析构建日志和运行记录...")
+        ai_analysis = _generate_ai_analysis(root, stats_text)
+        
+        # Replace placeholders for sections 1-4
+        # We look for the markers in the template and replace them
+        sections = [
+            ("## 1. 成功经验（可复用的）\n- …", ""),
+            ("## 2. 失败经验（避坑的）\n- …", ""),
+            ("## 3. 改进建议（未来可做的）\n- …", ""),
+            ("## 4. 本项目产出的新 Skill / Pattern（AC-008）\n- 新 Skill：…\n- 新 Pattern：…", ""),
+        ]
+        
+        # The AI output is structured as ## 1... ## 2... etc.
+        # We can split the AI output and replace each section.
+        import re
+        ai_sections = re.split(r"(?=## \d\.)", ai_analysis)
+        
+        for i in range(1, 5):
+            sec_content = next((s for s in ai_sections if s.startswith(f"## {i}.")), None)
+            if sec_content:
+                # Find the corresponding marker in the template and replace the "..." part
+                # Since the template has specific phrasing, we replace from the header down to the next header or end of section.
+                # Simplified: replace the a whole block.
+                pattern = rf"## {i}\. [^\n]*\n- .*?(?=\n## {i+1}\.|\n## 5\.|$)"
+                # This is a bit complex for simple replace. Let's just replace the "..." markers.
+                # Actually, let's just append the AI analysis to the end or replace the placeholders.
+                pass
+
+        # Better approach: replace the specific "..." markers in the template
+        # But since the AI returns full sections, we just replace the template's placeholder lines.
+        # For simplicity in this CLI, we will just append the AI analysis to the bottom 
+        # or replace the sections if we can find them.
+        
+        # Let's try a simpler replacement: 
+        # find the section header, then replace everything until the next section header.
+        for i in range(1, 5):
+            sec_content = next((s for s in ai_sections if s.startswith(f"## {i}.")), None)
+            if sec_content:
+                # Find the start of section i in the content
+                start_marker = f"## {i}."
+                start_idx = content.find(start_marker)
+                if start_idx != -1:
+                    # Find the end of this section (start of next section)
+                    end_marker = f"## {i+1}." if i < 4 else "## 5."
+                    end_idx = content.find(end_marker, start_idx)
+                    if end_idx == -1: end_idx = len(content)
+                    
+                    content = content[:start_idx] + sec_content + content[end_idx:]
 
     # Write to docs/RETRO.md
     retro_path.parent.mkdir(parents=True, exist_ok=True)
@@ -397,6 +520,7 @@ def build_parser() -> argparse.ArgumentParser:
     
     r = sub.add_parser("retro", help="生成/提交复盘报告")
     r.add_argument("action", nargs="?", default="generate", choices=["generate", "submit"], help="generate (默认) 或 submit")
+    r.add_argument("--ai", action="store_true", help="使用 AI 辅助分析构建日志和数据")
     
     return p
 
