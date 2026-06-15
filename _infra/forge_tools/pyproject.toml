@@ -6,7 +6,9 @@ name = "forge-tools"
 version = "0.1.0"
 description = "FORGE Factory CLI：五阶段状态机 / 任务图 / 文档校验（零三方依赖）"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "rich>=13.0",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]

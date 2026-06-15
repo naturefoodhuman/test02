@@ -1,0 +1,12 @@
+models:
+  local-qwen35b:
+    display_name: "Qwen3.5 35B MoE"
+    provider: ollama
+    model_id: qwen3.5:35b-a3b-q8_0
+    type: local
+    memory_required_gb: 22
+  deepseek-flash:
+    display_name: "DeepSeek V4 Flash"
+    provider: deepseek
+    model_id: deepseek-chat
+    type: api

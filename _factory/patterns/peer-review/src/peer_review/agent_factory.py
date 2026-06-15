@@ -46,33 +46,57 @@ class ExpertConfig:
 
 # --- 专家工厂 ---
 class ExpertFactory:
-    """专家 Agent 工厂：根据配置创建配置好知识库的 Agent"""
+    """专家 Agent 工厂：根据配置创建配置好知识库和技能的 Agent"""
 
     @staticmethod
-    def create_agent(config: ExpertConfig, kb: Any) -> Any:
+    def create_agent(config: Any, kb: Any) -> Any:
         """创建专家 Agent
 
         Args:
-            config: 专家配置
-            kb: 知识库实例 (ChromaDb)
-
-        Returns:
-            配置完成的 Agent 实例
+            config: 专家配置 (应包含 id, name, role, requires_skills)
+            kb: KnowledgeHub 实例
         """
         from agno.agent import Agent
         from agno.models.ollama import Ollama
 
-        sys_prompt = config.system_prompt if config.system_prompt else f"你是 {config.name}。"
+        # 1. 基础系统提示词
+        sys_prompt = getattr(config, "system_prompt", "") or f"你是 {getattr(config, 'name', '专家')}。"
+        
+        # 2. 技能注入 (SKILL.md 激活)
+        skill_content = ""
+        skills = getattr(config, "requires_skills", [])
+        if hasattr(kb, "inject_skill") and skills:
+            for skill_id in skills:
+                # 技能注入到临时上下文
+                context = {}
+                kb.inject_skill(skill_id, context)
+                if "injected_skills" in context:
+                    skill_content += f"\n\n### 核心技能: {skill_id}\n{context['injected_skills']}\n"
+
+        # 3. 构建最终指令
+        final_instructions = [
+            sys_prompt,
+            "基于知识库回答，客观专业。",
+        ]
+        if skill_content:
+            final_instructions.append(f"你必须严格遵循以下专业技能要求：\n{skill_content}")
+
+        # 4. 知识库挂载
         agent_kb = None
+        from agno.knowledge.agent import AgentKnowledge
         if kb and AgentKnowledge:
             try:
-                agent_kb = AgentKnowledge(vector_db=kb, num_documents=config.top_k)
+                # 确保传入的是 ChromaDb 实例而非 KnowledgeHub
+                db_instance = kb if not hasattr(kb, "load_expert_knowledge") else kb.load_expert_knowledge(config.id)
+                top_k = getattr(config, "top_k", 5)
+                agent_kb = AgentKnowledge(vector_db=db_instance, num_documents=top_k)
             except Exception:
                 pass
 
         return Agent(
-            name=config.name,
-            model=Ollama(id=config.model_id),
-            instructions=[sys_prompt, "基于知识库回答，客观专业。"],
+            name=getattr(config, "name", "Expert"),
+            model=Ollama(id=getattr(config, "model", "qwen3.6:35b-a3b-q8_0")),
+            instructions=final_instructions,
             knowledge=agent_kb,
         )
+

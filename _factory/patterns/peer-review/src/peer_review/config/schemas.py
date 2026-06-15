@@ -118,9 +118,11 @@ class ExpertConfig(BaseModel):
     specialization: str | None = Field(default=None, description="专业领域标识")
     model: str = Field(default="qwen3.6:35b-a3b-q8_0", description="使用的模型名 (引用 models.yaml)")
     knowledge_sources: list[str] = Field(default_factory=list, description="知识源文件列表")
+    requires_skills: list[str] = Field(default_factory=list, description="所需技能标识 (引用 _factory/skills/*.skill.md)")
     review_dimensions: list[ReviewDimension] = Field(default_factory=list, description="评审维度")
     weight: float = Field(default=1.0, ge=0.0, le=1.0, description="权重 (0-1)")
     system_prompt: str = Field(default="", description="系统提示词")
+
 
     @field_validator("id")
     @classmethod
