@@ -24,6 +24,7 @@ from pathlib import Path
 
 from forge.phases import PHASE_DEFS, PHASES, can_advance, next_phase
 from forge.task_graph import load_task_graph, validate_task_graph
+from forge.evaluator import cmd_eval
 
 try:
     from rich.console import Console
@@ -518,6 +519,9 @@ def build_parser() -> argparse.ArgumentParser:
     cp = sub.add_parser("compare-plans", help="查看模型方案对比报告")
     cp.add_argument("--days", type=int, default=30, help="对比的时间范围（天）")
     
+    ev = sub.add_parser("eval", help="执行模型方案 A/B 测试")
+    ev.add_argument("--plans", nargs="+", help="指定要测试的方案 ID 列表")
+    
     r = sub.add_parser("retro", help="生成/提交复盘报告")
     r.add_argument("action", nargs="?", default="generate", choices=["generate", "submit"], help="generate (默认) 或 submit")
     r.add_argument("--ai", action="store_true", help="使用 AI 辅助分析构建日志和数据")
@@ -542,6 +546,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_gate(args.gate_id)
     if args.cmd == "compare-plans":
         return cmd_compare_plans(root, args.days)
+    if args.cmd == "eval":
+        return cmd_eval(args, root)
     if args.cmd == "retro":
         if args.action == "generate":
             return cmd_retro(args, root)
