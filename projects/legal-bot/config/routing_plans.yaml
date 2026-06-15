@@ -1,0 +1,16 @@
+active_plan: default
+
+plans:
+  default:
+    description: "Default local-first plan"
+    estimated_total_time: "15min"
+    estimated_cost: "$0.02"
+    nodes:
+      primary_expert:
+        model: local-qwen35b
+      reviewer_1:
+        model: deepseek-flash
+        role: "risk-assessor"
+        execution: sequential
+      consensus:
+        model: local-qwen35b
