@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from peer_review.graph.state import ReviewState
-from peer_review.llm_client import chat
+import peer_review.llm_client as llm_client
 from peer_review.platform.routing_plan_engine import RoutingPlanEngine
 from rich.console import Console
 
@@ -83,7 +83,18 @@ def make_consensus_node(routing_engine: RoutingPlanEngine):
             f"分歧度（0-1）：{divergence}\n\n"
             "请给出最终汇总结论。"
         )
-        resp = chat(model_cfg, [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}])
+        privacy_context = None
+        if state.get("data_fields") and state.get("privacy_endpoint"):
+            privacy_context = {
+                "data_fields": state.get("data_fields"),
+                "endpoint": state.get("privacy_endpoint"),
+                "approved": state.get("privacy_approved"),
+            }
+        resp = llm_client.chat(
+            model_cfg,
+            [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+            privacy_context=privacy_context,
+        )
 
         console.print(f"[dim]🤖 consensus 使用模型: {model_cfg.display_name}[/dim]")
         return {

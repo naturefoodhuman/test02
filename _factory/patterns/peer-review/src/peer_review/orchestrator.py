@@ -165,11 +165,30 @@ def load_expert_config(yaml_path: Path, fallback_id: str) -> ExpertConfig | None
 
 # --- LangGraph 兼容入口（新架构）---
 
+from rich.live import Live
+from rich.table import Table
+from rich.panel import Panel
+
+
+def _make_progress_table(node_status: dict[str, str]) -> Table:
+    """构建 Rich Live 进度表"""
+    table = Table(title="Peer-Review 评审进度", show_header=True, header_style="bold magenta")
+    table.add_column("节点", style="cyan")
+    table.add_column("状态", style="green")
+    for node, status in node_status.items():
+        table.add_row(node, status)
+    return table
+
+
 def run_langgraph_review(
     query: str,
     project_root: Path | None = None,
     config_only: bool = False,
     plan_id: str | None = None,
+    data_fields: dict[str, Any] | None = None,
+    privacy_endpoint: str | None = None,
+    privacy_approved: bool | None = None,
+    use_live: bool = True,
 ) -> dict:
     """LangGraph 评审入口（v1.1.0 新架构）
 
@@ -178,10 +197,14 @@ def run_langgraph_review(
         project_root: 项目根目录；为 None 时自动探测
         config_only: 为 True 时仅返回配置对象而不运行图（用于测试）
         plan_id: 临时覆盖 active_plan 的方案 ID（不修改配置文件）
+        data_fields: 原始数据字段（用于 LLM 客户端节点级隐私校验）
+        privacy_endpoint: 隐私策略目标端点（如 chinese_api）
+        privacy_approved: CLI 是否已通过 DataPrivacyGate 人工确认
+        use_live: 是否使用 Rich Live Display 展示进度
 
     Returns:
         若 config_only=True 返回 dict(routing_engine=..., knowledge_hub=...)
-        否则返回最终状态 dict
+        否则返回最终状态 dict（含 thread_id 用于 HITL 恢复）
     """
     from peer_review.graph.review_graph import build_review_graph
     from peer_review.platform.knowledge_hub import KnowledgeHub
@@ -197,6 +220,8 @@ def run_langgraph_review(
     if plan_id and plan_id in routing_engine.config.routing.plans:
         routing_engine.config.routing.active_plan = plan_id
 
+    active_plan = routing_engine.config.routing.active_plan
+
     knowledge_hub = KnowledgeHub(
         knowledge_root=project_root / "_factory" / "experts",
         skills_root=project_root / "_factory" / "skills",
@@ -207,30 +232,137 @@ def run_langgraph_review(
 
     graph = build_review_graph(routing_engine, knowledge_hub)
 
-    thread_id = "review-" + str(hash(query) & 0xFFFFFFFF)
+    import uuid
+    thread_id = "review-" + str(uuid.uuid4())[:8]
     config = {"configurable": {"thread_id": thread_id}}
 
-    for event in graph.stream(
-        {"case_context": query, "model_plan_id": routing_engine.config.routing.active_plan},
-        config=config,
-        stream_mode="updates",
-    ):
-        # 打印节点级进度
-        for node_name, node_state in event.items():
-            if node_name == "primary_expert" and "primary_analysis" in node_state:
-                console.print(f"[dim]→ 主专家完成[/dim]")
-            elif node_name.startswith("reviewer_"):
-                console.print(f"[dim]→ {node_name} 完成[/dim]")
-            elif node_name == "consensus_builder":
-                console.print(f"[dim]→ 汇总完成 (分歧度: {node_state.get('divergence_score', 0)})[/dim]")
-            elif node_name == "human_review_gate":
-                console.print("[yellow]→ 触发人工审核中断点[/yellow]")
+    initial_state = {
+        "case_context": query,
+        "model_plan_id": active_plan,
+        "data_fields": data_fields,
+        "privacy_endpoint": privacy_endpoint,
+        "privacy_approved": privacy_approved,
+    }
+
+    # 收集所有节点名用于 Live 进度表
+    node_names = ["primary_expert"] + [
+        n for n in graph.nodes if n.startswith("reviewer_")
+    ] + ["consensus_builder", "human_review_gate"]
+    node_status = {n: "⏳ 等待" for n in node_names}
+
+    if use_live:
+        with Live(_make_progress_table(node_status), console=console, refresh_per_second=4) as live:
+            for event in graph.stream(
+                initial_state,
+                config=config,
+                stream_mode="updates",
+            ):
+                for node_name, node_state in event.items():
+                    if node_name == "primary_expert" and "primary_analysis" in node_state:
+                        node_status[node_name] = "✅ 完成"
+                    elif node_name.startswith("reviewer_"):
+                        node_status[node_name] = "✅ 完成"
+                    elif node_name == "consensus_builder":
+                        divergence = node_state.get("divergence_score", 0)
+                        node_status[node_name] = f"✅ 完成 (分歧度 {divergence})"
+                    elif node_name == "human_review_gate":
+                        node_status[node_name] = "🛑 人工审核中断点"
+                live.update(_make_progress_table(node_status))
+    else:
+        for event in graph.stream(
+            initial_state,
+            config=config,
+            stream_mode="updates",
+        ):
+            for node_name, node_state in event.items():
+                if node_name == "primary_expert" and "primary_analysis" in node_state:
+                    console.print(f"[dim]→ 主专家完成[/dim]")
+                elif node_name.startswith("reviewer_"):
+                    console.print(f"[dim]→ {node_name} 完成[/dim]")
+                elif node_name == "consensus_builder":
+                    console.print(f"[dim]→ 汇总完成 (分歧度: {node_state.get('divergence_score', 0)})[/dim]")
+                elif node_name == "human_review_gate":
+                    console.print("[yellow]→ 触发人工审核中断点[/yellow]")
 
     # 获取完整最终状态（包含所有节点写入）
     final_state = graph.get_state(config)
     if final_state is None or final_state.values is None:
-        return {}
-    return dict(final_state.values)
+        return {"thread_id": thread_id}
+    result = dict(final_state.values)
+    result["thread_id"] = thread_id
+    return result
+
+
+def continue_langgraph_review(
+    thread_id: str,
+    project_root: Path | None = None,
+    plan_id: str | None = None,
+    use_live: bool = True,
+) -> dict:
+    """从 HITL 中断点恢复 LangGraph 评审
+
+    Args:
+        thread_id: 之前 run_langgraph_review 返回的线程 ID
+        project_root: 项目根目录
+        plan_id: 临时覆盖方案（通常不需要，保持与之前一致）
+        use_live: 是否使用 Rich Live Display
+
+    Returns:
+        最终状态 dict
+    """
+    from peer_review.graph.review_graph import build_review_graph
+    from peer_review.platform.knowledge_hub import KnowledgeHub
+    from peer_review.platform.routing_plan_engine import RoutingPlanEngine
+
+    if project_root is None:
+        from peer_review.config import get_project_root
+        project_root = get_project_root()
+
+    routing_engine = RoutingPlanEngine(project_root)
+    if plan_id and plan_id in routing_engine.config.routing.plans:
+        routing_engine.config.routing.active_plan = plan_id
+
+    knowledge_hub = KnowledgeHub(
+        knowledge_root=project_root / "_factory" / "experts",
+        skills_root=project_root / "_factory" / "skills",
+    )
+    graph = build_review_graph(routing_engine, knowledge_hub)
+
+    config = {"configurable": {"thread_id": thread_id}}
+
+    # 检查当前状态
+    current_state = graph.get_state(config)
+    if current_state is None or not current_state.values:
+        raise ValueError(f"找不到线程 {thread_id} 的状态，无法恢复")
+
+    # 收集节点状态用于 Live 显示
+    node_names = ["primary_expert"] + [
+        n for n in graph.nodes if n.startswith("reviewer_")
+    ] + ["consensus_builder", "human_review_gate"]
+    node_status = {n: "✅ 已完成" for n in node_names}
+    node_status["human_review_gate"] = "🔄 恢复中"
+
+    if use_live:
+        with Live(_make_progress_table(node_status), console=console, refresh_per_second=4) as live:
+            for event in graph.stream(None, config=config, stream_mode="updates"):
+                for node_name in event:
+                    if node_name == "human_review_gate":
+                        node_status[node_name] = "✅ 人工审核通过"
+                    elif node_name == "__end__":
+                        node_status[node_name] = "✅ 结束"
+                live.update(_make_progress_table(node_status))
+    else:
+        for event in graph.stream(None, config=config, stream_mode="updates"):
+            for node_name in event:
+                if node_name == "human_review_gate":
+                    console.print("[green]→ 人工审核通过，继续执行[/green]")
+
+    final_state = graph.get_state(config)
+    if final_state is None or final_state.values is None:
+        return {"thread_id": thread_id}
+    result = dict(final_state.values)
+    result["thread_id"] = thread_id
+    return result
 
 
 def build_review_team(experts_dir: Path) -> tuple[Agent, list[Agent]]:

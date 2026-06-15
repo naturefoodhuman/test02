@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-15 03:10:00 CST
+创建时间（北京时间，精确到秒）：2026-06-15 03:45:00 CST
 -->
 
 # PROJECT STATE —— 当前进度快照
@@ -28,14 +28,19 @@
   - `platform/decision_engine.py`: 铁闸 + AI 参考 + AI 生成
 - **配置层**: `config/models.yaml` / `config/routing_plans.yaml` / `config/privacy_policy.yaml` 已按最终架构设计实现
 - **CLI 入口**: `debt review` 已切换到 LangGraph 路径（`--plan` 临时指定方案）
-- **测试**: `peer-review` 新测试套件 16 cases 全通过；`debt-collection` 22 cases 全通过
+  - `debt continue <thread_id>`: 从 HITL 中断点恢复评审
+- **LLM 客户端**: `llm_client.py` 已接入节点级 DataPrivacyGate 二次校验
+- **流式输出**: `debt review` 使用 Rich Live Display 实时展示节点进度
+- **端到端验证**: `scripts/e2e_review_test.py` 支持模拟/真实 LLM 两种模式
+- **测试**: `peer-review` 21 cases 全通过；`debt-collection` 32 cases 全通过；总计 53 cases 全通过
 
 ## 已知限制 / 待完成
-- [ ] 真实 LLM 调用需启动 LiteLLM 网关或 Ollama 服务（当前降级为提示信息）
+- [ ] 真实 LLM 调用需启动 LiteLLM 网关或 Ollama 服务（`scripts/e2e_review_test.py` 已提供验证入口）
 - [x] 评审节点已接入 CLI 级 DataPrivacyGate 实时确认门 ✅
 - [x] MemoryStore 已在 `debt review` 结束后自动写入记录 ✅
-- [ ] 流式输出体验待优化（当前已有节点级进度打印）
-- [ ] HITL 中断后恢复流程待补充文档与 CLI 指令
+- [x] LLM 客户端节点级 DataPrivacyGate 二次校验 ✅
+- [x] HITL 中断后恢复流程：`debt continue <thread_id>` ✅
+- [x] Rich Live Display 流式进度展示 ✅
 - [ ] 旧 Agno 文件 (`agent_factory.py`, `knowledge_loader.py`, `team_orchestrator.py`) 仍保留，待 LangGraph 稳定 2 周后删除
 - [ ] `docs/UPGRADE_LEARNINGS.md` 待最终阶段补齐
 

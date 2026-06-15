@@ -1,6 +1,6 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
 # 创建时间（北京时间）：2026-06-13 23:55:00 CST
-"""debt CLI：个人合法讨债助手命令行入口（v1.0.5 适配 Agno 重构版）。
+"""debt CLI：个人合法讨债助手命令行入口（v1.1.0 LangGraph + 双文件模型管理体系）。
 
 命令：
   debt add        录入一笔债务
@@ -9,7 +9,8 @@
   debt timeline   看某笔债务的案件时间线
   debt acquire    为某笔债务的债务人生成官方渠道待查清单
   debt report     生成/更新某笔债务的策略报告(GLM优先,离线兜底)
-  debt review     FB-14: Peer-Review 多专家评审 (Agno + LlamaIndex + ChromaDB)
+  debt review     FB-14: Peer-Review 多专家评审 (LangGraph + HUB-SPOKE)
+  debt continue   从 HITL 人工审核中断点恢复评审
 """
 from __future__ import annotations
 
@@ -235,8 +236,9 @@ def cmd_review(args) -> int:
     print(f"\n🚀 激活方案: {active_plan}")
 
     # ── DataPrivacyGate 实时确认门 ──
+    privacy_approved = False
+    privacy_fields = _extract_privacy_fields(d)
     if _plan_uses_api(ROOT, args.plan):
-        privacy_fields = _extract_privacy_fields(d)
         gate = DataPrivacyGate(ROOT / "config" / "privacy_policy.yaml")
         result = gate.check(privacy_fields, "chinese_api")
 
@@ -260,10 +262,22 @@ def cmd_review(args) -> int:
                 s.close()
                 return 1
             print("\n✅ 数据出境已获人工确认。")
+            privacy_approved = True
+        else:
+            privacy_approved = True
+    else:
+        privacy_approved = True
 
     # 运行 LangGraph 评审（计时）
     start_time = time.time()
-    final_state = run_langgraph_review(query, project_root=ROOT, plan_id=args.plan)
+    final_state = run_langgraph_review(
+        query,
+        project_root=ROOT,
+        plan_id=args.plan,
+        data_fields=privacy_fields,
+        privacy_endpoint="chinese_api" if _plan_uses_api(ROOT, args.plan) else "local_model",
+        privacy_approved=privacy_approved,
+    )
     elapsed = int(time.time() - start_time)
 
     print("\n" + "=" * 60)
@@ -276,7 +290,9 @@ def cmd_review(args) -> int:
         print(f"\n⚠️ 铁闸触发：{final_state.get('iron_gate_reason', '')}")
     if final_state.get("requires_human"):
         print(f"\n⚠️ 分歧度 {final_state.get('divergence_score', 0)} 超过阈值，已触发人工审核中断点")
+        print(f"   如需继续，请运行：debt continue {final_state.get('thread_id', 'UNKNOWN')}")
 
+    print(f"\n🆔 线程 ID: {final_state.get('thread_id', 'UNKNOWN')}（可用于 debt continue 恢复）")
     print("=" * 60)
 
     # ── MemoryStore 记录运行 ──
@@ -299,6 +315,29 @@ def cmd_review(args) -> int:
         print(f"\n⚠️ MemoryStore 记录失败（非阻塞）: {e}")
 
     s.close()
+    return 0
+
+
+def cmd_continue(args) -> int:
+    """从 HITL 人工审核中断点恢复 LangGraph 评审"""
+    print(f"🔄 恢复评审线程: {args.thread_id}")
+    try:
+        from peer_review.orchestrator import continue_langgraph_review
+        final_state = continue_langgraph_review(args.thread_id, project_root=ROOT)
+    except Exception as e:
+        print(f"❌ 恢复失败: {e}")
+        traceback.print_exc()
+        return 1
+
+    print("\n" + "=" * 60)
+    print("【主专家分析】")
+    print(final_state.get("primary_analysis", "（无）"))
+    print("\n【最终汇总结论】")
+    print(final_state.get("consensus", "（无）"))
+
+    if final_state.get("iron_gate_triggered"):
+        print(f"\n⚠️ 铁闸触发：{final_state.get('iron_gate_reason', '')}")
+    print("=" * 60)
     return 0
 
 
@@ -341,6 +380,10 @@ def build_parser() -> argparse.ArgumentParser:
     rv.add_argument("--plan", default=None,
                     help="临时指定 routing_plans.yaml 中的方案 ID（不修改配置文件）")
     rv.set_defaults(func=cmd_review)
+
+    cont = sub.add_parser("continue", help="从 HITL 人工审核中断点恢复评审")
+    cont.add_argument("thread_id", help="之前 debt review 返回的线程 ID")
+    cont.set_defaults(func=cmd_continue)
 
     return p
 

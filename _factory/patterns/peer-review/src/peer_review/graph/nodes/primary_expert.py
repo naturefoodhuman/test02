@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 from peer_review.graph.state import ReviewState
-from peer_review.llm_client import chat
+import peer_review.llm_client as llm_client
 from peer_review.platform.decision_engine import DecisionContext, DecisionEngine
 from peer_review.platform.knowledge_hub import KnowledgeHub
 from peer_review.platform.routing_plan_engine import RoutingPlanEngine
@@ -52,7 +52,18 @@ def make_primary_node(routing_engine: RoutingPlanEngine, knowledge_hub: Knowledg
             "给出结构化的法律定性、风险评估与初步策略建议。"
         )
         prompt = f"案件事实：\n{case_context}\n\n相关知识库片段：\n{knowledge_context}\n\n请给出主专家分析。"
-        resp = chat(model_cfg, [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}])
+        privacy_context = None
+        if state.get("data_fields") and state.get("privacy_endpoint"):
+            privacy_context = {
+                "data_fields": state.get("data_fields"),
+                "endpoint": state.get("privacy_endpoint"),
+                "approved": state.get("privacy_approved"),
+            }
+        resp = llm_client.chat(
+            model_cfg,
+            [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+            privacy_context=privacy_context,
+        )
 
         console.print(f"[dim]🤖 primary_expert 使用模型: {model_cfg.display_name}[/dim]")
         return {

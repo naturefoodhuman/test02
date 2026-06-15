@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 02:05:00 CST
+# 创建时间（北京时间）：2026-06-15 03:25:00 CST
 """LangGraph ReviewState 定义
 
 所有 Agent 数据显式管理，无隐式状态。
@@ -9,13 +9,16 @@
 from __future__ import annotations
 
 import operator
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
 
 class ReviewState(TypedDict, total=False):
     """HUB-SPOKE 评审图状态"""
 
     case_context: str              # 案件上下文（原始输入）
+    data_fields: dict[str, Any]    # 原始数据字段（用于 DataPrivacyGate 节点级校验）
+    privacy_endpoint: str            # 目标出境端点（如 chinese_api）
+    privacy_approved: bool          # CLI 是否已通过 DataPrivacyGate 人工确认
     primary_analysis: str          # 主专家分析结论
     reviewer_opinions: Annotated[list[str], operator.add]   # 各评审独立意见（HUB-SPOKE 收集）
     reviewer_roles: Annotated[list[str], operator.add]       # 对应角色标签

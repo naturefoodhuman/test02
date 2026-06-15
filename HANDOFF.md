@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间：2026-06-15 03:10:00 CST
+创建时间：2026-06-15 03:45:00 CST
 -->
 
 # HANDOFF —— 接力交接文档（v2.0 第28轮修订版）
@@ -139,6 +139,26 @@
    → 预期输出：使用 all-local 方案，数据完全不出本地，不触发确认门
 ```
 
+### 从 HITL 中断点恢复评审
+```
+终端 C:
+1. debt continue review-xxxx
+   → 预期输出：从 human_review_gate 中断点继续，完成最终汇总
+   > 注意：thread_id 来自前一次 `debt review` 输出
+```
+
+### 运行端到端验证脚本
+```
+终端 C:
+1. cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
+2. source .venv/bin/activate
+3. python3 scripts/e2e_review_test.py --plan default
+   → 真实 LLM 模式（需 Ollama + LiteLLM 已启动）
+4. python3 scripts/e2e_review_test.py --mock
+   → 模拟模式，无需外部模型，用于快速验证管道
+   → 报告输出：runtime/e2e_review_default_<timestamp>.md
+```
+
 ### 录入测试债务
 ```
 终端 C:
@@ -225,6 +245,7 @@ AI-Project-Incubation-Factory/
 | `debt review` 输出 "模型调用不可用" | LiteLLM 网关和 Ollama 都未启动 | 终端 A 启动 `ollama serve`，终端 B 启动 `bash _infra/start-litellm.sh` |
 | `InvalidUpdateError: Can receive only one value per step` | 旧版测试或旧代码未使用 LangGraph `Annotated` reducer | 确保使用 `test_peer_review_langgraph.py` 新测试，旧版已删除 |
 | `ModuleNotFoundError: No module named 'langgraph'` | 依赖未安装 | `pip install langgraph>=1.0.10 langgraph-checkpoint-sqlite>=3.0.1` |
+| `debt continue` 提示 "找不到线程状态" | 输入的 thread_id 错误或检查点已丢失 | 确认 thread_id 与 `debt review` 输出完全一致 |
 
 ---
 

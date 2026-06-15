@@ -166,3 +166,108 @@ class TestMemoryStore:
         rows = db.get_plan_comparison(days=30)
         assert len(rows) == 1
         assert rows[0]["plan_id"] == "default"
+
+
+# ── LLM 客户端节点级隐私二次校验 ──
+
+class TestLLMClientPrivacy:
+    def test_api_call_blocked_without_approval(self):
+        from peer_review.llm_client import chat
+        from peer_review.config import load_models_config
+
+        models = load_models_config(REPO_ROOT / "config" / "models.yaml")
+        model_cfg = models.models["deepseek-flash"]
+        resp = chat(
+            model_cfg,
+            [{"role": "user", "content": "test"}],
+            privacy_context={
+                "data_fields": {"debtor_name": "张三"},
+                "endpoint": "chinese_api",
+                "approved": False,
+            },
+        )
+        assert resp.blocked is True
+        assert "节点级数据出境被阻断" in resp.content
+
+    def test_api_call_allowed_with_approval(self):
+        from peer_review.llm_client import chat
+        from peer_review.config import load_models_config
+
+        models = load_models_config(REPO_ROOT / "config" / "models.yaml")
+        model_cfg = models.models["deepseek-flash"]
+        resp = chat(
+            model_cfg,
+            [{"role": "user", "content": "test"}],
+            privacy_context={
+                "data_fields": {"debtor_name": "张三"},
+                "endpoint": "chinese_api",
+                "approved": True,
+            },
+        )
+        # 网关/Ollama 不可用，但不应被隐私门阻断
+        assert resp.blocked is False
+
+    def test_local_call_no_privacy_check(self):
+        from peer_review.llm_client import chat
+        from peer_review.config import load_models_config
+
+        models = load_models_config(REPO_ROOT / "config" / "models.yaml")
+        model_cfg = models.models["local-qwen35b"]
+        resp = chat(
+            model_cfg,
+            [{"role": "user", "content": "test"}],
+            privacy_context={
+                "data_fields": {"debtor_name": "张三"},
+                "endpoint": "local_model",
+                "approved": False,
+            },
+        )
+        # 本地模型不触发隐私检查
+        assert resp.blocked is False
+
+
+# ── 端到端测试（模拟 LLM 响应）──
+
+class TestEndToEndWithMockLLM:
+    def test_full_review_pipeline_with_mocks(self, monkeypatch):
+        from peer_review.orchestrator import run_langgraph_review
+        from peer_review.llm_client import LLMResponse
+
+        def mock_gateway(model_name, messages, timeout=120):
+            return LLMResponse(
+                content=f"[模拟 API {model_name} 回复]",
+                model=model_name,
+            )
+
+        def mock_ollama(model_cfg, messages):
+            return LLMResponse(
+                content=f"[模拟本地 {model_cfg.display_name} 回复]",
+                model=model_cfg.model_id,
+            )
+
+        monkeypatch.setattr("peer_review.llm_client._call_litellm_gateway", mock_gateway)
+        monkeypatch.setattr("peer_review.llm_client._call_ollama_direct", mock_ollama)
+
+        result = run_langgraph_review(
+            "张三欠李四50000元，有借条。",
+            project_root=REPO_ROOT,
+            plan_id="default",
+            data_fields={"debtor_name": "张三", "amount": 50000},
+            privacy_endpoint="chinese_api",
+            privacy_approved=True,
+            use_live=False,
+        )
+        assert "primary_analysis" in result
+        assert "consensus" in result
+        assert len(result.get("reviewer_opinions", [])) == 3
+        assert result.get("thread_id") is not None
+
+
+# ── HITL 恢复测试 ──
+
+class TestHITLContinue:
+    def test_continue_requires_existing_thread(self):
+        from peer_review.orchestrator import continue_langgraph_review
+
+        with pytest.raises(ValueError):
+            continue_langgraph_review("non-existent-thread", project_root=REPO_ROOT, use_live=False)

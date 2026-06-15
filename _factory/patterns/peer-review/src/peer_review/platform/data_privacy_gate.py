@@ -49,10 +49,20 @@ class DataPrivacyGate:
     """数据出境策略执行器"""
 
     def __init__(self, policy_path: Path | None = None):
-        if policy_path:
-            self.policy: PrivacyPolicyConfig = load_privacy_policy_config(policy_path)
-        else:
-            self.policy = load_privacy_policy_config(Path("config/privacy_policy.yaml"))
+        if policy_path is None:
+            policy_path = self._find_default_policy_path()
+        self.policy: PrivacyPolicyConfig = load_privacy_policy_config(policy_path)
+
+    @staticmethod
+    def _find_default_policy_path() -> Path:
+        """向上查找项目根目录，定位 config/privacy_policy.yaml"""
+        cwd = Path.cwd()
+        for parent in [cwd] + list(cwd.parents):
+            candidate = parent / "config" / "privacy_policy.yaml"
+            if candidate.exists():
+                return candidate
+        # 兜底：返回当前目录下的相对路径（可能不存在，后续会抛出清晰错误）
+        return Path("config/privacy_policy.yaml")
 
     def check(self, data: dict[str, Any], target_endpoint: str) -> EgressCheckResult:
         """检查数据是否可以发送到目标端点

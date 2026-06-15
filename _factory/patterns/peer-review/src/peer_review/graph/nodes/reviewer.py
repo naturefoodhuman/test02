@@ -15,7 +15,7 @@ from typing import Any
 from langgraph.types import Send
 
 from peer_review.graph.state import ReviewState
-from peer_review.llm_client import chat
+import peer_review.llm_client as llm_client
 from peer_review.platform.routing_plan_engine import RoutingPlanEngine
 from rich.console import Console
 
@@ -40,7 +40,18 @@ def make_reviewer_node(routing_engine: RoutingPlanEngine, node_name: str, role: 
             "不要受其他分析或结论影响。给出你的独立判断、风险点与建议。"
         )
         prompt = f"案件事实：\n{case_context}\n\n请从'{role}'角度给出独立评审意见。"
-        resp = chat(model_cfg, [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}])
+        privacy_context = None
+        if state.get("data_fields") and state.get("privacy_endpoint"):
+            privacy_context = {
+                "data_fields": state.get("data_fields"),
+                "endpoint": state.get("privacy_endpoint"),
+                "approved": state.get("privacy_approved"),
+            }
+        resp = llm_client.chat(
+            model_cfg,
+            [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+            privacy_context=privacy_context,
+        )
 
         console.print(f"[dim]🤖 {node_name} ({role}) 使用模型: {model_cfg.display_name}[/dim]")
         return {

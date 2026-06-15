@@ -1,9 +1,47 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-15 03:10:00 CST
+创建时间（北京时间，精确到秒）：2026-06-15 03:45:00 CST
 -->
 
 # DEV LOG —— 逐轮开发日志
+
+## 第 31 轮 · 2026-06-15
+### 真实 LLM 端到端验证 + 节点级隐私校验 + HITL 恢复 + 流式输出优化
+
+**已完成：**
+1. **LLM 客户端节点级隐私二次校验**
+   - `peer_review/llm_client.py` 在调用 API 模型前，根据 `privacy_context` 执行 `DataPrivacyGate.check()`
+   - 若 `approved=False` 且含 `local_only` 字段，返回阻断响应
+   - 若含 `human_approve` 字段，返回需先完成 CLI 确认提示
+   - 本地模型不触发二次校验
+2. **HITL 中断恢复流程**
+   - 新增 `continue_langgraph_review(thread_id)` 函数，从 `human_review_gate` 中断点恢复
+   - 新增 `debt continue <thread_id>` CLI 命令
+   - `debt review` 输出中打印线程 ID，触发人工审核时提示 `debt continue` 命令
+3. **Rich Live Display 流式进度展示**
+   - `run_langgraph_review` 与 `continue_langgraph_review` 均支持 `use_live=True`
+   - 实时展示节点状态：等待 / 完成 / 人工审核中断点
+   - 不影响 `use_live=False` 的测试模式
+4. **端到端验证脚本**
+   - 新增 `scripts/e2e_review_test.py`
+   - 支持 `--mock` 模式（沙箱/CI 无需外部模型）
+   - 支持真实 LLM 模式（需启动 Ollama + LiteLLM）
+   - 输出 Markdown 报告到 `runtime/e2e_review_<plan>_<timestamp>.md`
+5. **测试补充**
+   - `peer-review` 测试从 16 个增至 21 个
+   - 新增：LLM 客户端隐私校验、模拟 LLM 端到端、HITL 恢复异常路径
+
+**验证结果：**
+- `peer-review` 21 个测试 ✅ 全通过
+- `debt-collection` 32 个测试 ✅ 全通过
+- `scripts/e2e_review_test.py --mock` ✅ 可生成完整报告
+- 总计 53 个测试 ✅ 全通过
+
+**遗留到下轮：**
+- 在真实 LLM/Ollama 环境下运行 `scripts/e2e_review_test.py` 并记录输出质量评分
+- 删除旧 Agno 文件（待 LangGraph 稳定 2 周后）
+
+---
 
 ## 第 30 轮 · 2026-06-15
 ### DataPrivacyGate 实时确认门 + MemoryStore 自动记录
