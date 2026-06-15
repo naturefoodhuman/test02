@@ -14,6 +14,8 @@
 本产品为 **AI 项目孵化工厂 (FORGE Factory)**。
 试点项目 `debt-collection` 是用来压测工厂能力的"沙包"，不作为正式开发目标。
 
+**当前架构版本**：v1.1.0（LangGraph 迁移已启动，双文件体系 + DataPrivacyGate 已落地）
+
 ---
 
 ## 2. 运行环境与路径
@@ -35,13 +37,20 @@
 | MinerU 专用 | `projects/debt-collection/runtime/mineru_env` | PDF 深度解析 |
 | forge CLI | `_infra/forge_tools/` 下独立安装 | 五阶段状态机 |
 
-### 模型矩阵 (Ollama)
-| 模型别名 | Ollama Tag | 用途 |
-|----------|-----------|------|
-| `local/primary` | `qwen3.6:35b-a3b-q8_0` | 本地执行核心 |
-| `local/r1` | `deepseek-r1:32b` | 本地推理核心 |
-| `local/embedding` | `bge-m3` | 本地向量检索 |
-| `cloud/glm-primary` | `openai/glm-4-plus` (NVIDIA) | 云端推理（需 GLM_API_KEY） |
+### 模型矩阵 (Ollama / 中国 API)
+| 模型别名 | 来源 | 用途 |
+|----------|------|------|
+| `local-qwen35b` | Ollama `qwen3.5:35b-a3b-q8_0` | 本地执行核心（默认主专家） |
+| `local-deepseek-r1` | Ollama `deepseek-r1:32b` | 本地推理核心 |
+| `local-coder` | Ollama `qwen2.5-coder:32b` | 本地代码任务 |
+| `local-fast` | Ollama `qwen2.5:7b` | 快速分类/路由 |
+| `embedding` | Ollama `bge-m3` | 向量检索 |
+| `deepseek-flash` | DeepSeek API | 外源快速评审 |
+| `deepseek-pro` | DeepSeek API | 外源高质量汇总 |
+| `qwen-plus` | Alibaba API | 超长上下文/中文法律 |
+| `glm-5` | Zhipu API | 中文专项 |
+
+> 完整配置见 `config/models.yaml`（A 文件）。节点如何调用见 `config/routing_plans.yaml`（B 文件），切换方案只改 `active_plan` 字段。
 
 ---
 
@@ -106,13 +115,19 @@
 1. cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 2. source .venv/bin/activate
 3. 
-4. debt review 1 --model local/primary
-   > **注意**：v1.0.5+ 已通过 `pip install -e .` 编译安装，无需手动设置 PYTHONPATH。`debt` 命令直接可用。
+4. debt review 1
+   > **注意**：v1.1.0+ 已迁移到 LangGraph，`debt review` 默认使用 config/routing_plans.yaml 中的 active_plan。
+   > 如需临时切换方案：debt review 1 --plan high-quality
    → 预期输出：
-     📚 正在构建专家 [risk-assessor] 向量索引...
-     🤖 加载专家 Agent: 债务风险评估专家 (reviewer)
-     🔍 启动多专家评审...
-     （AI 输出评审报告）
+     🔍 启动 Peer-Review 模块 (LangGraph)...
+     ✅ peer_review 模块加载成功
+     🚀 激活方案: default
+     → 主专家完成
+     → reviewer_1 完成
+     → reviewer_2 完成
+     → reviewer_3 完成
+     → 汇总完成 (分歧度: 0.00)
+     （主专家分析 + 最终汇总结论）
 ```
 
 ### 录入测试债务
@@ -141,11 +156,28 @@ AI-Project-Incubation-Factory/
 │   │   ├── asset-search.skill.md
 │   │   └── compliance-layered.skill.md
 │   ├── patterns/
-│   │   ├── peer-review/            # FB-14 多专家评审（v1.0.5 Agno 重构）
+│   │   ├── peer-review/            # FB-14 多专家评审（v1.1.0 LangGraph）
 │   │   │   ├── src/peer_review/
-│   │   │   │   └── orchestrator.py
+│   │   │   │   ├── graph/          # LangGraph 图结构
+│   │   │   │   │   ├── review_graph.py
+│   │   │   │   │   ├── nodes/
+│   │   │   │   │   │   ├── primary_expert.py
+│   │   │   │   │   │   ├── reviewer.py
+│   │   │   │   │   │   └── consensus.py
+│   │   │   │   │   └── checkpointer.py
+│   │   │   │   ├── platform/       # 平台层（路由/隐私/记忆/知识/决策）
+│   │   │   │   │   ├── routing_plan_engine.py
+│   │   │   │   │   ├── data_privacy_gate.py
+│   │   │   │   │   ├── memory_store.py
+│   │   │   │   │   ├── knowledge_hub.py
+│   │   │   │   │   └── decision_engine.py
+│   │   │   │   ├── config/         # Pydantic 配置层
+│   │   │   │   │   ├── schemas.py
+│   │   │   │   │   └── loader.py
+│   │   │   │   ├── orchestrator.py # LangGraph 兼容入口（保留 Agno 旧入口）
+│   │   │   │   └── llm_client.py
 │   │   │   └── tests/
-│   │   │       ├── test_peer_review.py
+│   │   │       ├── test_peer_review_langgraph.py
 │   │   │       └── verify_architecture.py
 │   │   ├── expert-consultant/
 │   │   ├── ingestion-pipeline/
@@ -181,6 +213,9 @@ AI-Project-Incubation-Factory/
 | `cannot import name 'Mode' from 'agno.team.mode'` | Agno 2.6 API 变更 | `mode="sequential"` 替换 `mode=Mode.SEQUENTIAL` |
 | `Agent.__init__() got an unexpected keyword argument 'add_history_to_messages'` | Agno 参数废弃 | 移除 `add_history_to_messages` 和 `markdown` 参数 |
 | 日志显示 `正在构建专家  向量索引`（ID 为空） | YAML 缺 `id` 字段 | 在专家 YAML 第一行加 `id: xxx` |
+| `debt review` 输出 "模型调用不可用" | LiteLLM 网关和 Ollama 都未启动 | 终端 A 启动 `ollama serve`，终端 B 启动 `bash _infra/start-litellm.sh` |
+| `InvalidUpdateError: Can receive only one value per step` | 旧版测试或旧代码未使用 LangGraph `Annotated` reducer | 确保使用 `test_peer_review_langgraph.py` 新测试，旧版已删除 |
+| `ModuleNotFoundError: No module named 'langgraph'` | 依赖未安装 | `pip install langgraph>=1.0.10 langgraph-checkpoint-sqlite>=3.0.1` |
 
 ---
 

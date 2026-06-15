@@ -12,10 +12,12 @@ start-ollama:     # 启动 Ollama (MLX 后端)
 
 test:             # 运行全量测试
 	@cd _factory/patterns/peer-review && python3 tests/verify_architecture.py
+	@cd _factory/patterns/peer-review && python3 -m pytest tests/ -v 2>/dev/null || true
 	@cd projects/debt-collection && python3 -m pytest tests/ -v 2>/dev/null || true
 
 test-unit:        # 只跑单元测试（快速）
 	@cd _factory/patterns/peer-review && python3 tests/verify_architecture.py
+	@cd _factory/patterns/peer-review && python3 -m pytest tests/test_peer_review_langgraph.py -v 2>/dev/null || true
 
 lint:             # 代码检查
 	@uv run ruff check src/ 2>/dev/null || python3 -m ruff check src/

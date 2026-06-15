@@ -22,3 +22,13 @@ patches/
 
 # Models (Local weights should not be committed)
 models/
+
+# Generated expert indices / raw JSON dumps (rebuilt from markdown sources)
+_factory/experts/**/*.json
+_factory/experts/**/index.json
+
+# Cache / logs
+.pytest_cache/
+.mypy_cache/
+*.log
+.ipynb_checkpoints/

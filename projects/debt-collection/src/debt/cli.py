@@ -19,6 +19,9 @@ import os
 import traceback
 from pathlib import Path
 
+# 项目根目录：本文件位于 projects/debt-collection/src/debt/cli.py
+ROOT = Path(__file__).resolve().parents[4]
+
 from debt import intel as intel_mod
 from debt import ledger
 from debt.integrations import build_acquisition_plan
@@ -139,25 +142,20 @@ def cmd_report(args) -> int:
 
 
 def cmd_review(args) -> int:
-    """FB-14: Peer-Review 多专家评审 (Agno + LlamaIndex + ChromaDB v1.0.5)"""
-    print("🔍 启动 Peer-Review 模块...")
+    """FB-14: Peer-Review 多专家评审 (LangGraph v1.1.0)"""
+    print("🔍 启动 Peer-Review 模块 (LangGraph)...")
 
-    # 1. 直接导入（已通过 editable install 安装）
     try:
-        from peer_review.orchestrator import (
-            PeerReviewOrchestrator, build_review_team,
-            resolve_model_id, MODEL_ALIAS_MAP,
-        )
+        from peer_review.orchestrator import run_langgraph_review
         print("✅ peer_review 模块加载成功")
     except Exception as e:
         print(f"❌ 模块加载失败！")
         traceback.print_exc()
         return 1
 
-    # 3. 组装案件上下文
+    # 组装案件上下文
     from debt import intel as intel_mod
     from debt import ledger
-    from debt.timeline import build_timeline
 
     s = _store(args)
     d = ledger.get_debt(s, args.debt)
@@ -180,23 +178,22 @@ def cmd_review(args) -> int:
             query_lines.append(f"  - [{it.source}/{cred}] {it.content}")
 
     query = "\n".join(query_lines)
-    print(f"\n🚀 目标模型: {args.model} (别名解析: {resolve_model_id(args.model)})")
+    print(f"\n🚀 激活方案: {args.plan or 'default'}")
 
-    # 4. 加载专家团队
-    experts_dir = ROOT / "_factory" / "experts"
-    try:
-        primary, reviewers = build_review_team(experts_dir)
-    except Exception as e:
-        print(f"❌ 团队加载失败: {e}")
-        s.close()
-        return 1
-
-    # 5. 运行评审
-    orch = PeerReviewOrchestrator(primary, reviewers, model_override=args.model)
+    # 运行 LangGraph 评审
+    final_state = run_langgraph_review(query, project_root=ROOT, plan_id=args.plan)
 
     print("\n" + "=" * 60)
-    result = orch.run_review(query + "\n\n请给出评估报告和策略建议。")
-    print(result)
+    print("【主专家分析】")
+    print(final_state.get("primary_analysis", "（无）"))
+    print("\n【最终汇总结论】")
+    print(final_state.get("consensus", "（无）"))
+
+    if final_state.get("iron_gate_triggered"):
+        print(f"\n⚠️ 铁闸触发：{final_state.get('iron_gate_reason', '')}")
+    if final_state.get("requires_human"):
+        print(f"\n⚠️ 分歧度 {final_state.get('divergence_score', 0)} 超过阈值，已触发人工审核中断点")
+
     print("=" * 60)
 
     s.close()
@@ -237,10 +234,10 @@ def build_parser() -> argparse.ArgumentParser:
     rp.add_argument("--model", default="cloud/glm-primary")
     rp.set_defaults(func=cmd_report)
 
-    rv = sub.add_parser("review", help="FB-14: Peer-Review 多专家评审 (Agno)")
+    rv = sub.add_parser("review", help="FB-14: Peer-Review 多专家评审 (LangGraph)")
     rv.add_argument("debt", type=int, help="债务ID")
-    rv.add_argument("--model", default="local/primary",
-                    help="评审模型：local/primary(隐私) | cloud/glm-primary(质量) | local/r1(深度推理)")
+    rv.add_argument("--plan", default=None,
+                    help="临时指定 routing_plans.yaml 中的方案 ID（不修改配置文件）")
     rv.set_defaults(func=cmd_review)
 
     return p
