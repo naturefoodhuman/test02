@@ -51,7 +51,7 @@ class ModelConfig(BaseModel):
     """模型配置 (对应 models.yaml 中的单个模型条目)"""
 
     display_name: str = Field(..., description="显示名称")
-    provider: Literal["ollama", "deepseek", "alibaba", "zhipu"] = Field(..., description="提供商")
+    provider: Literal["ollama", "deepseek", "alibaba", "zhipu", "mtplx", "llama_cpp"] = Field(..., description="提供商")
     model_id: str = Field(..., description="模型 ID (Ollama tag 或 API model name)")
     base_url: str = Field(default="http://localhost:11434", description="API 基础 URL")
     api_key: str | None = Field(default=None, description="API Key (引用环境变量如 ${DEEPSEEK_API_KEY})")
