@@ -1,3 +1,8 @@
+<!--
+创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+创建时间（北京时间）：2026-06-16 15:10:00
+-->
+
 # ADR-007: MemoryStore + ModelRunRecord as Authoritative Source for Plan Comparison and RETRO Data
 
 - **Status**: 已接受

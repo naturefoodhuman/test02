@@ -1,3 +1,8 @@
+<!--
+创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+创建时间（北京时间）：2026-06-16 15:10:00
+-->
+
 # ADR-006: forge eval as Core Factory A/B Testing and Model Suitability Tool
 
 - **Status**: 已接受
