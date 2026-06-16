@@ -52,4 +52,11 @@ forge gate GATE-2
 ```
 
 ## 给接手的人 / Agent
-出问题或要接续开发，先读 `HANDOFF.md`，再读 `docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、`docs/DECISIONS.md`。
+出问题或要接续开发，**必须按顺序阅读**：
+1. `DOCUMENT_AUDIT_REPORT.md`（最新项目治理审计报告）
+2. `HANDOFF.md`（接力总入口）
+3. `docs/UPGRADE_COMPLETION.md`（架构升级完成状态）
+4. `docs/PROJECT_STATE.md`（当前状态 SSOT）
+5. `docs/DEV_LOG.md` + `docs/DECISIONS.md` + `docs/CHANGELOG.md`
+
+**治理原则**：项目已建立 Documentation Governance 体系。任何变更必须遵循 Code → Tests → Documentation → CHANGELOG → ADR 流程。

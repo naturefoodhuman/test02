@@ -72,9 +72,10 @@
   4. **预期输出**（终端会打印什么，成功/失败的标志）
 - **禁止** 给模糊指令如"你试试看""跑一下"。
 
-### R4 — 每轮打包补丁
-- 每次改动文件后，必须在 `_patches/` 目录产出 `patch_YYYYMMDD_HHMMSS_<主题>.zip`。
-- zip 内路径对齐项目根目录，老板直接 `unzip -o` 覆盖即可。
+### R4 — 文档与变更记录（治理强化）
+- 每次有意义变更必须遵循：Code → Tests → Documentation → CHANGELOG → ADR（如为重大架构决策）→ Commit。
+- 禁止静默修改文档或让代码与文档长期不一致。
+- 任何 Agent 接手后必须阅读 `DOCUMENT_AUDIT_REPORT.md`（最新审计报告）和 `docs/UPGRADE_COMPLETION.md`。
 
 ### R5 — 文件头规范
 - 所有新建/修改的文件**必须**在头部注明：
@@ -258,7 +259,8 @@ AI-Project-Incubation-Factory/
 - [ ] 读 `docs/DEV_LOG.md` 最后一轮了解最近做了什么
 - [ ] 确认老板的下一个需求是什么（如果老板没说，主动问）
 - [ ] **任何新功能/架构变更前，先做 R2 调研**（穷尽→正反评估→老板认可→执行）
-- [ ] 改完文件后同步更新所有相关文档
+- [ ] 改完文件后同步更新所有相关文档（必须遵循 Code → Tests → Documentation → CHANGELOG → ADR（如需）流程）
 - [ ] 运行对应测试确保通过
 - [ ] 给老板保姆级操作指令（终端号/路径/环境/预期输出）
-- [ ] 按新同步流程：生成/提供沙箱 Deploy Key 公钥 → 等老板确认添加后 push → 老板 Mac git pull
+- [ ] 直接 push（已建立 Deploy Key 协议）→ 老板 Mac `git pull origin main`
+- [ ] 执行 Continuous Governance 检查（发现漂移/缺失 ADR/SSOT 冲突等必须优先修复）

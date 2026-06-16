@@ -402,6 +402,32 @@
 
 ---
 
+## [第 36 轮] 2026-06-16
+
+### 需求变动
+- **重大治理行动**：执行用户提供的 Documentation Governance & Audit 完整规范，进行第一次系统性项目审计。
+- **新增**：`DOCUMENT_AUDIT_REPORT.md`（结构化审计报告，覆盖 6 大维度：Consistency、Stale、Coverage、SSOT、ADR、Drift）
+- **新增**：`DOCUMENT_CHANGE_REPORT.md`（本次变更记录 + 风险与后续）
+- **识别问题**（高优先级）：
+  - 大量文档漂移（尤其是 4-Final Architecture Design.md 与实际 v1.1.0 实现）
+  - HANDOFF.md 仍保留已废止的 ZIP 补丁流程
+  - 根目录严重缺失工厂级 ADR（SSOT 碎片化）
+  - PROJECT_STATE.md 存在重复内容
+  - 孤立文档与孤立代码（早期 research + Agno 遗留模块）
+- **输出**：清晰的 Phase 1/2/3 治理修复计划 + 正式启动 Continuous Governance 机制。
+- **原则强化**：文档现在被视为与代码同等优先级的交付物（Code → Tests → Documentation → CHANGELOG → ADR）。
+
+### 文件影响
+- **新增**：`DOCUMENT_AUDIT_REPORT.md`、`DOCUMENT_CHANGE_REPORT.md`
+- **强化引用**：`docs/UPGRADE_COMPLETION.md`、`docs/PROJECT_STATE.md`
+- **改动**：`docs/CHANGELOG.md`（新增本节）
+- **后续行动**（Phase 1 必须完成）：
+  - 创建 `docs/adr/` 目录并补齐至少 7 个工厂级 ADR
+  - 重写 `HANDOFF.md`（彻底删除 ZIP 流程）
+  - 清理重复内容并建立清晰 SSOT
+
+---
+
 ## [第 29 轮 · Wave 1 + Wave 2 Task 1] 2026-06-14
 
 ### 需求变动
