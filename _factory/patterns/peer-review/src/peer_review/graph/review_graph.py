@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 02:30:00 CST
+# 创建时间（北京时间）：2026-06-16 21:35:00
 """LangGraph HUB-SPOKE 评审图
 
 构建 ReviewState 状态图，实现：
@@ -8,6 +8,18 @@
 - reviewer 节点 × N（信息屏蔽，仅读 case_context）
 - consensus_builder 汇总 + 分歧检测
 - human_review_gate HITL 中断点
+
+**SSOT 引用（必须保持一致）**:
+- 核心架构决策：docs/adr/ADR-001-langgraph-migration.md （HUB-SPOKE + Send() + SqliteSaver checkpointer + human_review_gate 为 LangGraph 1.0 原生实现；旧 Agno Team 路径已弃用）
+- 相关：ADR-002（plan 驱动节点配置）, ADR-005（KnowledgeHub）
+- 构建入口：peer_review.graph.execution + build_review_graph
+- 旧路径（已废弃）：orchestrator.py 中的 Team/sequential 模式
+
+修改本文件必须：
+1. 更新头部时间戳
+2. 同步 docs/ARCHITECTURE.md
+3. 重大图结构变更 → 新 ADR（supersede ADR-001）
+4. 保持与 execution.py + nodes 的接口一致
 """
 
 from __future__ import annotations

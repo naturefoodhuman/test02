@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 01:50:00 CST
+# 创建时间（北京时间）：2026-06-16 21:25:00
 """DecisionEngine: 分层决策引擎
 
 职责：
@@ -8,6 +8,17 @@
 - 层3 AI 生成：基于评分决定生成策略
 
 在 LangGraph 图中作为独立节点调用。
+
+**SSOT 引用**:
+- 本组件为工厂级决策铁闸 + AI 辅助的核心实现。
+- 相关架构决策：4-Final Architecture Design + Layered Decision Engine 描述（当前无专属 ADR，但属于核心不可变原则）。
+- 使用位置：graph/nodes/decision.py, graph/execution.py, projects/debt-collection/src/debt/compliance.py（部分复用逻辑）
+- 铁闸规则为硬编码（法律红线），不得随意修改；如需新增规则，必须走 ADR 流程 + 更新本文件 + ARCHITECTURE.md
+
+修改本文件必须：
+1. 更新头部时间
+2. 同步 docs/ARCHITECTURE.md
+3. 如涉及新铁闸规则或决策策略重大变更 → 创建新 ADR
 """
 
 from __future__ import annotations

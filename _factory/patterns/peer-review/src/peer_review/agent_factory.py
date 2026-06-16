@@ -1,8 +1,37 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-14 16:30:00 CST
-"""专家工厂模块
+# 创建时间（北京时间）：2026-06-16 21:25:00
+"""专家工厂模块 (Agno 遗留版)
 
 从 orchestrator.py 提取，单一职责：根据配置创建 Agent 实例。
+
+================================================================================
+DEPRECATED — 强烈不推荐使用（2026-06-16 强化版）
+================================================================================
+本文件为 Agno 遗留兼容层（旧 ExpertFactory）。
+
+**严禁**：
+- 在新功能中使用本模块
+- 扩展本文件（不要新增 create_agent 逻辑、skill 注入等）
+- 依赖 ExpertFactory 进行新开发
+
+**推荐路径**（v1.1.0+ 唯一规范）：
+- LangGraph 节点直接使用 `peer_review.platform.knowledge_hub.KnowledgeHub` + 平台层 DecisionEngine / RoutingPlanEngine
+- 专家 Agent 构建逻辑已迁移至 graph/nodes/primary_expert.py 和 reviewer.py（使用原生 LangGraph + LLMClient）
+
+**计划删除时间**：
+- 2026-07-01（2 周稳定性窗口后，按 ADR-001 要求）
+- 删除前必须通过完整回归测试（包括真实 LLM + eval --plans mtplx-hybrid + 5 个 gold cases）
+
+**理由**（引用 ADR-001 + ADR-005）：
+Agno Agent/Team 在 LangGraph 时代成为不必要抽象。所有新平台组件（KnowledgeHub、MemoryStore 等）均为框架无关，专家创建逻辑已下沉到节点。
+
+任何对本文件的修改都必须同时：
+1. 更新头部时间戳
+2. 在 docs/CHANGELOG.md 记录变更
+3. 强烈建议直接修改新节点代码 + 更新 docs/ARCHITECTURE.md 和相关 ADR
+
+违反以上规则将破坏 Documentation Governance R5 + ADR 不可变性。
+================================================================================
 """
 
 from __future__ import annotations

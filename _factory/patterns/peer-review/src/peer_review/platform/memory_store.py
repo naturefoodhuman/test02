@@ -1,11 +1,23 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 01:40:00 CST
+# 创建时间（北京时间）：2026-06-16 21:25:00
 """MemoryStore: 跨会话记忆 + 模型方案运行记录
 
 职责：
 - 记录每次评审的方案 ID、模型、耗时、成本、分歧度
 - 支持 forge compare-plans 查询对比
 - 使用 SQLite 持久化到 runtime/memory.db
+
+**SSOT 引用（必须保持一致）**:
+- 架构决策：docs/adr/ADR-007-memorystore-as-plan-comparison-ssot.md （MemoryStore + ModelRunRecord 作为 plan 对比与 RETRO 的权威历史来源）
+- 相关：ADR-006（forge eval 作为 A/B 测试能力）
+- 使用位置：graph/execution.py, debt/cli.py, forge/cli.py (compare-plans, retro)
+- 表结构 SSOT：本文件 _init_db() 中的 CREATE TABLE
+
+任何对记录格式、查询逻辑或持久化方案的修改必须：
+1. 更新本文件头部时间戳
+2. 同步更新 docs/ARCHITECTURE.md
+3. 如涉及数据模型变更 → 创建 superseding ADR（绝不修改历史 ADR-007）
+4. 更新 CHANGELOG.md
 """
 
 from __future__ import annotations

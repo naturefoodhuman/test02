@@ -1,12 +1,38 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-14 16:40:00 CST
-"""知识加载器模块
+# 创建时间（北京时间）：2026-06-16 21:25:00
+"""知识加载器模块 (Agno 遗留版)
 
 从 orchestrator.py 提取，单一职责：加载专家知识库 (ChromaDB)，实现去重机制。
 
-核心改进：
-- Collection 存在性检查：避免每次启动重建索引
-- 版本标记机制：知识库版本变更时自动重建
+================================================================================
+DEPRECATED — 强烈不推荐使用（2026-06-16 强化版）
+================================================================================
+本文件为 Agno 遗留兼容层（旧 KnowledgeLoader）。
+
+**严禁**：
+- 在新功能中使用本模块
+- 扩展本文件
+- 依赖 KnowledgeLoader 进行新开发
+
+**推荐路径**（v1.1.0+ 唯一规范）：
+- `peer_review.platform.knowledge_hub.KnowledgeHub`（纯 LlamaIndex + ChromaDB，无 Agno）
+- 调用方式：knowledge_hub.load_expert_knowledge(expert_id) + .search()
+
+**计划删除时间**：
+- 2026-07-01（2 周稳定性窗口后，按 ADR-001 + ADR-005 要求）
+- 删除前必须确认新 KnowledgeHub 在所有真实 eval（mtplx-hybrid 等）及 HITL 场景下表现一致
+
+**理由**（引用 ADR-005）：
+原 Agno ChromaDb + AgentKnowledge 包装器在 LangGraph 迁移后成为不一致依赖。
+新 KnowledgeHub 提供显式 VERSION 去重、Ollama bge-m3 embedding 控制、collection metadata 管理，日志更清晰（📦 复用 / 📚 构建）。
+
+任何对本文件的修改都必须同时：
+1. 更新头部时间戳
+2. 在 docs/CHANGELOG.md 记录
+3. 强烈建议不要修改，改动应直接作用于新 KnowledgeHub 并更新 ARCHITECTURE.md + 对应 ADR
+
+违反以上规则将破坏 Documentation Governance R5 + ADR-001/005 不可变性。
+================================================================================
 """
 
 from __future__ import annotations

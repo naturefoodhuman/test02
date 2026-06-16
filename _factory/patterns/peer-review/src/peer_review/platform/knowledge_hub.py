@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-16 13:30:00 CST
+# 创建时间（北京时间）：2026-06-16 21:25:00
 """KnowledgeHub: 知识统一接口（新架构 v1.1.0 纯 ChromaDB + LlamaIndex 实现）
 
 职责：
@@ -7,6 +7,18 @@
 - 实现 collection 存在性检查 + VERSION 版本控制（去重）
 - 为 LangGraph 节点提供知识检索
 - 注入 SKILL.md 技能到 Agent 上下文
+
+**SSOT 引用（必须保持一致）**:
+- 架构决策：docs/adr/ADR-005-knowledgehub-pure-llamaindex-chromadb.md （纯 LlamaIndex + ChromaDB，无 Agno）
+- 相关：ADR-001（LangGraph 迁移后移除 Agno 依赖）
+- 旧路径（已废弃）：_factory/patterns/peer-review/src/peer_review/knowledge_loader.py （仅保留兼容，计划 2026-07-01 删除）
+- 使用位置：graph/nodes/primary_expert.py, reviewer.py, graph/execution.py
+
+任何对知识检索 / 版本去重逻辑的修改必须：
+1. 更新本文件头部时间戳
+2. 同步更新 docs/ARCHITECTURE.md + docs/adr/ADR-005-*.md（如有实质变更则 supersede）
+3. 在 CHANGELOG.md 记录
+4. 运行相关测试（peer-review + eval）
 """
 
 from __future__ import annotations

@@ -1,11 +1,23 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 01:35:00 CST
+# 创建时间（北京时间）：2026-06-16 21:25:00
 """DataPrivacyGate: 策略文件驱动的数据出境门控
 
 职责：
 - 读取 privacy_policy.yaml
 - 执行人类定义的数据出境策略（不是代码决定策略）
 - 在数据发送到外部端点前进行拦截/脱敏/人工确认
+
+**SSOT 引用（必须保持一致）**:
+- 架构决策：docs/adr/ADR-003-data-privacy-gate-and-policy-file.md （策略文件驱动 + human_approve / local_only / mask 规则）
+- 策略文件：config/privacy_policy.yaml （A 文件类，人类拥有）
+- 使用位置：debt/cli.py (cmd_review), graph/nodes/ (privacy check), forge eval
+- 核心原则：永远不让代码决定隐私策略，策略由 config/privacy_policy.yaml 人类定义并版本控制
+
+修改本文件必须：
+1. 更新头部时间戳
+2. 同步更新 docs/ARCHITECTURE.md
+3. 如涉及新策略类型或重大门控逻辑变更 → 创建 superseding ADR（绝不改历史 ADR-003）
+4. 更新 CHANGELOG.md + 必要时运行治理检查
 """
 
 from __future__ import annotations

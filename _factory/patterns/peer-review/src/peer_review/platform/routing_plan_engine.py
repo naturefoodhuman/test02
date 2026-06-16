@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 01:30:00 CST
+# 创建时间（北京时间）：2026-06-16 21:25:00
 """RoutingPlanEngine: B 文件驱动的节点路由引擎
 
 职责：
@@ -7,6 +7,16 @@
 - 启动时交叉验证模型一致性
 - 根据 active_plan 为每个节点返回模型配置
 - 支持方案菜单展示、GPU 内存预检、并行安全验证
+
+**SSOT 引用（必须保持一致）**:
+- 架构决策：docs/adr/ADR-002-dual-file-model-management.md （双文件体系 + active_plan 切换规则）
+- 实现 SSOT：config/models.yaml (A文件) + config/routing_plans.yaml (B文件)
+- 使用位置：graph/execution.py, debt/cli.py, forge eval
+
+任何对模型路由逻辑的修改必须：
+1. 更新本文件头部时间戳
+2. 同步更新 docs/ARCHITECTURE.md
+3. 如涉及新方案或重大策略变更 → 创建新 ADR（并在 docs/adr/README.md 索引）
 """
 
 from __future__ import annotations

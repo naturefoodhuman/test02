@@ -1,9 +1,25 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-16 12:10:00 CST
+# 创建时间（北京时间）：2026-06-16 21:30:00
 """评审引擎执行入口
 
 封装 LangGraph 图的构建、状态管理与执行流程。
 支持真实 LLM 调用（MTPLX / Ollama 等），完整 HUB-SPOKE 评审。
+
+**SSOT 引用（必须保持一致）**:
+- 核心架构决策：docs/adr/ADR-001-langgraph-migration.md （立即全面迁移到 LangGraph 1.0，弃用 Agno 抽象层；新规范入口为本文件 run_langgraph_review；旧 orchestrator.py 仅保留兼容，计划 2026-07-01 删除）
+- 相关：ADR-002 (RoutingPlanEngine), ADR-005 (KnowledgeHub), ADR-007 (MemoryStore)
+- 旧兼容路径（已废弃）：peer_review.orchestrator.run_langgraph_review （仅 CLI fallback）
+- 调用方：projects/debt-collection/src/debt/cli.py (cmd_review), _infra/forge_tools/src/forge/cli.py (eval)
+
+**规范使用**：
+- 始终通过本文件 + platform/* 组件
+- 禁止直接 import orchestrator.py 中的旧类用于新逻辑
+
+修改本文件必须：
+1. 更新头部时间戳
+2. 同步 docs/ARCHITECTURE.md + CHANGELOG.md
+3. 如涉及图结构或执行语义重大变更 → 创建 superseding ADR
+4. 运行 peer-review 测试 + 真实 eval 验证
 """
 
 from __future__ import annotations

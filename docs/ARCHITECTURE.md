@@ -90,9 +90,14 @@ Project Layer (pilot)
 
 - Created this living `ARCHITECTURE.md` as central SSOT (Phase 2).
 - Strengthened cross-references from HANDOFF, README, PROJECT_STATE, etc. to `docs/adr/` and this file.
-- Started old Agno legacy cleanup (see section 3 and dedicated deprecation notes in legacy files).
+- **Deep old Agno legacy cleanup (C item)**: Added very strong deprecation blocks (with "严禁" rules, canonical path, and explicit removal date 2026-07-01 per ADR-001) to:
+  - `_factory/patterns/peer-review/src/peer_review/orchestrator.py`
+  - `knowledge_loader.py`
+  - `agent_factory.py`
+- **Traceability (C item)**: Added explicit "SSOT 引用" + ADR cross-references to 7+ core platform files (routing_plan_engine.py → ADR-002, knowledge_hub.py → ADR-005, memory_store.py → ADR-007, data_privacy_gate.py → ADR-003, decision_engine.py, graph/execution.py + review_graph.py → ADR-001, etc.).
 - Reinforced R5 LLM file header rule in HANDOFF.md with clearer instructions for future agents.
-- Performed governance health check (zero active stale ZIP references in core docs after Phase 1; all 7 ADRs have proper headers).
+- **Continuous Governance mechanism (C item)**: Created `scripts/governance_check.py` — a self-contained, regularly-runnable script that produces dated `docs/GOVERNANCE_CHECK_YYYY-MM-DD.md` (plus `GOVERNANCE_CHECK_LATEST.md`). It scans all 6 audit dimensions + R5 compliance + Agno footprint + cross-ref health. Run it after every significant change; always commit the generated report.
+- Performed governance health check via the new script (zero active stale ZIP references; 7/7 ADRs have headers; R5 Python ~76/88 relevant files; 6 platform files back-link to ADRs).
 
 ---
 

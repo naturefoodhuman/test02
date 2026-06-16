@@ -1,8 +1,39 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-13 23:45:00 CST
+# 创建时间（北京时间）：2026-06-16 21:25:00
 """
 Peer-Review 多专家评审引擎 v1.0.5 (Agno + LlamaIndex + ChromaDB 重构版)
 特性：全兼容导入层、禁用遥测、模型别名解析、CLI 适配
+
+================================================================================
+DEPRECATED — 强烈不推荐使用（2026-06-16 强化版）
+================================================================================
+本文件为 Agno 遗留兼容层（旧 orchestrator + 旧 Team/Agent 路径）。
+
+**严禁**：
+- 在新功能中使用本文件中的任何类/函数
+- 扩展本文件（不要添加新专家、 新节点、 新模型支持）
+- 依赖 orchestrator.py / KnowledgeLoader / ExpertFactory 进行新开发
+
+**推荐路径**（v1.1.0+ 唯一规范入口）：
+- `peer_review.graph.execution.run_langgraph_review`
+- `peer_review.graph.review_graph.build_review_graph`
+- 平台层：RoutingPlanEngine / KnowledgeHub / MemoryStore / DecisionEngine / DataPrivacyGate
+
+**计划删除时间**：
+- 2026-07-01（2 周稳定性窗口后，按 ADR-001 要求）
+- 删除前将最后一次完整测试覆盖（包括 mtplx-hybrid eval + HITL 恢复）记录到 CHANGELOG + 新 ADR
+
+**理由**（引用 ADR-001）：
+LangGraph 1.0 提供原生 HUB-SPOKE + checkpointer + HITL，Agno 在 6 个月内多次 breaking change，维护成本过高。
+保留本文件仅为极短期向后兼容（CLI fallback），未来将完全移除。
+
+任何对本文件的修改都必须同时：
+1. 更新本文件头部的“创建/修改时间”
+2. 在 docs/CHANGELOG.md 记录
+3. 如果涉及架构，创建新 ADR（但强烈建议不要再碰此文件）
+
+违反以上规则将破坏 Documentation Governance R5 + ADR-001 不可变性。
+================================================================================
 """
 import sys
 import os
