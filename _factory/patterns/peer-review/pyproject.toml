@@ -6,7 +6,16 @@ name = "peer-review"
 version = "0.1.0"
 description = "FORGE Factory Peer-Review 多专家评审引擎（FB-14）"
 requires-python = ">=3.11"
-dependencies = ["pyyaml>=6.0"]
+dependencies = [
+    "pyyaml>=6.0",
+    "langgraph>=1.0.0",
+    "langgraph-checkpoint-sqlite>=3.0.0",
+    "litellm>=1.40.0",
+    "chromadb>=0.6.0",
+    "pydantic>=2.10.0",
+    "rich>=13.0.0",
+    "ollama>=0.3.0",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
