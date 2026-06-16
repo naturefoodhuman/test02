@@ -29,7 +29,7 @@
 
 | 类别 | 冲突描述 | 严重程度 | 证据位置 |
 |------|----------|----------|----------|
-| **Documentation ↔ Code** | HANDOFF.md 仍大量描述“ZIP 补丁”流程，但用户已明确废止并改为“公钥 + Deploy key + git pull” | 高 | HANDOFF.md 第2节 + R4 |
+| **Documentation ↔ Code** | HANDOFF.md（Phase 1 已彻底清理，所有 ZIP 描述和 _patches 引用已移除） | 已修复 | HANDOFF.md + README + CHANGELOG 同步更新 |
 | **Documentation ↔ Documentation** | docs/DECISIONS.md 只记录了 D-012 / D-013（LangGraph 迁移），但项目中存在 6+ 个早期 ADR（在 projects/debt-collection/docs/adr/）且未汇总到根目录 | 中 | docs/DECISIONS.md vs projects/.../adr/ |
 | **Documentation ↔ Configuration** | 4-Final Architecture Design.md 中的模型示例与当前 config/models.yaml（大量 MTPLX + Ollama）严重不一致 | 高 | Design.md §5.2 vs config/models.yaml |
 | **Documentation ↔ Documentation** | PROJECT_STATE.md 存在大量重复段落（核心资产状态、运行依赖重复出现） | 中 | docs/PROJECT_STATE.md |
@@ -155,7 +155,7 @@
 
 ### Phase 1（立即，1-2 天内完成） — **进行中 / 已取得重大进展（2026-06-16）**
 1. ✅ 建立根目录 `docs/adr/` 目录 + 创建 7 个缺失工厂级 ADR（ADR-001 ~ ADR-007，详见 `docs/adr/` 和 `docs/adr/README.md`）
-2. ⏳ **重写** `HANDOFF.md`（已大幅清理 ZIP 流程，强化新公钥+git pull 协议 + 治理规则；仍可进一步精简目录结构中的 _patches/ 引用）
+2. ✅ **重写** `HANDOFF.md`（Phase 1 完成：所有 ZIP 描述和 _patches 引用已彻底移除，阅读顺序强化，ADR/审计报告交叉引用完成）
 3. ✅ 清理 `PROJECT_STATE.md` 重复内容，建立清晰的 SSOT 结构（已删除重复的“核心资产状态”和“运行依赖”段落）
 4. ✅ 在 README.md 和 HANDOFF.md 中明确引用 `DOCUMENT_AUDIT_REPORT.md` + `docs/UPGRADE_COMPLETION.md`
 5. ✅ 新增 `docs/adr/README.md` 作为工厂级 ADR 索引
