@@ -82,7 +82,7 @@ plans:
         role: "合规审查"
         execution: sequential_isolated
       reviewer_3:
-        model: local-coder
+        model: local-qwen-coder
         role: "技术可行性"
         execution: sequential_isolated
       consensus:
