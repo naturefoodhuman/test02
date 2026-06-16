@@ -153,11 +153,15 @@
 
 ## 推荐的维护体系落地计划（优先级排序）
 
-### Phase 1（立即，1-2 天内完成）
-1. 建立根目录 `docs/adr/` 目录 + 创建 7 个缺失工厂级 ADR（以当前状态为准）
-2. **重写** `HANDOFF.md`（彻底删除 ZIP 流程，强化新公钥+git pull 协议）
-3. 清理 `PROJECT_STATE.md` 重复内容，建立清晰的 SSOT 结构
-4. 在 README.md 和 HANDOFF.md 中明确引用 `DOCUMENT_AUDIT_REPORT.md` + `docs/UPGRADE_COMPLETION.md`
+### Phase 1（立即，1-2 天内完成） — **进行中 / 已取得重大进展（2026-06-16）**
+1. ✅ 建立根目录 `docs/adr/` 目录 + 创建 7 个缺失工厂级 ADR（ADR-001 ~ ADR-007，详见 `docs/adr/` 和 `docs/adr/README.md`）
+2. ⏳ **重写** `HANDOFF.md`（已大幅清理 ZIP 流程，强化新公钥+git pull 协议 + 治理规则；仍可进一步精简目录结构中的 _patches/ 引用）
+3. ✅ 清理 `PROJECT_STATE.md` 重复内容，建立清晰的 SSOT 结构（已删除重复的“核心资产状态”和“运行依赖”段落）
+4. ✅ 在 README.md 和 HANDOFF.md 中明确引用 `DOCUMENT_AUDIT_REPORT.md` + `docs/UPGRADE_COMPLETION.md`
+5. ✅ 新增 `docs/adr/README.md` 作为工厂级 ADR 索引
+6. ✅ 更新 `docs/DECISIONS.md` 将其定位为 legacy，指向新 `docs/adr/` 作为 SSOT
+
+**Phase 1 状态**：核心缺失 ADR 问题已解决。剩余为收尾精简工作。
 
 ### Phase 2（本周内）
 5. 创建 `docs/ARCHITECTURE.md`（作为 Design.md 的“活的”SSOT 版本，引用最新实现）
@@ -181,5 +185,11 @@
 
 ---
 
-**审计完成时间**：2026-06-16  
-**下次建议审计**：下一次重大架构/流程变更后，或每 7 轮开发后。
+**审计完成时间**：2026-06-16（首次完整审计 + Phase 1 启动）  
+**Phase 1 进展更新**：2026-06-16 — 7 个工厂级 ADR 已创建并推送，PROJECT_STATE 去重完成，HANDOFF 治理规则强化。
+
+**下次建议审计**：Phase 1 收尾后，或下一次重大架构/流程变更后，或每 7 轮开发后自动触发 Continuous Governance 检查。
+
+---
+
+**审计报告本身也是项目记忆的一部分**。任何新 Agent 必须先阅读本报告以理解当前文档健康状态。

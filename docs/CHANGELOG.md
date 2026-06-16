@@ -402,6 +402,29 @@
 
 ---
 
+## [第 37 轮] 2026-06-16（Phase 1 立即启动）
+
+### 需求变动
+- **Phase 1 治理行动**（响应 DOCUMENT_AUDIT_REPORT.md 发现的 "Missing ADR" 高优先级问题）：
+  - 创建 `docs/adr/` 目录（工厂级 ADR SSOT）。
+  - 新增 7 个完整工厂级 ADR（ADR-001 ~ ADR-007），覆盖 LangGraph 迁移、双文件模型、DataPrivacyGate、MTPLX 后端、KnowledgeHub 重构、forge eval、MemoryStore 作为 SSOT。
+  - 每个 ADR 均遵循规范模板（Context、Alternatives、Decision、Rationale、Consequences、Risks、Rollback Strategy）。
+- **文档体系强化**：
+  - 新增 `docs/adr/README.md`（ADR 索引 + 阅读指南）。
+  - 更新 `docs/DECISIONS.md`（标记为 legacy，指向 `docs/adr/` 作为当前 SSOT）。
+  - 更新 `docs/PROJECT_STATE.md`（清理重复段落，建立清晰 SSOT 结构）。
+  - 更新 `DOCUMENT_AUDIT_REPORT.md`（记录 Phase 1 进展）。
+- **持续治理**：正式将 "创建/更新根级别 ADR" 纳入变更流程。
+
+### 文件影响
+- **新增**：`docs/adr/ADR-001-langgraph-migration.md` ~ `ADR-007-memorystore-as-plan-comparison-ssot.md`（7 个文件） + `docs/adr/README.md`
+- **改动**：`docs/DECISIONS.md`、`docs/PROJECT_STATE.md`、`DOCUMENT_AUDIT_REPORT.md`、`docs/CHANGELOG.md`
+- **Git 推送**：已完成（commit bbfd0eb）
+
+**Phase 1 核心目标达成**：根目录工厂级 ADR 缺失问题已解决。
+
+---
+
 ## [第 36 轮] 2026-06-16
 
 ### 需求变动
