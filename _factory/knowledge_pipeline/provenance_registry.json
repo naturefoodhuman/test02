@@ -1,0 +1,17 @@
+{
+  "ATOM-DAA19406": {
+    "atom_id": "ATOM-DAA19406",
+    "content": "根据河南省高级人民法院关于执行工作的最新指南，对于涉及农村集体土地的债务争议，应优先协调乡镇政府介入...",
+    "source_url": "http://henan.court.gov.cn/guidelines/2026-execute-01",
+    "source_type": "guideline",
+    "region": "henan",
+    "fetch_date": "2026-06-16T00:08:30.958085",
+    "audit_status": "approved",
+    "auditor_id": "expert_lawyer_01",
+    "audit_date": "2026-06-16T00:08:30.958200",
+    "clean_version": "1.0",
+    "weight": 1.0,
+    "tags": [],
+    "clean_content": "【河南专项-农村债权执行】\n1. 优先级：乡镇政府协调 $\rightarrow$ 法院执行\n2. 核心要点：必须确认集体土地确权状态\n3. 风险：注意村民委员会的干扰因素"
+  }
+}
