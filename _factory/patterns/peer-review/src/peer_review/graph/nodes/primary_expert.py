@@ -31,6 +31,8 @@ def make_primary_node(routing_engine: RoutingPlanEngine, knowledge_hub: Knowledg
         # 知识检索（使用 debt-lawyer 专家知识库）
         retrieved = knowledge_hub.search("debt-lawyer", case_context, top_k=5)
         knowledge_context = "\n".join(retrieved) if retrieved else "（知识库当前未返回有效内容）"
+        if retrieved:
+            console.print(f"[dim]📚 知识检索命中 {len(retrieved)} 条（debt-lawyer）[/dim]")
 
         # 铁闸检查
         engine = DecisionEngine()

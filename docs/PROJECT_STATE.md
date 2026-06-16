@@ -18,6 +18,11 @@
   - 目标 2：高精模型矩阵路由设计与 A/B 测试。
   - 目标 3：区域化专家知识库自动化流水线。
 
+**重要更新 (2026-06-16)**: 核心架构升级 (v1.1.0) 已彻底完成！详见 `docs/UPGRADE_COMPLETION.md`。
+- LangGraph 真实执行 + HUB-SPOKE + MTPLX 真实调用 已通过真机验证 (eval --plans mtplx-hybrid 全 5 cases 成功)。
+- 双文件模型体系、DataPrivacyGate、MemoryStore、DecisionEngine、去重 KnowledgeHub 全部落地。
+- 升级目标（4-Final Architecture Design + Execution Plan 中的 P0/P1）全部达成，系统已达到“真正能用”状态。
+
 ## 核心资产状态
 - **专家系统**: `debt-lawyer.expert` 及多领域专家库。
 - **评审引擎**: `_factory/patterns/peer-review` (LangGraph HUB-SPOKE 模式)。

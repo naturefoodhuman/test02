@@ -5,6 +5,30 @@
 
 # DEV LOG —— 逐轮开发日志
 
+## 第 35 轮 · 2026-06-16（架构升级彻底完成确认 + 最终收尾）
+
+**用户反馈**：`eval --plans mtplx-hybrid` 在真机上完整跑通 5 个 gold cases（真实 MTPLX 8080/8082 + 真实 LangGraph HUB-SPOKE + 知识库复用 + MemoryStore + DecisionEngine），耗时 ~240s/case，输出完全符合预期。
+
+**结论**：核心架构升级已彻底完成！
+
+**本次最后收尾工作**：
+1. 彻底替换 KnowledgeHub 为纯 ChromaDB + LlamaIndex 实现（去 Agno 依赖），支持本地 bge-m3 / OllamaEmbedding + 版本去重 + 缓存复用。
+2. 修复 KnowledgeHub 构建时 collection 残留问题 + embedding 依赖。
+3. 更新 debt cli.py 优先使用新 `graph/execution.py` 路径（旧 orchestrator 仅作为兜底）。
+4. 新增 `docs/UPGRADE_COMPLETION.md` 正式宣告升级彻底完成（映射到 Design v1.1.0 + Plan Waves）。
+5. 更新 PROJECT_STATE.md 和本 DEV_LOG 记录完成状态。
+6. 按用户要求，删除所有 ZIP 补丁提及，强化公钥 + Deploy key + git pull 交互协议。
+
+**升级完成标志**（与 5-Architecture Upgrade Execution Plan 对照）：
+- ✅ M2 重构完成（双文件 + Pydantic + 平台层拆分）
+- ✅ M3 能力解锁（LangGraph 真实执行、MemoryStore、铁闸、知识去重）
+- ✅ M4/M5 合规与外部集成基础（DataPrivacyGate + 多模型方案 + MTPLX 对齐 DEPLOYMENT_GUIDE）
+- 真机端到端验证通过（用户本次测试）
+
+**当前系统状态**：已达到“真正能用的产品”标准。可继续 Phase D 持续演进（性能、更多计划、工厂命令完善、旧代码清理）。
+
+---
+
 ## 第 34 轮 · 2026-06-16（Arena Agent 接手继续开发）
 
 **本次目标**：修复用户当前阻塞报错 `AttributeError: 'RoutingPlanEngine' object has no attribute 'get_available_plans'`，让 `forge ... eval --plans mtplx-hybrid` 能真实跑通 LangGraph + 真实 MTPLX LLM 评审。同时把 DEPLOYMENT_GUIDE（最新）与 routing_plans.yaml 对齐。

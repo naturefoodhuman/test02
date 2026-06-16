@@ -200,12 +200,18 @@ def cmd_review(args) -> int:
     print("🔍 启动 Peer-Review 模块 (LangGraph)...")
 
     try:
-        from peer_review.orchestrator import run_langgraph_review
-        print("✅ peer_review 模块加载成功")
+        # 优先使用新架构纯 LangGraph 路径（v1.1.0 升级后推荐）
+        from peer_review.graph.execution import run_langgraph_review
+        print("✅ peer_review 模块加载成功（新 LangGraph 路径）")
     except Exception as e:
-        print(f"❌ 模块加载失败！")
-        traceback.print_exc()
-        return 1
+        print(f"❌ 新路径加载失败，尝试旧兼容路径...")
+        try:
+            from peer_review.orchestrator import run_langgraph_review
+            print("⚠️ 使用旧 orchestrator 兼容路径（建议尽快清理）")
+        except Exception as e2:
+            print(f"❌ 模块加载失败！")
+            traceback.print_exc()
+            return 1
 
     # 组装案件上下文
     from debt import intel as intel_mod
