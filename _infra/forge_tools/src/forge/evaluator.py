@@ -37,10 +37,6 @@ except ImportError as e:
 
 @dataclass
 class EvalResult:
-# ... (rest of the file)
-
-@dataclass
-class EvalResult:
     plan_id: str
     case_id: str
     tft: float  # Time to First Token (simulated if not available)
