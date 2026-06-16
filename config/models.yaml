@@ -55,7 +55,7 @@ models:
     provider: llama_cpp
     backend: llama_cpp
     model_id: Qwopus3.6-35B-A3B-v1-MTP-GGUF-8bit
-    base_url: http://localhost:8081/v1
+    base_url: http://localhost:8084/v1
     type: local
     estimated_speed: "~30 tok/s"
     memory_required_gb: 24

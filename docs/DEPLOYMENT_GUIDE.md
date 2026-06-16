@@ -31,29 +31,31 @@
 ### A. 启动主大脑 (Port 8080)
 ```bash
 cd ~/LocalAI/servers
-uv run python -m mlx_lm.server \
-  --model ~/LocalAI/hf-cache/hub/models--Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality \
+uv run mtplx quickstart \
+  --model Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality \
   --port 8080
 ```
 
 ### B. 启动评审模型 (Port 8082)
 ```bash
 cd ~/LocalAI/servers
-uv run python -m mlx_lm.server \
-  --model ~/LocalAI/hf-cache/hub/models--Youssofal--Gemma4-MTPLX-Optimized-Quality \
+uv run mtplx quickstart \
+  --model Youssofal/Gemma4-MTPLX-Optimized-Quality \
   --port 8082
 ```
 
-### C. 启动 GGUF 模型 (Port 8081)
+### C. 启动 GGUF 模型 (Port 8084)
 ```bash
 cd ~/LocalAI/servers
 ~/LocalAI/servers/llama-server \
-  --model ~/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf \
+  -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf \
   --host 127.0.0.1 \
-  --port 8081 \
-  --n_gpu_layers -1 \
-  --ctx_size 9000 \
-  --threads 8
+  --port 8084 \
+  -c 65536 \
+  -ngl 99 \
+  -fa on \
+  --spec-type draft-mtp \
+  --spec-draft-n-max 2
 ```
 
 ## 5. 内存调度测试方案 (Sequential Test Plan)
