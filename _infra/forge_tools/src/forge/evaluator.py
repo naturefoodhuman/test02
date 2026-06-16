@@ -27,7 +27,7 @@ import os
 sys.path.append(os.path.abspath("_factory/patterns/peer-review/src"))
 
 try:
-    from peer_review.graph.review_graph import run_langgraph_review
+    from peer_review.graph.execution import run_langgraph_review
     from peer_review.platform.routing_plan_engine import RoutingPlanEngine
     IMPORT_SUCCESS = True
 except ImportError as e:
