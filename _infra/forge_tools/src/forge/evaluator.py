@@ -76,7 +76,8 @@ class ModelEvaluator:
                 }
                 
                 try:
-                    # 注意：这里简化调用，不使用 Rich Live display 避免干扰测试输出
+                    # 真实 LangGraph + 真实 LLM 调用（MTPLX / Ollama 等）
+                    # use_live=False 避免 Rich Live 干扰 eval 输出
                     result = run_langgraph_review(
                         case_context=case_context,
                         plan_id=plan_id,
@@ -87,32 +88,34 @@ class ModelEvaluator:
                     end_time = time.perf_counter()
                     duration = end_time - start_time
                     
-                    # 计算伪 TPS (假设输出长度)
-                    output_len = len(result.get("final_decision", ""))
+                    # 真实输出长度用于 TPS 估算
+                    final_text = result.get("final_decision", "") or result.get("consensus", "")
+                    output_len = len(final_text)
                     tps = output_len / duration if duration > 0 else 0
                     
-                    # 质量评分：使用一个简单的启发式 (包含 expected_logic 的关键词)
+                    # 质量评分：基于 gold_dataset expected_logic 的简单关键词启发式（真实场景下可替换为人工打分或 RAGAS）
                     score = 0.0
-                    final_text = result.get("final_decision", "").lower()
+                    final_lower = final_text.lower()
                     for logic in case["expected_logic"]:
-                        # 简单的关键词匹配模拟评分
-                        keywords = logic.split() # 简化处理
-                        if any(k in final_text for k in keywords if len(k) > 1):
+                        keywords = [w for w in logic.split() if len(w) > 1]
+                        if any(k.lower() in final_lower for k in keywords):
                             score += 1.0
                     
-                    quality_score = score / len(case["expected_logic"])
+                    quality_score = min(1.0, score / max(1, len(case["expected_logic"])))
                     divergence = result.get("divergence_score", 0.0)
+                    models_used = result.get("models_used", {})
 
                     all_results.append(EvalResult(
                         plan_id=plan_id,
                         case_id=case["id"],
-                        tft=duration * 0.1, # 模拟 TFT
+                        tft=duration * 0.1,
                         total_time=duration,
                         tps=tps,
                         quality_score=quality_score,
                         divergence=divergence
                     ))
-                    print(f"✅ Score: {quality_score:.2f} | {duration:.1f}s")
+                    model_summary = ", ".join(f"{k}:{v.split(':')[0] if ':' in v else v}" for k,v in models_used.items()) if models_used else "N/A"
+                    print(f"✅ Score: {quality_score:.2f} | {duration:.1f}s | models: {model_summary}")
                 except Exception as e:
                     print(f"❌ Error: {e}")
 

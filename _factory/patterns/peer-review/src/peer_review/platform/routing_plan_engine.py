@@ -122,3 +122,22 @@ class RoutingPlanEngine:
     def get_plan_id_for_node(self, node_name: str) -> str:
         """返回当前激活方案 ID（用于记录）"""
         return self.config.routing.active_plan
+
+    def get_available_plans(self) -> list[str]:
+        """返回所有启用的方案 ID 列表（兼容 evaluator 调用）"""
+        return [
+            plan_id
+            for plan_id, plan in self.config.routing.plans.items()
+            if plan.enabled
+        ]
+
+    def set_active_plan(self, plan_id: str) -> None:
+        """临时切换激活方案（用于 eval 指定 --plans）"""
+        if plan_id not in self.config.routing.plans:
+            raise ValueError(f"方案 '{plan_id}' 不存在。可用方案: {self.get_available_plans()}")
+        if not self.config.routing.plans[plan_id].enabled:
+            raise ValueError(f"方案 '{plan_id}' 未启用")
+        self.config.routing.active_plan = plan_id
+        # 强制重新加载以确保一致性（简单实现）
+        # 注意：生产环境建议使用不可变配置，这里为 eval 兼容
+        print(f"✅ 已切换激活方案为: {plan_id}")

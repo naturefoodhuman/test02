@@ -135,3 +135,29 @@ plans:
         model: deepseek-flash
       fast_classify:
         model: local-fast
+
+  # ── MTPLX 高性能混合方案（对应 DEPLOYMENT_GUIDE 第一阶段测试）────────────────
+  mtplx-hybrid:
+    description: "MTPLX 高性能本地混合（主大脑 Qwen + 独立评审 Gemma4，并行）"
+    estimated_total_time: "约 5-8 分钟"
+    estimated_cost: "$0"
+    notes: "专为 M1 Max 64GB 硬件优化，使用 8080/8082 MTPLX 端口。真实 LLM 评审。"
+    nodes:
+      primary_expert:
+        model: mtplx-qwen36-27b
+        note: "主大脑 / 编码"
+      reviewer_1:
+        model: mtplx-gemma4
+        role: "风险评估"
+        execution: parallel
+        note: "独立评审，不受主专家偏见影响"
+      reviewer_2:
+        model: mtplx-gemma4
+        role: "合规审查"
+        execution: parallel
+        note: "独立评审"
+      consensus:
+        model: mtplx-qwen36-27b
+        note: "高质量模型做最终决断"
+      fast_classify:
+        model: local-fast
