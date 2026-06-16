@@ -48,9 +48,9 @@
 
 | 过时项 | 位置 | 说明 | 严重程度 |
 |--------|------|------|----------|
-| ZIP 补丁流程 | HANDOFF.md（多处） | 用户已明确废止 | 高 |
+| ZIP 补丁流程 | HANDOFF.md（已于 Phase 1 彻底清理） | 用户已明确废止 | 已修复 |
 | Agno 相关遗留描述 | HANDOFF.md、orchestrator.py 头部注释、knowledge_loader.py | 核心执行路径已切换到纯 LangGraph | 高 |
-| 早期项目定位（“ZIP 补丁部署”） | README.md、多个早期 CHANGELOG 条目 | 与当前 Git 标准化发布冲突 | 中 |
+| 早期项目定位（“ZIP 补丁部署”） | README.md、多个早期 CHANGELOG 条目（已在 Phase 1 标注废弃） | 与当前 Git 标准化发布冲突 | 已缓解 |
 | “Phase C 完成”描述与真实状态不完全同步 | PROJECT_STATE.md | 部分工厂命令（forge new）描述与实际实现有差距 | 中 |
 | 旧模型示例（大量 deepseek/qwen-plus 为主） | 4-Final Architecture Design.md §5 | 当前真机主力已切换为 MTPLX | 中 |
 | 重复的“核心资产状态”段落 | PROJECT_STATE.md | 明显复制粘贴残留 | 低 |
