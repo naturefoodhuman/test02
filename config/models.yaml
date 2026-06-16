@@ -21,7 +21,7 @@ models:
     provider: mtplx
     backend: mtplx
     model_id: Gemma4-MTPLX-Optimized-Quality
-    base_url: http://localhost:8080/v1
+    base_url: http://localhost:8082/v1
     type: local
     estimated_speed: "~60 tok/s"
     memory_required_gb: 16
