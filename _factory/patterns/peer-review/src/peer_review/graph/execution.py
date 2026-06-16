@@ -31,8 +31,11 @@ def run_langgraph_review(
     """
     # 1. 初始化平台组件
     # 强制指定根目录以确保加载正确的 config
-    routing_engine = RoutingPlanEngine(root / "config" / "routing_plans.yaml", root / "config" / "models.yaml")
-    knowledge_hub = KnowledgeHub(root / "config" / "models.yaml", root / "_factory" / "experts")
+    routing_engine = RoutingPlanEngine(project_root=root)
+    knowledge_hub = KnowledgeHub(
+        knowledge_root=root / "_factory" / "experts",
+        skills_root=root / "_factory" / "skills"
+    )
     
     # 如果指定了 plan_id，则临时切换
     if plan_id:

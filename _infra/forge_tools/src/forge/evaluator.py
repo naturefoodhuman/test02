@@ -49,7 +49,8 @@ class ModelEvaluator:
     def __init__(self, root: Path):
         self.root = root
         self.dataset_path = root / "_factory" / "evals" / "gold_dataset.json"
-        self.routing_engine = RoutingPlanEngine(root / "config" / "routing_plans.yaml", root / "config" / "models.yaml")
+        # RoutingPlanEngine now takes project_root as a single argument
+        self.routing_engine = RoutingPlanEngine(project_root=root)
 
     def load_dataset(self) -> list[dict]:
         with open(self.dataset_path, "r", encoding="utf-8") as f:
