@@ -29,8 +29,15 @@ sys.path.append(os.path.abspath("_factory/patterns/peer-review/src"))
 try:
     from peer_review.graph.review_graph import run_langgraph_review
     from peer_review.platform.routing_plan_engine import RoutingPlanEngine
+    IMPORT_SUCCESS = True
 except ImportError as e:
     print(f"❌ 导入评审模块失败: {e}")
+    print("👉 请运行 'uv pip install -e _factory/patterns/peer-review' 安装依赖。")
+    IMPORT_SUCCESS = False
+
+@dataclass
+class EvalResult:
+# ... (rest of the file)
 
 @dataclass
 class EvalResult:
@@ -132,6 +139,9 @@ class ModelEvaluator:
         return report
 
 def cmd_eval(args, root: Path):
+    if not IMPORT_SUCCESS:
+        print("⛔ 无法执行 eval：评审模块依赖缺失。")
+        return 1
     evaluator = ModelEvaluator(root)
     # 获取所有可用的 plan_id
     plans = evaluator.routing_engine.get_available_plans()
