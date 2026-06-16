@@ -6,7 +6,12 @@
 # HANDOFF —— 接力交接文档（v2.0 第28轮修订版）
 
 > 目标：任何 Agent 5 分钟内接手并继续开发。
-> ⚠️ **任何 Agent 接手后，必须先读本文档，再读 docs/PROJECT_STATE.md，然后看 docs/DEV_LOG.md 最后一轮记录。**
+> ⚠️ **任何 Agent 接手后，必须按以下顺序阅读**：
+> 1. `DOCUMENT_AUDIT_REPORT.md`（最新治理审计 + 问题清单）
+> 2. `HANDOFF.md`（本文件）
+> 3. `docs/UPGRADE_COMPLETION.md` + `docs/adr/README.md`（架构完成状态 + 工厂级决策 SSOT，含 7 个核心 ADR）
+> 4. `docs/PROJECT_STATE.md`（当前状态）
+> 5. `docs/DEV_LOG.md` + `docs/DECISIONS.md`（历史演进，DECISIONS 已为 legacy） + `docs/CHANGELOG.md`
 
 ---
 
@@ -26,7 +31,7 @@
 - **GitHub 仓库：** `https://github.com/naturefoodhuman/test02.git`
 
 ### 同步方式
-- Agent 改完后生成 ZIP 补丁 → 老板 `unzip -o patch_xxx.zip` 覆盖
+- （历史）早期曾使用 ZIP 补丁方式，已于 2026-06-16 正式废弃（Documentation Governance Phase 1）。当前唯一流程为公钥 + Deploy Key + git pull。
 - 或者老板 `git pull` 拉取最新代码
 - **标准化发布流程**：`make release` 或 `bash release.sh [patch|minor|major] "发布说明"` → 自动更新版本号、CHANGELOG、git tag → `git push origin main --tags`
 
@@ -218,7 +223,6 @@ AI-Project-Incubation-Factory/
 │       ├── risk-assessor.expert/   # 评审专家
 │       ├── compliance-auditor.expert/
 │       └── execution-strategist.expert/
-├── _patches/                       # 补丁包目录
 ├── projects/
 │   ├── _TEMPLATE/                  # 新项目脚手架
 │   └── debt-collection/            # 试点项目
@@ -227,7 +231,7 @@ AI-Project-Incubation-Factory/
 │       │   ├── models.py
 │       │   └── strategy.py
 │       └── tests/
-└── _patches/
+# 注意：_patches/ 目录及所有 ZIP 补丁流程已于 2026-06-16 正式废弃（Documentation Governance Phase 1）。本目录树中已完全移除相关引用。
 ```
 
 ---
@@ -255,8 +259,9 @@ AI-Project-Incubation-Factory/
 接手后按顺序执行：
 - [ ] 读本文档（HANDOFF.md）
 - [ ] 读 `docs/PROJECT_STATE.md` 了解当前进度
-- [ ] 读 `docs/DECISIONS.md` 了解已拍板决策（不得擅自改）
+- [ ] 读 `docs/DECISIONS.md`（legacy，早于 2026-06-16 治理；当前工厂级决策见 `docs/adr/` + `docs/adr/README.md`）
 - [ ] 读 `docs/DEV_LOG.md` 最后一轮了解最近做了什么
+- [ ] 读 `DOCUMENT_AUDIT_REPORT.md` + `docs/UPGRADE_COMPLETION.md` 了解文档健康状态和架构完成度
 - [ ] 确认老板的下一个需求是什么（如果老板没说，主动问）
 - [ ] **任何新功能/架构变更前，先做 R2 调研**（穷尽→正反评估→老板认可→执行）
 - [ ] 改完文件后同步更新所有相关文档（必须遵循 Code → Tests → Documentation → CHANGELOG → ADR（如需）流程）

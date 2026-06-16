@@ -16,7 +16,7 @@
 - **新增**：建立 FORGE Factory 基础设施骨架（Phase 1）。
 - **新增**：接力维护文档体系（应对意外中止可接续）—— 来自特殊要求 #1。
 - **新增**：每轮需求增删改要同步到相关文档并写变动说明 —— 来自特殊要求 #2（本 CHANGELOG 即其落地）。
-- **新增**：每轮改动后打 zip 补丁包 —— 来自补丁约定。
+- **新增**：每轮改动后打 zip 补丁包 —— 来自补丁约定。（**已于 2026-06-16 Documentation Governance 审计中正式废弃**，见 DOCUMENT_AUDIT_REPORT.md + HANDOFF.md 同步方式更新）
 
 ### 文件影响（新增）
 - `HANDOFF.md`（接力总入口）
@@ -433,7 +433,7 @@
 - **新增**：`DOCUMENT_CHANGE_REPORT.md`（本次变更记录 + 风险与后续）
 - **识别问题**（高优先级）：
   - 大量文档漂移（尤其是 4-Final Architecture Design.md 与实际 v1.1.0 实现）
-  - HANDOFF.md 仍保留已废止的 ZIP 补丁流程
+  - HANDOFF.md 仍保留已废止的 ZIP 补丁流程（Phase 1 收尾中已彻底清理并移除所有引用）
   - 根目录严重缺失工厂级 ADR（SSOT 碎片化）
   - PROJECT_STATE.md 存在重复内容
   - 孤立文档与孤立代码（早期 research + Agno 遗留模块）

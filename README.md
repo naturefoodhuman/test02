@@ -53,10 +53,12 @@ forge gate GATE-2
 
 ## 给接手的人 / Agent
 出问题或要接续开发，**必须按顺序阅读**：
-1. `DOCUMENT_AUDIT_REPORT.md`（最新项目治理审计报告）
-2. `HANDOFF.md`（接力总入口）
-3. `docs/UPGRADE_COMPLETION.md`（架构升级完成状态）
+1. `DOCUMENT_AUDIT_REPORT.md`（最新项目治理审计报告 + 问题与修复计划）
+2. `HANDOFF.md`（接力总入口 + 操作 SOP）
+3. `docs/UPGRADE_COMPLETION.md` + `docs/adr/README.md`（架构升级完成状态 + 工厂级 ADR 索引，含 ADR-001~007）
 4. `docs/PROJECT_STATE.md`（当前状态 SSOT）
-5. `docs/DEV_LOG.md` + `docs/DECISIONS.md` + `docs/CHANGELOG.md`
+5. `docs/DEV_LOG.md` + `docs/DECISIONS.md`（历史，DECISIONS 已标记为 legacy） + `docs/CHANGELOG.md`
 
-**治理原则**：项目已建立 Documentation Governance 体系。任何变更必须遵循 Code → Tests → Documentation → CHANGELOG → ADR 流程。
+**治理原则**：项目已建立 Documentation Governance 体系（见 `DOCUMENT_AUDIT_REPORT.md` + Phase 1 收尾）。任何变更必须遵循：
+Code → Tests → Documentation → CHANGELOG → ADR（如为重大决策）流程。
+新工厂级架构决策必须在 `docs/adr/` 创建对应 ADR（参考 `docs/adr/README.md`）。
