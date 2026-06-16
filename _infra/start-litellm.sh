@@ -26,7 +26,19 @@ if ! command -v litellm >/dev/null 2>&1; then
   exit 1
 fi
 
-# 2) 加载并 export .env（关键修复）
+# 2) 额外自检 proxy 依赖（websockets 是 litellm[proxy] 必需，常见 macOS 报错根因）
+if python -c "import websockets" 2>/dev/null; then
+  echo "✅ websockets 已可用（proxy 依赖就绪）"
+else
+  echo "⚠️  检测到缺少 'websockets'（这是 litellm[proxy] 的核心依赖）。"
+  echo "   正确修复命令（必须在已激活的 venv 内执行）："
+  echo "     uv pip install 'litellm[proxy]' -i https://mirrors.aliyun.com/pypi/simple"
+  echo "   或（如果用系统 python）：pip install 'litellm[proxy]' 但强烈建议用 uv + venv。"
+  echo "   然后重新运行本脚本。"
+  # 不立即退出，让用户看到提示后再决定
+fi
+
+# 3) 加载并 export .env（关键修复）
 if [ -f "$ENV_FILE" ]; then
   echo "📥 从 $ENV_FILE 加载并 export 环境变量..."
   # 只处理形如 KEY=VALUE 的非注释行；用 set -a 让随后所有赋值自动 export

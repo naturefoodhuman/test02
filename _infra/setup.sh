@@ -90,7 +90,9 @@ else
     warn "当前终端未激活该 venv，故 PATH 里找不到。启动网关前先：source $(dirname "$(dirname "$FOUND_LITELLM")")/bin/activate"
   else
     warn "未找到 litellm（PATH 与常见 venv 均无）。安装：uv pip install 'litellm[proxy]'"
-    warn "国内源：uv pip install 'litellm[proxy]' -i https://pypi.tuna.tsinghua.edu.cn/simple"
+    warn "国内源（推荐）：uv pip install 'litellm[proxy]' -i https://mirrors.aliyun.com/pypi/simple"
+    warn "⚠️  常见 macOS 报错 'No module named websockets' 的根因：只装了 litellm，没有装 [proxy] extra。"
+    warn "   必须用带 [proxy] 的命令，且在已激活的 venv 内执行。"
     warn "提示：若你已在某个 venv 里装过，激活它即可（source <venv>/bin/activate）。"
   fi
 fi

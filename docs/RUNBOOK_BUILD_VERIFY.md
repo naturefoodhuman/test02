@@ -64,6 +64,11 @@ bash _infra/start-litellm.sh
 - ✅ 预期：看到 `✅ GLM_API_KEY 已加载到环境（长度 39）` 和 `Uvicorn running on ...:4000`。
 - ⚠️ **这个终端A 不要关，让它一直跑着**。后续命令都在**新终端B**里执行。
 - ❓ 若 `litellm: command not found`：说明 litellm 没装在当前 venv。先 `uv pip install 'litellm[proxy]' -i https://mirrors.aliyun.com/pypi/simple` 再重试。
+- ❓ 若启动时报 `ModuleNotFoundError: No module named 'websockets'`（或类似）：这是 litellm[proxy] 的**必需依赖**缺失。**正确命令**（必须在激活的 venv 内）：
+  ```
+  uv pip install 'litellm[proxy]' -i https://mirrors.aliyun.com/pypi/simple
+  ```
+  然后重新运行 `bash _infra/start-litellm.sh`。不要只装 `litellm`，必须带 `[proxy]`。
 
 ### 步骤 2（终端B，新开一个终端窗口）：进项目、激活 venv
 ```bash
