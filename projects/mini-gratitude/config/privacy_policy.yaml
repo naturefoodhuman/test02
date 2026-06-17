@@ -1,0 +1,22 @@
+version: "1.0"
+project: "mini-gratitude"
+last_reviewed: "2026-06-15"
+reviewed_by: "Project Owner"
+
+fields:
+  debtor_name:
+    label: "债务人姓名"
+    policy: local_only
+  amount:
+    label: "金额"
+    policy: mask_then_allow
+    mask_rule: "round_to_nearest_10000"
+
+endpoints:
+  chinese_api:
+    display_name: "Chinese API"
+    allowed_policies: [allow, mask_then_allow]
+    requires_human_for: [human_approve]
+  local_model:
+    display_name: "Local Model"
+    allowed_policies: [allow, mask_then_allow, human_approve, local_only]

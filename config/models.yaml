@@ -17,7 +17,7 @@ models:
     capabilities: [general, reasoning, code, high_quality]
 
   mtplx-gemma4:
-    display_name: "Gemma4-MTPLX-Optimized (评审)"
+    display_name: "Gemma4-MTPLX-Optimized (独立评审)"
     provider: mtplx
     backend: mtplx
     model_id: Gemma4-MTPLX-Optimized-Quality
@@ -40,7 +40,7 @@ models:
     capabilities: [deep_reasoning, strategy]
 
   local-qwen-coder:
-    display_name: "Qwen3-Coder-Next q4_K_M (测试/编码)"
+    display_name: "Qwen3-Coder-Next q4_K_M (测试/编码备用)"
     provider: ollama
     backend: ollama
     model_id: qwen3-coder-next:q4_K_M
@@ -51,7 +51,7 @@ models:
     capabilities: [code_generation, code_review]
 
   qwopus-35b:
-    display_name: "Qwopus3.6-35B-A3B (评审)"
+    display_name: "Qwopus3.6-35B-A3B (独立评审)"
     provider: llama_cpp
     backend: llama_cpp
     model_id: Qwopus3.6-35B-A3B-v1-MTP-GGUF-8bit
@@ -63,7 +63,7 @@ models:
 
   # ── 其他本地模型 ─────────────────────────────────────────────
   local-qwen35b:
-    display_name: "Qwen3.5 35B MoE (本地主力)"
+    display_name: "Qwen3.5 35B MoE (本地主力备用)"
     provider: ollama
     backend: ollama
     model_id: qwen3.5:35b-a3b-q8_0
@@ -74,7 +74,7 @@ models:
     capabilities: [general, reasoning, chinese]
 
   local-fast:
-    display_name: "Qwen2.5 7B (快速)"
+    display_name: "Qwen2.5 7B (简单任务)"
     provider: ollama
     backend: ollama
     model_id: qwen2.5:7b
@@ -93,12 +93,24 @@ models:
     type: embedding
 
   # ── 中国商业 API ─────────────────────────────────────────────
+    glm-5:
+    display_name: "GLM-5.1 (本地模型不能胜任的复杂问题)"
+    provider: zhipu
+    backend: litellm
+    model_id: z-ai/glm-5.1
+    base_url: https://integrate.api.nvidia.com/v1
+    api_key: ${GLM_API_KEY}
+    type: api
+    estimated_cost: "$0.007/1k tokens"
+    capabilities: [chinese, legal]
+    data_policy: requires_privacy_check
+  
   deepseek-flash:
-    display_name: "DeepSeek V4 Flash (API 快速)"
+    display_name: "DeepSeek V4 Flash (快速创作)"
     provider: deepseek
     backend: litellm
-    model_id: deepseek-chat
-    base_url: https://api.deepseek.com/v1
+    model_id: deepseek-ai/DeepSeek-V4-Flash
+    base_url: https://integrate.api.nvidia.com/v1
     api_key: ${DEEPSEEK_API_KEY}
     type: api
     estimated_cost: "$0.002/1k tokens"
@@ -106,11 +118,11 @@ models:
     data_policy: requires_privacy_check
 
   deepseek-pro:
-    display_name: "DeepSeek V4 Pro (API 高质量)"
+    display_name: "DeepSeek V4 Pro (独立评审)"
     provider: deepseek
     backend: litellm
-    model_id: deepseek-reasoner
-    base_url: https://api.deepseek.com/v1
+    model_id: deepseek-ai/DeepSeek-V4-Pro
+    base_url: https://integrate.api.nvidia.com/v1
     api_key: ${DEEPSEEK_API_KEY}
     type: api
     estimated_cost: "$0.015/1k tokens"
@@ -118,10 +130,10 @@ models:
     data_policy: requires_privacy_check
 
   qwen-plus:
-    display_name: "Qwen 3.6 Plus (API 超长上下文)"
+    display_name: "Qwen3.5-397B-A17B (多模态)"
     provider: alibaba
     backend: litellm
-    model_id: qwen-plus
+    model_id: Qwen/Qwen3.5-397B-A17B
     base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     api_key: ${QWEN_API_KEY}
     type: api
@@ -129,14 +141,4 @@ models:
     capabilities: [long_context, chinese]
     data_policy: requires_privacy_check
 
-  glm-5:
-    display_name: "GLM-5.1 (API 中文专项)"
-    provider: zhipu
-    backend: litellm
-    model_id: glm-4-plus
-    base_url: https://open.bigmodel.cn/api/paas/v4
-    api_key: ${GLM_API_KEY}
-    type: api
-    estimated_cost: "$0.007/1k tokens"
-    capabilities: [chinese, legal]
-    data_policy: requires_privacy_check
+
