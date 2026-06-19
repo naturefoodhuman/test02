@@ -25,8 +25,8 @@ cat << 'EOF' > ~/.claude/settings.json
 {
   "env": {
     "ANTHROPIC_BASE_URL": "http://localhost:4000",
-    "ANTHROPIC_AUTH_TOKEN": "sk444",
-    "ANTHROPIC_API_KEY": "sk444",
+    "ANTHROPIC_AUTH_TOKEN": "sk-forge-local-anytoken",
+    "ANTHROPIC_API_KEY": "sk-forge-local-anytoken",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "API_TIMEOUT_MS": "3000000"
   }
