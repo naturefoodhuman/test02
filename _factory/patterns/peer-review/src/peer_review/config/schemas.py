@@ -60,7 +60,13 @@ class ModelConfig(BaseModel):
     memory_required_gb: int = Field(default=0, ge=0, description="所需显存/内存 (GB)")
     capabilities: list[str] = Field(default_factory=list, description="能力标签")
     note: str | None = Field(default=None, description="备注")
-    data_policy: str | None = Field(default=None, description="数据策略要求")
+    # ── 显存与频率控制参数 ──────────────────────────────────────────
+    max_tokens: int | None = Field(default=None, description="最大生成 Token 数")
+    temperature: float | None = Field(default=None, description="温度参数")
+    top_p: float | None = Field(default=None, description="Top-P 参数")
+    stream: bool = Field(default=False, description="是否使用流式输出")
+    rpm: int | None = Field(default=None, description="每分钟限制请求数 (RPM)")
+    tpm: int | None = Field(default=None, description="每分钟限制 Token 数 (TPM)")
 
     @field_validator("api_key", mode="before")
     @classmethod

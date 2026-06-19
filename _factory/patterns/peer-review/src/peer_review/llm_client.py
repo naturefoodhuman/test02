@@ -111,7 +111,19 @@ class MTPLXBackend(LLMBackend):
         # MTPLX 通常提供高性能 OpenAI 兼容接口
         base_url = model_cfg.base_url or "http://localhost:8080/v1"
         api_key = "mtplx-token"
-        body = json.dumps({"model": model_cfg.model_id, "messages": messages, "temperature": 0.1}).encode("utf-8")
+        
+        # 构建请求体，包含自定义参数 (需求 5)
+        payload = {
+            "model": model_cfg.model_id,
+            "messages": messages,
+            "temperature": model_cfg.temperature if model_cfg.temperature is not None else 0.1,
+            "top_p": model_cfg.top_p if model_cfg.top_p is not None else 1.0,
+            "stream": model_cfg.stream,
+        }
+        if model_cfg.max_tokens:
+            payload["max_tokens"] = model_cfg.max_tokens
+
+        body = json.dumps(payload).encode("utf-8")
         try:
             req = urllib.request.Request(
                 base_url.rstrip("/") + "/chat/completions",
