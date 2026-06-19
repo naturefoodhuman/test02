@@ -55,6 +55,13 @@ model_list:
       api_key: "os.environ/GLM_API_KEY"
       timeout: 60
 
+  # ═══════════ CLAUDE CODE 伪装适配 ═══════════
+  - model_name: "claude-3-5-sonnet-20241022"
+    litellm_params:
+      model: "ollama/qwen3.6:35b-a3b-q8_0"
+      api_base: "http://localhost:11434"
+      timeout: 300
+
 router_settings:
   routing_strategy: "latency-based-routing"
   fallbacks:
