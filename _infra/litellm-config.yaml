@@ -62,6 +62,18 @@ model_list:
       api_base: "http://localhost:11434"
       timeout: 300
 
+  - model_name: "claude-opus-4-8"
+    litellm_params:
+      model: "ollama/qwen3.6:35b-a3b-q8_0"
+      api_base: "http://localhost:11434"
+      timeout: 300
+
+  - model_name: "claude-3-5-sonnet-latest"
+    litellm_params:
+      model: "ollama/qwen3.6:35b-a3b-q8_0"
+      api_base: "http://localhost:11434"
+      timeout: 300
+
 router_settings:
   routing_strategy: "latency-based-routing"
   fallbacks:
