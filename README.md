@@ -62,3 +62,12 @@ forge gate GATE-2
 **治理原则**：项目已建立 Documentation Governance 体系（见 `DOCUMENT_AUDIT_REPORT.md` + Phase 1 收尾）。任何变更必须遵循：
 Code → Tests → Documentation → CHANGELOG → ADR（如为重大决策）流程。
 新工厂级架构决策必须在 `docs/adr/` 创建对应 ADR（参考 `docs/adr/README.md`）。
+
+
+
+## Obsolete Assets
+
+`_obsolete/` 是**本地归档目录**，已加入 `.gitignore`，不会 push 到 GitHub。历史资产、一次性诊断脚本、运行日志等如需保留，可放入本地 `_obsolete/`；GitHub 仓库只保留当前有效代码、配置、测试、文档与用户明确要求保留的项目目录。
+
+本轮用户明确要求保留并复位：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`。
+清理证据与最终结果见 `docs/repository-audit.md` 与 `docs/repository-cleanup-report.md`。

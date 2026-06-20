@@ -84,3 +84,16 @@
 - **R5 文件头**：所有文件顶部必须有“创建/修改模型 + 北京时间”。
 - **R8 行数限制**：文档与复杂逻辑代码不设硬性行数限制。
 - **过期处理**：所有旧代码、旧设计文档均在 `_obsolete/` 目录下。
+
+
+---
+
+
+---
+
+## 6. 仓库清理与过期资产规则
+- 最新仓库资产盘点见 `docs/repository-audit.md`。
+- 清理报告见 `docs/repository-cleanup-report.md`。
+- `_obsolete/` 为本地归档目录，已加入 `.gitignore`，禁止 push 到 GitHub。
+- 用户明确要求保留：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`；不得擅自迁移。
+- 源码与文档不一致时，以当前源码和配置为准，并在审计/清理报告中记录差异。

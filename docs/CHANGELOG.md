@@ -10,6 +10,30 @@
 
 ---
 
+## [第 43 轮] 2026-06-20
+
+### 需求变动
+- **重大治理行动**：执行 Repository Cleanup & Obsolete Asset Management，并按用户最新要求修正迁移策略。
+- **明确保留**：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/` 不迁移，已复位并继续保留在 GitHub 仓库。
+- **新增**：`docs/repository-audit.md`、`docs/repository-cleanup-report.md`。
+- **策略调整**：`_obsolete/` 加入 `.gitignore`，停止跟踪既有 `_obsolete/`，该目录仅作为本地归档，不 push 到 GitHub。
+- **归档**：一次性诊断/修复脚本与运行日志保留在本地 `_obsolete/`，从 GitHub 最小有效仓库中移出。
+- **修复**：恢复 `peer_review.orchestrator` 极薄 lazy 兼容 shim，解决源码/测试引用与已迁移旧实现之间的不一致。
+- **优化**：扩展 `.gitignore`，覆盖 build、cache、logs、runtime、temp、Python、Node、IDE、OS 产物。
+
+### 文件影响
+- 新增：`docs/repository-audit.md`、`docs/repository-cleanup-report.md`、`_factory/patterns/peer-review/src/peer_review/orchestrator.py`（兼容 shim）。
+- 改动：`.gitignore`、`README.md`、`HANDOFF.md`、`docs/ARCHITECTURE.md`、`docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`。
+- 停止跟踪：既有 `_obsolete/` 目录；一次性诊断/修复脚本；运行日志。
+
+### 说明
+- 本轮最终状态遵循用户最新指令：指定三个目录不迁移；`_obsolete/` 不 push 到 GitHub。
+- 源码与旧文档冲突处，以当前源码为准，并记录在 `docs/repository-audit.md`。
+
+---
+
+
+
 ## [第 1 轮] 2026-06-10
 
 ### 需求变动

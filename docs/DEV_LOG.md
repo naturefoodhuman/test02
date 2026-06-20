@@ -211,3 +211,16 @@
 1. 核心架构：`_factory/patterns/peer-review/` 模块初始化
 2. 新增 3 位评审专家定义
 3. CLI 集成：`debt review` 命令
+
+
+
+---
+
+## 2026-06-20 — Repository Cleanup & Obsolete Asset Management
+
+- 完成全仓库资产盘点并生成 `docs/repository-audit.md`。
+- 按用户最新要求复位并保留 `projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`。
+- 将 `_obsolete/` 加入 `.gitignore`，并停止跟踪既有 `_obsolete/` 资产；本地文件保留，GitHub 不再推送该目录。
+- 一次性诊断/修复脚本与运行日志仅保留在本地 `_obsolete/`，不进入 GitHub 最小有效仓库。
+- 修复 `peer_review.orchestrator` 缺失导致历史测试/兼容导入失败的问题：新增极薄 lazy shim，真实入口仍为 `peer_review.graph.execution.run_langgraph_review`。
+- 更新 `.gitignore`，补齐 build/cache/log/temp/IDE/OS/Python/Node/runtime 规则。

@@ -45,3 +45,13 @@
 - [ ] 收集多方案真实压测数据（high-quality / all-local / mtplx-hybrid）
 - [ ] 优化 MTPLX 启动参数（--reasoning-effort low 等）
 - [ ] 准备 v1.3.0（多项目并行 + 断点续接）
+
+
+## 6. Repository Cleanup State
+
+- **最近清理时间**：2026-06-20
+- **审计报告**：`docs/repository-audit.md`
+- **清理报告**：`docs/repository-cleanup-report.md`
+- **过期资产目录策略**：`/_obsolete/` 为本地归档，已加入 `.gitignore`，不 push 到 GitHub。
+- **用户保留要求**：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/` 已复位并保持在仓库中。
+- **本轮仓库净化重点**：停止跟踪既有 `_obsolete/`，归档一次性诊断/修复脚本与运行日志到本地 `_obsolete/`，补齐审计/清理报告。

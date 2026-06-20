@@ -52,3 +52,18 @@
 ## 4. 进化规则
 - **不重复造轮子**：优先集成主流开源库 (LiteLLM, FastAPI, HTTPX)。
 - **物理透明**：模型拉起必须通过 Terminal 窗口，不得在后台静默“装死”。
+
+
+
+## 5. Obsolete / Local Archive Boundary
+
+`/_obsolete/` 不属于当前运行架构，也不属于 GitHub 最小有效仓库内容；该目录已在 `.gitignore` 中忽略，仅用于本地追溯。
+
+当前架构入口仍是：
+
+- `_infra/smart_proxy.py` / `_infra/start-litellm.sh` / `scripts/forge-start.sh`
+- `_factory/patterns/peer-review/src/peer_review/graph/execution.py`
+- `config/models.yaml`、`config/routing_plans.yaml`、`config/privacy_policy.yaml`
+- `projects/debt-collection/` 当前试点、`projects/_TEMPLATE/` 项目模板，以及用户明确要求保留的 `projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`
+
+旧 Agno/orchestrator 大实现只可作为本地归档参考；当前源码只保留一个兼容 shim，避免历史导入直接失败；新功能不得回流到旧实现。
