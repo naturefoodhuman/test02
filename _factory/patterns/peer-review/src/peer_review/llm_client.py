@@ -69,7 +69,8 @@ def _ensure_server_running(base_url: str):
                 return
     print(f"⚠️ 端口 {port} 启动超时")
 
-class LLMBackend(ABC):
+@dataclass
+class LLMResponse:
     content: str
     model: str
     error: str | None = None
