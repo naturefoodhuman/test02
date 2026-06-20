@@ -1,37 +1,11 @@
-# Created by FORGE Factory Agent
-# Timestamp: 2026-06-13 14:15:00 CST
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
 .venv/
-.env
-
-# Project Runtime (Private PDFs, Local Databases, Logs)
-runtime/
-*/runtime/
-projects/*/runtime/
-mineru_out/
-
-# OS
+__pycache__/
+*.pyc
 .DS_Store
-
-# Patches
-patches/
-
-# Models (Local weights should not be committed)
-models/
-
-# Generated expert indices / raw JSON dumps (rebuilt from markdown sources)
-_factory/experts/**/*.json
-_factory/experts/**/index.json
-
-# Cache / logs
-.pytest_cache/
-.mypy_cache/
-*.log
-.ipynb_checkpoints/
-.ssh/
-.gitconfig
-.cache/
+runtime/
+projects/*/runtime/
+.idea/
+.vscode/
+*.bak
+_infra/.env
+/tmp/forge_*.log
