@@ -1,13 +1,11 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-21 19:30:00
+# 创建时间（北京时间）：2026-06-21 15:30:00
 # config/models.yaml
-# A 文件：所有可用模型的接入信息。
-# ⚠️ 统一路由：所有本地模型 base_url 均指向 Smart Proxy (4000) 进行显存调度。
 
 models:
-  # ── MTPLX 高性能本地推理 ──────────────────────────
+  # ── 本地模型：统一由 Smart Proxy (4000) 调度 ──
   mtplx-qwen36-27b:
-    display_name: "Qwen3.6-27B-MTPLX-Optimized (主大脑/编码)"
+    display_name: "Qwen3.6-27B-MTPLX-Optimized (主大脑)"
     provider: mtplx
     backend: mtplx
     model_id: Qwen3.6-27B-MTPLX-Optimized-Quality
@@ -24,17 +22,6 @@ models:
     type: local
     memory_required_gb: 16
 
-  # ── Ollama 本地推理 ──────────────────────────────────────────
-  local-deepseek-r1:
-    display_name: "DeepSeek-R1 32B (独立评审)"
-    provider: ollama
-    backend: ollama
-    model_id: deepseek-r1:32b
-    base_url: http://localhost:4000/v1
-    type: local
-    memory_required_gb: 20
-
-  # ── Llama.cpp 本地推理 ────────────────────────────────────────
   qwopus-35b:
     display_name: "Qwopus3.6-35B-A3B (独立评审)"
     provider: llama_cpp
@@ -44,16 +31,16 @@ models:
     type: local
     memory_required_gb: 36
 
-  local-fast:
-    display_name: "Qwen2.5 7B (简单任务)"
+  local-deepseek-r1:
+    display_name: "DeepSeek-R1 32B"
     provider: ollama
     backend: ollama
-    model_id: qwen2.5:7b
-    base_url: http://localhost:11434
+    model_id: deepseek-r1:32b
+    base_url: http://localhost:4000/v1
     type: local
-    memory_required_gb: 6
+    memory_required_gb: 20
 
-  # ── 中国商业 API ─────────────────────────────────────────────
+  # ── API 模型：直接访问官方，不经过本地代理 ──
   deepseek-pro:
     display_name: "DeepSeek V4 Pro"
     provider: deepseek

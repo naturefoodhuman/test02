@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-21 21:30:00
+# 创建时间（北京时间）：2026-06-21 16:00:00
 
 import sys
 import os
@@ -15,7 +15,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 from threading import Lock
 
-# 注入项目路径
 FORGE_ROOT = "/Users/naturist/MusicProject/AI-Project-Incubation-Factory"
 sys.path.append(os.path.join(FORGE_ROOT, "_factory/patterns/peer-review/src"))
 from peer_review.llm_client import SERVER_COMMANDS
@@ -23,21 +22,18 @@ from peer_review.llm_client import SERVER_COMMANDS
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]: %(message)s')
 logger = logging.getLogger("SmartProxy")
 
-app = FastAPI(title="FORGE Robust VRAM Gateway")
+app = FastAPI(title="FORGE Unified Smart Proxy v4.0")
 
-# 显存管理 SSOT
-VRAM_LIMIT = 48 # GB
-MODEL_VRAM_MAP = {
-    8080: 20, 
-    8082: 16, 
-    8084: 36,
-    11434: 20
+# 1. 物理 ID 映射表 (解决 404/超时的关键)
+REAL_ID_MAP = {
+    8080: "Qwen3.6-27B-MTPLX-Optimized-Quality",
+    8082: "Gemma4-MTPLX-Optimized-Quality",
+    8084: "Qwopus3.6-35B-A3B-v1-MTP-GGUF-8bit",
+    11434: "deepseek-r1:32b"
 }
-active_servers = {} 
-vram_lock = Lock()
 
-# 对齐 models.yaml 的真实模型 ID
-MODEL_MAP = {
+# 2. 别名路由表
+MODEL_TO_PORT = {
     "mtplx-qwen36-27b": 8080,
     "mtplx-gemma4": 8082,
     "qwopus-35b": 8084,
@@ -47,19 +43,17 @@ MODEL_MAP = {
     "claude-3-5-sonnet-latest": 8080
 }
 
+# 显存管理
+VRAM_LIMIT = 48
+MODEL_VRAM = {8080: 20, 8082: 16, 8084: 36, 11434: 20}
+active_servers = {}
+vram_lock = Lock()
+http_client = httpx.AsyncClient(timeout=300.0, limits=httpx.Limits(max_keepalive_connections=20))
+
 def is_listening(port: int):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(0.5)
         return s.connect_ex(("127.0.0.1", port)) == 0
-
-def purge_oldest_server():
-    running = [p for p in active_servers if is_listening(p)]
-    if not running: return
-    oldest = min(running, key=lambda p: active_servers.get(p, 0))
-    logger.info(f"⚠️ 释放显存：正在卸载端口 {oldest}")
-    subprocess.run(f"pkill -9 -f '.*{oldest}'", shell=True)
-    if oldest in active_servers: del active_servers[oldest]
-    time.sleep(2)
 
 def ensure_server(port: int):
     with vram_lock:
@@ -68,89 +62,79 @@ def ensure_server(port: int):
             return True
         if port not in SERVER_COMMANDS: return False
         
-        # 显存调度
-        required = MODEL_VRAM_MAP.get(port, 20)
-        current = sum(MODEL_VRAM_MAP.get(p, 20) for p in active_servers if is_listening(p))
-        while current + required > VRAM_LIMIT:
-            purge_oldest_server()
-            current = sum(MODEL_VRAM_MAP.get(p, 20) for p in active_servers if is_listening(p))
+        # 显存回收
+        current = sum(MODEL_VRAM.get(p, 20) for p in active_servers if is_listening(p))
+        while current + MODEL_VRAM.get(port, 20) > VRAM_LIMIT:
+            oldest = min([p for p in active_servers if is_listening(p)], key=lambda x: active_servers[x])
+            logger.info(f"⚠️ 卸载离线模型释放显存 (Port {oldest})")
+            subprocess.run(f"pkill -9 -f '.*{oldest}'", shell=True)
+            del active_servers[oldest]
+            current = sum(MODEL_VRAM.get(p, 20) for p in active_servers if is_listening(p))
 
-        logger.info(f"🚀 拉起端口 {port} (预估 {required}GB)...")
-        # 【核心修复】使用最稳的 AppleScript 启动新窗口，避免 -10000 错误
+        logger.info(f"🚀 拉起真机模型 (Port {port})...")
         script = f'tell application "Terminal" to do script "{SERVER_COMMANDS[port]}"'
         subprocess.run(["osascript", "-e", script])
         
-        # 深度就绪等待
         start_ts = time.time()
-        while time.time() - start_ts < 150:
+        while time.time() - start_ts < 120:
             if is_listening(port):
-                # API 可用性握手
-                check_url = f"http://127.0.0.1:{port}/" if port == 11434 else f"http://127.0.0.1:{port}/v1/models"
                 try:
+                    # 必须确认 API 握手成功
+                    check_url = f"http://127.0.0.1:{port}/v1/models"
+                    if port == 11434: check_url = "http://127.0.0.1:11434/"
                     with httpx.Client() as client:
                         if client.get(check_url, timeout=2).status_code in [200, 404]:
-                            logger.info(f"✅ 端口 {port} 已完全就绪")
+                            logger.info(f"✅ 后端 {port} 响应就绪")
                             active_servers[port] = time.time()
-                            time.sleep(3) # 最终稳定性缓冲
+                            time.sleep(5) # 显存稳定缓冲
                             return True
                 except: pass
             time.sleep(5)
-            logger.info(f"   ...加载中 ({int(time.time()-start_ts)}s)")
         return False
 
-# --- 协议转换逻辑 (保持流式与非流式分流) ---
-# ... [此处已包含完整的 protocol_translator 逻辑] ...
-# 为了保证文件能够直接执行，我将在实际代码中合并这些逻辑。
-
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def unified_gateway(request: Request, path: str):
+async def smart_gateway(request: Request, path: str):
     body = await request.body()
     try: data = json.loads(body) if body else {}
     except: data = {}
     
-    model_name = data.get("model", "mtplx-qwen36-27b")
-    target_port = MODEL_MAP.get(model_name, 8080)
-    is_stream = data.get("stream", False)
+    model_name = data.get("model", "")
+    target_port = MODEL_TO_PORT.get(model_name, 8080)
     is_anthropic = "messages" in path
 
-    if not ensure_server(target_port): 
-        logger.error(f"❌ 后端超时: {model_name} (Port {target_port})")
-        raise HTTPException(status_code=504, detail="Backend Startup Timeout")
-    
+    if not ensure_server(target_port): raise HTTPException(status_code=504, detail="Backend Timeout")
     active_servers[target_port] = time.time()
+
+    # 【重要】翻译物理 ID：不管前端发什么名字，发给后端的一定是它认识的物理 ID
+    real_model_id = REAL_ID_MAP.get(target_port, model_name)
     
-    # 构造 forward_payload 并转换 Anthropic -> OpenAI
+    # 构造 forward_payload
     if is_anthropic:
-        openai_msgs = []
-        if "system" in data: openai_msgs.append({"role": "system", "content": data["system"]})
+        logger.info(f"🔄 协议转换: Anthropic -> OpenAI (Target: {real_model_id})")
+        msgs = []
+        if "system" in data: msgs.append({"role": "system", "content": data["system"]})
         for m in data.get("messages", []):
             content = m["content"][0]["text"] if isinstance(m["content"], list) else m["content"]
-            openai_msgs.append({"role": m["role"], "content": content})
-        fw_model = "Qwen3.6-27B-MTPLX-Optimized-Quality" if target_port == 8080 else model_name
-        forward_payload = {"model": fw_model, "messages": openai_msgs, "stream": is_stream, "temperature": data.get("temperature", 0.7)}
+            msgs.append({"role": m["role"], "content": content})
+        forward_payload = {"model": real_model_id, "messages": msgs, "temperature": data.get("temperature", 0.7), "stream": data.get("stream", False)}
     else:
         forward_payload = data
+        forward_payload["model"] = real_model_id
 
-    # 转发
+    # 执行转发
     target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
-    async with httpx.AsyncClient(timeout=300.0) as client:
-        try:
-            if is_stream:
-                req = client.build_request("POST", target_url, json=forward_payload)
-                resp = await client.send(req, stream=True)
-                # 简单流式中继 (此处可根据需要补全 Anthropic 流转换)
-                return StreamingResponse(resp.aiter_raw(), status_code=resp.status_code)
-            else:
-                resp = await client.post(target_url, json=forward_payload)
-                res_json = resp.json()
-                if is_anthropic:
-                    # 转回 Anthropic 响应
-                    ans = res_json['choices'][0]['message']['content']
-                    return JSONResponse({"id": f"msg_{uuid.uuid4().hex}", "type": "message", "role": "assistant", "model": model_name, "content": [{"type": "text", "text": ans}], "stop_reason": "end_turn", "usage": {"input_tokens": 0, "output_tokens": 0}})
-                return JSONResponse(res_json)
-        except Exception as e:
-            logger.error(f"❌ 转发异常: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+    try:
+        resp = await http_client.post(target_url, json=forward_payload)
+        res_json = resp.json()
+        
+        if is_anthropic:
+            # 转回 Anthropic 格式
+            ans = res_json['choices'][0]['message']['content']
+            return JSONResponse({"id": f"msg_{uuid.uuid4().hex}", "type": "message", "role": "assistant", "model": model_name, "content": [{"type": "text", "text": ans}], "stop_reason": "end_turn", "usage": {"input_tokens": 0, "output_tokens": 0}})
+        return JSONResponse(res_json)
+    except Exception as e:
+        logger.error(f"❌ 转发失败: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=4000, log_level="error")
