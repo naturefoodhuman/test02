@@ -99,6 +99,12 @@ class LiteLLMBackend(LLMBackend):
         base_url = model_cfg.base_url or "http://localhost:4000/v1"
         model_id = model_cfg.model_id
 
+        # 智能拼接 URL，避免重复 /v1
+        if base_url.rstrip("/").endswith("/v1"):
+            chat_url = f"{base_url.rstrip('/')}/chat/completions"
+        else:
+            chat_url = f"{base_url.rstrip('/')}/v1/chat/completions"
+
         payload = {
             "model": model_id,
             "messages": messages,
@@ -108,7 +114,7 @@ class LiteLLMBackend(LLMBackend):
             "top_p": 0.95,
         }
 
-        # chunk 级超时（每 60s 必须有新 token）
+        # chunk 级超时（每 90s 必须有新 token）
         CHUNK_IDLE_TIMEOUT = 90.0
         TOTAL_HARD_LIMIT = 3600.0
 
@@ -121,7 +127,7 @@ class LiteLLMBackend(LLMBackend):
                 timeout=httpx.Timeout(connect=10.0, read=None, write=30.0, pool=10.0),
                 limits=httpx.Limits(max_keepalive_connections=0)
             ) as client:
-                with client.stream("POST", f"{base_url}/v1/chat/completions", json=payload) as resp:
+                with client.stream("POST", chat_url, json=payload) as resp:
                     resp.raise_for_status()
                     for line in resp.iter_lines():
                         now = time.time()
