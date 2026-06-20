@@ -6,7 +6,7 @@ id: compliance-auditor
 name: 合规审查专家
 role: reviewer
 specialization: legal_compliance_audit
-model: local-qwen35b
+model: mtplx-qwen36-27b
 requires_skills:
   - compliance-layered
 knowledge_sources:

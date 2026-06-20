@@ -15,6 +15,15 @@ models:
     type: local
     memory_required_gb: 20
 
+  local-qwen35b:
+    display_name: "Qwen3.5 35B (兼容性别名)"
+    provider: mtplx
+    backend: mtplx
+    model_id: Qwen3.6-27B-MTPLX-Optimized-Quality
+    base_url: http://localhost:4000/v1
+    type: local
+    memory_required_gb: 20
+
   mtplx-gemma4:
     display_name: "Gemma4-MTPLX-Optimized (独立评审)"
     provider: mtplx

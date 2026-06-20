@@ -70,7 +70,7 @@ plans:
     description: "全部 Ollama 本地模型，零 API 成本"
     nodes:
       primary_expert:
-        model: local-qwen35b
+        model: mtplx-qwen36-27b
       reviewer_1:
         model: local-deepseek-r1
         execution: sequential_isolated
