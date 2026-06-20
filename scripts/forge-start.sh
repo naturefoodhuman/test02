@@ -80,13 +80,16 @@ check_and_unload 8082 "评审模型 (Gemma4-MTPLX)" "cd $SERVER_DIR && nohup uv 
 # 4. 深度评审 (8084) - Llama-server
 check_and_unload 8084 "深度评审 (Qwopus-GGUF)" "nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &" "llama-server.*8084"
 
-# 5. 最后启动网关 (4000) - 持久运行
-if is_listening 4000; then
-    pkill -f "litellm.*4000"
-    sleep 1
-fi
-echo -e "${BLUE}📥 启动 LiteLLM 网关 (4000)...${NC}"
-cd "$FORGE_ROOT" && source .venv/bin/activate && nohup bash _infra/start-litellm.sh 4000 > /tmp/litellm.log 2>&1 &
+# 5. 启动智能网关中继器 (4000) 与 核心网关 (4001)
+if is_listening 4000; then pkill -f "uvicorn.*4000"; fi
+if is_listening 4001; then pkill -f "litellm.*4001"; fi
 
-echo -e "${GREEN}✅ 全量环境自检完成！所有端口已确认可用，显存已释放。${NC}"
+echo -e "${BLUE}📥 启动核心网关 (4001)...${NC}"
+cd "$FORGE_ROOT" && source .venv/bin/activate && nohup bash _infra/start-litellm.sh 4001 > /tmp/forge_litellm_4001.log 2>&1 &
+sleep 2
+
+echo -e "${BLUE}🚀 启动智能网关中继器 (4000)...${NC}"
+nohup python3 _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
+
+echo -e "${GREEN}✅ 环境自检与智能网关部署完成！${NC}"
 echo -e "${BLUE}💡 系统现已准备好进行“按需加载”运行。${NC}"
