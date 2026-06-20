@@ -24,12 +24,48 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Type
 
+import time
+import subprocess
 from peer_review.config.schemas import ModelConfig
 from peer_review.platform.data_privacy_gate import DataPrivacyGate, GateDecisionType
 
+# ── 服务器启动指令注册表 (需求 1, 8, 11) ──────────────────────────
+SERVER_COMMANDS = {
+    8080: "cd ~/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality --port 8080 > /tmp/mtplx_8080.log 2>&1 &",
+    8082: "cd ~/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Gemma4-MTPLX-Optimized-Quality --port 8082 > /tmp/mtplx_8082.log 2>&1 &",
+    8084: "nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &",
+}
 
-@dataclass
-class LLMResponse:
+def _ensure_server_running(base_url: str):
+    """按需加载：如果端口没响应，尝试拉起服务器 (R11)"""
+    import urllib.parse
+    parsed = urllib.parse.urlparse(base_url)
+    if not parsed.port or parsed.hostname != "localhost":
+        return
+
+    port = parsed.port
+    if port not in SERVER_COMMANDS:
+        return
+
+    # 检查端口
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        if s.connect_ex(("localhost", port)) == 0:
+            return # 已运行
+
+    print(f"📡 检测到端口 {port} 未启动，正在按需加载模型...")
+    subprocess.Popen(SERVER_COMMANDS[port], shell=True, executable="/bin/bash")
+    
+    # 等待就绪 (冷启动可能需要一点时间)
+    for _ in range(30):
+        time.sleep(3)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            if s.connect_ex(("localhost", port)) == 0:
+                print(f"✅ 端口 {port} 已就绪")
+                return
+    print(f"⚠️ 端口 {port} 启动超时")
+
+class LLMBackend(ABC):
     content: str
     model: str
     error: str | None = None
@@ -110,6 +146,7 @@ class MTPLXBackend(LLMBackend):
     def chat(self, model_cfg: ModelConfig, messages: list[dict[str, str]]) -> LLMResponse | None:
         # MTPLX 通常提供高性能 OpenAI 兼容接口
         base_url = model_cfg.base_url or "http://localhost:8080/v1"
+        _ensure_server_running(base_url)
         api_key = "mtplx-token"
         
         # 构建请求体，包含自定义参数 (需求 5)
@@ -150,6 +187,7 @@ class LlamaCppBackend(LLMBackend):
     
     def chat(self, model_cfg: ModelConfig, messages: list[dict[str, str]]) -> LLMResponse | None:
         base_url = model_cfg.base_url or "http://localhost:8081/v1"
+        _ensure_server_running(base_url)
         body = json.dumps({"model": model_cfg.model_id, "messages": messages}).encode("utf-8")
         try:
             req = urllib.request.Request(
