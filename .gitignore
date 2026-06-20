@@ -1,9 +1,6 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
 # 创建时间（北京时间）：2026-06-20 22:05:00 CST
 
-# Obsolete/local archival assets (local only; do not push to GitHub)
-_obsolete/
-
 # Virtual environments / dependencies
 .venv/
 venv/
@@ -67,3 +64,8 @@ temp/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Traceability exception: obsolete assets are intentionally versioned, even if
+# their filenames match generic log/cache patterns.
+!_obsolete/
+!_obsolete/**

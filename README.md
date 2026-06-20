@@ -65,9 +65,15 @@ Code → Tests → Documentation → CHANGELOG → ADR（如为重大决策）�
 
 
 
+
 ## Obsolete Assets
 
-`_obsolete/` 是**本地归档目录**，已加入 `.gitignore`，不会 push 到 GitHub。历史资产、一次性诊断脚本、运行日志等如需保留，可放入本地 `_obsolete/`；GitHub 仓库只保留当前有效代码、配置、测试、文档与用户明确要求保留的项目目录。
+`_obsolete/` 现在作为**可追溯历史资产目录**纳入 GitHub 仓库，不再被 `.gitignore` 忽略。
 
-本轮用户明确要求保留并复位：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`。
+原则：
+- 不直接删除历史资产。
+- 废弃实现、历史设计稿、一次性诊断脚本、运行诊断输出统一放入 `_obsolete/`。
+- 当前生产/运行路径不得 import 或执行 `_obsolete/` 内代码。
+- 用户明确要求保留并保持 active 的目录：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`。
+
 清理证据与最终结果见 `docs/repository-audit.md` 与 `docs/repository-cleanup-report.md`。

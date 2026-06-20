@@ -1,0 +1,17 @@
+=== FORGE Smart Proxy 诊断报告 2026年 6月20日 星期六 15时20分26秒 CST ===
+
+[1] 检查 4000 端口 (Smart Proxy)
+COMMAND    PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+python3.1 2148 naturist   10u  IPv4 0x7d161c1e0103e51d      0t0  TCP *:terabase (LISTEN)
+
+[2] 检查 8080 端口 (Qwen 模型)
+COMMAND PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+WeChat  405 naturist   45u  IPv4 0xcf1ffc4bb3c6c7a8      0t0  TCP 192.168.0.102:49483->157.255.209.219:http-alt (ESTABLISHED)
+
+[3] 测试 Smart Proxy /v1/models
+
+[4] 测试直接模型 /v1/models (8080)
+
+[5] 测试 Smart Proxy chat/completions
+
+=== 诊断结束 ===

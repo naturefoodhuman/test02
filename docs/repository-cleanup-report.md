@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间，精确到秒）：2026-06-20 22:20:00 CST
+创建时间（北京时间，精确到秒）：2026-06-20 22:50:00 CST
 -->
 
 # Repository Cleanup Report
@@ -9,59 +9,63 @@
 
 | Metric | Count | Notes |
 |---|---:|---|
-| Scanned tracked files | 326 | Based on revised git index. |
-| Active retained tracked files | 326 | `_obsolete/` is no longer tracked. |
-| Tracked `_obsolete/` files | 0 | Required by user: `_obsolete/` ignored, not pushed. |
-| Existing `_obsolete/` files removed from Git index | 15 | Local copies retained under ignored `_obsolete/`. |
-| Active files archived locally and removed from GitHub surface | 6 | One-off scripts/log only; local copies retained. |
-| User-requested folders restored | 3 | `projects/legal-bot/`, `projects/project-b/`, `retro-data-share/`. |
+| Scanned tracked files | 348 | Based on revised git index after restoring `_obsolete/` tracking. |
+| Active retained tracked files | 326 | Tracked files outside `_obsolete/`. |
+| Tracked `_obsolete/` files | 22 | Required by user: `_obsolete/` is pushed to GitHub. |
+| User-requested folders restored/retained active | 3 | `projects/legal-bot/`, `projects/project-b/`, `retro-data-share/`. |
 
-## User-requested Restoration
+## User-requested Restoration / Retention
 
-These folders were restored and remain tracked/active:
+These folders remain tracked and active, not migrated:
 
 - `projects/legal-bot/`
 - `projects/project-b/`
 - `retro-data-share/`
 
-## Obsolete / Local-only Assets
+## Obsolete Assets Tracked in GitHub
 
-Because `_obsolete/` must be ignored and not pushed, obsolete assets are now local-only archives.
-
-| Original Path | Local Archive Path | Reason |
-|---|---|---|
-| `forge_diagnose_20260620_152026.log` | `_obsolete/forge_diagnose_20260620_152026.log` | Runtime diagnostic log; local-only archive because `_obsolete/` is ignored. |
-| `scripts/demo_knowledge_pipeline.py` | `_obsolete/scripts/demo_knowledge_pipeline.py` | Standalone demo/PoC script with no active SOP references. |
-| `scripts/e2e_review_test.py` | `_obsolete/scripts/e2e_review_test.py` | Historical validation script using retired orchestrator import path; canonical tests remain under peer-review tests. |
-| `scripts/fix-claude-code.sh` | `_obsolete/scripts/fix-claude-code.sh` | One-off local machine repair script mutating home-directory config and using absolute Mac path. |
-| `scripts/test_model_direct.py` | `_obsolete/scripts/test_model_direct.py` | One-off local-port/direct-model diagnostic with absolute Mac path. |
-| `scripts/verify_on_demand_fix.py` | `_obsolete/scripts/verify_on_demand_fix.py` | One-off on-demand-load diagnostic with local ports/process killing. |
-
-Existing tracked `_obsolete/` files were removed from the Git index. They remain on disk locally under `_obsolete/`, but `.gitignore` prevents them from being pushed again.
+| Path | Reason |
+|---|---|
+| `_obsolete/4-Final Architecture Design.md` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/5-Architecture Upgrade Execution Plan.md` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/README.md` | Obsolete asset migration record. |
+| `_obsolete/_factory/patterns/peer-review/src/peer_review/agent_factory.py` | Retired Agno-era peer-review implementation; replaced by LangGraph/platform path. |
+| `_obsolete/_factory/patterns/peer-review/src/peer_review/knowledge_loader.py` | Retired Agno-era peer-review implementation; replaced by LangGraph/platform path. |
+| `_obsolete/_factory/patterns/peer-review/src/peer_review/orchestrator.py` | Retired Agno-era peer-review implementation; replaced by LangGraph/platform path. |
+| `_obsolete/_infra/diag-glm.sh` | Retired/diagnostic infrastructure asset; replaced by current config/startup flow. |
+| `_obsolete/_infra/litellm-config.yaml` | Retired/diagnostic infrastructure asset; replaced by current config/startup flow. |
+| `_obsolete/_infra/verify-glm.sh` | Retired/diagnostic infrastructure asset; replaced by current config/startup flow. |
+| `_obsolete/diag-glm-output.txt` | Historical diagnostic output retained for traceability. |
+| `_obsolete/diag-glm-v2-output.txt` | Historical diagnostic output retained for traceability. |
+| `_obsolete/docs/AI 项目孵化工厂架构设计书-V4.docx` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/docs/AI 项目孵化工厂需求说明书-V2.docx` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/forge_diagnose_20260620_152026.log` | Runtime diagnostic log retained for traceability. |
+| `_obsolete/scripts/demo_knowledge_pipeline.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/e2e_review_test.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/fix-claude-code.sh` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/test_model_direct.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/verify_on_demand_fix.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/test_comparison.py` | Historical root-level test/PoC replaced by current test suites. |
+| `_obsolete/test_full.py` | Historical root-level test/PoC replaced by current test suites. |
+| `_obsolete/test_smoke.py` | Historical root-level test/PoC replaced by current test suites. |
 
 ## Documentation Updates
 
-- `README.md`: documents `_obsolete/` as local-only ignored archive and notes restored folders.
-- `HANDOFF.md`: adds repository cleanup rule: `_obsolete/` is ignored and not pushed; three user-specified folders must not be migrated.
-- `docs/ARCHITECTURE.md`: clarifies `_obsolete/` is outside active runtime and GitHub surface.
+- `README.md`: documents `_obsolete/` as tracked GitHub history archive and notes retained active folders.
+- `HANDOFF.md`: adds repository cleanup rule: `_obsolete/` is not ignored and is pushed; three user-specified folders must not be migrated.
+- `docs/ARCHITECTURE.md`: clarifies `_obsolete/` is outside active runtime but inside GitHub traceability surface.
 - `docs/PROJECT_STATE.md`: records current repository cleanup state.
 - `docs/CHANGELOG.md`: adds revised 第43轮 cleanup entry.
 - `docs/DEV_LOG.md`: records implementation and restoration details.
+- `_obsolete/README.md`: records current obsolete inventory and usage rules.
 - `docs/repository-audit.md`: created revised evidence-based inventory.
 - `docs/repository-cleanup-report.md`: this final cleanup report.
 
 ## GitIgnore Changes
 
-`.gitignore` was rewritten/expanded to cover:
+`.gitignore` was expanded to cover build outputs, Python/Node caches, runtime data, logs, temp/cache folders, IDE files, and OS artifacts.
 
-- `_obsolete/` local archive directory
-- Build outputs: `build/`, `dist/`, `out/`, `target/`
-- Python: `__pycache__/`, `**/__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.coverage`, `coverage/`, `htmlcov/`, `*.py[cod]`
-- Node/frontend: `node_modules/`, `.next/`, `.nuxt/`, `.output/`, `.vite/`, `.turbo/`, `.parcel-cache/`
-- Runtime/local data: `runtime/`, `projects/*/runtime/`, `*.db`, `*.sqlite`, `*.sqlite3`
-- Logs: `logs/`, `*.log`, `/tmp/forge_*.log`, `/tmp/mtplx_*.log`, `/tmp/llama_*.log`
-- Temp/cache: `tmp/`, `temp/`, `.cache/`, `*.bak`, `*.swp`, `*.tmp`
-- IDE/OS: `.vscode/`, `.idea/`, `.DS_Store`, `Thumbs.db`
+Important final policy: `_obsolete/` is **not** ignored, so GitHub contains obsolete assets for traceability.
 
 ## Compatibility Fix Included
 
@@ -74,15 +78,16 @@ Action: added `_factory/patterns/peer-review/src/peer_review/orchestrator.py` as
 - `PYTHONPATH=_factory/patterns/peer-review/src python3 -c 'from peer_review.orchestrator import ...'` ✅ for import + retired `continue_langgraph_review` ValueError behavior.
 - `make test` in the sandbox is blocked by missing optional/runtime dependencies (`agno`, `llama_index.core`, `chromadb`, `ollama`, `langgraph`, `litellm`, etc.). This was already true before cleanup changes.
 - `projects/legal-bot/`, `projects/project-b/`, and `retro-data-share/` are present in the active tree.
-- `_obsolete/` is ignored and has zero tracked files in the revised index.
+- `_obsolete/` is tracked and will be pushed to GitHub.
 
 ## Remaining Risks
 
 | Risk | Impact | Mitigation / Follow-up |
 |---|---|---|
 | Sandbox lacks full Mac/LLM runtime dependencies. | Full `make test` cannot be completed here. | Run `make install-dev && make test` on target Mac environment. |
-| `projects/legal-bot/` / `projects/project-b/` may be stale. | They increase GitHub surface area. | Retained per explicit user instruction; revisit only with user approval. |
+| `projects/legal-bot/` / `projects/project-b/` may be stale. | They increase active GitHub surface area. | Retained per explicit user instruction; revisit only with user approval. |
 | `retro-data-share/` is generated validation output. | It is not minimal, but user requested restoration. | Retained per explicit user instruction. |
+| `_obsolete/` increases repository size. | GitHub contains historical assets. | Required by latest user instruction for traceability. |
 | `continue_langgraph_review` is explicitly retired. | `debt continue` will fail with a clear ValueError until a modern checkpoint resume path exists. | Implement modern LangGraph checkpoint resume if HITL resume becomes required again. |
 
 ## Final Repository Structure
@@ -172,6 +177,31 @@ Action: added `_factory/patterns/peer-review/src/peer_review/orchestrator.py` as
         test_cli.py
         test_phases.py
         test_task_graph.py
+  _obsolete/
+    4-Final Architecture Design.md
+    5-Architecture Upgrade Execution Plan.md
+    README.md
+    diag-glm-output.txt
+    diag-glm-v2-output.txt
+    forge_diagnose_20260620_152026.log
+    test_comparison.py
+    test_full.py
+    test_smoke.py
+    docs/
+      AI 项目孵化工厂架构设计书-V4.docx
+      AI 项目孵化工厂需求说明书-V2.docx
+    _factory/
+      patterns/
+    _infra/
+      diag-glm.sh
+      litellm-config.yaml
+      verify-glm.sh
+    scripts/
+      demo_knowledge_pipeline.py
+      e2e_review_test.py
+      fix-claude-code.sh
+      test_model_direct.py
+      verify_on_demand_fix.py
   config/
     models.yaml
     privacy_policy.yaml

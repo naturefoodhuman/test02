@@ -91,9 +91,13 @@
 
 ---
 
+
+---
+
 ## 6. 仓库清理与过期资产规则
 - 最新仓库资产盘点见 `docs/repository-audit.md`。
 - 清理报告见 `docs/repository-cleanup-report.md`。
-- `_obsolete/` 为本地归档目录，已加入 `.gitignore`，禁止 push 到 GitHub。
-- 用户明确要求保留：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`；不得擅自迁移。
+- `_obsolete/` 为可追溯历史资产目录，**不 ignore，继续 push 到 GitHub**。
+- 用户明确要求保留 active：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`；不得擅自迁移。
+- 当前生产路径禁止依赖 `_obsolete/` 中的代码或配置。
 - 源码与文档不一致时，以当前源码和配置为准，并在审计/清理报告中记录差异。

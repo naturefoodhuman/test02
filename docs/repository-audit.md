@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间，精确到秒）：2026-06-20 22:20:00 CST
+创建时间（北京时间，精确到秒）：2026-06-20 22:50:00 CST
 -->
 
 # Repository Audit — FORGE Factory
@@ -12,11 +12,11 @@
 
 ## Summary Inventory
 
-- Tracked files after revised cleanup staging: **326**
-- Tracked `_obsolete/` files: **0**
-- `_obsolete/` policy: **ignored local archive; not pushed to GitHub**
-- User-mandated retained folders: `projects/legal-bot/`, `projects/project-b/`, `retro-data-share/`
-- Ignored local paths currently detected: **3**
+- Tracked files after revised cleanup staging: **348**
+- Active tracked files outside `_obsolete/`: **326**
+- Tracked `_obsolete/` files: **22**
+- `_obsolete/` policy: **tracked and pushed to GitHub for traceability**
+- User-mandated retained active folders: `projects/legal-bot/`, `projects/project-b/`, `retro-data-share/`
 
 ### Active files by top-level area
 
@@ -25,25 +25,27 @@
 | `projects` | 143 | Project templates, active pilot, demos/placeholders explicitly retained by user. |
 | `_factory` | 102 | Core factory skills, experts, patterns, peer-review implementation. |
 | `docs` | 37 | Current governance, architecture, ADR, state, and runbook documentation. |
+| `_obsolete` | 22 | Tracked historical/obsolete assets for traceability. |
 | `_infra` | 18 | Infrastructure gateway, smart proxy, forge CLI, setup assets. |
-| `scripts` | 12 | Current operational/benchmark/governance scripts after one-off diagnostics were archived locally. |
-| `.` | 9 | Root governance or operational file. |
+| `.` | 8 | Root governance or operational file. |
+| `scripts` | 7 | Current operational/benchmark/governance scripts after one-off diagnostics were moved. |
 | `_agents` | 4 | Current global agent definitions. |
 | `retro-data-share` | 4 | User-mandated retained historical validation output folder. |
 | `config` | 3 | Current root model/routing/privacy configuration SSOT. |
 
-### Active files by extension
+### Files by extension
 
 | Extension | Count |
 |---|---:|
-| `.md` | 163 |
-| `.py` | 93 |
-| `.sh` | 33 |
-| `.yaml` | 25 |
+| `.md` | 166 |
+| `.py` | 99 |
+| `.sh` | 35 |
+| `.yaml` | 26 |
 | `.toml` | 7 |
-| `.txt` | 4 |
+| `.txt` | 6 |
 | `[no ext]` | 3 |
 | `.json` | 2 |
+| `.docx` | 2 |
 | `.example` | 1 |
 | `.log` | 1 |
 
@@ -54,7 +56,7 @@
 - `_infra/smart_proxy.py`, `_infra/smart_proxy_streaming.py`, `_infra/forge_tools/src/forge/*`: current infrastructure and CLI code.
 - `projects/debt-collection/src/debt/*`: active pilot application used by Makefile, release flow, docs, and tests.
 - `_factory/patterns/*`: reusable factory patterns.
-- `projects/legal-bot/` and `projects/project-b/`: retained because the user explicitly required these folders not be migrated.
+- `projects/legal-bot/` and `projects/project-b/`: retained active because the user explicitly required these folders not be migrated.
 
 ### Configuration
 - `config/models.yaml`, `config/routing_plans.yaml`, `config/privacy_policy.yaml`: current root SSOT for model, routing, and privacy policy.
@@ -62,50 +64,55 @@
 
 ### Tests / validation
 - `_infra/forge_tools/tests/*`, `_factory/patterns/*/tests/*`, and `projects/debt-collection/tests/*` remain active.
-- `retro-data-share/` remains tracked because the user explicitly required it to be restored.
+- `retro-data-share/` remains tracked active because the user explicitly required it to be restored.
 
-## Candidate Obsolete Assets and Final Action
+## Obsolete Assets Moved / Tracked
 
-| Asset | Evidence | Final action |
-|---|---|---|
-| Existing tracked `_obsolete/` | Historical/obsolete assets should not be part of GitHub minimal repository per latest user instruction. | Stopped tracking; `_obsolete/` added to `.gitignore`; local files retained. |
-| `forge_diagnose_20260620_152026.log` | Runtime diagnostic log; generated artifact. | Archived locally to `_obsolete/forge_diagnose_20260620_152026.log`; not pushed. |
-| `scripts/demo_knowledge_pipeline.py` | Standalone demo/PoC; no active SOP references. | Archived locally under `_obsolete/scripts/`; not pushed. |
-| `scripts/e2e_review_test.py` | Historical validation script using retired `peer_review.orchestrator` path; canonical tests remain elsewhere. | Archived locally under `_obsolete/scripts/`; not pushed. |
-| `scripts/fix-claude-code.sh` | One-off local repair script with absolute Mac path and home-directory side effects. | Archived locally under `_obsolete/scripts/`; not pushed. |
-| `scripts/test_model_direct.py` | One-off local direct-model diagnostic with absolute Mac path/local ports. | Archived locally under `_obsolete/scripts/`; not pushed. |
-| `scripts/verify_on_demand_fix.py` | One-off on-demand loading diagnostic with local ports/process killing. | Archived locally under `_obsolete/scripts/`; not pushed. |
-| `projects/legal-bot/` | Prior audit considered it old/demo-like. | **Retained/restored by explicit user instruction.** |
-| `projects/project-b/` | Prior audit considered it placeholder/old project. | **Retained/restored by explicit user instruction.** |
-| `retro-data-share/` | Generated validation output. | **Retained/restored by explicit user instruction.** |
+| Path | Reason |
+|---|---|
+| `_obsolete/4-Final Architecture Design.md` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/5-Architecture Upgrade Execution Plan.md` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/README.md` | Obsolete asset migration record. |
+| `_obsolete/_factory/patterns/peer-review/src/peer_review/agent_factory.py` | Retired Agno-era peer-review implementation; replaced by LangGraph/platform path. |
+| `_obsolete/_factory/patterns/peer-review/src/peer_review/knowledge_loader.py` | Retired Agno-era peer-review implementation; replaced by LangGraph/platform path. |
+| `_obsolete/_factory/patterns/peer-review/src/peer_review/orchestrator.py` | Retired Agno-era peer-review implementation; replaced by LangGraph/platform path. |
+| `_obsolete/_infra/diag-glm.sh` | Retired/diagnostic infrastructure asset; replaced by current config/startup flow. |
+| `_obsolete/_infra/litellm-config.yaml` | Retired/diagnostic infrastructure asset; replaced by current config/startup flow. |
+| `_obsolete/_infra/verify-glm.sh` | Retired/diagnostic infrastructure asset; replaced by current config/startup flow. |
+| `_obsolete/diag-glm-output.txt` | Historical diagnostic output retained for traceability. |
+| `_obsolete/diag-glm-v2-output.txt` | Historical diagnostic output retained for traceability. |
+| `_obsolete/docs/AI 项目孵化工厂架构设计书-V4.docx` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/docs/AI 项目孵化工厂需求说明书-V2.docx` | Historical design/document artifact; superseded by current docs/ARCHITECTURE.md and ADRs. |
+| `_obsolete/forge_diagnose_20260620_152026.log` | Runtime diagnostic log retained for traceability. |
+| `_obsolete/scripts/demo_knowledge_pipeline.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/e2e_review_test.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/fix-claude-code.sh` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/test_model_direct.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/scripts/verify_on_demand_fix.py` | One-off demo/diagnostic/repair script; not part of current operational SOP. |
+| `_obsolete/test_comparison.py` | Historical root-level test/PoC replaced by current test suites. |
+| `_obsolete/test_full.py` | Historical root-level test/PoC replaced by current test suites. |
+| `_obsolete/test_smoke.py` | Historical root-level test/PoC replaced by current test suites. |
+
+## Explicitly Retained Active Assets
+
+| Asset | Reason |
+|---|---|
+| `projects/legal-bot/` | User explicitly instructed not to migrate; restored/kept active. |
+| `projects/project-b/` | User explicitly instructed not to migrate; restored/kept active. |
+| `retro-data-share/` | User explicitly instructed not to migrate; restored/kept active. |
 
 ## Unknown Assets / Remaining Review Items
 
 | Asset | Why unknown / risk | Current action |
 |---|---|---|
 | `projects/mini-gratitude/` | Demo-like, but current Chinese example documentation directly references it. | Retained. |
-| `projects/legal-bot/`, `projects/project-b/` | May be stale, but user explicitly required no migration. | Retained. |
-| `retro-data-share/` | Generated validation output, but user explicitly required no migration. | Retained. |
+| `projects/legal-bot/`, `projects/project-b/` | May be stale, but user explicitly required no migration. | Retained active. |
+| `retro-data-share/` | Generated validation output, but user explicitly required no migration. | Retained active. |
 | `backup.sh` | Referenced by docs and benchmark; Makefile has overlapping backup target. | Retained; possible future consolidation. |
 | `docs/research/*` | Some research docs may drift over time. | Retained; evaluate in dedicated documentation archival pass. |
 
 ## Source vs Documentation Differences Found
 
-1. `peer_review.orchestrator` was referenced by tests and `debt continue`, but the active source tree no longer contained that module after a prior cleanup. A thin lazy compatibility shim has been restored at `_factory/patterns/peer-review/src/peer_review/orchestrator.py`; the retired implementation is local-only under ignored `_obsolete/`.
-2. Existing `_obsolete/` assets were tracked in GitHub before this round. This conflicts with the user's latest instruction, so they are removed from the index and ignored.
-3. Earlier draft cleanup migrated `projects/legal-bot/`, `projects/project-b/`, and `retro-data-share/`; this has been reversed before push.
-
-## Local-only Archive Detail
-
-| Original Path | Local Archive Path | Reason |
-|---|---|---|
-| `forge_diagnose_20260620_152026.log` | `_obsolete/forge_diagnose_20260620_152026.log` | Runtime diagnostic log; local-only archive because `_obsolete/` is ignored. |
-| `scripts/demo_knowledge_pipeline.py` | `_obsolete/scripts/demo_knowledge_pipeline.py` | Standalone demo/PoC script with no active SOP references. |
-| `scripts/e2e_review_test.py` | `_obsolete/scripts/e2e_review_test.py` | Historical validation script using retired orchestrator import path; canonical tests remain under peer-review tests. |
-| `scripts/fix-claude-code.sh` | `_obsolete/scripts/fix-claude-code.sh` | One-off local machine repair script mutating home-directory config and using absolute Mac path. |
-| `scripts/test_model_direct.py` | `_obsolete/scripts/test_model_direct.py` | One-off local-port/direct-model diagnostic with absolute Mac path. |
-| `scripts/verify_on_demand_fix.py` | `_obsolete/scripts/verify_on_demand_fix.py` | One-off on-demand-load diagnostic with local ports/process killing. |
-
-## Existing `_obsolete/` Handling
-
-Tracked files previously under `_obsolete/` are removed from Git tracking. Local copies remain under `_obsolete/`, which is ignored and will not be pushed.
+1. `peer_review.orchestrator` was referenced by tests and `debt continue`, but the active source tree no longer contained that module after a prior cleanup. A thin lazy compatibility shim has been restored at `_factory/patterns/peer-review/src/peer_review/orchestrator.py`; the retired implementation is tracked under `_obsolete/_factory/patterns/peer-review/src/peer_review/orchestrator.py`.
+2. Earlier draft cleanup migrated `projects/legal-bot/`, `projects/project-b/`, and `retro-data-share/`; this was reversed before final push per user instruction.
+3. `_obsolete/` policy changed twice during the task; final user instruction is authoritative: `_obsolete/` is **not ignored** and is pushed to GitHub.
