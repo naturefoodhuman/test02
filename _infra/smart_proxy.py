@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-21 16:00:00
+# 创建时间（北京时间）：2026-06-21 17:30:00
 
 import sys
 import os
@@ -23,17 +23,15 @@ from peer_review.llm_client import SERVER_COMMANDS
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]: %(message)s')
 logger = logging.getLogger("SmartProxy")
 
-app = FastAPI(title="FORGE VRAM-Aware Smart Proxy")
+app = FastAPI(title="FORGE VRAM-Aware Unified Gateway")
 
-# 显存管理 SSOT
-VRAM_LIMIT = 48 # GB (保留 16G 给系统)
-# 模型显存占用估算 (与 models.yaml 对齐)
+# 显存管理 SSOT (M1 Max 64G 优化)
+VRAM_LIMIT = 48 # GB
 MODEL_VRAM_MAP = {
     8080: 20, # Qwen 27B
     8082: 16, # Gemma4
     8084: 36, # Qwopus 35B
 }
-
 active_servers = {} # {port: last_used_time}
 vram_lock = Lock()
 
@@ -52,71 +50,98 @@ def is_listening(port: int):
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 def purge_oldest_server():
-    """根据 LRU 算法卸载一个服务器以释放显存"""
     if not active_servers: return
     oldest_port = min(active_servers, key=active_servers.get)
-    logger.info(f"⚠️ 显存压力过载，正在强制卸载最久未使用的端口: {oldest_port}")
-    pkill_cmd = f"pkill -9 -f '.*{oldest_port}'"
-    subprocess.run(pkill_cmd, shell=True)
-    del active_servers[oldest_port]
+    logger.info(f"⚠️ 显存不足，正在卸载最久未使用的模型 (Port {oldest_port})...")
+    subprocess.run(f"pkill -9 -f '.*{oldest_port}'", shell=True)
+    if oldest_port in active_servers: del active_servers[oldest_port]
     time.sleep(2)
 
 def ensure_server(port: int):
     with vram_lock:
-        # 1. 检查是否已经在运行
         if is_listening(port):
             active_servers[port] = time.time()
             return True
-
         if port not in SERVER_COMMANDS: return False
-
-        # 2. 显存水位检查
-        required = MODEL_VRAM_MAP.get(port, 0)
-        current_total = sum(MODEL_VRAM_MAP.get(p, 0) for p in active_servers.keys() if is_listening(p))
+        
+        required = MODEL_VRAM_MAP.get(port, 20)
+        current_total = sum(MODEL_VRAM_MAP.get(p, 20) for p in active_servers.keys() if is_listening(p))
         
         while current_total + required > VRAM_LIMIT:
             purge_oldest_server()
-            current_total = sum(MODEL_VRAM_MAP.get(p, 0) for p in active_servers.keys() if is_listening(p))
+            current_total = sum(MODEL_VRAM_MAP.get(p, 20) for p in active_servers.keys() if is_listening(p))
 
-        # 3. 启动
-        logger.info(f"📡 启动端口 {port}，预估占用 {required}GB (当前总计 {current_total + required}GB)")
+        logger.info(f"📡 正在拉起端口 {port}，预估显存 {required}GB (总计 {current_total + required}GB)...")
         script = f'tell application "Terminal" to tell (make new tab at window 1) to do script "{SERVER_COMMANDS[port]}"'
         subprocess.run(["osascript", "-e", script])
         
-        # 4. 深度检查
         start_time = time.time()
-        while time.time() - start_time < 120:
+        while time.time() - start_time < 150:
             if is_listening(port):
-                active_servers[port] = time.time()
-                logger.info(f"✅ 端口 {port} 就绪")
-                return True
-            time.sleep(4)
+                try:
+                    with httpx.Client() as client:
+                        if client.get(f"http://127.0.0.1:{port}/v1/models", timeout=2).status_code == 200:
+                            active_servers[port] = time.time()
+                            logger.info(f"✅ 后端 {port} 就绪")
+                            return True
+                except: pass
+            time.sleep(5)
         return False
 
+async def openai_to_anthropic_stream(openai_response, model_name):
+    msg_id = f"msg_{uuid.uuid4().hex}"
+    yield f"event: message_start\ndata: {json.dumps({'type': 'message_start', 'message': {'id': msg_id, 'type': 'message', 'role': 'assistant', 'model': model_name, 'content': [], 'stop_reason': None, 'usage': {'input_tokens': 0, 'output_tokens': 0}}})}\n\n"
+    yield f"event: content_block_start\ndata: {json.dumps({'type': 'content_block_start', 'index': 0, 'content_block': {'type': 'text', 'text': ''}})}\n\n"
+    async for line in openai_response.aiter_lines():
+        if not line.startswith("data: ") or "[DONE]" in line: continue
+        try:
+            chunk = json.loads(line[6:])
+            content = chunk['choices'][0].get('delta', {}).get('content', '')
+            if content: yield f"event: content_block_delta\ndata: {json.dumps({'type': 'content_block_delta', 'index': 0, 'delta': {'type': 'text_delta', 'text': content}})}\n\n"
+        except: continue
+    yield f"event: message_stop\ndata: {json.dumps({'type': 'message_stop'})}\n\n"
+
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def vram_managed_proxy(request: Request, path: str):
+async def unified_proxy(request: Request, path: str):
     body = await request.body()
-    is_anthropic = "messages" in path
+    try: data = json.loads(body) if body else {}
+    except: data = {}
     
-    try:
-        data = json.loads(body)
-        model_name = data.get("model", "")
-        target_port = MODEL_MAP.get(model_name, 8080)
-        is_stream = data.get("stream", False)
-    except:
-        return JSONResponse({"status": "alive"})
+    model_name = data.get("model", "mtplx-qwen36-27b")
+    target_port = MODEL_MAP.get(model_name, 8080)
+    is_stream = data.get("stream", False)
+    is_anthropic = "messages" in path
 
-    if not ensure_server(target_port):
-        raise HTTPException(status_code=504, detail="VRAM Manager: Startup Timeout")
-
-    # 更新使用时间
+    if not ensure_server(target_port): raise HTTPException(status_code=504, detail="Backend Timeout")
     active_servers[target_port] = time.time()
 
-    # 协议转换与转发逻辑 (保持上一版的高效流式转换)
-    # ... [此处复用上一版的 protocol_translator 逻辑] ...
-    # 为了保证逻辑完整，此处略，但实际代码中是完整的。
-    return JSONResponse({"status": "proxying", "target": target_port})
+    # 协议适配：将 Anthropic 转为 OpenAI
+    if is_anthropic:
+        openai_messages = []
+        if "system" in data: openai_messages.append({"role": "system", "content": data["system"]})
+        for msg in data.get("messages", []):
+            content = msg["content"]
+            if isinstance(content, list): content = content[0].get("text", "")
+            openai_messages.append({"role": msg["role"], "content": content})
+        forward_payload = {"model": "Qwen3.6-27B-MTPLX-Optimized-Quality", "messages": openai_messages, "stream": is_stream, "temperature": data.get("temperature", 0.7)}
+    else:
+        forward_payload = data
+
+    target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
+    
+    async with httpx.AsyncClient(timeout=300.0) as client:
+        if is_stream:
+            req = client.build_request("POST", target_url, json=forward_payload)
+            resp = await client.send(req, stream=True)
+            if is_anthropic: return StreamingResponse(openai_to_anthropic_stream(resp, model_name), media_type="text/event-stream")
+            return StreamingResponse(resp.aiter_raw(), status_code=resp.status_code, headers=dict(resp.headers))
+        else:
+            resp = await client.post(target_url, json=forward_payload)
+            result = resp.json()
+            if is_anthropic:
+                answer = result['choices'][0]['message']['content']
+                return JSONResponse({"id": f"msg_{uuid.uuid4().hex}", "type": "message", "role": "assistant", "model": model_name, "content": [{"type": "text", "text": answer}], "stop_reason": "end_turn", "usage": {"input_tokens": 0, "output_tokens": 0}})
+            return JSONResponse(result)
 
 if __name__ == "__main__":
-    logger.info(f"🚀 FORGE 显存感知版网关启动 (VRAM Limit: {VRAM_LIMIT}GB)")
     uvicorn.run(app, host="0.0.0.0", port=4000, log_level="error")
