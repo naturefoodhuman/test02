@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-21 18:00:00
+# 创建时间（北京时间）：2026-06-21 19:30:00
 # config/models.yaml
 # A 文件：所有可用模型的接入信息。
 # ⚠️ 统一路由：所有本地模型 base_url 均指向 Smart Proxy (4000) 进行显存调度。
@@ -8,15 +8,6 @@ models:
   # ── MTPLX 高性能本地推理 ──────────────────────────
   mtplx-qwen36-27b:
     display_name: "Qwen3.6-27B-MTPLX-Optimized (主大脑/编码)"
-    provider: mtplx
-    backend: mtplx
-    model_id: Qwen3.6-27B-MTPLX-Optimized-Quality
-    base_url: http://localhost:4000/v1
-    type: local
-    memory_required_gb: 20
-
-  local-qwen35b:
-    display_name: "Qwen3.5 35B (兼容性别名)"
     provider: mtplx
     backend: mtplx
     model_id: Qwen3.6-27B-MTPLX-Optimized-Quality

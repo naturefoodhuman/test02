@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-21 04:00:00
+# 创建时间（北京时间）：2026-06-21 19:30:00
 # config/routing_plans.yaml
 
 active_plan: full-check
@@ -65,9 +65,9 @@ plans:
       consensus:
         model: deepseek-pro
 
-  # ── 全本地方案：零成本，Ollama 驱动 ────────────────────────────────────────
+  # ── 全本地方案：零成本，本地驱动 ────────────────────────────────────────
   all-local:
-    description: "全部 Ollama 本地模型，零 API 成本"
+    description: "全部本地模型，零 API 成本"
     nodes:
       primary_expert:
         model: mtplx-qwen36-27b
