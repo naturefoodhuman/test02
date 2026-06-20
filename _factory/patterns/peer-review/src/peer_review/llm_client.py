@@ -40,7 +40,11 @@ def _ensure_server_running(base_url: str):
     """按需加载：如果端口没响应，尝试拉起服务器 (R11)"""
     import urllib.parse
     parsed = urllib.parse.urlparse(base_url)
-    if not parsed.port or parsed.hostname != "localhost":
+    if not parsed.port:
+        return
+
+    # 允许 hostname 为 localhost 或 0.0.0.0 或 127.0.0.1
+    if parsed.hostname not in ["localhost", "127.0.0.1", "0.0.0.0"]:
         return
 
     port = parsed.port

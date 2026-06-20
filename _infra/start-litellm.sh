@@ -58,5 +58,6 @@ else
 fi
 
 # 4) 启动网关
-echo "🚀 启动 LiteLLM：config=$CONFIG port=$PORT"
+echo "🚀 启动 LiteLLM (含按需加载 Hook)：config=$CONFIG port=$PORT"
+# 使用 python 启动以支持自定义 hook (如果需要) 或直接运行
 exec litellm --config "$CONFIG" --port "$PORT"
