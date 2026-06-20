@@ -114,9 +114,9 @@ class LiteLLMBackend(LLMBackend):
             "top_p": 0.95,
         }
 
-        # chunk 级超时（针对长思考模型大幅放宽）
-        CHUNK_IDLE_TIMEOUT = 300.0   # 5 分钟无新 token 才超时
-        TOTAL_HARD_LIMIT = 7200.0    # 最长允许 2 小时
+        # chunk 级超时（针对长思考模型最终放宽）
+        CHUNK_IDLE_TIMEOUT = 600.0   # 10 分钟无新 token 才超时
+        TOTAL_HARD_LIMIT = 14400.0   # 最长允许 4 小时
 
         content_parts = []
         start_time = time.time()

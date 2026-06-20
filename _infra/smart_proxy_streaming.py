@@ -152,7 +152,7 @@ async def chat_proxy(request: Request):
 
         while True:
             try:
-                chunk = await asyncio.wait_for(queue.get(), timeout=45.0)  # 45s 心跳（配合 300s chunk 超时）
+                chunk = await asyncio.wait_for(queue.get(), timeout=60.0)  # 60s 心跳（配合 600s chunk 超时）
                 if chunk is None:
                     break
                 yield chunk
