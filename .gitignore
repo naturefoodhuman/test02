@@ -1,11 +1,36 @@
+# 虚拟环境与依赖
 .venv/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Python 缓存
 __pycache__/
 *.pyc
-.DS_Store
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# 运行时数据
 runtime/
 projects/*/runtime/
-.idea/
-.vscode/
-*.bak
-_infra/.env
+*.db
+*.log
 /tmp/forge_*.log
+/tmp/mtplx_*.log
+/tmp/llama_*.log
+
+# 个人与环境配置
+_infra/.env
+.env
+.DS_Store
+.vscode/
+.idea/
+*.bak
+*.swp
+
+# 过期资产 (根据老板需求，如果想上传干净的代码，可以取消注释下面这一行)
+# _obsolete/
