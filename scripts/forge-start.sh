@@ -86,9 +86,17 @@ if is_listening 4001; then pkill -f "litellm.*4001"; fi
 
 echo -e "${BLUE}📥 启动核心网关 (4001)...${NC}"
 cd "$FORGE_ROOT" && source .venv/bin/activate && nohup bash _infra/start-litellm.sh 4001 > /tmp/forge_litellm_4001.log 2>&1 &
-sleep 2
 
-echo -e "${BLUE}🚀 启动智能网关中继器 (4000)...${NC}"
+# 等待核心网关就绪
+for i in {1..10}; do
+    if lsof -nP -iTCP:4001 -sTCP:LISTEN > /dev/null 2>&1; then
+        echo -e "${GREEN}✅ 核心网关 (4001) 已就绪${NC}"
+        break
+    fi
+    sleep 1
+done
+
+echo -e "${BLUE}🚀 启动智能看门人 (4000)...${NC}"
 nohup python3 _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
 
 echo -e "${GREEN}✅ 环境自检与智能网关部署完成！${NC}"
