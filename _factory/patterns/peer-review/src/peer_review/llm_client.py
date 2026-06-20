@@ -114,7 +114,7 @@ class LiteLLMBackend(LLMBackend):
                 },
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=300) as r:
+            with urllib.request.urlopen(req, timeout=600) as r:
                 data = json.loads(r.read().decode("utf-8"))
                 content = data["choices"][0]["message"]["content"]
                 return LLMResponse(content=content, model=model_id)
