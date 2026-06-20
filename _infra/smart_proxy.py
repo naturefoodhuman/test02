@@ -11,6 +11,7 @@ import socket
 import logging
 import uuid
 import httpx
+import asyncio
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 from threading import Lock
@@ -49,7 +50,10 @@ VRAM_LIMIT = 48
 MODEL_VRAM = {8080: 20, 8082: 16, 8084: 36, 11434: 20}
 active_servers = {}
 vram_lock = Lock()
-http_client = httpx.AsyncClient(timeout=300.0, limits=httpx.Limits(max_keepalive_connections=20))
+http_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(connect=30.0, read=600.0, write=30.0, pool=30.0),
+    limits=httpx.Limits(max_keepalive_connections=20)
+)
 
 def is_listening(port: int):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -136,20 +140,40 @@ async def smart_gateway(request: Request, path: str):
         forward_payload.setdefault("top_p", 0.95)
         forward_payload.setdefault("stream", False)
 
-    # 执行转发
+    # 执行转发（带重试）
     target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
-    try:
-        resp = await http_client.post(target_url, json=forward_payload)
-        res_json = resp.json()
-        
-        if is_anthropic:
-            # 转回 Anthropic 格式
-            ans = res_json['choices'][0]['message']['content']
-            return JSONResponse({"id": f"msg_{uuid.uuid4().hex}", "type": "message", "role": "assistant", "model": model_name, "content": [{"type": "text", "text": ans}], "stop_reason": "end_turn", "usage": {"input_tokens": 0, "output_tokens": 0}})
-        return JSONResponse(res_json)
-    except Exception as e:
-        logger.error(f"❌ 转发失败: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    last_exception = None
+    
+    for attempt in range(3):  # 最多重试 3 次
+        try:
+            resp = await http_client.post(target_url, json=forward_payload)
+            if resp.status_code == 200:
+                res_json = resp.json()
+                
+                if is_anthropic:
+                    ans = res_json['choices'][0]['message']['content']
+                    return JSONResponse({
+                        "id": f"msg_{uuid.uuid4().hex}", 
+                        "type": "message", 
+                        "role": "assistant", 
+                        "model": model_name, 
+                        "content": [{"type": "text", "text": ans}], 
+                        "stop_reason": "end_turn", 
+                        "usage": {"input_tokens": 0, "output_tokens": 0}
+                    })
+                return JSONResponse(res_json)
+            else:
+                logger.warning(f"⚠️ 后端返回 {resp.status_code}，第 {attempt+1} 次尝试")
+                last_exception = f"HTTP {resp.status_code}"
+                
+        except Exception as e:
+            last_exception = str(e)
+            logger.warning(f"⚠️ 第 {attempt+1} 次转发失败: {e}")
+            if attempt < 2:
+                await asyncio.sleep(2)  # 等待 2 秒后重试
+    
+    logger.error(f"❌ 转发最终失败（已重试3次）: {last_exception}")
+    raise HTTPException(status_code=504, detail=f"Backend timeout after 3 attempts: {last_exception}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=4000, log_level="error")
