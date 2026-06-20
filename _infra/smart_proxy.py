@@ -24,11 +24,12 @@ logger = logging.getLogger("SmartProxy")
 
 app = FastAPI(title="FORGE Unified Smart Proxy v4.0")
 
-# 1. 物理 ID 映射表 (解决 404/超时的关键)
+# 1. 物理 ID 映射表（显示用 + MTPLX 实际模型 ID）
+# 关键修复：MTPLX 需要使用它自己注册的短 ID，而不是长 display_name
 REAL_ID_MAP = {
-    8080: "Qwen3.6-27B-MTPLX-Optimized-Quality",
-    8082: "Gemma4-MTPLX-Optimized-Quality",
-    8084: "Qwopus3.6-35B-A3B-v1-MTP-GGUF-8bit",
+    8080: "mtplx-qwen36-27b-optimized-quality",      # ← MTPLX 实际接受的 ID
+    8082: "mtplx-gemma4-optimized-quality",
+    8084: "qwopus-35b-a3b-v1-mtp-gguf-8bit",
     11434: "deepseek-r1:32b"
 }
 
@@ -105,21 +106,35 @@ async def smart_gateway(request: Request, path: str):
     if not ensure_server(target_port): raise HTTPException(status_code=504, detail="Backend Timeout")
     active_servers[target_port] = time.time()
 
-    # 【重要】翻译物理 ID：不管前端发什么名字，发给后端的一定是它认识的物理 ID
+    # 【关键修复】使用 MTPLX 实际注册的 model id（社区最佳实践）
+    # 不要用 display_name，直接用启动时显示的短 ID
     real_model_id = REAL_ID_MAP.get(target_port, model_name)
-    
-    # 构造 forward_payload
+
+    # 构造 forward_payload（保留原始请求结构，减少转换风险）
     if is_anthropic:
         logger.info(f"🔄 协议转换: Anthropic -> OpenAI (Target: {real_model_id})")
         msgs = []
-        if "system" in data: msgs.append({"role": "system", "content": data["system"]})
+        if "system" in data:
+            msgs.append({"role": "system", "content": data["system"]})
         for m in data.get("messages", []):
             content = m["content"][0]["text"] if isinstance(m["content"], list) else m["content"]
             msgs.append({"role": m["role"], "content": content})
-        forward_payload = {"model": real_model_id, "messages": msgs, "temperature": data.get("temperature", 0.7), "stream": data.get("stream", False)}
+        forward_payload = {
+            "model": real_model_id,
+            "messages": msgs,
+            "temperature": data.get("temperature", 0.6),
+            "top_p": data.get("top_p", 0.95),
+            "stream": data.get("stream", False),
+            "max_tokens": data.get("max_tokens", 2048)
+        }
     else:
-        forward_payload = data
+        # OpenAI 格式：直接使用客户端传来的 model（或映射后的真实 ID）
+        forward_payload = data.copy() if isinstance(data, dict) else {}
         forward_payload["model"] = real_model_id
+        # 确保必要字段存在（MTPLX 严格模式）
+        forward_payload.setdefault("temperature", 0.6)
+        forward_payload.setdefault("top_p", 0.95)
+        forward_payload.setdefault("stream", False)
 
     # 执行转发
     target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
