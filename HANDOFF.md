@@ -1,16 +1,17 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间：2026-06-21 16:30:00 CST
+创建时间：2026-06-20 22:45:00 CST
 -->
 
-# HANDOFF —— 接力交接文档 (v1.2.5 第42轮修订版)
+# HANDOFF —— 接力交接文档 (v1.3.0 第44轮修订版)
 
 > 目标：任何 Agent 5 分钟内接手并继续开发。
 > ⚠️ **接手必读顺序**：
-> 1. `HANDOFF.md`（本文件，最高规则 SSOT）
-> 2. `docs/ARCHITECTURE.md`（动态调度网关架构）
+> 1. `docs/dossier_v2/PROJECT_DOSSIER_V2.md` §1 Executive Takeover Brief（架构师接管总览）
+> 2. `HANDOFF.md`（本文件，最高规则 SSOT）
 > 3. `docs/PROJECT_STATE.md`（当前状态与 VRAM 水位）
-> 4. `docs/CHANGELOG.md`（最近一轮 64G 显存优化记录）
+> 4. `docs/dossier_v2/risk_register.csv`（风险清单）
+> 5. `docs/CHANGELOG.md`（最近一轮 Dossier 交付记录）
 
 ---
 
@@ -29,8 +30,10 @@
 
 ## 1. 项目定位与架构版本
 本产品为 **AI 项目孵化工厂 (FORGE Factory)**。
-**当前版本**：v1.2.5 (Dynamic VRAM Loading Edition)
-**核心特性**：实现了 Mac M1 Max 64G 显存下的 **“自检-卸载-按需加载”** 闭环。
+**当前版本**：v1.3.0-dossier (Project Dossier V2 Edition)
+**核心特性**：实现了 Mac M1 Max 64G 显存下的 **“自检-卸载-按需加载”** 闭环 + 已完成架构师接管卷宗。
+
+**Dossier 交付物**：`docs/dossier_v2/` – 含卷宗正文、资产清单、证据索引、风险登记册、ADR候选、图表源，共6文件。
 
 ---
 
@@ -53,8 +56,8 @@
 2. source .venv/bin/activate
 3. bash scripts/forge-start.sh
    → 预期：执行全量端口冷启动自检，成功后自动释放显存。
-4. python3 _infra/smart_proxy.py
-   → 预期：启动 4000 端口智能网关。
+4. python3 _infra/smart_proxy_streaming.py
+   → 预期：启动 4000 端口智能网关（SSE 流式版）。
 ```
 
 ### B. 开启工作 (Claude Code)
@@ -69,6 +72,7 @@
 终端 B:
 1. export PYTHONPATH=$PYTHONPATH:$(pwd)/_factory/patterns/peer-review/src
 2. python3 scripts/benchmark_test.py
+   → 预期：首次真实 LLM 共识约 1132s，见 docs/PROJECT_STATE.md
 ```
 
 ---
@@ -84,19 +88,15 @@
 - **R5 文件头**：所有文件顶部必须有“创建/修改模型 + 北京时间”。
 - **R8 行数限制**：文档与复杂逻辑代码不设硬性行数限制。
 - **过期处理**：所有旧代码、旧设计文档均在 `_obsolete/` 目录下。
-
-
----
-
-
----
-
+- **Dossier 优先**：架构升级前必读 `docs/dossier_v2/PROJECT_DOSSIER_V2.md`，风险清单见 `risk_register.csv`，禁止触碰项见卷宗 §10。
+- **ADR 流程**：新工厂级架构决策必须在 `docs/adr/` 创建对应 ADR（参考 `docs/adr/README.md` + `docs/dossier_v2/adr_candidates.md`）。
 
 ---
 
 ## 6. 仓库清理与过期资产规则
 - 最新仓库资产盘点见 `docs/repository-audit.md`。
 - 清理报告见 `docs/repository-cleanup-report.md`。
+- **Project Dossier V2** 见 `docs/dossier_v2/`。
 - `_obsolete/` 为可追溯历史资产目录，**不 ignore，继续 push 到 GitHub**。
 - 用户明确要求保留 active：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`；不得擅自迁移。
 - 当前生产路径禁止依赖 `_obsolete/` 中的代码或配置。

@@ -1,0 +1,51 @@
+claim_id,section,claim_summary,classification,confidence,evidence_type,file_path,symbol_or_object,line_range,commit_or_version,notes
+E-001,4,Peer-Review引擎基于LangGraph StateGraph,Observed,High,code,_factory/patterns/peer-review/src/peer_review/graph/review_graph.py,build_review_graph,44-110,main,
+E-002,4,Smart Proxy SSE流式网关 :4000,Observed,High,code,_infra/smart_proxy_streaming.py,chat_proxy,112-160,main,chunk超时600s
+E-003,6,LLMBackend抽象支持4种后端,Observed,High,code,_factory/patterns/peer-review/src/peer_review/llm_client.py,LLMBackend,80-260,main,MTPLX/Ollama/LiteLLM/LlamaCpp
+E-004,2,models.yaml为模型注册SSOT,Observed,High,config,config/models.yaml,,1-60,main,6个模型定义
+E-005,2,routing_plans.yaml定义5种Plan,Observed,High,config,config/routing_plans.yaml,,1-80,main,full-check/default/mtplx-hybrid/high-quality/all-local
+E-006,7,privacy_policy.yaml字段级出境策略,Observed,High,config,config/privacy_policy.yaml,,1-90,main,4种policy
+E-007,9,DataPrivacyGate存在但未全链路enforce,Inferred,Medium,code,_factory/patterns/peer-review/src/peer_review/platform/data_privacy_gate.py,,,main,llm_client中可选调用
+E-008,5,RoutingPlanEngine负责Plan→Model映射,Observed,High,code,_factory/patterns/peer-review/src/peer_review/platform/routing_plan_engine.py,,,main,
+E-009,7,KnowledgeHub使用LlamaIndex+ChromaDB,Observed,High,doc,docs/adr/ADR-005-knowledgehub-pure-llamaindex-chromadb.md,,,main,
+E-010,4,ReviewState为会诊状态TypedDict,Observed,High,code,_factory/patterns/peer-review/src/peer_review/graph/state.py,ReviewState,15-30,main,
+E-011,7,MemoryStore为Plan对比SSOT SQLite,Observed,High,doc,docs/adr/ADR-007-memorystore-as-plan-comparison-ssot.md,,,main,
+E-012,8,forge CLI支持status/check/tasks/advance/gate,Observed,High,code,_infra/forge_tools/src/forge/cli.py,,,main,19 tests passed
+E-013,2,fastapi-backend为项目脚手架模板,Observed,High,code,_factory/patterns/fastapi-backend/src/app/main.py,,,main,
+E-014,3,debt-collection为首个实战项目,Observed,High,code,projects/debt-collection/src/debt/strategy.py,,,main,
+E-015,2,ingestion-pipeline pattern存在,Observed,High,code,_factory/patterns/ingestion-pipeline/src/ingestion/pipeline.py,,,main,
+E-016,2,data-acquisition pattern存在,Observed,High,code,_factory/patterns/data-acquisition/src/acquisition/planner.py,,,main,
+E-017,2,debt-lawyer.expert知识包存在,Observed,High,doc,_factory/experts/debt-lawyer.expert/expert.yaml,,,main,
+E-018,8,benchmark_test.py为端到端压测入口,Observed,High,code,scripts/benchmark_test.py,,,main,
+E-019,10,ADR 001-007已记录,Observed,High,doc,docs/adr/README.md,,,main,
+E-020,4,Smart Proxy支持AppleScript自动拉起模型,Observed,High,code,_infra/smart_proxy_streaming.py,ensure_server,72-110,main,Mac-only
+E-021,8,无CI/CD配置文件,Observed,High,ci,N/A,,,.github/workflows/不存在,
+E-022,8,测试覆盖率低于15%,Inferred,Medium,test,./_factory/patterns/peer-review/tests/,,,main,仅1个测试文件
+E-023,4,真实LLM调用成功耗时1132.5s,Observed,High,doc,docs/PROJECT_STATE.md,§4,1-20,main,2026-06-20
+E-024,1,VRAM红线48GB,Observed,High,doc,HANDOFF.md,§4,1-10,main,
+E-025,10,LangGraph为编排唯一标准 ADR-001,Observed,High,doc,docs/adr/ADR-001-langgraph-migration.md,,,main,
+E-026,10,models+routing双文件管理 ADR-002,Observed,High,doc,docs/adr/ADR-002-dual-file-model-management.md,,,main,
+E-027,10,MTPLX为primary local backend ADR-004,Observed,High,doc,docs/adr/ADR-004-mtplx-as-primary-local-backend.md,,,main,
+E-028,5,ReviewState变更会级联影响5个node,Inferred,High,code,_factory/patterns/peer-review/src/peer_review/graph/nodes/,*,*,main,primary/reviewer/consensus/decision/memory
+E-029,6,Smart Proxy字段白名单曾导致400 Bad Request,Observed,High,doc,docs/LESSONS_LEARNED_SMART_PROXY_MTPX.md,,,main,
+E-030,9,网关无鉴权,Observed,High,code,_infra/smart_proxy_streaming.py,chat_proxy,112,main,无Auth中间件
+E-031,9,密钥明文存于_infra/.env,Observed,High,config,_infra/.env.example,,,main,GLM_API_KEY/DEEPSEEK_API_KEY
+E-032,8,依赖未pin精确版本,Observed,High,config,_factory/patterns/peer-review/pyproject.toml,,,main,
+E-033,2,配置在projects/*/config/重复拷贝,Observed,High,config,projects/debt-collection/config/models.yaml,,,main,与根config/重复
+E-034,8,无容器化交付物,Observed,High,doc,./,Dockerfile,,main,仓库无Dockerfile
+E-035,11,可观测性仅简易logger,Observed,High,code,_factory/patterns/peer-review/src/peer_review/utils/logger.py,,,main,无OTel
+E-036,4,consensus节点计算divergence_score,Observed,High,code,_factory/patterns/peer-review/src/peer_review/graph/nodes/consensus.py,,,main,
+E-037,8,forge check校验任务图循环,Observed,High,code,_infra/forge_tools/src/forge/task_graph.py,,,main,
+E-038,3,系统定位为AI项目孵化工厂,Observed,High,doc,README.md,,,main,
+E-039,5,llm_client.py为高耦合点,Inferred,High,code,_factory/patterns/peer-review/src/peer_review/llm_client.py,,,main,4后端+privacy耦合
+E-040,8,部署为Mac M1 Max单机手工启动,Observed,High,doc,HANDOFF.md,§3,,main,
+E-041,9,无SBOM生成,Observed,High,doc,./,,,main,未找到SBOM文件
+E-042,10,三文件SSOT不可拆,Recommended,High,doc,PROJECT_DOSSIER_V2.md,§10,,,下一任架构师约束
+E-043,12,Proxy单点风险 High/High,Inferred,High,code,_infra/smart_proxy_streaming.py,,,main,无熔断/降级
+E-044,12,VRAM LRU竞态风险 High/Medium,Inferred,Medium,code,_infra/smart_proxy_streaming.py,,,main,代码未见完整LRU
+E-045,13,模型权重来源未知,Observed,Low,doc,./,,,main,~/LocalAI/gguf-models/不在repo
+E-046,4,OpenAI-compatible /chat/completions协议,Observed,High,code,_infra/smart_proxy_streaming.py,chat_proxy,112,main,
+E-047,7,无关系型业务数据库,Observed,High,code,projects/debt-collection/src/debt/,,,main,仅ledger.py无持久化
+E-048,8,质量门禁无自动化,Observed,High,ci,./,,,main,无CI文件
+E-049,9,Prompt注入防护缺失,Inferred,Medium,code,_factory/patterns/peer-review/src/peer_review/llm_client.py,,,main,未见过滤
+E-050,10,primary→reviewer→consensus→decision顺序不可逆,Inferred,High,code,_factory/patterns/peer-review/src/peer_review/graph/review_graph.py,,,main,设计不变量

@@ -1,6 +1,7 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
 创建时间（北京时间，精确到秒）：2026-06-10 23:03:36 CST
+修改时间：2026-06-20 22:50:00 CST
 -->
 
 # FORGE Factory（AI 项目孵化工厂）
@@ -53,15 +54,16 @@ forge gate GATE-2
 
 ## 给接手的人 / Agent
 出问题或要接续开发，**必须按顺序阅读**：
-1. `DOCUMENT_AUDIT_REPORT.md`（最新项目治理审计报告 + 问题与修复计划）
+1. `docs/dossier_v2/PROJECT_DOSSIER_V2.md` §1 Executive Takeover Brief（架构师接管总览，含风险/约束/接管计划）
 2. `HANDOFF.md`（接力总入口 + 操作 SOP）
-3. `docs/UPGRADE_COMPLETION.md` + `docs/adr/README.md`（架构升级完成状态 + 工厂级 ADR 索引，含 ADR-001~007）
-4. `docs/PROJECT_STATE.md`（当前状态 SSOT）
-5. `docs/DEV_LOG.md` + `docs/DECISIONS.md`（历史，DECISIONS 已标记为 legacy） + `docs/CHANGELOG.md`
+3. `docs/PROJECT_STATE.md`（当前状态 SSOT）
+4. `docs/dossier_v2/risk_register.csv`（风险清单）
+5. `docs/adr/README.md`（工厂级 ADR 索引，含 ADR-001~007）+ `docs/dossier_v2/adr_candidates.md`（7 个待补 ADR）
+6. `docs/DEV_LOG.md` + `docs/CHANGELOG.md`
 
-**治理原则**：项目已建立 Documentation Governance 体系（见 `DOCUMENT_AUDIT_REPORT.md` + Phase 1 收尾）。任何变更必须遵循：
+**治理原则**：项目已建立 Documentation Governance 体系（见 `DOCUMENT_AUDIT_REPORT.md` + `docs/dossier_v2/`）。任何变更必须遵循：
 Code → Tests → Documentation → CHANGELOG → ADR（如为重大决策）流程。
-新工厂级架构决策必须在 `docs/adr/` 创建对应 ADR（参考 `docs/adr/README.md`）。
+新工厂级架构决策必须在 `docs/adr/` 创建对应 ADR（参考 `docs/adr/README.md` + `docs/dossier_v2/adr_candidates.md`）。
 
 
 

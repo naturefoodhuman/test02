@@ -9,6 +9,35 @@
 > 格式：每轮一节，列出【需求变动】和【文件影响】。
 
 ---
+## [第 44 轮] 2026-06-20
+
+### 需求变动
+- **重大治理行动**：生成 Project Dossier V2 – 项目资产审计 + 架构逆向工程 + 知识压缩，面向下一任架构师接管与升级设计。
+- **新增**：`docs/dossier_v2/` 目录及 6 个交付物：
+  - `PROJECT_DOSSIER_V2.md` – 卷宗正文（17 章，含 Executive Takeover Brief / As-Is Architecture / Risk Register / 30/60/90 Day Handover Plan）
+  - `asset_manifest.json` – 18 项资产清单（P0/P1/P2）
+  - `evidence_index.csv` – 50 条证据索引（Observed/Inferred/Intended/Recommended）
+  - `risk_register.csv` – 20 项风险/技术债登记
+  - `adr_candidates.md` – 7 个 ADR 候选（网关熔断/测试替身/配置统一/容器化/可观测/密钥Vault/ModelLauncher抽象）
+  - `diagram_sources.md` – 8 张架构图源与证据映射
+- **识别 Top 风险**：R-001 Proxy 单点无熔断 / R-002 VRAM LRU竞态 / R-003 无CI/CD / R-009 测试覆盖<15%
+- **识别承重墙**：smart_proxy_streaming.py / llm_client.py / config 三文件 SSOT / ReviewState
+- **输出接管计划**：30/60/90 Day – 测试护栏→网关加固→配置收敛→CI→可观测→容器化→多租户
+- **版本提升**：v1.2.9 → v1.3.0-dossier
+
+### 文件影响
+- 新增：`docs/dossier_v2/PROJECT_DOSSIER_V2.md`、`docs/dossier_v2/asset_manifest.json`、`docs/dossier_v2/evidence_index.csv`、`docs/dossier_v2/risk_register.csv`、`docs/dossier_v2/adr_candidates.md`、`docs/dossier_v2/diagram_sources.md`
+- 改动：`docs/PROJECT_STATE.md`（版本 v1.3.0-dossier，新增 Dossier 交付物索引与接管必读顺序，待办更新为 P0 三项）
+- 改动：`HANDOFF.md`（版本 v1.3.0，第 44 轮修订，接手必读顺序首位增加 Dossier）
+- 改动：`docs/CHANGELOG.md`（本文件）
+
+### 说明
+- 本轮为纯文档治理轮，无代码改动。所有结论基于代码/配置证据，严格区分 Observed/Inferred/Intended/Recommended。
+- Dossier 明确标注：Proxy单点、VRAM竞态、无CI、测试覆盖低为真危险；ReviewState/三文件SSOT/字段白名单为不可轻动项。
+- 下一轮建议优先落地 ADR-C002 测试替身 → ADR-C003 配置统一 → ADR-C001 网关加固。
+
+---
+
 
 ## [第 43 轮] 2026-06-20
 
