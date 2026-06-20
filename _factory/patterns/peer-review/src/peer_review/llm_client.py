@@ -90,36 +90,64 @@ class LLMBackend(ABC):
 
 
 class LiteLLMBackend(LLMBackend):
-    """LiteLLM 网关适配器 (OpenAI 兼容接口)"""
+    """LiteLLM 网关适配器 (OpenAI 兼容接口) - 流式版本"""
     
     def chat(self, model_cfg: ModelConfig, messages: list[dict[str, str]]) -> LLMResponse | None:
-        # 使用 LiteLLM 的标准 OpenAI 兼容格式
+        import httpx
+        import time
+
         base_url = model_cfg.base_url or "http://localhost:4000/v1"
-        api_key = model_cfg.api_key or "sk-forge-local-anytoken"
-        
-        # 处理 model_id 映射
         model_id = model_cfg.model_id
-        if model_cfg.type.value == "api":
-            # 确保 API 路由正确
-            pass 
-        
-        body = json.dumps({"model": model_id, "messages": messages}).encode("utf-8")
+
+        payload = {
+            "model": model_id,
+            "messages": messages,
+            "stream": True,
+            "temperature": 0.6,
+            "max_tokens": 4096,
+            "top_p": 0.95,
+        }
+
+        # chunk 级超时（每 60s 必须有新 token）
+        CHUNK_IDLE_TIMEOUT = 90.0
+        TOTAL_HARD_LIMIT = 3600.0
+
+        content_parts = []
+        start_time = time.time()
+        last_chunk_time = start_time
+
         try:
-            req = urllib.request.Request(
-                base_url.rstrip("/") + "/chat/completions",
-                data=body,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}",
-                },
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=600) as r:
-                data = json.loads(r.read().decode("utf-8"))
-                content = data["choices"][0]["message"]["content"]
-                return LLMResponse(content=content, model=model_id)
+            with httpx.Client(
+                timeout=httpx.Timeout(connect=10.0, read=None, write=30.0, pool=10.0),
+                limits=httpx.Limits(max_keepalive_connections=0)
+            ) as client:
+                with client.stream("POST", f"{base_url}/v1/chat/completions", json=payload) as resp:
+                    resp.raise_for_status()
+                    for line in resp.iter_lines():
+                        now = time.time()
+                        if now - last_chunk_time > CHUNK_IDLE_TIMEOUT:
+                            raise TimeoutError(f"无新 token 超过 {CHUNK_IDLE_TIMEOUT}s")
+                        if now - start_time > TOTAL_HARD_LIMIT:
+                            raise TimeoutError("总时长超限")
+
+                        if not line or not line.startswith("data:"):
+                            continue
+                        data = line[5:].strip()
+                        if data == "[DONE]":
+                            break
+                        try:
+                            delta = json.loads(data)["choices"][0]["delta"].get("content", "")
+                            if delta:
+                                content_parts.append(delta)
+                                last_chunk_time = now
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            continue
+
+            full_content = "".join(content_parts)
+            return LLMResponse(content=full_content, model=model_id)
+
         except Exception as e:
-            print(f"❌ 后端调用失败: {e}")
+            print(f"❌ 流式后端调用失败: {e}")
             return LLMResponse(content=f"错误: {str(e)}", model=model_id, error=str(e), blocked=True)
 
     def chat_stream(self, model_cfg: ModelConfig, messages: list[dict[str, str]]) -> LLMResponse | None:
