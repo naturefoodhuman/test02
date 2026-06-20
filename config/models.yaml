@@ -1,31 +1,28 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 12:00:00 CST
+# 创建时间（北京时间）：2026-06-21 18:00:00
 # config/models.yaml
-# A 文件：所有可用模型的接入信息
+# A 文件：所有可用模型的接入信息。
+# ⚠️ 统一路由：所有本地模型 base_url 均指向 Smart Proxy (4000) 进行显存调度。
 
 models:
-  # ── MTPLX 高性能本地推理 (最高优先级) ──────────────────────────
+  # ── MTPLX 高性能本地推理 ──────────────────────────
   mtplx-qwen36-27b:
     display_name: "Qwen3.6-27B-MTPLX-Optimized (主大脑/编码)"
     provider: mtplx
     backend: mtplx
     model_id: Qwen3.6-27B-MTPLX-Optimized-Quality
-    base_url: http://localhost:8080/v1
+    base_url: http://localhost:4000/v1
     type: local
-    estimated_speed: "~80 tok/s"
-    memory_required_gb: 18
-    capabilities: [general, reasoning, code, high_quality]
+    memory_required_gb: 20
 
   mtplx-gemma4:
     display_name: "Gemma4-MTPLX-Optimized (独立评审)"
     provider: mtplx
     backend: mtplx
     model_id: Gemma4-MTPLX-Optimized-Quality
-    base_url: http://localhost:8082/v1
+    base_url: http://localhost:4000/v1
     type: local
-    estimated_speed: "~60 tok/s"
     memory_required_gb: 16
-    capabilities: [general, reasoning]
 
   # ── Ollama 本地推理 ──────────────────────────────────────────
   local-deepseek-r1:
@@ -33,45 +30,19 @@ models:
     provider: ollama
     backend: ollama
     model_id: deepseek-r1:32b
-    base_url: http://localhost:11434
+    base_url: http://localhost:4000/v1
     type: local
-    estimated_speed: "~30 tok/s"
     memory_required_gb: 20
-    capabilities: [deep_reasoning, strategy]
 
-  local-qwen-coder:
-    display_name: "Qwen3-Coder-Next q4_K_M (测试/编码备用)"
-    provider: ollama
-    backend: ollama
-    model_id: qwen3-coder-next:q4_K_M
-    base_url: http://localhost:11434
-    type: local
-    estimated_speed: "~50 tok/s"
-    memory_required_gb: 14
-    capabilities: [code_generation, code_review]
-
+  # ── Llama.cpp 本地推理 ────────────────────────────────────────
   qwopus-35b:
     display_name: "Qwopus3.6-35B-A3B (独立评审)"
     provider: llama_cpp
     backend: llama_cpp
     model_id: Qwopus3.6-35B-A3B-v1-MTP-GGUF-8bit
-    base_url: http://localhost:8084/v1
+    base_url: http://localhost:4000/v1
     type: local
-    estimated_speed: "~30 tok/s"
-    memory_required_gb: 24
-    capabilities: [general, reasoning]
-
-  # ── 其他本地模型 ─────────────────────────────────────────────
-  local-qwen35b:
-    display_name: "Qwen3.5 35B MoE (本地主力备用)"
-    provider: ollama
-    backend: ollama
-    model_id: qwen3.5:35b-a3b-q8_0
-    base_url: http://localhost:11434
-    type: local
-    estimated_speed: "~50 tok/s (MLX)"
-    memory_required_gb: 22
-    capabilities: [general, reasoning, chinese]
+    memory_required_gb: 36
 
   local-fast:
     display_name: "Qwen2.5 7B (简单任务)"
@@ -80,65 +51,23 @@ models:
     model_id: qwen2.5:7b
     base_url: http://localhost:11434
     type: local
-    estimated_speed: "~120 tok/s"
     memory_required_gb: 6
-    capabilities: [classify, summarize, route]
-
-  embedding:
-    display_name: "bge-m3 (向量嵌入)"
-    provider: ollama
-    backend: ollama
-    model_id: bge-m3
-    base_url: http://localhost:11434
-    type: embedding
 
   # ── 中国商业 API ─────────────────────────────────────────────
-    glm-5:
-    display_name: "GLM-5.1 (本地模型不能胜任的复杂问题)"
-    provider: zhipu
-    backend: litellm
-    model_id: z-ai/glm-5.1
-    base_url: https://integrate.api.nvidia.com/v1
-    api_key: ${GLM_API_KEY}
-    type: api
-    estimated_cost: "$0.007/1k tokens"
-    capabilities: [chinese, legal]
-    data_policy: requires_privacy_check
-  
-  deepseek-flash:
-    display_name: "DeepSeek V4 Flash (快速创作)"
-    provider: deepseek
-    backend: litellm
-    model_id: deepseek-ai/DeepSeek-V4-Flash
-    base_url: https://integrate.api.nvidia.com/v1
-    api_key: ${DEEPSEEK_API_KEY}
-    type: api
-    estimated_cost: "$0.002/1k tokens"
-    capabilities: [general, reasoning, fast]
-    data_policy: requires_privacy_check
-
   deepseek-pro:
-    display_name: "DeepSeek V4 Pro (独立评审)"
+    display_name: "DeepSeek V4 Pro"
     provider: deepseek
     backend: litellm
     model_id: deepseek-ai/DeepSeek-V4-Pro
     base_url: https://integrate.api.nvidia.com/v1
     api_key: ${DEEPSEEK_API_KEY}
     type: api
-    estimated_cost: "$0.015/1k tokens"
-    capabilities: [deep_reasoning, high_quality]
-    data_policy: requires_privacy_check
 
-  qwen-plus:
-    display_name: "Qwen3.5-397B-A17B (多模态)"
-    provider: alibaba
+  deepseek-flash:
+    display_name: "DeepSeek V4 Flash"
+    provider: deepseek
     backend: litellm
-    model_id: Qwen/Qwen3.5-397B-A17B
-    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
-    api_key: ${QWEN_API_KEY}
+    model_id: deepseek-ai/DeepSeek-V4-Flash
+    base_url: https://integrate.api.nvidia.com/v1
+    api_key: ${DEEPSEEK_API_KEY}
     type: api
-    estimated_cost: "$0.005/1k tokens"
-    capabilities: [long_context, chinese]
-    data_policy: requires_privacy_check
-
-

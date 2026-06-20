@@ -114,12 +114,13 @@ class LiteLLMBackend(LLMBackend):
                 },
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=120) as r:
+            with urllib.request.urlopen(req, timeout=300) as r:
                 data = json.loads(r.read().decode("utf-8"))
                 content = data["choices"][0]["message"]["content"]
                 return LLMResponse(content=content, model=model_id)
-        except Exception:
-            return None
+        except Exception as e:
+            print(f"❌ 后端调用失败: {e}")
+            return LLMResponse(content=f"错误: {str(e)}", model=model_id, error=str(e), blocked=True)
 
     def chat_stream(self, model_cfg: ModelConfig, messages: list[dict[str, str]]) -> LLMResponse | None:
         # 简化实现：先调用 chat() 聚合
