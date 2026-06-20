@@ -72,7 +72,39 @@ def is_listening(port: int) -> bool:
 async def ensure_server(port: int) -> bool:
     if is_listening(port):
         return True
-    # 这里可以扩展 AppleScript 拉起逻辑
+
+    # 自动拉起 MTPLX（使用 AppleScript）
+    if port not in {8080, 8082}:
+        return False
+
+    model_map = {
+        8080: "Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality",
+        8082: "Youssofal/Gemma4-MTPLX-Optimized-Quality",
+    }
+
+    model_name = model_map[port]
+    logger.info(f"🚀 自动拉起 MTPLX 模型 (Port {port})...")
+
+    script = f'''
+    tell application "Terminal"
+        do script "cd ~/LocalAI/servers && uv run mtplx quickstart --model {model_name} --port {port}"
+    end tell
+    '''
+
+    try:
+        subprocess.run(["osascript", "-e", script], check=True)
+    except Exception as e:
+        logger.error(f"AppleScript 拉起失败: {e}")
+        return False
+
+    # 等待模型就绪（最多 120 秒）
+    for _ in range(40):
+        await asyncio.sleep(3)
+        if is_listening(port):
+            logger.info(f"✅ MTPLX 模型 (Port {port}) 已就绪")
+            return True
+
+    logger.error(f"❌ MTPLX 模型 (Port {port}) 启动超时")
     return False
 
 
