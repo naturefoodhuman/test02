@@ -1,0 +1,67 @@
+# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
+# 创建时间（北京时间）：2026-06-20 11:15:00
+#
+# ⚠️ 注意：本文件已根据 config/models.yaml 彻底重构。
+# 所有的 model_name 必须与 A 文件保持 100% 一致。
+
+model_list:
+  # ── MTPLX 高性能本地推理 (主大脑/编码) ──────────────────────────
+  - model_name: "mtplx-qwen36-27b"
+    litellm_params:
+      model: "openai/Qwen3.6-27B-MTPLX-Optimized-Quality"
+      api_base: "http://localhost:8080/v1"
+      api_key: "mtplx-token"
+
+  # ── MTPLX 高性能本地推理 (独立评审) ──────────────────────────
+  - model_name: "mtplx-gemma4"
+    litellm_params:
+      model: "openai/Gemma4-MTPLX-Optimized-Quality"
+      api_base: "http://localhost:8082/v1"
+      api_key: "mtplx-token"
+
+  # ── Ollama 本地推理 (独立评审) ──────────────────────────────
+  - model_name: "local-deepseek-r1"
+    litellm_params:
+      model: "ollama/deepseek-r1:32b"
+      api_base: "http://localhost:11434"
+
+  # ── Llama.cpp 本地推理 (深度评审) ───────────────────────────
+  - model_name: "qwopus-35b"
+    litellm_params:
+      model: "openai/Qwopus3.6-35B-A3B-v1-MTP-GGUF-8bit"
+      api_base: "http://localhost:8084/v1"
+
+  # ── 中国商业 API (外源增强) ──────────────────────────────────
+  - model_name: "glm-5"
+    litellm_params:
+      model: "openai/z-ai/glm-5.1"
+      api_base: "https://integrate.api.nvidia.com/v1"
+      api_key: "os.environ/GLM_API_KEY"
+
+  - model_name: "deepseek-pro"
+    litellm_params:
+      model: "openai/deepseek-ai/DeepSeek-V4-Pro"
+      api_base: "https://integrate.api.nvidia.com/v1"
+      api_key: "os.environ/DEEPSEEK_API_KEY"
+
+  # ── CLAUDE CODE 专用映射 (全部指向主大脑 mtplx-qwen36-27b) ──
+  - model_name: "claude-3-5-sonnet-20241022"
+    litellm_params:
+      model: "openai/Qwen3.6-27B-MTPLX-Optimized-Quality"
+      api_base: "http://localhost:8080/v1"
+
+  - model_name: "claude-opus-4-8"
+    litellm_params:
+      model: "openai/Qwen3.6-27B-MTPLX-Optimized-Quality"
+      api_base: "http://localhost:8080/v1"
+
+  - model_name: "claude-3-5-sonnet-latest"
+    litellm_params:
+      model: "openai/Qwen3.6-27B-MTPLX-Optimized-Quality"
+      api_base: "http://localhost:8080/v1"
+
+router_settings:
+  routing_strategy: "latency-based-routing"
+
+litellm_settings:
+  json_logs: true

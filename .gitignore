@@ -65,7 +65,6 @@ temp/
 .DS_Store
 Thumbs.db
 
-# Traceability exception: obsolete assets are intentionally versioned, even if
-# their filenames match generic log/cache patterns.
-!_obsolete/
-!_obsolete/**
+# 废弃资产
+_obsolete/
+
