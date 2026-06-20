@@ -402,6 +402,30 @@
 
 ---
 
+## [第 43 轮] 2026-06-20 — 模型压测打通（v1.2.6）
+
+### 需求变动
+- **核心修复**：解决 benchmark_test.py 启动时“模型配置不一致”错误
+  - 根因：`routing_plans.yaml` 中 `full-check` 方案引用了未定义的模型 `local-fast`（节点 `fast_classify`）
+  - 修复：删除 `fast_classify` 节点（该节点在代码中无实现，且其他方案均未使用）
+- **全量检测**：完成对 peer-review 引擎 26 个 Python 文件的语法 + 导入链 + 配置交叉验证
+- **结果**：配置系统、节点工厂、LangGraph 构建链路全部健康（仅缺 langgraph 运行时依赖）
+- **里程碑**：压测链路正式打通，`full-check` / `default` / `high-quality` / `all-local` / `mtplx-hybrid` 五方案均可正常加载
+
+### 文件影响
+- **改动**：`config/routing_plans.yaml`（移除 fast_classify + local-fast）
+- **改动**：`docs/PROJECT_STATE.md`（升级到 v1.2.6，记录本次修复）
+- **改动**：`docs/CHANGELOG.md`（新增本节）
+- **新增**：`/home/user/test02_deploy_key` + `.pub`（用于 GitHub Deploy Key 推送）
+
+### 验收
+- ✅ `load_all_configs()` 交叉验证通过
+- ✅ 所有压测方案模型引用一致
+- ✅ 无残留未定义模型引用
+- ✅ 代码无语法错误
+
+---
+
 ## [第 37 轮] 2026-06-16（Phase 1 立即启动）
 
 ### 需求变动

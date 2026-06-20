@@ -3,7 +3,10 @@
 创建时间：2026-06-21 17:00:00 CST
 -->
 
-# PROJECT_STATE —— 工厂运行状态 (v1.2.5)
+# PROJECT_STATE —— 工厂运行状态 (v1.2.6)
+
+**更新日期**：2026-06-20 13:30 CST
+**更新内容**：修复 full-check 方案模型配置不一致问题（移除未定义的 local-fast + fast_classify），压测链路已打通。
 
 ## 1. 核心资产概览
 - **系统版本**: v1.2.5 (Stable Hybrid)
