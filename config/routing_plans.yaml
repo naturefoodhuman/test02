@@ -1,51 +1,77 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-14 14:10:00 CST
+# 创建时间（北京时间）：2026-06-20 15:30:00
 # config/routing_plans.yaml
 # B 文件：各节点模型调用方案
 # 切换方案只改 active_plan 这一个字段
+# SSOT: 必须与 config/models.yaml 中的模型 ID 严格对应
 
-active_plan: default
+active_plan: mtplx-hybrid
 
 plans:
-  # ── 默认方案：本地为主，外源 API 增强评审质量 ─────────────────
+  # ── 默认方案：高性能本地混合 (主大脑 Qwen + 独立评审 Gemma4) ─────────────────
   default:
-    description: "本地模型为主，DeepSeek Flash 增强评审质量"
-    estimated_total_time: "约 12-18 分钟"
-    estimated_cost: "$0.01-0.03/次"
+    description: "高性能本地混合，使用 MTPLX 优化引擎"
+    estimated_total_time: "约 5-8 分钟"
+    estimated_cost: "$0"
     nodes:
       primary_expert:
-        model: local-qwen35b
-        note: "主分析，本地主力"
+        model: mtplx-qwen36-27b
+        note: "主分析，MTPLX 优化版 Qwen"
       reviewer_1:
-        model: deepseek-flash
+        model: mtplx-gemma4
         role: "风险评估"
         execution: sequential
-        note: "外源 API 独立评审，不受本地模型偏见影响"
+        note: "独立评审，高性能本地模型"
       reviewer_2:
         model: local-deepseek-r1
         role: "合规审查"
         execution: sequential
         note: "本地推理模型，深度分析"
       reviewer_3:
-        model: local-qwen35b
+        model: mtplx-gemma4
         role: "执行策略"
         execution: sequential
-        note: "本地主力，独立视角"
+        note: "独立视角"
       consensus:
-        model: deepseek-flash
-        note: "外源模型汇总，客观性更好"
+        model: mtplx-qwen36-27b
+        note: "主大脑汇总"
       fast_classify:
         model: local-fast
 
-  # ── 高质量方案：多外源 API 并行，最高评审质量，顺从性最低 ──────
-  high-quality:
-    description: "多外源 API 独立并行评审，最高质量，顺从性最低"
-    estimated_total_time: "约 8-12 分钟（API 并行执行）"
-    estimated_cost: "$0.05-0.15/次"
-    notes: "3 个独立 API 模型评审，偏见多样性最高"
+  # ── MTPLX 高性能混合方案 (专为 M1 Max 64GB 优化) ──────────────────────────
+  mtplx-hybrid:
+    description: "MTPLX 高性能本地混合（主大脑 Qwen + 独立评审 Gemma4，并行）"
+    estimated_total_time: "约 5-8 分钟"
+    estimated_cost: "$0"
+    notes: "专为 M1 Max 64GB 硬件优化，使用 8080/8082 MTPLX 端口。"
     nodes:
       primary_expert:
-        model: local-qwen35b
+        model: mtplx-qwen36-27b
+        note: "主大脑 / 编码"
+      reviewer_1:
+        model: mtplx-gemma4
+        role: "风险评估"
+        execution: parallel
+        note: "独立评审"
+      reviewer_2:
+        model: mtplx-gemma4
+        role: "合规审查"
+        execution: parallel
+        note: "独立评审"
+      consensus:
+        model: mtplx-qwen36-27b
+        note: "高质量模型做最终决断"
+      fast_classify:
+        model: local-fast
+
+  # ── 高质量方案：外源 API 增强评审质量 ──────────────────────────────────────
+  high-quality:
+    description: "本地主大脑 + 多外源 API 独立并行评审"
+    estimated_total_time: "约 8-12 分钟"
+    estimated_cost: "$0.05-0.15/次"
+    nodes:
+      primary_expert:
+        model: mtplx-qwen36-27b
       reviewer_1:
         model: deepseek-pro
         role: "深度推理评审"
@@ -60,16 +86,15 @@ plans:
         execution: parallel
       consensus:
         model: deepseek-pro
-        note: "高质量模型做最终决断"
+        note: "高质量外源模型做最终决断"
       fast_classify:
         model: local-fast
 
-  # ── 全本地方案：零成本，数据完全不出本地 ──────────────────────
+  # ── 全本地方案：零成本，Ollama 驱动 ────────────────────────────────────────
   all-local:
-    description: "全部本地模型，零 API 成本，数据完全不出本地"
+    description: "全部 Ollama 本地模型，零 API 成本"
     estimated_total_time: "约 18-25 分钟"
     estimated_cost: "$0"
-    notes: "信息屏蔽顺序模式，评审者只看案件上下文"
     nodes:
       primary_expert:
         model: local-qwen35b
@@ -90,74 +115,19 @@ plans:
       fast_classify:
         model: local-fast
 
-  # ── 快速方案：单评审，最快速度，适合低风险场景 ─────────────────
-  fast:
-    description: "单评审+汇总，最快完成，适合低风险初步判断"
-    estimated_total_time: "约 5-8 分钟"
-    estimated_cost: "$0.005/次"
-    nodes:
-      primary_expert:
-        model: local-qwen35b
-      reviewer_1:
-        model: deepseek-flash
-        role: "综合评审"
-        execution: sequential
-        note: "单一评审，速度快但多角度覆盖不足"
-      consensus:
-        model: local-qwen35b
-      fast_classify:
-        model: local-fast
-
-  # ── 手动方案：快速自定义模板 ─────────────────────────────────
-  # 使用方法：复制此方案，修改 model 字段名，设 enabled: true
-  # 然后修改 active_plan 为此方案 ID 即可生效
-  manual-override:
-    description: "手动配置方案（修改此方案的模型名即可）"
-    estimated_total_time: "根据配置模型而定"
-    estimated_cost: "根据配置模型而定"
-    enabled: false
-    nodes:
-      primary_expert:
-        model: local-qwen35b
-      reviewer_1:
-        model: local-qwen35b
-        role: "初步评审"
-        execution: sequential_isolated
-      reviewer_2:
-        model: local-deepseek-r1
-        role: "批判性审查"
-        execution: sequential_isolated
-      reviewer_3:
-        model: deepseek-flash
-        role: "综合决断"
-        execution: sequential_isolated
-      consensus:
-        model: deepseek-flash
-      fast_classify:
-        model: local-fast
-
-  # ── MTPLX 高性能混合方案（对应 DEPLOYMENT_GUIDE 第一阶段测试）────────────────
-  mtplx-hybrid:
-    description: "MTPLX 高性能本地混合（主大脑 Qwen + 独立评审 Gemma4，并行）"
-    estimated_total_time: "约 5-8 分钟"
+  # ── 深度方案：Llama.cpp 高规格模型 ────────────────────────────────────────
+  deep-review:
+    description: "主大脑 + 35B 高规格 GGUF 评审"
+    estimated_total_time: "约 15-20 分钟"
     estimated_cost: "$0"
-    notes: "专为 M1 Max 64GB 硬件优化，使用 8080/8082 MTPLX 端口。真实 LLM 评审。"
     nodes:
       primary_expert:
         model: mtplx-qwen36-27b
-        note: "主大脑 / 编码"
       reviewer_1:
-        model: mtplx-gemma4
-        role: "风险评估"
-        execution: parallel
-        note: "独立评审，不受主专家偏见影响"
-      reviewer_2:
-        model: mtplx-gemma4
-        role: "合规审查"
-        execution: parallel
-        note: "独立评审"
+        model: qwopus-35b
+        role: "高精度评审"
+        execution: sequential
       consensus:
         model: mtplx-qwen36-27b
-        note: "高质量模型做最终决断"
       fast_classify:
         model: local-fast
