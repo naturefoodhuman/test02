@@ -99,19 +99,34 @@ async def chat_proxy(request: Request):
     target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
 
     async def event_stream():
-        try:
-            async with http_client.stream("POST", target_url, json=forward_payload) as resp:
-                if resp.status_code != 200:
-                    err = await resp.aread()
-                    yield f"data: {{\"error\": {err.decode()!r}}}\n\n".encode()
-                    return
+        """带心跳保活的 SSE 流式透传"""
+        queue = asyncio.Queue()
 
-                async for chunk in resp.aiter_raw():
-                    yield chunk  # 原样透传 SSE 字节
+        async def upstream_pump():
+            try:
+                async with http_client.stream("POST", target_url, json=forward_payload) as resp:
+                    if resp.status_code != 200:
+                        err = await resp.aread()
+                        await queue.put(f"data: {{\"error\": {err.decode()!r}}}\n\n".encode())
+                        await queue.put(None)
+                        return
+                    async for chunk in resp.aiter_raw():
+                        await queue.put(chunk)
+            except Exception as e:
+                await queue.put(f"data: {{\"error\": \"{str(e)}\"}}\n\n".encode())
+            await queue.put(None)
 
-        except Exception as e:
-            logger.error(f"流式转发失败: {e}")
-            yield f"data: {{\"error\": \"{str(e)}\"}}\n\n".encode()
+        task = asyncio.create_task(upstream_pump())
+
+        while True:
+            try:
+                chunk = await asyncio.wait_for(queue.get(), timeout=18.0)  # 18s 心跳
+                if chunk is None:
+                    break
+                yield chunk
+            except asyncio.TimeoutError:
+                # 发送 SSE 注释行（客户端会忽略但能保活）
+                yield b": keepalive\n\n"
 
     return StreamingResponse(
         event_stream(),
