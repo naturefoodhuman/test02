@@ -1,14 +1,14 @@
-<!--\n创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)\n创建时间：2026-06-20 13:40:00 CST\n-->
+<!--\n创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)\n创建时间：2026-06-20 17:10:00 CST\n-->
 
-# PROJECT_STATE —— 工厂运行状态 (v1.2.6)
+# PROJECT_STATE —— 工厂运行状态 (v1.2.9)
 
-**更新日期**：2026-06-20 13:40 CST  
-**当前版本**：v1.2.6（Model Stress Test Connectivity）
+**更新日期**：2026-06-20 17:10 CST  
+**当前版本**：v1.2.9（Real LLM Call Success）
 
 ## 1. 核心资产概览
-- **系统版本**: v1.2.6 (Stable Hybrid + Benchmark Ready)
+- **系统版本**: v1.2.9 (Streaming Smart Proxy + Real Model Call)
 - **显存状态**: 动态管理中 (M1 Max 64G)
-- **网关状态**: Smart Proxy (FastAPI) + AppleScript 驱动
+- **网关状态**: Smart Proxy v5.0 (SSE Streaming) + AppleScript 驱动
 
 ## 2. 模型分工状态 (A-File SSOT)
 | 模型 ID | 角色 | 端口 | 显存 | 状态 |
@@ -22,23 +22,26 @@
 ## 3. 运行健康检查
 - [x] **配置交叉验证**: OK（load_all_configs 通过）
 - [x] **全量方案加载**: OK（full-check / default / high-quality / all-local / mtplx-hybrid 全部健康）
-- [x] **沙箱 Benchmark 执行**: ✅ 已完成（4 方案全部成功运行）
-- [x] **Smart Proxy 连通性**: OK (4000 端口)
-- [x] **Benchmark 配置链路**: ✅ 已打通（v1.2.6 核心里程碑）
-- [x] **Smart Proxy 超时/重试优化**: ✅ 已完成（600s + 3次重试）
-- [ ] **真实 LLM 调用**: 需本地模型服务 + langgraph 依赖（当前已能转发 200 OK）
+- [x] **Smart Proxy 流式改造**: ✅ 已完成（SSE 直通 + 心跳 + 字段白名单）
+- [x] **真实 LLM 调用**: ✅ **首次成功**（1132.5s 获得真实共识报告）
+- [x] **自动模型拉起**: ✅ 已实现（ensure_server + AppleScript）
 
 ## 4. 最近一轮大攻坚 (2026-06-20)
-- **成就 1**（核心）：彻底修复 benchmark 启动报错
-  - 问题：`full-check` 方案引用未定义模型 `local-fast`
-  - 解决：移除 `fast_classify` 节点（无对应实现）
-  - 结果：5 个压测方案全部可正常加载
-- **成就 2**：完成 26 个 Python 文件全量语法 + 导入链检查
-- **成就 3**：首次使用 Deploy Key 成功 push 到 GitHub
-- **治理**：同步更新 PROJECT_STATE + CHANGELOG + routing_plans.yaml
+- **成就 1**（里程碑）：首次获得真实 LLM 共识报告
+  - 耗时：1132.5 秒（≈19 分钟）
+  - 模型：Qwen3.6-27B-MTPLX + Gemma4-MTPLX
+  - 结果：完整债务案件策略报告（分歧度 0.0）
+- **成就 2**：实现生产级流式 Smart Proxy
+  - SSE 原样透传
+  - chunk 级超时（最终 600s）
+  - 心跳保活（45s~60s）
+  - 字段白名单解决 400 Bad Request
+- **成就 3**：完成全套诊断与修复工具链
+  - `scripts/diagnose_proxy.sh`
+  - `scripts/test_streaming_plan.py`
+  - `scripts/start_streaming_proxy.sh`
 
 ## 5. 待办事项 (Next)
-- [x] **沙箱 Benchmark 执行**：已完成（venv + 依赖安装 + 4 方案成功运行）
-- [ ] 在 Mac 本地执行真实压测（需启动 Smart Proxy + 模型服务）
-- [ ] 收集真实耗时 + divergence_score 数据（当前沙箱因无模型服务返回 0.0）
-- [ ] 准备 v1.2.7（添加 benchmark 结果表格 + 真机验证）
+- [ ] 收集多方案真实压测数据（high-quality / all-local / mtplx-hybrid）
+- [ ] 优化 MTPLX 启动参数（--reasoning-effort low 等）
+- [ ] 准备 v1.3.0（多项目并行 + 断点续接）

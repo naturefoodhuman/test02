@@ -402,6 +402,38 @@
 
 ---
 
+## [第 47 轮] 2026-06-20 — 真实模型调用首次成功（v1.2.9）
+
+### 需求变动
+- **里程碑达成**：首次通过流式 Smart Proxy 获得真实 LLM 共识报告（耗时 1132.5s）
+- **核心突破**：
+  - 实现 SSE 流式直通 + chunk 级超时（最终 600s）
+  - 自动拉起 MTPLX 模型 + 就绪探针
+  - 字段白名单过滤解决 400 Bad Request
+  - 心跳保活机制（45s~60s）
+- **经验教训**：
+  - 对 27B 长思考模型，**必须用 streaming + chunk 超时 + 心跳**，而非单纯加大总超时
+  - MTPLX 必须使用启动日志中的短 model_id（`mtplx-qwen36-27b-optimized-quality`）
+  - `urllib.request` 不支持真正流式，必须改用 `httpx.stream`
+  - 模型沉默思考阶段（`mtplx_stream_silence`）可达数分钟，需极高 chunk 超时
+
+### 文件影响
+- **新增**：`_infra/smart_proxy_streaming.py`（SSE 流式版）
+- **重构**：`peer_review/llm_client.py`（LiteLLMBackend 改为流式）
+- **新增**：`scripts/test_streaming_plan.py`、`scripts/start_streaming_proxy.sh`
+- **改动**：`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`docs/benchmark.md`
+
+---
+
+## [第 46 轮] 2026-06-20 — 实现 SSE 流式直通 + 心跳保活（v1.2.8）
+
+### 需求变动
+- 按专业方案实现 Smart Proxy 流式改造
+- 修复 URL 重复 `/v1` 导致的 404
+- 大幅放宽超时（300s → 600s chunk）
+
+---
+
 ## [第 45 轮] 2026-06-20 — Smart Proxy 生产级优化（v1.2.7）
 
 ### 需求变动
