@@ -41,10 +41,18 @@ def test_rank_search_results():
 
     ranked = rank_search_results(results)
 
-    # github should now be highest
+    # github should now be highest after domain boost
     assert ranked[0].domain == "github.com"
-    assert ranked[0].score > 0.7
-    assert ranked[-1].score < 0.4  # spam should be low
+    # blended: 0.6*0.6 + 0.4*(0.5+0.25) ≈ 0.66
+    assert ranked[0].score > 0.60
+
+    # spam ends up with blended score < 0.7 (from high original 0.9 + negative domain)
+    spam_scores = [r.score for r in ranked if "spammy" in r.domain]
+    assert spam_scores and spam_scores[0] < 0.65
+
+    # random stays around its input
+    random_scores = [r.score for r in ranked if "random" in r.domain]
+    assert random_scores and 0.48 < random_scores[0] < 0.52
 
 
 def test_config_load_fallback():

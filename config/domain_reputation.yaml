@@ -1,0 +1,22 @@
+# Domain reputation configuration (FORGE Network incremental)
+# Used by result_scorer.py (E3-C3-S1-T2)
+
+domain_reputation:
+  positive:
+    github.com: 0.25
+    arxiv.org: 0.30
+    wikipedia.org: 0.20
+    "*.edu": 0.18
+    "docs.python.org": 0.22
+    "developer.mozilla.org": 0.20
+    "stackoverflow.com": 0.15
+    "pytorch.org": 0.18
+    "tensorflow.org": 0.18
+
+  negative:
+    clickbait.com: -0.30
+    spammy-seo.net: -0.35
+    "low-quality-ai.com": -0.25
+    example-spam.org: -0.40
+
+  default_score: 0.50

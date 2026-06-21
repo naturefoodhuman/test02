@@ -2632,15 +2632,16 @@ graph TD
 | M2 | E3-C1 | E3-C1-S1-T1 | [ ] | | |
 | M2 | E3-C1 | E3-C1-S1-T2 | [ ] | | |
 | M2 | E3-C2 | E3-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
+| M2 | E3-C2 | E3-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C2 | E3-C2-S1-T2 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C3 | E3-C3-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C3 | E3-C3-S1-T2 | [x] | 2026-06-21 | Arena Agent |
-| M2 | E3-C4 | E3-C4-S1-T1 | [ ] | | |
+| M2 | E3-C4 | E3-C4-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E4-C1 | E4-C1-S1-T1 | [ ] | | |
-| M2 | E4-C2 | E4-C2-S1-T1 | [ ] | | |
-| M2 | E4-C2 | E4-C2-S1-T2 | [ ] | | |
-| M2 | E4-C2 | E4-C2-S1-T3 | [ ] | | |
-| M2 | E4-C3 | E4-C3-S1-T1 | [ ] | | |
+| M2 | E4-C2 | E4-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
+| M2 | E4-C2 | E4-C2-S1-T2 | [x] | 2026-06-21 | Arena Agent |
+| M2 | E4-C2 | E4-C2-S1-T3 | [x] | 2026-06-21 | Arena Agent |
+| M2 | E4-C3 | E4-C3-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M3 | E5-C1 | E5-C1-S1-T1 | [ ] | | |
 | M3 | E5-C1 | E5-C1-S1-T2 | [ ] | | |
 | M3 | E5-C2 | E5-C2-S1-T1 | [ ] | | |
