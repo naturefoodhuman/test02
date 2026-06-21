@@ -226,7 +226,46 @@
 - 修复 `peer_review.orchestrator` 缺失导致历史测试/兼容导入失败的问题：新增极薄 lazy shim，真实入口仍为 `peer_review.graph.execution.run_langgraph_review`。
 - 更新 `.gitignore`，补齐 build/cache/log/temp/IDE/OS/Python/Node/runtime 规则，同时确保 `_obsolete/` 不被忽略。
 
-## 第 36 轮 · 2026-06-21（联网功能接管 + 不一致处理 + 骨架启动）
+## 第 37 轮 · 2026-06-21（E1-C2-S1-T1：配置加载器实现 + 基础验证）
+
+**当前任务**：E1-C2-S1-T1（实现 Config 类 + 加载 network.yaml）
+
+**已完成**：
+1. 实现了 `_infra/network/config_loader/` 完整模块：
+   - `schemas.py`：NetworkConfig + 各子配置 Pydantic 模型（复用 FORGE 风格 + model_config）
+   - `loader.py`：`load_network_config()` + 自动根探测
+   - `__init__.py` + 文档
+2. 单元测试：`tests/unit/test_config_loader.py`（3 个 case 全通过）
+3. 集成验证：
+   - `python -c "from _infra.network.config_loader import load_network_config; cfg=...` 成功加载真实 `config/network.yaml`
+   - 能正确读取 searxng、privacy_gateway 等字段
+4. 同步状态：
+   - TASK_BACKLOG.md：E1-C2-S1-T1 标记 [x]
+   - DEV_LOG 追加本轮记录
+   - 准备提交
+
+**修改文件**：
+- `_infra/network/config_loader/`（新模块 + 测试）
+- `TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+
+**静态检查**：
+- pytest 3/3 通过
+- 配置加载在真实环境中成功
+
+**风险**：无（纯配置层，依赖成熟 Pydantic + yaml）
+
+**下一步计划**：
+- 继续 E1 基础设施（推荐审计层或异常体系）
+- 或直接进入搜索层（E3-C2）作为并行能力
+- 每轮结束 push + 更新文档
+
+**DoD 满足**：
+- ✅ 功能实现（load_network_config 可直接使用）
+- ✅ 相关测试通过
+- ✅ 文档更新
+- ✅ 状态同步
+- ✅ 准备 Push
 
 **用户最新指令**：
 - 联网功能必须作为**现有 FORGE Factory 上的增量模块**（`_infra/network` 子模块）。

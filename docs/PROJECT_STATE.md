@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
 **更新日期**：2026-06-20 22:40 CST  
-**当前版本**：v1.3.0-dossier（Project Dossier V2 交付）
+**当前版本**：v1.3.0-dossier + Network Increment（Phase 1 启动）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
