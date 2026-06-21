@@ -75,7 +75,7 @@
 - **最近清理时间**：2026-06-20
 - **审计报告**：`docs/repository-audit.md`
 - **清理报告**：`docs/repository-cleanup-report.md`
-- **过期资产目录策略**：`/_obsolete/` 不 ignore，继续 push 到 GitHub，用于历史追溯。
+- **过期资产目录策略**：`/_obsolete/`  ignore，不 push 到 GitHub，保留在本地。
 - **用户保留要求**：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/` 已复位并保持 active。
-- **本轮仓库净化重点**：将一次性诊断/修复脚本、运行日志、历史设计/旧实现集中纳入 `_obsolete/`，同时保留 GitHub 可追溯性。
+- **本轮仓库净化重点**：将一次性诊断/修复脚本、运行日志、历史设计/旧实现集中纳入 `_obsolete/`。
 - **Dossier 交付物位置**：`docs/dossier_v2/` – 6 个文件，已纳入版本控制。

@@ -7,9 +7,9 @@
 
 > 目标：任何 Agent 5 分钟内接手并继续开发。
 > ⚠️ **任何 Agent 接手后，必须按以下顺序阅读**：
-> 1. `DOCUMENT_AUDIT_REPORT.md`（最新治理审计 + 问题清单）
+> 1. `PROJECT_DOSSIER_V3.md`（根目录，完整 Current State 档案）
 > 2. `HANDOFF.md`（本文件）
-> 3. `docs/UPGRADE_COMPLETION.md` + `docs/adr/README.md`（架构完成状态 + 工厂级决策 SSOT，含 7 个核心 ADR）
+> 3. `docs/adr/README.md` + 最新 ADR（工厂级决策 SSOT，含 7 个核心 ADR）
 > 4. `docs/PROJECT_STATE.md`（当前状态）
 > 5. `docs/DEV_LOG.md` + `docs/DECISIONS.md`（历史演进，DECISIONS 已为 legacy） + `docs/CHANGELOG.md`
 
@@ -19,7 +19,16 @@
 本产品为 **AI 项目孵化工厂 (FORGE Factory)**。
 试点项目 `debt-collection` 是用来压测工厂能力的"沙包"，不作为正式开发目标。
 
-**当前架构版本**：v1.1.0（LangGraph 已迁移，双文件体系 + DataPrivacyGate 已落地）
+**当前架构版本**：v1.3.0-dossier
+
+核心已实现能力：
+- LangGraph 1.0 纯 HUB-SPOKE 多专家评审引擎（primary_expert + 多个 reviewer 并行 + consensus + human_review_gate + MemoryStore）
+- 双文件模型管理体系（config/models.yaml + config/routing_plans.yaml + RoutingPlanEngine）
+- Smart Proxy v5.0 SSE 流式网关（4000 端口，自动拉起 MTPLX + 字段白名单 + 600s chunk 超时 + 心跳保活）
+- DataPrivacyGate + privacy_policy.yaml 策略驱动数据出境控制
+- KnowledgeHub（ChromaDB + LlamaIndex + 版本去重）
+- MemoryStore + forge compare-plans / retro
+- 工厂级 7 个 ADR（docs/adr/）
 
 ---
 
@@ -28,19 +37,24 @@
 ### 老板真机路径
 - **macOS 绝对路径：** `/Users/naturist/MusicProject/AI-Project-Incubation-Factory`
 - 硬件配置：M1 max 64G
+
 ### 虚拟环境 (Venv) 矩阵
 | 环境 | 路径 | 用途 |
 |------|------|------|
-| 主工厂环境 | `.venv`（根目录） | 运行网关 (start-litellm.sh)、专家咨询、peer-review |
+| 主工厂环境 | `.venv`（根目录） | 运行网关、专家咨询、peer-review |
 | MinerU 专用 | `projects/debt-collection/runtime/mineru_env` | PDF 深度解析 |
 | forge CLI | `_infra/forge_tools/` 下独立安装 | 五阶段状态机 |
 
-### 模型矩阵 (Ollama / 中国 API)
-| 模型别名 | 来源 | 用途 |
-|----------|------|------|
+### 模型矩阵
+| 模型 ID                | 角色         | 后端     | 端口（经 Smart Proxy） | 显存估算 | 备注 |
+|------------------------|--------------|----------|------------------------|----------|------|
+| mtplx-qwen36-27b      | 主大脑      | MTPLX   | 8080 → 4000           | 20GB    | 默认主模型 |
+| mtplx-gemma4          | 独立评审    | MTPLX   | 8082 → 4000           | 16GB    | 并行评审 |
+| qwopus-35b            | 深度评审    | llama.cpp | 8084                | 36GB    | - |
+| local-deepseek-r1     | 逻辑推理    | Ollama  | 11434                 | 20GB    | - |
+| deepseek-pro / flash  | 外部增强    | API     | -                     | 0       | 需 DEEPSEEK_API_KEY |
 
-
-> 完整配置见 `config/models.yaml`（A 文件）。节点如何调用见 `config/routing_plans.yaml`（B 文件），切换方案只改 `active_plan` 字段。
+完整配置见 `config/models.yaml`（A 文件）。节点如何调用见 `config/routing_plans.yaml`（B 文件），切换方案只改 `active_plan` 字段。
 
 ---
 
@@ -120,34 +134,48 @@
 - 改了什么模块 → 同步更新 `docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、`docs/DECISIONS.md`。
 - 如果 HANDOFF.md 里的操作 SOP 过时了 → **直接修正 HANDOFF.md**，不要等老板提醒。
 
+### R7 — 文档同步更新原则
+更新需要与项目实时状态保持一致的文档（例如 HANDOFF.md、PROJECT_STATE.md 等）时：
+- 只修改事实已经过时的部分，直接写成当前最新真相。
+- 保留所有仍有价值的规则、方法论、操作格式和历史指导内容。
+- 目标是让阅读者直接获得准确的最新信息。
+
 ---
 
 ## 4. 操作 SOP（保姆级）
 
-### 启动 Ollama 服务（终端 A）
+### 启动 Smart Proxy（推荐主力方式，终端 A）
 ```
 终端 A:
+1. cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
+2. python _infra/smart_proxy_streaming.py
+   → 预期：监听 0.0.0.0:4000，SSE 直通，支持自动拉起 MTPLX 模型 + 心跳保活
+```
+
+### 启动 Ollama 服务（终端 B，备选）
+```
+终端 B:
 1. ollama serve
    → 预期输出：ollama listening on :11434
 ```
 
-### 启动 LiteLLM 网关（终端 B，仅云端模型需要）
+### 启动 LiteLLM 网关（终端 C，仅云端模型需要）
 ```
-终端 B:
+终端 C:
 1. cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 2. source .venv/bin/activate
 3. bash _infra/start-litellm.sh
    → 预期输出：📥 加载环境变量 → ✅ GLM_API_KEY 已加载 → 🚀 启动 LiteLLM
 ```
 
-### 运行 Peer-Review 评审（终端 C）
+### 运行 Peer-Review 评审（终端 D）
 ```
-终端 C:
+终端 D:
 1. cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 2. source .venv/bin/activate
-3. 
-4. debt review 1
-   > **注意**：v1.1.0+ 已迁移到 LangGraph，`debt review` 默认使用 config/routing_plans.yaml 中的 active_plan。
+
+3. debt review 1
+   > 注意：默认使用 config/routing_plans.yaml 中的 active_plan。
    > 如需临时切换方案：debt review 1 --plan high-quality
    > 使用 API 模型时，若含 human_approve 字段会强制要求输入 yes 确认；local_only 字段会被阻断。
    → 预期输出：
@@ -165,14 +193,14 @@
 
 ### 运行隐私安全模式（全部本地，无数据出境）
 ```
-终端 C:
+终端 D:
 1. debt review 1 --plan all-local
    → 预期输出：使用 all-local 方案，数据完全不出本地，不触发确认门
 ```
 
 ### 从 HITL 中断点恢复评审
 ```
-终端 C:
+终端 D:
 1. debt continue review-xxxx
    → 预期输出：从 human_review_gate 中断点继续，完成最终汇总
    > 注意：thread_id 来自前一次 `debt review` 输出
@@ -180,11 +208,11 @@
 
 ### 运行端到端验证脚本
 ```
-终端 C:
+终端 D:
 1. cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
 2. source .venv/bin/activate
 3. python3 scripts/e2e_review_test.py --plan default
-   → 真实 LLM 模式（需 Ollama + LiteLLM 已启动）
+   → 真实 LLM 模式（需 Smart Proxy 已启动）
 4. python3 scripts/e2e_review_test.py --mock
    → 模拟模式，无需外部模型，用于快速验证管道
    → 报告输出：runtime/e2e_review_default_<timestamp>.md
@@ -192,7 +220,7 @@
 
 ### 录入测试债务
 ```
-终端 C:
+终端 D:
 debt add "张三" 50000 --evidence "微信转账"
 → 预期输出：✅ 已录入债务 #1：张三 50000.0元
 ```
@@ -203,60 +231,47 @@ debt add "张三" 50000 --evidence "微信转账"
 
 ```
 AI-Project-Incubation-Factory/
-├── HANDOFF.md                      # ⭐ 本文档（交接必读）
-├── README.md                       # 项目总览
-├── docs/
-│   ├── PROJECT_STATE.md            # 当前进度快照
-│   ├── DECISIONS.md                # 已拍板决策（不得擅自改）
-│   └── DEV_LOG.md                  # 逐轮开发日志
-├── _infra/                         # 基础设施（LiteLLM 网关、自检脚本）
+├── PROJECT_DOSSIER_V3.md           # ⭐ 最高 Current State 档案（优先阅读）
+├── HANDOFF.md                      # 本文档（交接必读）
+├── README.md
+├── config/
+│   ├── models.yaml                 # A 文件（模型定义）
+│   ├── routing_plans.yaml          # B 文件（方案定义）
+│   └── privacy_policy.yaml
+├── _infra/
+│   ├── smart_proxy_streaming.py    # Smart Proxy v5.0（推荐网关）
+│   ├── smart_proxy.py
+│   ├── litellm-config.yaml
+│   ├── setup.sh
+│   └── forge_tools/src/forge/      # forge CLI
 ├── _factory/
-│   ├── skills/                     # SKILL.md 技能库
-│   │   ├── prescription-risk.skill.md
-│   │   ├── asset-search.skill.md
-│   │   └── compliance-layered.skill.md
-│   ├── patterns/
-│   │   ├── peer-review/            # FB-14 多专家评审（v1.1.0 LangGraph）
-│   │   │   ├── src/peer_review/
-│   │   │   │   ├── graph/          # LangGraph 图结构
-│   │   │   │   │   ├── review_graph.py
-│   │   │   │   │   ├── nodes/
-│   │   │   │   │   │   ├── primary_expert.py
-│   │   │   │   │   │   ├── reviewer.py
-│   │   │   │   │   │   └── consensus.py
-│   │   │   │   │   └── checkpointer.py
-│   │   │   │   ├── platform/       # 平台层（路由/隐私/记忆/知识/决策）
-│   │   │   │   │   ├── routing_plan_engine.py
-│   │   │   │   │   ├── data_privacy_gate.py
-│   │   │   │   │   ├── memory_store.py
-│   │   │   │   │   ├── knowledge_hub.py
-│   │   │   │   │   └── decision_engine.py
-│   │   │   │   ├── config/         # Pydantic 配置层
-│   │   │   │   │   ├── schemas.py
-│   │   │   │   │   └── loader.py
-│   │   │   │   ├── orchestrator.py # LangGraph 兼容入口（保留 Agno 旧入口）
-│   │   │   │   └── llm_client.py
-│   │   │   └── tests/
-│   │   │       ├── test_peer_review_langgraph.py
-│   │   │       └── verify_architecture.py
-│   │   ├── expert-consultant/
-│   │   ├── ingestion-pipeline/
-│   │   ├── data-acquisition/
-│   │   └── llm-telemetry/
-│   └── experts/
-│       ├── debt-lawyer.expert/     # 主专家
-│       ├── risk-assessor.expert/   # 评审专家
-│       ├── compliance-auditor.expert/
-│       └── execution-strategist.expert/
+│   ├── patterns/peer-review/
+│   │   └── src/peer_review/
+│   │       ├── graph/
+│   │       │   ├── execution.py    # 核心执行入口（run_langgraph_review）
+│   │       │   └── review_graph.py
+│   │       ├── platform/
+│   │       │   ├── routing_plan_engine.py
+│   │       │   ├── data_privacy_gate.py
+│   │       │   ├── knowledge_hub.py
+│   │       │   └── memory_store.py
+│   │       ├── llm_client.py
+│   │       └── config/
+│   ├── experts/
+│   ├── skills/
+│   └── lessons/
 ├── projects/
-│   ├── _TEMPLATE/                  # 新项目脚手架
-│   └── debt-collection/            # 试点项目
-│       ├── src/debt/               # 债务助手核心代码
-│       │   ├── cli.py              # CLI 入口（含 review 命令）
-│       │   ├── models.py
-│       │   └── strategy.py
-│       └── tests/
-# 注意：experts/中的内容可能已经过时，应以 `config/models.yaml`为准。
+│   ├── _TEMPLATE/
+│   └── debt-collection/
+│       └── src/debt/cli.py
+├── docs/
+│   ├── PROJECT_STATE.md
+│   ├── adr/
+│   │   ├── README.md
+│   │   └── ADR-001~007
+│   └── CHANGELOG.md
+├── _agents/
+└── scripts/
 ```
 
 ---
@@ -272,17 +287,25 @@ AI-Project-Incubation-Factory/
 | `cannot import name 'Mode' from 'agno.team.mode'` | Agno 2.6 API 变更 | `mode="sequential"` 替换 `mode=Mode.SEQUENTIAL` |
 | `Agent.__init__() got an unexpected keyword argument 'add_history_to_messages'` | Agno 参数废弃 | 移除 `add_history_to_messages` 和 `markdown` 参数 |
 | 日志显示 `正在构建专家  向量索引`（ID 为空） | YAML 缺 `id` 字段 | 在专家 YAML 第一行加 `id: xxx` |
-| `debt review` 输出 "模型调用不可用" | LiteLLM 网关和 Ollama 都未启动 | 终端 A 启动 `ollama serve`，终端 B 启动 `bash _infra/start-litellm.sh` |
+| `debt review` 输出 "模型调用不可用" | LiteLLM 网关和 Ollama 都未启动 | 终端启动 Smart Proxy 或 ollama serve |
 | `InvalidUpdateError: Can receive only one value per step` | 旧版测试或旧代码未使用 LangGraph `Annotated` reducer | 确保使用 `test_peer_review_langgraph.py` 新测试，旧版已删除 |
 | `ModuleNotFoundError: No module named 'langgraph'` | 依赖未安装 | `pip install langgraph>=1.0.10 langgraph-checkpoint-sqlite>=3.0.1` |
 | `debt continue` 提示 "找不到线程状态" | 输入的 thread_id 错误或检查点已丢失 | 确认 thread_id 与 `debt review` 输出完全一致 |
+| Smart Proxy 提示 Backend not ready | MTPLX 未启动 | Smart Proxy 会尝试自动拉起；或手动启动对应端口模型 |
+| 数据出境被阻断 | 字段违反 local_only / human_approve | 修改 `privacy_policy.yaml` 或使用 `--plan all-local` |
+| 流式长时间无输出 | 长思考模型 | Smart Proxy 已将 chunk 超时放宽到 600s + 60s 心跳 |
 
 ---
 
 ## 7. 给接手 Agent 的检查清单
 
 接手后按顺序执行：
-- [ ] 读本文档（HANDOFF.md）
+- [ ] 阅读 `PROJECT_DOSSIER_V3.md`（建立完整当前状态认知）
+- [ ] 阅读本 `HANDOFF.md`
+- [ ] 阅读 `docs/adr/README.md` + 至少 ADR-001/002/003
+- [ ] 启动 `python _infra/smart_proxy_streaming.py` 并验证 `debt review 1 --plan default`
+- [ ] 运行 `forge compare-plans --days 7` 验证 MemoryStore 是否正常
+- [ ] 检查 `config/routing_plans.yaml` 当前 `active_plan`
 - [ ] 读 `docs/PROJECT_STATE.md` 了解当前进度
 - [ ] 读 `docs/DECISIONS.md`（legacy，早于 2026-06-16 治理；当前工厂级决策见 `docs/adr/` + `docs/adr/README.md`）
 - [ ] 读 `docs/DEV_LOG.md` 最后一轮了解最近做了什么
@@ -294,3 +317,7 @@ AI-Project-Incubation-Factory/
 - [ ] 给老板保姆级操作指令（终端号/路径/环境/预期输出）
 - [ ] 直接 push（已建立 Deploy Key 协议）→ 老板 Mac `git pull origin main`
 - [ ] 执行 Continuous Governance 检查（发现漂移/缺失 ADR/SSOT 冲突等必须优先修复）
+
+---
+
+**本文件已与项目当前状态（PROJECT_DOSSIER_V3.md）保持同步。**
