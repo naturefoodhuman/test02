@@ -2612,6 +2612,10 @@ graph TD
 | M1 | E1-C1 | E1-C1-S1-T1 | [x] | 2026-06-21 | Arena Agent (增量) |
 | M1 | E1-C2 | E1-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M1 | E1-C5 | E1-C5-S1-T1 | [x] | 2026-06-21 | Arena Agent |
+| M1 | E1-C4 | E1-C4-S1-T1 | [x] | 2026-06-21 | Arena Agent |
+| M1 | E1-C1-S2 | E1-C1-S2-T1 | [x] | 2026-06-21 | Arena Agent |
+| M1 | E1-C3 | E1-C3-S1-T1 | [x] | 2026-06-21 | Arena Agent |
+| M1 | E1-C6 | E1-C6-S1-T1 | [~] | 2026-06-21 | Arena Agent |
 | M1 | E1-C1 | E1-C1-S1-T2 | [ ] | | |
 | M1 | E1-C1 | E1-C1-S1-T3 | [ ] | | |
 | M1 | E1-C1 | E1-C1-S2-T1 | [ ] | | |

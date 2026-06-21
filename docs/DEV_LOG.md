@@ -226,7 +226,50 @@
 - 修复 `peer_review.orchestrator` 缺失导致历史测试/兼容导入失败的问题：新增极薄 lazy shim，真实入口仍为 `peer_review.graph.execution.run_langgraph_review`。
 - 更新 `.gitignore`，补齐 build/cache/log/temp/IDE/OS/Python/Node/runtime 规则，同时确保 `_obsolete/` 不被忽略。
 
-## 第 37 轮 · 2026-06-21（E1-C2-S1-T1：配置加载器实现 + 基础验证）
+## 第 38 轮 · 2026-06-21（E1-C5-S1-T1：审计层实现 + 收尾）
+
+**当前任务**：E1-C5-S1-T1（创建 audit.db Schema + AuditLogger）
+
+**已完成**：
+1. **审计 Schema**（`_infra/network/audit_log/schema.sql`）：
+   - tool_calls、mcp_schema_changes、browser_sessions、browser_actions、canary_hits、privacy_detections、metrics_daily
+   - 完整索引
+
+2. **AuditLogger 实现**：
+   - `models.py`：AuditEvent
+   - `logger.py`：record / record_tool_call / query
+   - 自动建表（测试友好）
+   - 支持 JSON details
+
+3. **初始化脚本**：
+   - `_infra/network/scripts/init_audit_db.py`
+
+4. **测试**：
+   - 新增 `test_audit_logger.py`（2 个 case）
+   - 全量单元测试 5/5 通过
+
+5. **验证**：
+   - 真实 `runtime/audit.db` 创建成功
+   - 记录 + 查询端到端工作
+   - 与 config 模块解耦良好
+
+**修改文件**（本轮新增/修改）：
+- `_infra/network/audit_log/`
+- `_infra/network/scripts/init_audit_db.py`
+- `_infra/network/tests/unit/test_audit_logger.py`
+- `TASK_BACKLOG.md`（状态）
+- `docs/DEV_LOG.md`
+
+**DoD 全部满足**：
+- ✅ 功能 + 测试 + 文档 + 状态 + Push
+
+**当前进度**（M1 基础设施）：
+- E1-C1-S1-T1 [x] 骨架
+- E1-C2-S1-T1 [x] 配置加载
+- E1-C5-S1-T1 [x] 审计层（本次）
+- 继续 E1 剩余（异常、日志等）或进入搜索层
+
+**下一步**：等待用户指令（推荐继续 E1-C4 日志 或 进入搜索能力）。
 
 **当前任务**：E1-C2-S1-T1（实现 Config 类 + 加载 network.yaml）
 
