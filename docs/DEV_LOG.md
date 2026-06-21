@@ -226,7 +226,36 @@
 - 修复 `peer_review.orchestrator` 缺失导致历史测试/兼容导入失败的问题：新增极薄 lazy shim，真实入口仍为 `peer_review.graph.execution.run_langgraph_review`。
 - 更新 `.gitignore`，补齐 build/cache/log/temp/IDE/OS/Python/Node/runtime 规则，同时确保 `_obsolete/` 不被忽略。
 
-## 第 39 轮 · 2026-06-21（E1 基础设施完成：日志 + 异常 + 密钥 + 收尾）
+## 第 40 轮 · 2026-06-21（E1 基础设施全面完成 + 健康检查）
+
+**里程碑**：**E1 基础设施核心全部完成**
+
+已交付能力：
+- 项目骨架（_infra/network）
+- 配置加载（config_loader + network.yaml）
+- 审计层（audit_log + AuditLogger）
+- 结构化日志（utils/logger）
+- 统一异常体系（exceptions.py）
+- 密钥管理（core/secrets）
+- 健康检查（health_check/checker）
+
+**本轮补充**：
+- 健康检查 + 测试
+- 最终状态同步 + Push
+
+**测试统计**：22+ 通过
+
+**文档**：
+- TASK_BACKLOG 已标记 E1 核心完成
+- DEV_LOG 已更新
+
+**下一步建议**（请确认）：
+1. 启动 M2：搜索 + 提取（推荐）
+2. 实现 Privacy Gateway 7 层管线
+3. 集成 network_workflow 到现有 CLI
+4. 其他
+
+仓库始终可工作，已 Push。
 
 **任务**：E1 基础设施收尾（E1-C4 日志 + E1-C1-S2 异常 + E1-C3 密钥）
 
