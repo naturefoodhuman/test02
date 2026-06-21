@@ -5,8 +5,8 @@
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-20 22:40 CST  
-**当前版本**：v1.3.0-dossier + Network Increment（Phase 1 启动）
+**更新日期**：2026-06-21 15:50 CST  
+**当前版本**：v1.3.0-dossier + Network Increment（E5 Privacy Gateway 启动）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -45,6 +45,22 @@
   - chunk 级超时（最终 600s）
   - 心跳保活（45s~60s）
   - 字段白名单解决 400 Bad Request
+
+
+## 4.1 Network Privacy Gateway 阶段进展（2026-06-21）
+
+- **E5-C1** InputSanitizer 完成（HTML 剥离 + Prompt Injection 检测 + 隐藏内容）
+- **E5-C2** Unicode 规范化完成（NFKC + 零宽字符 + PII 检测专用 normalize）
+- **E5 骨架**：`_infra/network/privacy_gateway/` + `models.py`（PIIType Enum + PIIEntity + mask()）
+- **测试**：98 passed（全量 network 单元测试）
+- **当前单任务**：E5-C3-S1-T1 [~] PIIDetector 抽象基类
+- **文档同步**：DEV_LOG / CHANGELOG / PROJECT_STATE / TASK_BACKLOG 已更新
+
+**验证命令**：
+```bash
+python -m pytest _infra/network/tests/unit/ -q
+# 98 passed
+```
 
 ## 5. 待办事项 (Next)
 - [ ] **P0 – 测试护栏**：补 llm_client / smart_proxy / privacy_gate 单测，覆盖率 15% → 60% （ADR-C002）

@@ -1,3 +1,30 @@
+## [2026-06-21] Network Increment — E5 Privacy Gateway (Phase 1)
+
+### Added
+- **E5-C1**: InputSanitizer
+  - HTML stripping (custom HTMLParser)
+  - Prompt injection detection (multi-language patterns + raw + post-strip)
+  - Hidden content removal + spotlighting
+- **E5-C2**: Unicode normalization
+  - `normalize_for_pii_detection()` (NFKC + zero-width removal + URL decode)
+  - Handles full-width digits (e.g. "138-５５５５-１２３４" → "138-5555-1234")
+- **E5 skeleton**: `_infra/network/privacy_gateway/`
+  - `models.py`: PIIType (Enum) + PIIEntity (Pydantic + mask())
+  - `privacy_gateway/__init__.py` re-exports
+- Tests: 98 passing across network module
+
+### Changed
+- Updated maintenance docs (DEV_LOG, CHANGELOG, PROJECT_STATE)
+- TASK_BACKLOG: E5-C3-S1-T1 marked [~] (PIIDetector ABC)
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/ -q
+# 98 passed
+```
+
+---
+
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
 创建时间（北京时间，精确到秒）：2026-06-16 22:00:00

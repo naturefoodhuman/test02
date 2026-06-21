@@ -143,3 +143,37 @@ print('✅ M2 Search + Extract ready')
 **下一优先级**：M3 Privacy Gateway 或 E3-C4 Cache / CLI 集成
 
 （历史日志已包含于前文）
+
+## 第 43 轮 · 2026-06-21（维护文档同步 + E5 阶段性 push）
+
+**目标**：在进入 E5-C3-S1-T1 核心实现前，同步所有维护文档，确保状态一致。
+
+**已完成工作（阶段性）**：
+- E5-C1：InputSanitizer（HTML 剥离 + prompt injection 检测 + 隐藏内容移除）
+- E5-C2：unicode_norm.py（NFKC + 零宽字符 + URL 解码 + normalize_for_pii_detection）
+- E5 骨架：`_infra/network/privacy_gateway/` + `models.py`（PIIType + PIIEntity + mask()）
+- 单元测试：98 passed（含新 sanitizer + unicode 测试）
+
+**文档更新**：
+- `docs/DEV_LOG.md`：新增本轮记录
+- `docs/CHANGELOG.md`：补充 E5 增量
+- `docs/PROJECT_STATE.md`：更新日期 + Network Privacy 进度
+- `TASK_BACKLOG.md`：确认 E5-C3-S1-T1 [~] 状态
+
+**当前单任务状态**：
+- E5-C3-S1-T1 [~]：实现 PIIDetector 抽象基类 + 支持模型
+- 下一步：`detectors/base.py` + 单元测试
+
+**验证**：
+```bash
+python -m pytest _infra/network/tests/unit/ -q
+# 98 passed
+
+git status
+# clean + pushed
+```
+
+**仓库状态**：可工作，文档一致，准备实现 PIIDetector ABC。
+
+---
+
