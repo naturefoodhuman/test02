@@ -1,7 +1,8 @@
 # TASK_BACKLOG.md
 
-> **文档版本**: v1.0.0  
+> **文档版本**: v1.0.1 (增量调整版)  
 > **生成日期**: 2026-06-21  
+> **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。  
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md  
 > **目标受众**: Claude Code、Codex 等 AI Agent  
 > **任务粒度**: 单个 Task 可在一次独立开发会话内完成（约 30-90 分钟）
@@ -186,27 +187,29 @@ P3 = 可选增强
 
 #### **E1-C1-S1: 项目骨架搭建**
 
-##### **Task E1-C1-S1-T1: 创建项目目录结构**
+##### **Task E1-C1-S1-T1: 在现有 FORGE Factory 中创建联网功能目录结构（增量模块）**
 
-- **目标**: 按 NETWORK_ENGINEERING_DESIGN.md §3 创建完整目录树
+- **目标**: 按 NETWORK_ENGINEERING_DESIGN.md §3（调整后）在**现有 FORGE Factory 项目**的 `_infra/network/` 下创建增量目录树（不新建独立项目、不覆盖现有结构）
 - **前置依赖**: 无
-- **输入**: NETWORK_ENGINEERING_DESIGN.md §3 目录结构
-- **输出**: 完整空目录树 + `.gitkeep` 占位
-- **涉及模块**: 项目骨架
+- **输入**: NETWORK_ENGINEERING_DESIGN.md §3 目录结构（已调整为 _infra 子模块）
+- **输出**: `_infra/network/` 完整子目录树 + `.gitkeep` 占位（复用现有 FORGE 根 .gitignore、README 等）
+- **涉及模块**: 项目骨架（作为 FORGE Factory 的增量 networking 模块）
 - **涉及文件**:
-  - 新建：所有 §3 列出的目录
-  - 新建：`.gitignore`、`README.md`
+  - 新建：`_infra/network/` 下所有 §3 列出的子目录（src/ 改为直接放在 `_infra/network/` 或轻量子包）
+  - 新建：`_infra/network/README.md`（仅 networking 说明）
 - **实现要求**:
-  - `.gitignore` 必须包含：`runtime/`、`profiles/`、`config/.env`、`__pycache__/`、`.venv/`、`*.db`
-  - `README.md` 包含项目简介 + 快速启动
+  - **严格复用现有 FORGE 架构**：使用现有根目录的 pyproject / uv / .gitignore / Makefile；只在 `_infra/network/` 下放模块代码（不创建独立 pyproject.toml 或 src/forge_network/ 顶级结构）
+  - `.gitignore` 复用根（已包含 runtime/ 等）
+  - 所有配置放入根 `config/network.yaml`
 - **测试要求**: 无（结构性任务）
 - **验收标准**:
-  - `tree -L 3` 输出与 §3 一致
-  - `git status` 显示 runtime/profiles/.env 被忽略
+  - `_infra/network/` 目录树存在
+  - `git status` 仅显示新 networking 子目录
+  - 根目录结构保持不变
 - **DoD**:
-  - [x] 目录结构完整
-  - [x] .gitignore 正确
-  - [x] README.md 可读
+  - [x] _infra/network 目录结构完整（作为增量）
+  - [x] 复用现有 FORGE 根配置
+  - [x] _infra/network/README.md 可读
 
 ---
 
@@ -2606,7 +2609,7 @@ graph TD
 
 | Milestone | Capability | Task ID | 状态 | 完成日期 | 负责 Agent |
 |-----------|------------|---------|------|----------|------------|
-| M1 | E1-C1 | E1-C1-S1-T1 | [ ] | | |
+| M1 | E1-C1 | E1-C1-S1-T1 | [~] | 2026-06-21 | Arena Agent (增量) |
 | M1 | E1-C1 | E1-C1-S1-T2 | [ ] | | |
 | M1 | E1-C1 | E1-C1-S1-T3 | [ ] | | |
 | M1 | E1-C1 | E1-C1-S2-T1 | [ ] | | |

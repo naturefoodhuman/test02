@@ -131,6 +131,12 @@ Claude Code 作为主控；SearXNG 做本地搜索；Crawl4AI 做公开网页提
 
 ## 3. 组件清单与分阶段部署计划
 
+**关键原则（与 FORGE Factory 对齐）**：
+- 联网功能是**现有 FORGE Factory 的增量叠加模块**（`_infra/network` 子模块）。
+- **严禁**创建独立新项目目录、独立 pyproject、顶级 src/forge_network 或覆盖现有结构。
+- 所有 Docker / 配置 / runtime 均复用现有 FORGE 根目录。
+- 实现时严格遵循 PROJECT_DOSSIER_V3 + HANDOFF 中的架构保护原则。
+
 ### 3.1 组件裁决总表
 
 | 组件 | 最终裁决 |
@@ -1229,22 +1235,23 @@ payment autofill
 
 ### 16.1 Phase 1：最小可用安全搜索系统
 
-**目标：** 实现公开搜索 + 抓取 + 脱敏 + 审计。
+**目标：** 在**现有 FORGE Factory** 上实现公开搜索 + 抓取 + 脱敏 + 审计（作为增量模块）。
 
-1. 部署 SearXNG。
-2. 启用 JSON format。
-3. 部署 Crawl4AI。
-4. 配置 Crawl4AI MCP。
-5. 安装 mcp-scan。
-6. 所有 MCP server 固定本地路径。
-7. 编写 Privacy Gateway v1：
+1. 在现有项目中创建 `_infra/network/` 骨架（复用根结构）。
+2. 部署 SearXNG（复用或添加根 docker/searxng/）。
+3. 启用 JSON format。
+4. 部署 Crawl4AI（复用根 docker/）。
+5. 配置 Crawl4AI MCP。
+6. 安装 mcp-scan。
+7. 所有 MCP server 固定本地路径。
+8. 编写 Privacy Gateway v1（放在 _infra/network/privacy_gateway/）：
    - Unicode normalize
    - Regex
    - Presidio
    - placeholder
-8. 建 SQLite audit log。
-9. Claude Code 只启用 Research Mode MCP。
-10. 验证：
+9. 建 SQLite audit log（复用 runtime/）。
+10. 集成到现有 forge CLI / Claude Code Research Mode。
+11. 验证：
     - 搜索
     - 抓取
     - 脱敏

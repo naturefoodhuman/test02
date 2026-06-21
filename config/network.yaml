@@ -1,0 +1,153 @@
+# config/network.yaml
+# 联网功能配置（FORGE Factory 增量）
+# 版本：1.0 （复用现有 config/ 体系）
+version: "1.0"
+
+# ── 搜索层 ──────────────────────────────────────
+search:
+  searxng:
+    base_url: "http://127.0.0.1:8080"
+    timeout_seconds: 6
+    max_results: 20
+    fetch_top_k: 5
+    max_chars_per_page: 8000
+    engines_enabled:
+      - duckduckgo
+      - bing
+      - wikipedia
+      - github
+      - stackoverflow
+      - arxiv
+    engines_disabled:
+      - google            # 频繁 CAPTCHA
+  fallback_tavily:
+    enabled: false        # 手动启用
+    api_key_env: "TAVILY_API_KEY"
+
+# ── 提取层 ──────────────────────────────────────
+extract:
+  crawl4ai:
+    base_url: "http://127.0.0.1:11235"
+    timeout_seconds: 30
+    js_exec_allowed: false          # execute_js 默认禁用
+    screenshot_requires_approval: true
+  trafilatura:
+    enabled: true
+    max_size_bytes: 1048576
+  playwright:
+    wrapper_script: "_infra/network/scripts/run_playwright_action.py"
+    allowed_commands:
+      - open
+      - snapshot
+      - click
+      - type
+      - wait
+      - close
+
+# ── 浏览器层 ──────────────────────────────────────
+browser:
+  profiles:
+    ai_public:
+      user_data_dir: "${HOME}/ai-agent/profiles/ai-public"
+      blocked_origins:
+        - "https://accounts.google.com"
+    ai_private_github:
+      user_data_dir: "${HOME}/ai-agent/profiles/ai-private-github"
+      remote_debugging_port: 9222
+      allowed_domains:
+        - "github.com"
+        - "gist.github.com"
+  session_expiry:
+    login_page_patterns:
+      - "登录"
+      - "Sign in"
+      - "CAPTCHA"
+      - "验证码"
+      - "2FA"
+
+# ── 隐私网关 ──────────────────────────────────────
+privacy_gateway:
+  qwen_model: "qwen3:8b"
+  qwen_base_url: "http://127.0.0.1:11434"
+  qwen_timeout_seconds: 30
+  spacy_model: "zh_core_web_sm"
+  pii_map_db: "runtime/pii_map.db"
+  pii_map_encryption_key_env: "PII_MAP_ENCRYPTION_KEY"
+  canary_tokens:
+    - "AI_CANARY_DO_NOT_LEAK_2026"
+  output_schema_strict: true
+  placeholder_format: "<<{entity_type}_{index}>>"
+
+# ── 本地 RAG ──────────────────────────────────────
+local_rag:
+  rag_db: "runtime/rag.db"
+  embed_model: "bge-m3"
+  embed_base_url: "http://127.0.0.1:11434"
+  chunk_size_tokens: 512
+  chunk_overlap_tokens: 50
+  top_k_default: 5
+  reranker_enabled: false          # Phase 3 启用
+  reranker_model: "bge-reranker-v2-m3"
+
+# ── MCP Guard ──────────────────────────────────────
+mcp_guard:
+  hash_store: "runtime/mcp_hashes.json"
+  audit_db: "runtime/audit.db"
+  policy_config: "config/mcp_policy.yaml"
+  scan_interval_days: 7
+  high_risk_tools:
+    - "execute_js"
+    - "evaluate_js"
+    - "delete"
+    - "send_email"
+    - "submit_form"
+    - "pay"
+    - "filesystem_write"
+  forbidden_js_patterns:
+    - "document.cookie"
+    - "localStorage"
+    - "sessionStorage"
+
+# ── 模式隔离 ──────────────────────────────────────
+mode_profiles:
+  coding:
+    allowed_servers:
+      - "filesystem"
+      - "git"
+    denied_servers:
+      - "searxng"
+      - "crawl4ai"
+      - "playwright"
+      - "chrome-devtools"
+  research:
+    allowed_servers:
+      - "searxng"
+      - "crawl4ai"
+      - "playwright-public"
+    denied_servers:
+      - "filesystem-write"
+      - "chrome-devtools"
+  private:
+    allowed_servers:
+      - "chrome-devtools-private"
+    denied_servers:
+      - "searxng"
+      - "crawl4ai"
+      - "filesystem"
+      - "shell"
+
+# ── 健康检查 ──────────────────────────────────────
+health_check:
+  services:
+    searxng:
+      url: "http://127.0.0.1:8080/search?q=test&format=json"
+      timeout: 5
+    crawl4ai:
+      url: "http://127.0.0.1:11235/health"
+      timeout: 5
+    ollama:
+      command: "ollama ps"
+    chrome_private:
+      url: "http://127.0.0.1:9222/json"
+      timeout: 3
+      optional: true

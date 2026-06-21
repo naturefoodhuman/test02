@@ -4,6 +4,8 @@
 > 架构事实来源：`NETWORK_ARCHITECTURE_FINAL.md`
 > 项目背景来源：`PROJECT_DOSSIER_V3.md`
 > 本文件不包含任何架构决策，仅描述实现方式。
+>
+> **重要调整（2026-06-21）**：联网功能是 **现有 FORGE Factory 上的增量模块**（放置在 `_infra/network/`），**严禁**创建独立 pyproject.toml、独立 src/forge_network/ 顶级结构或覆盖根目录。所有实现必须复用现有 FORGE 架构（_infra/、config/、pyproject、uv、Makefile）。
 
 ---
 
@@ -30,9 +32,11 @@
 
 ### 1.1 系统工程结构总览
 
-联网功能（Network Feature）是 FORGE Factory 在现有 `_factory/patterns/peer-review` 引擎之上叠加的**外部信息获取 + 隐私保护 + 安全治理**能力层。
+联网功能（Network Feature）是 FORGE Factory 在现有 `_factory/patterns/peer-review` 引擎之上**增量叠加**的**外部信息获取 + 隐私保护 + 安全治理**能力层。
 
-它不替换已有引擎，而是作为一个独立的 `_infra/network` 模块，为 Claude Code / 现有 CLI 提供：
+**核心原则**：**复用现有 FORGE Factory 架构**（_infra/、config/、_factory/patterns/、forge CLI、现有 pyproject/uv/Makefile），**不作为独立新项目**、不覆盖根目录结构、不创建独立的 pyproject.toml 或顶级 src/forge_network/。
+
+它不替换已有引擎，而是作为 `_infra/network` 子模块，为 Claude Code / 现有 CLI 提供：
 
 ```
 外部信息 → 搜索 → 抓取 → 净化 → 脱敏 → 本地知识库 → Agent 可用
@@ -229,175 +233,155 @@
 
 ---
 
-## 3. 推荐目录结构
+## 3. 推荐目录结构（**增量叠加到现有 FORGE Factory**）
+
+**重要**：以下是**现有项目**的增量目录。**不创建独立 pyproject.toml**、**不创建顶级 src/forge_network/**、**不覆盖根目录结构**。所有代码放在 `_infra/network/` 下（可作为轻量包或直接模块），配置复用根 `config/`，Docker 放在根 `docker/`，runtime 复用根 `runtime/`。
 
 ```
+# 现有 FORGE 根目录保持不变，仅新增以下
 _infra/
-├── network/                           # 联网功能根目录
+├── network/                           # 联网功能**增量子模块**（复用根 pyproject/uv）
 │   ├── __init__.py
-│   ├── pyproject.toml                 # 独立可安装包：forge-network
-│   ├── README.md
+│   ├── README.md                      # 仅描述 networking 增量
 │   │
-│   ├── src/
-│   │   └── forge_network/
-│   │       ├── __init__.py
-│   │       │
-│   │       ├── mode_manager/          # M-01
-│   │       │   ├── __init__.py
-│   │       │   ├── manager.py         # ModeManager 类
-│   │       │   ├── profile_builder.py # .mcp.json 生成
-│   │       │   └── templates/         # mcp.{mode}.json.j2
-│   │       │       ├── coding.json.j2
-│   │       │       ├── research.json.j2
-│   │       │       └── private.json.j2
-│   │       │
-│   │       ├── mcp_guard/             # M-02
-│   │       │   ├── __init__.py
-│   │       │   ├── guard.py           # MCPGuard 类
-│   │       │   ├── policy.py          # PolicyEngine（策略执行）
-│   │       │   ├── schema_hasher.py   # tool schema hash pin
-│   │       │   ├── hook_handler.py    # PreToolUse hook 处理
-│   │       │   └── allowlist.py       # tool/server 白名单管理
-│   │       │
-│   │       ├── search/                # M-03
-│   │       │   ├── __init__.py
-│   │       │   ├── searxng_client.py  # SearXNG HTTP 适配器
-│   │       │   ├── result_ranker.py   # 域名评分 + 去重 + 排序
-│   │       │   ├── query_rewriter.py  # 多语言 query 改写
-│   │       │   └── domain_scores.yaml # 域名信誉配置
-│   │       │
-│   │       ├── extract/               # M-04
-│   │       │   ├── __init__.py
-│   │       │   ├── extractor.py       # ExtractorChain（降级链）
-│   │       │   ├── crawl4ai_adapter.py
-│   │       │   ├── trafilatura_adapter.py
-│   │       │   ├── playwright_adapter.py
-│   │       │   └── models.py          # ExtractResult, ExtractMode
-│   │       │
-│   │       ├── browser/               # M-05
-│   │       │   ├── __init__.py
-│   │       │   ├── playwright_wrapper.py  # 受限命令 wrapper
-│   │       │   ├── profile_manager.py     # Profile 生命周期
-│   │       │   ├── session_detector.py    # 登录页 / CAPTCHA 检测
-│   │       │   ├── devtools_client.py     # Chrome DevTools MCP 封装
-│   │       │   └── crash_recovery.py     # 崩溃状态记录 + 恢复策略
-│   │       │
-│   │       ├── input_sanitizer/       # M-06
-│   │       │   ├── __init__.py
-│   │       │   ├── sanitizer.py       # InputSanitizer 类
-│   │       │   ├── injection_detector.py  # prompt injection 检测规则
-│   │       │   ├── html_stripper.py   # bleach 封装
-│   │       │   └── rules.yaml         # 注入标记规则
-│   │       │
-│   │       ├── privacy_gateway/       # M-07
-│   │       │   ├── __init__.py
-│   │       │   ├── gateway.py         # PrivacyGateway 主入口
-│   │       │   ├── pipeline.py        # L1-L7 管线定义
-│   │       │   ├── layers/
-│   │       │   │   ├── l1_unicode.py
-│   │       │   │   ├── l2_presidio.py
-│   │       │   │   ├── l3_ner.py
-│   │       │   │   ├── l4_qwen.py
-│   │       │   │   ├── l5_placeholder.py
-│   │       │   │   ├── l6_schema_validator.py
-│   │       │   │   └── l7_canary.py
-│   │       │   ├── recognizers/       # 自定义 Presidio Recognizer
-│   │       │   │   ├── cn_phone.py
-│   │       │   │   ├── cn_id_card.py
-│   │       │   │   ├── bank_card.py
-│   │       │   │   ├── token_recognizer.py
-│   │       │   │   └── api_key_recognizer.py
-│   │       │   ├── pii_map_store.py   # PII 明文 ↔ 占位符映射（SQLite）
-│   │       │   └── canary.py          # Canary token 生成 + 检测
-│   │       │
-│   │       ├── local_rag/             # M-08
-│   │       │   ├── __init__.py
-│   │       │   ├── rag_store.py       # LocalRAGStore 主类
-│   │       │   ├── embedder.py        # bge-m3 via Ollama
-│   │       │   ├── chunker.py         # 文本分块策略
-│   │       │   ├── reranker.py        # bge-reranker-v2-m3（Optional）
-│   │       │   ├── fts_index.py       # FTS5 全文检索封装
-│   │       │   └── schema.sql         # documents/chunks/embeddings DDL
-│   │       │
-│   │       ├── audit_log/             # M-09
-│   │       │   ├── __init__.py
-│   │       │   ├── logger.py          # AuditLogger 类
-│   │       │   ├── events.py          # AuditEvent 数据类
-│   │       │   └── schema.sql         # audit DB DDL
-│   │       │
-│   │       ├── network_workflow/      # M-10
-│   │       │   ├── __init__.py
-│   │       │   ├── workflow.py        # NetworkWorkflow 主编排
-│   │       │   ├── flows/
-│   │       │   │   ├── public_search_flow.py
-│   │       │   │   ├── js_heavy_flow.py
-│   │       │   │   ├── private_access_flow.py
-│   │       │   │   └── write_approval_flow.py
-│   │       │   └── models.py          # WorkflowRequest, WorkflowResult
-│   │       │
-│   │       ├── health_check/          # M-11
-│   │       │   ├── __init__.py
-│   │       │   ├── checker.py         # HealthChecker
-│   │       │   ├── services.py        # 各服务探针定义
-│   │       │   └── launchd.py         # launchd plist 生成
-│   │       │
-│   │       └── config_loader/         # M-12
-│   │           ├── __init__.py
-│   │           ├── loader.py          # load_network_config()
-│   │           └── schemas.py         # NetworkConfig Pydantic schema
+│   ├── mode_manager/                  # M-01（直接放在 network/ 下，简化）
+│   │   ├── __init__.py
+│   │   ├── manager.py
+│   │   ├── profile_builder.py
+│   │   └── templates/
+│   │       ├── coding.json.j2
+│   │       ├── research.json.j2
+│   │       └── private.json.j2
 │   │
-│   ├── tests/
-│   │   ├── conftest.py
-│   │   ├── unit/
-│   │   │   ├── test_search.py
-│   │   │   ├── test_input_sanitizer.py
-│   │   │   ├── test_privacy_gateway.py
-│   │   │   ├── test_mcp_guard.py
-│   │   │   ├── test_local_rag.py
-│   │   │   └── test_config_loader.py
-│   │   ├── integration/
-│   │   │   ├── test_search_extract_flow.py
-│   │   │   ├── test_privacy_pipeline.py
-│   │   │   └── test_local_rag_store.py
-│   │   └── e2e/
-│   │       ├── test_public_search_flow.py
-│   │       └── test_private_access_flow.py
+│   ├── mcp_guard/                     # M-02
+│   │   ├── __init__.py
+│   │   ├── guard.py
+│   │   ├── policy.py
+│   │   ├── schema_hasher.py
+│   │   ├── hook_handler.py
+│   │   └── allowlist.py
 │   │
-│   └── scripts/
-│       ├── setup_network.sh           # 一键安装所有依赖
-│       ├── start_services.sh          # 启动 SearXNG / Crawl4AI / Ollama
-│       ├── stop_services.sh
-│       └── verify_network.py          # 架构验证脚本
+│   ├── search/                        # M-03
+│   │   ├── __init__.py
+│   │   ├── searxng_client.py
+│   │   ├── result_ranker.py
+│   │   ├── query_rewriter.py
+│   │   └── domain_scores.yaml
+│   │
+│   ├── extract/                       # M-04
+│   │   ├── __init__.py
+│   │   ├── extractor.py
+│   │   ├── crawl4ai_adapter.py
+│   │   ├── trafilatura_adapter.py
+│   │   ├── playwright_adapter.py
+│   │   └── models.py
+│   │
+│   ├── browser/                       # M-05
+│   │   ├── __init__.py
+│   │   ├── playwright_wrapper.py
+│   │   ├── profile_manager.py
+│   │   ├── session_detector.py
+│   │   ├── devtools_client.py
+│   │   └── crash_recovery.py
+│   │
+│   ├── input_sanitizer/               # M-06
+│   │   ├── __init__.py
+│   │   ├── sanitizer.py
+│   │   ├── injection_detector.py
+│   │   ├── html_stripper.py
+│   │   └── rules.yaml
+│   │
+│   ├── privacy_gateway/               # M-07
+│   │   ├── __init__.py
+│   │   ├── gateway.py
+│   │   ├── pipeline.py
+│   │   ├── layers/
+│   │   │   ├── l1_unicode.py
+│   │   │   ├── l2_presidio.py
+│   │   │   ├── l3_ner.py
+│   │   │   ├── l4_qwen.py
+│   │   │   ├── l5_placeholder.py
+│   │   │   ├── l6_schema_validator.py
+│   │   │   └── l7_canary.py
+│   │   ├── recognizers/
+│   │   │   ├── cn_phone.py
+│   │   │   ├── cn_id_card.py
+│   │   │   ├── bank_card.py
+│   │   │   ├── token_recognizer.py
+│   │   │   └── api_key_recognizer.py
+│   │   ├── pii_map_store.py
+│   │   └── canary.py
+│   │
+│   ├── local_rag/                     # M-08
+│   │   ├── __init__.py
+│   │   ├── rag_store.py
+│   │   ├── embedder.py
+│   │   ├── chunker.py
+│   │   ├── reranker.py
+│   │   ├── fts_index.py
+│   │   └── schema.sql
+│   │
+│   ├── audit_log/                     # M-09
+│   │   ├── __init__.py
+│   │   ├── logger.py
+│   │   ├── events.py
+│   │   └── schema.sql
+│   │
+│   ├── network_workflow/              # M-10
+│   │   ├── __init__.py
+│   │   ├── workflow.py
+│   │   ├── flows/
+│   │   │   ├── public_search_flow.py
+│   │   │   ├── js_heavy_flow.py
+│   │   │   ├── private_access_flow.py
+│   │   │   └── write_approval_flow.py
+│   │   └── models.py
+│   │
+│   ├── health_check/                  # M-11
+│   │   ├── __init__.py
+│   │   ├── checker.py
+│   │   ├── services.py
+│   │   └── launchd.py
+│   │
+│   └── config_loader/                 # M-12
+│       ├── __init__.py
+│       ├── loader.py
+│       └── schemas.py
 │
+│   ├── tests/                         # 放在 _infra/network/tests/ （或复用根 tests/）
+│   │   └── ...
+│   │
+│   └── scripts/                       # 网络相关启动/验证脚本
+│       ├── setup_network.sh
+│       ├── start_services.sh
+│       ├── stop_services.sh
+│       └── verify_network.py
+│
+# 以下复用**现有 FORGE 根结构**
 config/
-│   ├── models.yaml                    # 已有（A 文件）
-│   ├── routing_plans.yaml             # 已有（B 文件）
-│   ├── privacy_policy.yaml            # 已有
-│   └── network.yaml                   # 新增：联网功能配置（见 §8）
+│   └── network.yaml                   # 新增（复用现有 config/）
 │
 docker/
 │   ├── searxng/
-│   │   ├── docker-compose.yml
-│   │   └── settings.yml               # SearXNG 配置
+│   │   └── ...
 │   └── crawl4ai/
-│       ├── docker-compose.yml
-│       └── Dockerfile.local           # 本地构建版本
+│       └── ...
 │
 runtime/
-│   ├── audit.db                       # 审计日志（新增）
-│   ├── rag.db                         # 本地 RAG（新增）
-│   ├── pii_map.db                     # PII 映射（新增）
-│   └── mcp_hashes.json                # MCP schema hash pin 文件
+│   ├── audit.db
+│   ├── rag.db
+│   ├── pii_map.db
+│   └── mcp_hashes.json
 │
 docs/adr/
-    ├── ADR-NET-001-searxng-primary.md # 从架构文件提取
-    ├── ADR-NET-002-crawl4ai.md
-    ├── ADR-NET-003-no-mcp-router.md
-    ├── ADR-NET-004-cdp-private-only.md
-    ├── ADR-NET-005-playwright-wrapper.md
-    ├── ADR-NET-006-presidio-deterministic.md
-    └── ADR-NET-007-sqlite-vec-rag.md
+    ├── ADR-NET-*.md
 ```
+
+**说明**：
+- 代码直接放在 `_infra/network/<module>/`（或 `_infra/network/src/forge_network/` 的轻量形式，视实现需要）
+- 复用根 `pyproject.toml`、`uv`、`Makefile`
+- Docker / runtime / config 全部复用根目录
+- 保持与现有 FORGE 目录风格一致（参考 _infra/ + _factory/patterns/）
 
 ---
 
@@ -475,8 +459,8 @@ class SearchProvider(Protocol):
     async def health_check(self) -> bool: ...
 ```
 
-**已有实现**：`SearXNGProvider`
-**扩展方式**：新增 `TavilyProvider`（手动 fallback）只需实现 Protocol。
+**已有实现**：`SearXNGProvider`（将在 _infra/network/search/ 实现）
+**扩展方式**：新增 `TavilyProvider`（手动 fallback）只需实现 Protocol。**所有实现放在现有 FORGE 项目的 _infra/network/ 下**。
 
 ---
 

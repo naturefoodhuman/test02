@@ -225,3 +225,57 @@
 - 一次性诊断/修复脚本、运行日志、历史设计/旧实现集中迁入 `_obsolete/`。
 - 修复 `peer_review.orchestrator` 缺失导致历史测试/兼容导入失败的问题：新增极薄 lazy shim，真实入口仍为 `peer_review.graph.execution.run_langgraph_review`。
 - 更新 `.gitignore`，补齐 build/cache/log/temp/IDE/OS/Python/Node/runtime 规则，同时确保 `_obsolete/` 不被忽略。
+
+## 第 36 轮 · 2026-06-21（联网功能接管 + 不一致处理 + 骨架启动）
+
+**用户最新指令**：
+- 联网功能必须作为**现有 FORGE Factory 上的增量模块**（`_infra/network` 子模块）。
+- 先处理重大不一致：TASK_BACKLOG.md、NETWORK_ARCHITECTURE_FINAL.md、NETWORK_ENGINEERING_DESIGN.md 中“新项目”假设。
+- 调整后开始开发。
+- 每轮修改必须 Push + 更新文档。
+- SSH 公钥已添加。
+
+**本次完成内容**（严格单任务：E1-C1-S1-T1）：
+1. **文档不一致修复**（P0）：
+   - TASK_BACKLOG.md：添加“增量调整版”头部说明；重写 E1-C1-S1-T1 描述，明确“在现有 FORGE 中创建 `_infra/network/` 子模块”，删除独立项目假设。
+   - NETWORK_ENGINEERING_DESIGN.md：
+     - 1.1 节强调“增量叠加 + 复用现有架构”。
+     - §3 目录结构大幅简化：**不创建独立 pyproject / 顶级 src/forge_network**，代码直接放 `_infra/network/<module>/`，配置/Docker/runtime 复用根目录。
+     - 其他模块描述增加“复用现有 FORGE”提示。
+   - NETWORK_ARCHITECTURE_FINAL.md：Phase 1 实施路线 + 关键原则增加“现有 FORGE 增量”声明。
+2. **目录骨架创建**（E1-C1-S1-T1）：
+   - 创建完整 `_infra/network/` 子目录树（mode_manager、mcp_guard、search、extract、privacy_gateway 等所有模块 + tests + scripts）。
+   - 新增 `_infra/network/README.md`（增量说明 + 原则）。
+   - 新增 `config/network.yaml`（复用根 config/ 风格，包含所有层配置）。
+3. **状态同步**：
+   - TASK_BACKLOG.md §10：E1-C1-S1-T1 标记为 `[~] IN_PROGRESS` + 日期 + Agent。
+   - 本 DEV_LOG 追加记录。
+4. **Git 准备**：
+   - SSH 公钥已由用户添加到 GitHub Deploy Keys。
+   - 本轮将执行 commit + push（保持仓库可工作状态）。
+
+**修改文件**：
+- TASK_BACKLOG.md
+- NETWORK_ENGINEERING_DESIGN.md
+- NETWORK_ARCHITECTURE_FINAL.md
+- _infra/network/（目录 + README.md）
+- config/network.yaml
+- docs/DEV_LOG.md
+
+**风险**：
+- 后续实现需持续检查“复用现有架构”约束。
+- Docker 服务（SearXNG/Crawl4AI）与现有 FORGE 环境集成需验证。
+- 依赖追加到根 pyproject（避免独立包）。
+
+**当前任务状态**：E1-C1-S1-T1 骨架完成（目录+基础文件），符合调整后的 DoD。
+
+**下一步计划**（待用户确认或继续）：
+- 完成 E1-C1-S1-T1 DoD 收尾（验证目录、更新更多文档）。
+- 推进 E1-C2 配置管理（config_loader + 加载 network.yaml）。
+- 每轮结束立即 commit + push + DEV_LOG 更新。
+- 后续任务前先确认是否需要 `ask_user` 澄清集成点（例如 forge CLI 如何挂接 network）。
+
+**验收**：
+- 目录结构符合调整后的 ENGINEERING_DESIGN §3。
+- 所有文档已对齐“增量模块”共识。
+- 仓库保持可工作状态。
