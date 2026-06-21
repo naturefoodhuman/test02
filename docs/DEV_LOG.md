@@ -226,7 +226,52 @@
 - 修复 `peer_review.orchestrator` 缺失导致历史测试/兼容导入失败的问题：新增极薄 lazy shim，真实入口仍为 `peer_review.graph.execution.run_langgraph_review`。
 - 更新 `.gitignore`，补齐 build/cache/log/temp/IDE/OS/Python/Node/runtime 规则，同时确保 `_obsolete/` 不被忽略。
 
-## 第 38 轮 · 2026-06-21（E1-C5-S1-T1：审计层实现 + 收尾）
+## 第 39 轮 · 2026-06-21（E1 基础设施完成：日志 + 异常 + 密钥 + 收尾）
+
+**任务**：E1 基础设施收尾（E1-C4 日志 + E1-C1-S2 异常 + E1-C3 密钥）
+
+**已完成**：
+1. **结构化日志**（E1-C4-S1-T1）
+   - `_infra/network/utils/logger.py`（兼容 structlog / 标准 logging）
+   - 支持 `logger.info("msg", key=val)` + JSON/彩色
+   - 自动创建 `runtime/logs/`
+   - 测试 3/3 通过
+
+2. **统一异常体系**（E1-C1-S2-T1）
+   - `_infra/network/exceptions.py`
+   - 按领域分类（MCP / Search / Extract / Privacy / Browser）
+   - 所有异常带 `code` + 上下文
+   - 测试 6/6 通过
+
+3. **密钥管理**（E1-C3-S1-T1）
+   - `_infra/network/core/secrets.py`
+   - `validate_secrets()` + `get_pii_encryption_key()`
+   - 掩码 + 清晰错误
+   - 测试 6/6 通过
+
+**测试总览**：
+- `_infra/network/tests/unit/` 共 14+ 通过
+
+**状态同步**：
+- TASK_BACKLOG.md：E1-C4 / E1-C1-S2 / E1-C3 全部 [x]
+- 本轮 DEV_LOG 追加
+- 已 Push
+
+**E1 基础设施总结**（M1 核心）：
+- 目录骨架
+- 配置加载（config_loader）
+- 审计层
+- 结构化日志
+- 统一异常
+- 密钥管理
+
+**下一步计划**（请确认）：
+- 进入 M2（搜索 + 提取）
+- 或实现 network_workflow 编排器
+- 或集成到现有 forge CLI / debt CLI
+- 或其他优先级任务
+
+仓库保持可工作状态。
 
 **当前任务**：E1-C5-S1-T1（创建 audit.db Schema + AuditLogger）
 
