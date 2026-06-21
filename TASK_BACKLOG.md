@@ -1940,7 +1940,6 @@ P3 = 可选增强
 ##### **Task E10-C1-S1-T1: 实现 health-check.sh**
 
 - **目标**: 按 §15.2 实现
-- **前置依赖**: E3-C1-S1-T1, E4-C1-S1-T1
 - **输入**: §15.2 代码
 - **输出**: 脚本
 - **涉及文件**: 新建 `scripts/health-check.sh`
@@ -2631,8 +2630,6 @@ graph TD
 | M1 | E11-C1 | E11-C1-S1-T2 | [ ] | | |
 | M2 | E3-C1 | E3-C1-S1-T1 | [ ] | | |
 | M2 | E3-C1 | E3-C1-S1-T2 | [ ] | | |
-| M2 | E3-C2 | E3-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
-| M2 | E3-C2 | E3-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C2 | E3-C2-S1-T2 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C3 | E3-C3-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C3 | E3-C3-S1-T2 | [x] | 2026-06-21 | Arena Agent |
@@ -2642,10 +2639,11 @@ graph TD
 | M2 | E4-C2 | E4-C2-S1-T2 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E4-C2 | E4-C2-S1-T3 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E4-C3 | E4-C3-S1-T1 | [x] | 2026-06-21 | Arena Agent |
-| M3 | E5-C1 | E5-C1-S1-T1 | [ ] | | |
-| M3 | E5-C1 | E5-C1-S1-T2 | [ ] | | |
+| M3 | E5-C1 | E5-C1-S1-T1 | [x] | 2026-06-21 | Arena Agent |
+| M3 | E5-C1 | E5-C1-S1-T2 | [x] | 2026-06-21 | Arena Agent |
+| M3 | E5-C2 | E5-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M3 | E5-C2 | E5-C2-S1-T1 | [ ] | | |
-| M3 | E5-C3 | E5-C3-S1-T1 | [ ] | | |
+| M3 | E5-C3 | E5-C3-S1-T1 | [~] | 2026-06-21 | Arena Agent |
 | M3 | E5-C3 | E5-C3-S1-T2 | [ ] | | |
 | M3 | E5-C3 | E5-C3-S1-T3 | [ ] | | |
 | M3 | E5-C3 | E5-C3-S1-T4 | [ ] | | |
