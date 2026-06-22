@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:05:00
+创建时间（北京时间）：2026-06-22 20:18:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -45,5 +45,6 @@ python -m pytest _infra/network/tests/unit/ -q
 - E5-C3-S1-T1/T2/T3/T4（PIIDetector ABC / PresidioDetector / 中文 recognizers / Token & API Key recognizers；Presidio 相关测试在未安装 `presidio_analyzer` 时依赖门控跳过）
 - E5-C4-S1-T1（SpaCyNERDetector + spaCy 模型下载脚本；单元测试通过依赖注入 fake NLP，避免强制下载模型）
 - E5-C5-S1-T1（QwenPIIClassifier；Ollama lazy import + fake client 单元测试，失败降级为 uncertain）
+- E5-C6-S1-T1（PIIReplacer；占位符替换 + mapping_id + in-process queryable mapping store）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C6-S1-T1 — PIIReplacer。
+当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C6-S1-T2 — SQLCipher PII Map DB。

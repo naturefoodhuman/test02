@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:05:00
+创建时间（北京时间）：2026-06-22 20:18:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -447,5 +447,65 @@ python -m _infra.network.cli config
 **下一步计划**：
 - E5-C6-S1-T1：实现 PIIReplacer（占位符替换，同值复用）。
 - E5-C6-S1-T2：再处理 PII map 持久化 / 加密存储。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 49 轮 · 2026-06-22（E5-C6-S1-T1: PIIReplacer）
+
+**当前任务**：E5-C6-S1-T1 — 实现 PIIReplacer。
+
+**完成内容**：
+
+1. **新增 PIIReplacer**：
+   - 新建 `_infra/network/privacy_gateway/replacer.py`
+   - 实现 `PIIReplacer.replace(text, entities, mapping_id=None)`
+   - 默认占位符格式：`PII_{entity_type}_{index:03d}`，例如 `PII_PERSON_001`
+   - 支持自定义 `placeholder_format`，为后续读取 `config/network.yaml` 的 `placeholder_format` 预留接口
+
+2. **Mapping 结果模型**：
+   - `PIIPlaceholderMapping`
+   - `PIIReplacementResult`
+   - `InMemoryPIIMapStore`
+   - `mapping_id` 自动生成或由调用方传入
+   - mapping 可通过 `PIIReplacer.get_mapping(mapping_id)` 查询
+
+3. **替换行为**：
+   - 按字符 offset 替换，避免普通字符串全局替换导致误伤
+   - 相同原始值在同一次 replacement run 中复用同一个 placeholder
+   - 对重叠 span 采用确定性选择：start 更小优先，同 start 时更长 span 优先，高 score 作为次级排序
+   - 空 entities 时仍保存空 mapping，方便后续管线统一处理
+
+4. **任务边界说明**：
+   - 本轮实现 placeholder replacement + in-process queryable mapping store。
+   - SQLCipher `runtime/pii_map.db` 加密持久化属于 E5-C6-S1-T2，未在本轮提前实现，避免越过当前单任务边界。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_pii_replacer.py -q
+# 9 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 153 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/replacer.py`
+- 新增：`_infra/network/tests/unit/test_pii_replacer.py`
+- 修改：`_infra/network/privacy_gateway/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前 mapping store 是进程内存实现，不具备持久化 / 加密能力；这与 E5-C6-S1-T2 明确拆分，下一轮必须实现 SQLCipher PII Map DB 后才能满足 full mode 私域数据持久映射要求。
+- PIIReplacer 依赖上游 entities offset 正确；后续 PrivacyGateway 主管线需要确保 Unicode normalize 后的文本与检测 offset 一致。
+
+**下一步计划**：
+- E5-C6-S1-T2：实现 SQLCipher PII Map DB（加密 mapping 持久化 + CRUD + 初始化脚本）。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

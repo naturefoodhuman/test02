@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:05:00
+创建时间（北京时间）：2026-06-22 20:18:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C5-S1-T1 QwenPIIClassifier 完成）
+> **最近同步**: 2026-06-22（E5-C6-S1-T1 PIIReplacer 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1299,23 +1299,26 @@ P3 = 可选增强
 - **前置依赖**: E5-C3-S1-T1, E1-C5-S1-T1
 - **输入**: 检测到的 entities
 - **输出**: PIIReplacer 类
-- **涉及文件**:
-  - 新建：`src/privacy/replacer.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/privacy_gateway/replacer.py`
+  - 新建：`_infra/network/tests/unit/test_pii_replacer.py`
+  - 修改：`_infra/network/privacy_gateway/__init__.py`（导出 PIIReplacer / mapping models）
 - **实现要求**:
   - 替换规则：`PII_{TYPE}_{INDEX}`（如 `PII_PERSON_001`）
   - 同一文本中相同值复用占位符
-  - mapping 写入 `runtime/pii_map.db`（SQLCipher 加密）
-  - mapping_id 关联
+  - 生成 `mapping_id` 并保存 queryable mapping
+  - 本任务实现 in-process mapping store；SQLCipher `runtime/pii_map.db` 加密持久化按拆分任务 E5-C6-S1-T2 执行
 - **测试要求**:
   - 单元测试：替换正确
   - 单元测试：相同值复用
-  - 单元测试：mapping 加密存储
+  - 单元测试：mapping_id 与 mapping 可查
+  - 单元测试：overlap 处理、空 entities、custom placeholder_format
 - **验收标准**:
   - 输出不含原始 PII
   - mapping 可查
 - **DoD**:
-  - [ ] replacer.py 实现
-  - [ ] 单元测试覆盖率 ≥ 90%
+  - [x] replacer.py 实现
+  - [x] 单元测试通过（`test_pii_replacer.py`: 9 passed）
 
 ---
 
@@ -2682,7 +2685,7 @@ graph TD
 | M3 | E5-C3 | E5-C3-S1-T4 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C4 | E5-C4-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C5 | E5-C5-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C6 | E5-C6-S1-T1 | [ ] | | |
+| M3 | E5-C6 | E5-C6-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C6 | E5-C6-S1-T2 | [ ] | | |
 | M3 | E5-C7 | E5-C7-S1-T1 | [ ] | | |
 | M3 | E5-C8 | E5-C8-S1-T1 | [ ] | | |

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:05:00
+创建时间（北京时间）：2026-06-22 20:18:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -789,3 +789,35 @@ python -m compileall -q _infra/network
 - Full local integration requires Ollama service and qwen3:8b:
   `ollama pull qwen3:8b`
 - Next recommended task: `E5-C6-S1-T1` PIIReplacer.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — PIIReplacer (E5-C6-S1-T1)
+
+### Added
+- `_infra/network/privacy_gateway/replacer.py`
+  - `PIIReplacer`
+  - `PIIReplacementResult`
+  - `PIIPlaceholderMapping`
+  - `InMemoryPIIMapStore`
+- `_infra/network/tests/unit/test_pii_replacer.py`
+  - 9 unit tests for replacement, same-value reuse, mapping query, overlap handling, custom placeholder format
+
+### Changed
+- `_infra/network/privacy_gateway/__init__.py` exports PIIReplacer and related mapping models.
+- `TASK_BACKLOG.md` marks `E5-C6-S1-T1` as done and sets the next TODO to `E5-C6-S1-T2`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_pii_replacer.py -q
+# 9 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 153 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- SQLCipher encrypted persistence is intentionally deferred to `E5-C6-S1-T2`.
+- Next recommended task: `E5-C6-S1-T2` SQLCipher PII Map DB.
