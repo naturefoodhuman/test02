@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:32:00
+创建时间（北京时间）：2026-06-22 20:45:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -47,5 +47,6 @@ python -m pytest _infra/network/tests/unit/ -q
 - E5-C5-S1-T1（QwenPIIClassifier；Ollama lazy import + fake client 单元测试，失败降级为 uncertain）
 - E5-C6-S1-T1（PIIReplacer；占位符替换 + mapping_id + in-process queryable mapping store）
 - E5-C6-S1-T2（PII Map DB；SQLCipher driver 优先 + sqlite3 field-level AES-256 fallback，错误密钥无法解密 original）
+- E5-C7-S1-T1（JSON Schema 输出验证；禁止 raw PII value 出现在输出 entities 中）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C7-S1-T1 — JSON Schema 输出验证。
+当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C8-S1-T1 — CanaryTokenMonitor。

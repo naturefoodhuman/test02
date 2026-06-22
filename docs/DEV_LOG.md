@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:32:00
+创建时间（北京时间）：2026-06-22 20:45:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -572,5 +572,70 @@ PII_MAP_ENCRYPTION_KEY=test-key-at-least-16-chars python _infra/network/scripts/
 
 **下一步计划**：
 - E5-C7-S1-T1：实现 Privacy Gateway 输出 JSON Schema 验证器。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 51 轮 · 2026-06-22（E5-C7-S1-T1: JSON Schema 输出验证）
+
+**当前任务**：E5-C7-S1-T1 — 实现输出 Schema 验证。
+
+**完成内容**：
+
+1. **新增 JSON Schema**：
+   - 新建 `config/output_schemas/privacy_gateway_output.schema.yaml`
+   - Draft 2020-12 schema
+   - 必填字段：`text` / `mapping_id` / `entities`
+   - 允许可选字段：`schema_valid` / `canary_clean`
+   - `entities` 只允许 safe metadata：`type` / `placeholder` / `recognizer` / `score` / `start` / `end`
+   - `additionalProperties: false`，明确禁止 raw PII `value` 进入输出实体
+
+2. **新增 PrivacyOutputValidator**：
+   - 新建 `_infra/network/privacy_gateway/validator.py`
+   - 使用 `jsonschema.Draft202012Validator`
+   - 校验失败抛 `SchemaValidationFailedError`
+   - 提供：
+     - `PrivacyOutputValidator.validate()`
+     - `PrivacyOutputValidator.is_valid()`
+     - `validate_privacy_output()`
+     - `safe_entity_metadata()`
+     - `build_privacy_output()`
+
+3. **安全输出 helper**：
+   - `safe_entity_metadata()` 从 placeholder mapping 生成安全实体列表，不包含原始 value。
+   - `build_privacy_output()` 构造 schema-friendly redacted output。
+
+4. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_privacy_output_validator.py`
+   - 覆盖合法输出、最小合法输出、缺字段、额外字段、raw value 泄露、非法 score、非 object、schema file 加载、helper 不泄露原文。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_privacy_output_validator.py -q
+# 10 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 171 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`config/output_schemas/privacy_gateway_output.schema.yaml`
+- 新增：`_infra/network/privacy_gateway/validator.py`
+- 新增：`_infra/network/tests/unit/test_privacy_output_validator.py`
+- 修改：`_infra/network/privacy_gateway/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前 schema 是 Privacy Gateway 输出的第一版严格 schema；后续 E5-C9 主管线如需要新增字段，必须先更新 schema 与测试，避免绕过 L6。
+- Schema 明确禁止 raw `value`，后续管线需要确保 detections 输出只使用 placeholder metadata。
+
+**下一步计划**：
+- E5-C8-S1-T1：实现 CanaryTokenMonitor（命中立即阻断 + 后续接入审计）。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

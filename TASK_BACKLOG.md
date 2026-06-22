@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:32:00
+创建时间（北京时间）：2026-06-22 20:45:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C6-S1-T2 PII Map DB 完成）
+> **最近同步**: 2026-06-22（E5-C7-S1-T1 JSON Schema 验证完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1362,21 +1362,27 @@ P3 = 可选增强
 - **前置依赖**: E5-C6-S1-T1
 - **输入**: §10.1 设计原则 5
 - **输出**: Schema 验证器
-- **涉及文件**:
-  - 新建：`src/privacy/validator.py`
-  - 新建：`config/output_schemas/`
+- **涉及文件（已按增量架构落地到 `_infra/network/` 与根 `config/`）**:
+  - 新建：`_infra/network/privacy_gateway/validator.py`
+  - 新建：`config/output_schemas/privacy_gateway_output.schema.yaml`
+  - 新建：`_infra/network/tests/unit/test_privacy_output_validator.py`
+  - 修改：`_infra/network/privacy_gateway/__init__.py`（导出 validator helpers）
 - **实现要求**:
-  - 使用 `jsonschema` 库
+  - 使用 `jsonschema` 库（Draft 2020-12）
   - 默认 schema：`{text: str, mapping_id: str, entities: array}`
-  - 校验失败时抛 `PrivacyException`
+  - `entities` 仅允许 safe metadata（type / placeholder / recognizer / score / start / end），禁止 raw `value`
+  - 校验失败时抛 `SchemaValidationFailedError`（PrivacyError 子类）
+  - 提供 `build_privacy_output()` / `safe_entity_metadata()`，避免 raw PII 进入输出结构
 - **测试要求**:
   - 单元测试：合法输出通过
   - 单元测试：非法输出拒绝
+  - 单元测试：raw value / extra field / invalid score 拒绝
+  - 单元测试：schema file 加载与 helper 不泄露 raw PII
 - **验收标准**:
   - 输出严格符合 schema
 - **DoD**:
-  - [ ] validator.py 实现
-  - [ ] 单元测试通过
+  - [x] validator.py 实现
+  - [x] 单元测试通过（`test_privacy_output_validator.py`: 10 passed）
 
 ---
 
@@ -2692,7 +2698,7 @@ graph TD
 | M3 | E5-C5 | E5-C5-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C6 | E5-C6-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C6 | E5-C6-S1-T2 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C7 | E5-C7-S1-T1 | [ ] | | |
+| M3 | E5-C7 | E5-C7-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C8 | E5-C8-S1-T1 | [ ] | | |
 | M3 | E5-C9 | E5-C9-S1-T1 | [ ] | | |
 | M3 | E5-C9 | E5-C9-S1-T2 | [ ] | | |

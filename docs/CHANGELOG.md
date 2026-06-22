@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:32:00
+创建时间（北京时间）：2026-06-22 20:45:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -857,3 +857,37 @@ PII_MAP_ENCRYPTION_KEY=test-key-at-least-16-chars python _infra/network/scripts/
 ### Known Follow-up
 - For file-level SQLCipher in production, install a SQLCipher Python binding and run with `--require-sqlcipher`.
 - Next recommended task: `E5-C7-S1-T1` JSON Schema output validator.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — JSON Schema Output Validator (E5-C7-S1-T1)
+
+### Added
+- `config/output_schemas/privacy_gateway_output.schema.yaml`
+  - strict Draft 2020-12 schema for redacted Privacy Gateway output
+  - forbids raw PII `value` inside `entities`
+- `_infra/network/privacy_gateway/validator.py`
+  - `PrivacyOutputValidator`
+  - `validate_privacy_output()`
+  - `safe_entity_metadata()`
+  - `build_privacy_output()`
+- `_infra/network/tests/unit/test_privacy_output_validator.py`
+  - 10 unit tests covering valid output, invalid output, raw-value rejection, schema loading and safe helper behavior
+
+### Changed
+- `_infra/network/privacy_gateway/__init__.py` exports output validator helpers.
+- `TASK_BACKLOG.md` marks `E5-C7-S1-T1` as done and sets next TODO to `E5-C8-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_privacy_output_validator.py -q
+# 10 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 171 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E5-C8-S1-T1` CanaryTokenMonitor.
