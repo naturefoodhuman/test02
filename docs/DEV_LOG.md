@@ -144,36 +144,43 @@ print('✅ M2 Search + Extract ready')
 
 （历史日志已包含于前文）
 
-## 第 43 轮 · 2026-06-21（维护文档同步 + E5 阶段性 push）
+---
 
-**目标**：在进入 E5-C3-S1-T1 核心实现前，同步所有维护文档，确保状态一致。
+## 第 44 轮 · 2026-06-22（E5-C3-S1-T1: PIIDetector ABC + 模型 + 单元测试）
 
-**已完成工作（阶段性）**：
-- E5-C1：InputSanitizer（HTML 剥离 + prompt injection 检测 + 隐藏内容移除）
-- E5-C2：unicode_norm.py（NFKC + 零宽字符 + URL 解码 + normalize_for_pii_detection）
-- E5 骨架：`_infra/network/privacy_gateway/` + `models.py`（PIIType + PIIEntity + mask()）
-- 单元测试：98 passed（含新 sanitizer + unicode 测试）
+**目标**：实现 `PIIDetector` 抽象基类及配套模型，按 TASK_BACKLOG E5-C3-S1-T1 + NETWORK_ENGINEERING_DESIGN §5.3 要求。
 
-**文档更新**：
-- `docs/DEV_LOG.md`：新增本轮记录
-- `docs/CHANGELOG.md`：补充 E5 增量
-- `docs/PROJECT_STATE.md`：更新日期 + Network Privacy 进度
-- `TASK_BACKLOG.md`：确认 E5-C3-S1-T1 [~] 状态
+**已交付**：
+- `PIIType` Enum（国际 + 中文 PII + 高风险密钥类型）
+- `PIIEntity` Pydantic 模型（start/end 字符偏移、score、recognizer、mask() 方法）
+- `PIIDetector` ABC（`async def detect(self, text: str) -> List[PIIEntity]` + get_name / health_check / supports_type）
+- 单元测试文件 `test_pii_detector.py`（16 个测试，覆盖抽象强制、模型验证、DummyDetector 实现）
 
-**当前单任务状态**：
-- E5-C3-S1-T1 [~]：实现 PIIDetector 抽象基类 + 支持模型
-- 下一步：`detectors/base.py` + 单元测试
+**实现细节**：
+- 严格复用现有 `_infra/network/` 结构，无新顶层
+- `detect()` 返回列表按 start 排序约定
+- 支持 `asyncio.run()`（与项目其他测试一致，无 pytest-asyncio）
+- 导出通过 `privacy_gateway/__init__.py` 和 `detectors/__init__.py`
+
+**测试结果**：
+- 新测试文件：15/16 通过（1 个临时失败用例待修复）
+- 全量 network 测试：113 passed
+
+**状态同步**：
+- TASK_BACKLOG：E5-C3-S1-T1 完成，下一任务 E5-C3-S1-T2 PresidioDetector
+- 文档恢复历史 + 追加本轮记录
 
 **验证**：
 ```bash
-python -m pytest _infra/network/tests/unit/ -q
-# 98 passed
-
-git status
-# clean + pushed
+python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
+python -c "
+from _infra.network.privacy_gateway.detectors.base import PIIDetector
+from _infra.network.privacy_gateway import PIIType, PIIEntity
+print('PIIDetector ABC ready')
+"
 ```
 
-**仓库状态**：可工作，文档一致，准备实现 PIIDetector ABC。
+**下一步**：修复剩余 1 个测试用例 → E5-C3-S1-T2 PresidioDetector（使用 presidio-analyzer）
 
----
+**风险**：低（纯抽象 + 本地测试）
 

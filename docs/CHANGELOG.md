@@ -1,30 +1,3 @@
-## [2026-06-21] Network Increment — E5 Privacy Gateway (Phase 1)
-
-### Added
-- **E5-C1**: InputSanitizer
-  - HTML stripping (custom HTMLParser)
-  - Prompt injection detection (multi-language patterns + raw + post-strip)
-  - Hidden content removal + spotlighting
-- **E5-C2**: Unicode normalization
-  - `normalize_for_pii_detection()` (NFKC + zero-width removal + URL decode)
-  - Handles full-width digits (e.g. "138-５５５５-１２３４" → "138-5555-1234")
-- **E5 skeleton**: `_infra/network/privacy_gateway/`
-  - `models.py`: PIIType (Enum) + PIIEntity (Pydantic + mask())
-  - `privacy_gateway/__init__.py` re-exports
-- Tests: 98 passing across network module
-
-### Changed
-- Updated maintenance docs (DEV_LOG, CHANGELOG, PROJECT_STATE)
-- TASK_BACKLOG: E5-C3-S1-T1 marked [~] (PIIDetector ABC)
-
-### Verified
-```bash
-python -m pytest _infra/network/tests/unit/ -q
-# 98 passed
-```
-
----
-
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
 创建时间（北京时间，精确到秒）：2026-06-16 22:00:00
@@ -658,3 +631,28 @@ python -m pytest _infra/network/tests/unit/ -q
 - 配置加载成功：10 模型、5 方案、4 专家
 - 交叉验证通过 (A/B 文件一致性、专家引用检查)
 - CLI 正常运行：`debt review 1 --model local/primary`
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — PIIDetector ABC (E5-C3-S1-T1)
+
+### Added
+- `PIIDetector` abstract base class in `_infra/network/privacy_gateway/detectors/base.py`
+  - `async def detect(self, text: str) -> List[PIIEntity]`
+  - `get_name()`, `health_check()`, `supports_type()`
+- Supporting models already in place: `PIIType` (Enum), `PIIEntity` (Pydantic + `mask()`)
+- `detectors/__init__.py` and cleaned `__init__.py` exports
+- Unit tests: `test_pii_detector.py` (16 tests covering ABC enforcement, model validation, dummy implementation)
+
+### Changed
+- Restored historical content in `docs/DEV_LOG.md` and `docs/CHANGELOG.md`
+- Appended new round records (append-only, no overwrite)
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
+# 16 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 113+ passed
+```
+

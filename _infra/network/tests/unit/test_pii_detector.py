@@ -1,5 +1,11 @@
 """
 Unit tests for PIIDetector ABC + supporting models (E5-C3-S1-T1)
+
+Tests:
+- PIIType enum
+- PIIEntity Pydantic model + mask()
+- PIIDetector abstract enforcement
+- Basic detector interface
 """
 
 from typing import List
@@ -10,7 +16,10 @@ from _infra.network.privacy_gateway.models import PIIType, PIIEntity
 from _infra.network.privacy_gateway.detectors.base import PIIDetector
 
 
+# --- PIIType tests ---
+
 def test_pii_type_enum_values():
+    """All expected PII types exist."""
     assert PIIType.EMAIL_ADDRESS.value == "EMAIL_ADDRESS"
     assert PIIType.CN_PHONE.value == "CN_PHONE"
     assert PIIType.API_KEY.value == "API_KEY"
@@ -18,10 +27,13 @@ def test_pii_type_enum_values():
 
 
 def test_pii_type_is_str_enum():
+    """PIIType should be usable as string (str Enum)."""
     assert PIIType.PHONE_NUMBER == "PHONE_NUMBER"
     assert PIIType.CN_ID_CARD.value == "CN_ID_CARD"
     assert PIIType.CN_ID_CARD == "CN_ID_CARD"
 
+
+# --- PIIEntity tests ---
 
 def test_pii_entity_basic():
     entity = PIIEntity(
@@ -33,12 +45,21 @@ def test_pii_entity_basic():
         recognizer="presidio",
     )
     assert entity.type == PIIType.EMAIL_ADDRESS
+    assert entity.value == "alice@example.com"
+    assert entity.start == 10
+    assert entity.end == 27
     assert entity.length == 17
+    assert entity.score == 0.97
     assert entity.recognizer == "presidio"
 
 
 def test_pii_entity_mask_full():
-    entity = PIIEntity(type=PIIType.CREDIT_CARD, value="4111111111111111", start=0, end=16)
+    entity = PIIEntity(
+        type=PIIType.CREDIT_CARD,
+        value="4111111111111111",
+        start=0,
+        end=16,
+    )
     assert entity.mask() == "41************11"
 
 
@@ -55,33 +76,56 @@ def test_pii_entity_mask_very_short():
 def test_pii_entity_validation():
     with pytest.raises(Exception):
         PIIEntity(type=PIIType.EMAIL_ADDRESS, value="x", start=5)
+
     with pytest.raises(Exception):
         PIIEntity(type=PIIType.EMAIL_ADDRESS, value="x@x.com", start=-1, end=7)
+
     with pytest.raises(Exception):
         PIIEntity(type=PIIType.EMAIL_ADDRESS, value="x@x.com", start=0, end=7, score=1.5)
 
 
 def test_pii_entity_extra_fields_forbidden():
     with pytest.raises(Exception):
-        PIIEntity(type=PIIType.EMAIL_ADDRESS, value="x@x.com", start=0, end=7, foo="bar")
+        PIIEntity(
+            type=PIIType.EMAIL_ADDRESS,
+            value="x@x.com",
+            start=0,
+            end=7,
+            unknown_field="bad",
+        )
 
+
+# --- PIIDetector ABC tests ---
 
 def test_piidetector_is_abstract():
+    """Direct instantiation of ABC must fail."""
     with pytest.raises(TypeError):
         PIIDetector()  # type: ignore
 
 
 def test_piidetector_abstract_detect():
+    """Subclass must implement detect()."""
     class BadDetector(PIIDetector):
         pass
+
     with pytest.raises(TypeError):
         BadDetector()  # type: ignore
 
 
 class DummyDetector(PIIDetector):
+    """Minimal concrete implementation for testing the ABC contract."""
+
     async def detect(self, text: str) -> List[PIIEntity]:
-        if "email" in text.lower():
-            return [PIIEntity(type=PIIType.EMAIL_ADDRESS, value="test@example.com", start=0, end=16, recognizer="dummy")]
+        if "@" in text:
+            return [
+                PIIEntity(
+                    type=PIIType.EMAIL_ADDRESS,
+                    value="test@example.com",
+                    start=0,
+                    end=16,
+                    recognizer="dummy",
+                )
+            ]
         return []
 
     def get_name(self) -> str:
@@ -98,18 +142,20 @@ def test_dummy_detector_instantiation():
 
 
 def test_dummy_detector_detect():
+    """Use asyncio.run() to match project convention (no pytest-asyncio)."""
     import asyncio
     det = DummyDetector()
-    entities = asyncio.run(det.detect("Contact me at test@example.com"))
+    entities = asyncio.run(det.detect("Contact test@example.com please"))
     assert len(entities) == 1
     assert entities[0].type == PIIType.EMAIL_ADDRESS
+    assert entities[0].value == "test@example.com"
     assert entities[0].recognizer == "dummy"
 
 
 def test_dummy_detector_empty():
     import asyncio
     det = DummyDetector()
-    entities = asyncio.run(det.detect("No PII here"))
+    entities = asyncio.run(det.detect("No PII here at all"))
     assert entities == []
 
 
@@ -122,9 +168,18 @@ def test_dummy_health_check():
 def test_supports_type_default():
     det = DummyDetector()
     assert det.supports_type(PIIType.EMAIL_ADDRESS) is True
+    assert det.supports_type(PIIType.CN_PHONE) is True
 
 
 def test_piientity_with_detector_name():
-    entity = PIIEntity(type=PIIType.PERSON, value="张三", start=5, end=7, score=0.91, recognizer="dummy_cn")
+    """Common pattern: entities carry recognizer info."""
+    entity = PIIEntity(
+        type=PIIType.PERSON,
+        value="张三",
+        start=5,
+        end=7,
+        score=0.91,
+        recognizer="dummy_cn",
+    )
     assert entity.recognizer == "dummy_cn"
     assert entity.mask() == "**"
