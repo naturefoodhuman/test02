@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 20:18:00
+# 创建时间（北京时间）：2026-06-22 20:32:00
 
 """
 Privacy Gateway module (FORGE Network incremental).
@@ -10,6 +10,7 @@ Core exports:
 - PIIType, PIIEntity (models)
 - PIIDetector (ABC)
 - PIIReplacer (placeholder replacement)
+- PIIMapDB (encrypted mapping persistence)
 
 Concrete detectors with optional heavy dependencies (for example
 PresidioDetector / presidio_analyzer, spaCy models, Ollama) are lazy-loaded from
@@ -19,12 +20,16 @@ importable and testable.
 
 from .detectors import PIIDetector
 from .models import PIIEntity, PIIType
+from .pii_map_db import PIIMapDB, PIIMapDBConfig, PIIMapDecryptionError
 from .replacer import InMemoryPIIMapStore, PIIPlaceholderMapping, PIIReplacementResult, PIIReplacer
 
 __all__ = [
     "InMemoryPIIMapStore",
     "PIIEntity",
     "PIIDetector",
+    "PIIMapDB",
+    "PIIMapDBConfig",
+    "PIIMapDecryptionError",
     "PIIPlaceholderMapping",
     "PIIReplacementResult",
     "PIIReplacer",

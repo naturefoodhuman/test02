@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:18:00
+创建时间（北京时间）：2026-06-22 20:32:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-22 20:18 CST
-**当前版本**：v1.3.0-dossier + Network Increment（E5-C6 PIIReplacer 完成）
+**更新日期**：2026-06-22 20:32 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E5-C6 PII Map DB 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -57,20 +57,23 @@
 - **E5-C3-S1-T4** Token / API Key / JWT / Cookie / Session / OAuth / Private Key recognizers 完成；同时提供不依赖 Presidio 的 deterministic regex scanner
 - **E5-C4-S1-T1** SpaCyNERDetector 完成；支持 zh/en 模型加载、依赖注入测试、PERSON/ORG/GPE/LOC/FAC → PIIEntity 映射，并提供 spaCy 模型下载脚本
 - **E5-C5-S1-T1** QwenPIIClassifier 完成；使用 Ollama Python client lazy import，prompt 强制三选一（是/否/不确定），temperature=0.0，num_predict=10，10s 超时，失败降级为 uncertain 不阻断主流程
-- **E5-C6-S1-T1** PIIReplacer 完成；支持 `PII_{TYPE}_{INDEX}` 占位符替换、相同值复用、mapping_id、queryable in-process mapping store；SQLCipher `runtime/pii_map.db` 加密持久化保留给 E5-C6-S1-T2
-- **测试**：`test_pii_replacer.py` 9 passed；全量 network 单元测试 153 passed / 2 skipped / 3 warnings；`compileall` 通过
-- **当前单任务**：E5-C6-S1-T1 PIIReplacer 已完成
-- **下一任务候选**：E5-C6-S1-T2 SQLCipher PII Map DB（尚未实现）
+- **E5-C6-S1-T1** PIIReplacer 完成；支持 `PII_{TYPE}_{INDEX}` 占位符替换、相同值复用、mapping_id、queryable in-process mapping store
+- **E5-C6-S1-T2** PII Map DB 完成；优先支持 SQLCipher driver，当前最小沙箱无 SQLCipher 时使用 sqlite3 + field-level AES-256-CBC authenticated BLOB fallback，错误密钥无法解密 original
+- **测试**：`test_pii_map_db.py` 8 passed；全量 network 单元测试 161 passed / 2 skipped / 3 warnings；`compileall` 通过；`init_pii_map_db.py` 初始化验证通过
+- **当前单任务**：E5-C6-S1-T2 SQLCipher PII Map DB 已完成
+- **下一任务候选**：E5-C7-S1-T1 JSON Schema 输出验证（尚未实现）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_pii_replacer.py -q
-# 9 passed
+python -m pytest _infra/network/tests/unit/test_pii_map_db.py -q
+# 8 passed
 python -m pytest _infra/network/tests/unit/ -q
-# 153 passed, 2 skipped, 3 warnings
+# 161 passed, 2 skipped, 3 warnings
 python -m compileall -q _infra/network
 # pass
+PII_MAP_ENCRYPTION_KEY=test-key-at-least-16-chars python _infra/network/scripts/init_pii_map_db.py --db /tmp/test02_pii_map_check.db
+# initialized
 ```
 
 ## 5. 待办事项 (Next)

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:18:00
+创建时间（北京时间）：2026-06-22 20:32:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -507,5 +507,70 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E5-C6-S1-T2：实现 SQLCipher PII Map DB（加密 mapping 持久化 + CRUD + 初始化脚本）。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 50 轮 · 2026-06-22（E5-C6-S1-T2: SQLCipher PII Map DB）
+
+**当前任务**：E5-C6-S1-T2 — 实现 SQLCipher PII Map DB。
+
+**完成内容**：
+
+1. **新增 PII Map DB**：
+   - 新建 `_infra/network/privacy_gateway/pii_map_db.py`
+   - `PIIMapDB` 提供 `save` / `get` / `has` / `get_original` / `delete`
+   - Schema：`pii_mappings(id, placeholder, entity_type, original, recognizer, score, created_at, expires_at)`
+   - 使用 `(id, placeholder)` 复合主键支持一个 `mapping_id` 对应多个 placeholder
+
+2. **SQLCipher 优先 + 最小沙箱 fallback**：
+   - 优先尝试 `sqlcipher3` / `pysqlcipher3` driver
+   - 支持 `require_sqlcipher=True`，生产环境可强制要求 SQLCipher driver，不允许 fallback
+   - 当前沙箱无 SQLCipher binding，因此提供 stdlib sqlite3 + field-level AES-256-CBC authenticated BLOB fallback
+   - original 值不会以明文落盘；错误密钥无法通过 HMAC 验证，抛 `PIIMapDecryptionError`
+
+3. **加密实现**：
+   - `AES256FieldCipher` 使用 OpenSSL CLI 的 `aes-256-cbc`
+   - PBKDF2-HMAC-SHA256 派生 AES key + HMAC key
+   - 每条记录使用随机 salt + IV
+   - HMAC-SHA256 验证密文完整性，防止错误密钥静默输出乱码
+
+4. **初始化脚本**：
+   - 新建 `_infra/network/scripts/init_pii_map_db.py`
+   - 支持 `--db` 与 `--require-sqlcipher`
+   - 从 `PII_MAP_ENCRYPTION_KEY` 读取密钥
+
+5. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_pii_map_db.py`
+   - 覆盖 save/get、错误密钥无法解密、DB 文件不含原文、get_original/delete、覆盖保存、schema 创建、require_sqlcipher 行为、短密钥拒绝
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_pii_map_db.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 161 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+PII_MAP_ENCRYPTION_KEY=test-key-at-least-16-chars python _infra/network/scripts/init_pii_map_db.py --db /tmp/test02_pii_map_check.db
+# ✅ pii_map.db 已初始化
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/pii_map_db.py`
+- 新增：`_infra/network/scripts/init_pii_map_db.py`
+- 新增：`_infra/network/tests/unit/test_pii_map_db.py`
+- 修改：`_infra/network/privacy_gateway/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前沙箱未安装 SQLCipher Python binding，已通过 field-level AES-256 fallback 验证加密 BLOB 与错误密钥失败；用户真机如需文件级 SQLCipher，需安装 `sqlcipher3-binary` 或 `pysqlcipher3` 并使用 `--require-sqlcipher` 验证。
+- AES-CBC 加密通过 OpenSSL CLI 完成，依赖系统存在 `openssl` 命令；当前沙箱验证通过。
+
+**下一步计划**：
+- E5-C7-S1-T1：实现 Privacy Gateway 输出 JSON Schema 验证器。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

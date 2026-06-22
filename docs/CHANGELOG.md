@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:18:00
+创建时间（北京时间）：2026-06-22 20:32:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -821,3 +821,39 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - SQLCipher encrypted persistence is intentionally deferred to `E5-C6-S1-T2`.
 - Next recommended task: `E5-C6-S1-T2` SQLCipher PII Map DB.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — PII Map DB (E5-C6-S1-T2)
+
+### Added
+- `_infra/network/privacy_gateway/pii_map_db.py`
+  - `PIIMapDB`
+  - `AES256FieldCipher`
+  - SQLCipher driver preference with sqlite3 field-level encrypted fallback
+- `_infra/network/scripts/init_pii_map_db.py`
+  - initializes encrypted `runtime/pii_map.db`
+  - supports `--require-sqlcipher`
+- `_infra/network/tests/unit/test_pii_map_db.py`
+  - 8 tests covering CRUD, wrong-key failure, plaintext absence, schema creation, require_sqlcipher behavior
+
+### Changed
+- `_infra/network/privacy_gateway/__init__.py` exports PIIMapDB / PIIMapDBConfig / PIIMapDecryptionError.
+- `TASK_BACKLOG.md` marks `E5-C6-S1-T2` as done and sets next TODO to `E5-C7-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_pii_map_db.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 161 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+PII_MAP_ENCRYPTION_KEY=test-key-at-least-16-chars python _infra/network/scripts/init_pii_map_db.py --db /tmp/test02_pii_map_check.db
+# initialized
+```
+
+### Known Follow-up
+- For file-level SQLCipher in production, install a SQLCipher Python binding and run with `--require-sqlcipher`.
+- Next recommended task: `E5-C7-S1-T1` JSON Schema output validator.

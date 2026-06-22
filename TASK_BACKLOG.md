@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:18:00
+创建时间（北京时间）：2026-06-22 20:32:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C6-S1-T1 PIIReplacer 完成）
+> **最近同步**: 2026-06-22（E5-C6-S1-T2 PII Map DB 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1328,24 +1328,29 @@ P3 = 可选增强
 - **前置依赖**: E1-C3-S1-T1
 - **输入**: §6.2.3 SQL
 - **输出**: 加密 DB 初始化
-- **涉及文件**:
-  - 修改：`scripts/init_db.py`
-  - 新建：`src/privacy/pii_map_db.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/privacy_gateway/pii_map_db.py`
+  - 新建：`_infra/network/scripts/init_pii_map_db.py`
+  - 新建：`_infra/network/tests/unit/test_pii_map_db.py`
+  - 修改：`_infra/network/privacy_gateway/__init__.py`（导出 PIIMapDB）
 - **实现要求**:
-  - 使用 `sqlcipher3-binary`
-  - 密钥来自 `PII_DB_ENCRYPTION_KEY`
-  - Schema 按 §6.2.3
-  - 提供 CRUD 接口
+  - 优先使用 `sqlcipher3` / `pysqlcipher3` driver；可通过 `require_sqlcipher=True` 强制要求 SQLCipher
+  - 当前最小沙箱无 SQLCipher driver 时使用 stdlib sqlite3 + field-level AES-256-CBC authenticated BLOB fallback，原文不落明文
+  - 密钥来自 `PII_MAP_ENCRYPTION_KEY`（与 `config/network.yaml` 一致）
+  - Schema 按 §6.1 `pii_mappings` 表实现（`id + placeholder` 复合主键，支持一个 mapping_id 多个 placeholder）
+  - 提供 CRUD 接口：`save` / `get` / `has` / `get_original` / `delete`
 - **测试要求**:
   - 单元测试：加密 DB 创建
   - 单元测试：错误密钥无法解密
   - 单元测试：CRUD 操作
+  - 单元测试：DB 文件不包含原始 PII 明文
+  - 脚本验证：`init_pii_map_db.py` 可初始化 DB
 - **验收标准**:
-  - 文件加密
-  - 无密钥无法读取
+  - 原始 PII 以加密 BLOB 形式存储
+  - 无正确密钥无法读取 original
 - **DoD**:
-  - [ ] pii_map_db.py 实现
-  - [ ] 单元测试通过
+  - [x] pii_map_db.py 实现
+  - [x] 单元测试通过（`test_pii_map_db.py`: 8 passed）
 
 ---
 
@@ -2686,7 +2691,7 @@ graph TD
 | M3 | E5-C4 | E5-C4-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C5 | E5-C5-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C6 | E5-C6-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C6 | E5-C6-S1-T2 | [ ] | | |
+| M3 | E5-C6 | E5-C6-S1-T2 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C7 | E5-C7-S1-T1 | [ ] | | |
 | M3 | E5-C8 | E5-C8-S1-T1 | [ ] | | |
 | M3 | E5-C9 | E5-C9-S1-T1 | [ ] | | |
