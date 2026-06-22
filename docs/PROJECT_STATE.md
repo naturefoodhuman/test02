@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:32:46
+创建时间（北京时间）：2026-06-22 19:41:55
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-22 19:32 CST
-**当前版本**：v1.3.0-dossier + Network Increment（E5-C3 状态收敛）
+**更新日期**：2026-06-22 19:41 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E5-C3 Secret Recognizers 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -54,17 +54,20 @@
 - **E5-C3-S1-T1** PIIDetector ABC + PIIType / PIIEntity 完成，并已修复导入隔离：ABC 与基础模型不再因 `detectors/__init__.py` 提前加载 `PresidioDetector` 而依赖 `presidio_analyzer`
 - **E5-C3-S1-T2** PresidioDetector 源码已存在；相关单测在未安装 `presidio_analyzer` 的最小沙箱中依赖门控跳过
 - **E5-C3-S1-T3** 中文 PII recognizers 源码已存在；相关单测同样依赖门控跳过
-- **测试**：`test_pii_detector.py` 17 passed；全量 network 单元测试 115 passed / 2 skipped / 3 warnings；`compileall` 通过
-- **当前单任务**：E5-C3-S1-T1 状态收敛与测试修复已完成
-- **下一任务候选**：E5-C3-S1-T4 Token / API Key Recognizers（尚未实现）
+- **E5-C3-S1-T4** Token / API Key / JWT / Cookie / Session / OAuth / Private Key recognizers 完成；同时提供不依赖 Presidio 的 deterministic regex scanner
+- **测试**：`test_secret_recognizers.py` 12 passed；`test_pii_detector.py` 17 passed；全量 network 单元测试 127 passed / 2 skipped / 3 warnings；`compileall` 通过
+- **当前单任务**：E5-C3-S1-T4 Token / API Key Recognizers 已完成
+- **下一任务候选**：E5-C4-S1-T1 SpaCyNERDetector（尚未实现）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
+python -m pytest _infra/network/tests/unit/test_secret_recognizers.py -q
+# 12 passed
 python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
 # 17 passed
 python -m pytest _infra/network/tests/unit/ -q
-# 115 passed, 2 skipped, 3 warnings
+# 127 passed, 2 skipped, 3 warnings
 python -m compileall -q _infra/network
 # pass
 ```

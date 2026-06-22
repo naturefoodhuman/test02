@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 19:32:46
+# 创建时间（北京时间）：2026-06-22 19:41:55
 
 """
 Unit tests for PIIDetector ABC + supporting models (E5-C3-S1-T1).
@@ -29,6 +29,10 @@ def test_pii_type_enum_values():
     assert PIIType.EMAIL_ADDRESS.value == "EMAIL_ADDRESS"
     assert PIIType.CN_PHONE.value == "CN_PHONE"
     assert PIIType.API_KEY.value == "API_KEY"
+    assert PIIType.JWT.value == "JWT"
+    assert PIIType.COOKIE.value == "COOKIE"
+    assert PIIType.SESSION_ID.value == "SESSION_ID"
+    assert PIIType.OAUTH_TOKEN.value == "OAUTH_TOKEN"
     assert PIIType.PERSON.value == "PERSON"
 
 

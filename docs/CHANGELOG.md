@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:32:46
+创建时间（北京时间）：2026-06-22 19:41:55
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -687,3 +687,39 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - `presidio_analyzer` 未安装的最小沙箱会跳过 Presidio / 中文 recognizer 真实行为测试；真机完整验证需安装该依赖。
 - 下一建议任务：`E5-C3-S1-T4` Token / API Key Recognizers。
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — Token / API Key Recognizers (E5-C3-S1-T4)
+
+### Added
+- `_infra/network/privacy_gateway/recognizers/secret_recognizers.py`
+  - deterministic `detect_secrets()` scanner
+  - optional Presidio `get_secret_recognizers()` factory
+- `_infra/network/tests/unit/test_secret_recognizers.py` with 12 unit tests.
+- New `PIIType` values:
+  - `SESSION_ID`
+  - `COOKIE`
+  - `OAUTH_TOKEN`
+
+### Changed
+- `PresidioDetector` now registers secret recognizers when Presidio is available.
+- `PRESIDIO_TO_PII_TYPE` now maps API_KEY / ACCESS_TOKEN / JWT / PRIVATE_KEY / SESSION_ID / COOKIE / OAUTH_TOKEN.
+- `TASK_BACKLOG.md` marks `E5-C3-S1-T4` as done and sets the next TODO to `E5-C4-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_secret_recognizers.py -q
+# 12 passed
+python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
+# 17 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 127 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Presidio-specific recognizer runtime path remains skipped in sandbox without `presidio_analyzer`; full local validation should run on the user's Python environment with Presidio installed.
+- Next recommended task: `E5-C4-S1-T1` SpaCyNERDetector.

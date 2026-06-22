@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:32:46
+创建时间（北京时间）：2026-06-22 19:41:55
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -252,5 +252,75 @@ print('PIIDetector ABC ready')
 **下一步计划**：
 - 在用户批准后，进入 E5-C3-S1-T4：实现 Token / API Key / JWT / Cookie / Private Key recognizers。
 - 后续再推进 E5-C4 SpaCyNERDetector、E5-C5 QwenPIIClassifier、E5-C6 Placeholder/PII map、E5-C9 PrivacyGateway 主管线。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 46 轮 · 2026-06-22（E5-C3-S1-T4: Token / API Key Recognizers）
+
+**当前任务**：E5-C3-S1-T4 — 实现 Token / API Key Recognizers。
+
+**完成内容**：
+
+1. **新增 secret recognizers**：
+   - 新建 `_infra/network/privacy_gateway/recognizers/secret_recognizers.py`
+   - 覆盖高风险 secret 类型：
+     - JWT (`eyJ...`)
+     - GitHub PAT (`ghp_*`, `github_pat_*`)
+     - OpenAI Key (`sk-*`, `sk-proj-*`)
+     - AWS Access Key (`AKIA*`, `ASIA*`)
+     - Private Key header
+     - OAuth Bearer token
+     - access_token / refresh_token / auth_token assignment
+     - api_key / secret_key / client_secret assignment
+     - Cookie / Set-Cookie
+     - Session ID (`session_id`, `JSESSIONID`, `PHPSESSID`, `connect.sid`, `csrftoken`, `xsrf-token`)
+
+2. **双层实现方式**（符合 deterministic-first）：
+   - `detect_secrets(text) -> List[PIIEntity]`：纯 regex deterministic scanner，不依赖 Presidio，可在最小沙箱独立运行。
+   - `get_secret_recognizers()`：如安装 `presidio_analyzer`，返回 Presidio `PatternRecognizer`；未安装时返回空列表，不破坏 import isolation。
+
+3. **PII 类型扩展**：
+   - `PIIType` 增加：`SESSION_ID` / `COOKIE` / `OAUTH_TOKEN`
+   - `PresidioDetector` 增加 secret recognizers 注册与类型映射。
+
+4. **单元测试**：
+   - 新增 `_infra/network/tests/unit/test_secret_recognizers.py`
+   - 12 个测试覆盖：每类 secret、空文本、排序与重叠去重、Presidio 可选依赖行为。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_secret_recognizers.py -q
+# 12 passed
+python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
+# 17 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 127 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/recognizers/secret_recognizers.py`
+- 新增：`_infra/network/tests/unit/test_secret_recognizers.py`
+- 修改：`_infra/network/privacy_gateway/models.py`
+- 修改：`_infra/network/privacy_gateway/detectors/presidio_detector.py`
+- 修改：`_infra/network/tests/unit/test_pii_detector.py`
+- 修改：`_infra/network/tests/unit/test_presidio_detector.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前 secret recognizers 是 deterministic regex 层，不能替代后续 E5-C6 placeholder mapping、E5-C7 schema validation、E5-C8 canary、E5-C9 PrivacyGateway 主管线。
+- `presidio_analyzer` 在沙箱未安装，因此 Presidio PatternRecognizer 真实运行路径仍需真机依赖环境验证。
+- Regex intentionally conservative，后续可在安全测试中继续扩展更多 provider-specific key 格式。
+
+**下一步计划**：
+- E5-C4-S1-T1：实现 SpaCyNERDetector（人名/组织/地点 NER）。
+- 或如用户优先要求 deterministic-first 完整管线，也可先推进 E5-C6 placeholder replacement。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

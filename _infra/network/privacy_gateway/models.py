@@ -1,10 +1,10 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 19:32:46
+# 创建时间（北京时间）：2026-06-22 19:41:55
 
 """
 Privacy models (PII detection)
 
-Per TASK_BACKLOG E5-C3-S1-T1 + NETWORK_ENGINEERING_DESIGN §5.4
+Per TASK_BACKLOG E5-C3-S1-T1/T4 + NETWORK_ENGINEERING_DESIGN §5.4.
 
 Defines:
 - PIIType (Enum)
@@ -14,13 +14,12 @@ Defines:
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
 
 class PIIType(str, Enum):
-    """Supported PII entity types (including Chinese)."""
+    """Supported PII entity types (including Chinese and high-risk secrets)."""
 
     # Common international
     EMAIL_ADDRESS = "EMAIL_ADDRESS"
@@ -31,7 +30,7 @@ class PIIType(str, Enum):
     LOCATION = "LOCATION"
     ORGANIZATION = "ORGANIZATION"
 
-    # Chinese specific (will be used by custom recognizers)
+    # Chinese specific (used by custom recognizers)
     CN_PHONE = "CN_PHONE"           # 11-digit Chinese mobile
     CN_ID_CARD = "CN_ID_CARD"       # 18-digit ID card
     CN_NAME = "CN_NAME"
@@ -43,6 +42,9 @@ class PIIType(str, Enum):
     ACCESS_TOKEN = "ACCESS_TOKEN"
     JWT = "JWT"
     PRIVATE_KEY = "PRIVATE_KEY"
+    SESSION_ID = "SESSION_ID"
+    COOKIE = "COOKIE"
+    OAUTH_TOKEN = "OAUTH_TOKEN"
 
 
 class PIIEntity(BaseModel):
@@ -57,7 +59,7 @@ class PIIEntity(BaseModel):
     start: int = Field(..., ge=0)
     end: int = Field(..., ge=0)
     score: float = Field(0.95, ge=0.0, le=1.0)
-    recognizer: str = "unknown"   # e.g. "presidio", "cn_phone", "spacy"
+    recognizer: str = "unknown"   # e.g. "presidio", "regex:jwt", "spacy"
 
     @property
     def length(self) -> int:

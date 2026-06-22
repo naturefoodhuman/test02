@@ -1,19 +1,22 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 19:32:46
+# 创建时间（北京时间）：2026-06-22 19:41:55
 
 """
-PresidioDetector — Microsoft Presidio based PII detector
+PresidioDetector — Microsoft Presidio based PII detector.
 
-Per TASK_BACKLOG E5-C3-S1-T2 / T3 + NETWORK_ENGINEERING_DESIGN §5.3
+Per TASK_BACKLOG E5-C3-S1-T2/T3/T4 + NETWORK_ENGINEERING_DESIGN §5.3.
 
-Supports custom Chinese recognizers via ad-hoc or registry.
+Supports:
+- default Presidio recognizers
+- custom Chinese recognizers
+- custom secret / token recognizers
 """
 
 from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from presidio_analyzer import AnalyzerEngine, RecognizerResult
 
@@ -23,8 +26,18 @@ from ..models import PIIEntity, PIIType
 try:
     from ..recognizers.cn_recognizers import get_cn_recognizers
 except ImportError:
+
     def get_cn_recognizers():
         return []
+
+
+try:
+    from ..recognizers.secret_recognizers import get_secret_recognizers
+except ImportError:
+
+    def get_secret_recognizers():
+        return []
+
 
 PRESIDIO_TO_PII_TYPE: Dict[str, PIIType] = {
     "EMAIL_ADDRESS": PIIType.EMAIL_ADDRESS,
@@ -38,6 +51,13 @@ PRESIDIO_TO_PII_TYPE: Dict[str, PIIType] = {
     "CN_ID_CARD": PIIType.CN_ID_CARD,
     "BANK_CARD": PIIType.BANK_CARD,
     "CN_ADDRESS": PIIType.CN_ADDRESS,
+    "API_KEY": PIIType.API_KEY,
+    "ACCESS_TOKEN": PIIType.ACCESS_TOKEN,
+    "JWT": PIIType.JWT,
+    "PRIVATE_KEY": PIIType.PRIVATE_KEY,
+    "SESSION_ID": PIIType.SESSION_ID,
+    "COOKIE": PIIType.COOKIE,
+    "OAUTH_TOKEN": PIIType.OAUTH_TOKEN,
 }
 
 
@@ -48,6 +68,7 @@ class PresidioDetector(PIIDetector):
         timeout: float = 5.0,
         additional_recognizers: Optional[List] = None,
         load_cn_recognizers: bool = True,
+        load_secret_recognizers: bool = True,
     ):
         self._language = language
         self._timeout = timeout
@@ -57,6 +78,9 @@ class PresidioDetector(PIIDetector):
 
         if load_cn_recognizers and language in ("zh", "zh-cn"):
             self._additional_recognizers.extend(get_cn_recognizers())
+
+        if load_secret_recognizers:
+            self._additional_recognizers.extend(get_secret_recognizers())
 
     def _get_analyzer(self) -> AnalyzerEngine:
         if self._analyzer is None:

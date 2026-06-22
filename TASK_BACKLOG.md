@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:32:46
+创建时间（北京时间）：2026-06-22 19:41:55
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（以当前源码为准同步 E5-C3 状态）
+> **最近同步**: 2026-06-22（E5-C3-S1-T4 Token/API Key Recognizers 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1197,22 +1197,30 @@ P3 = 可选增强
 - **目标**: 检测 token / API key
 - **前置依赖**: E5-C3-S1-T2
 - **输入**: §10.3 TOKEN / SESSION_ID / COOKIE / JWT / API_KEY / PRIVATE_KEY / OAuth
-- **输出**: 自定义 recognizers
-- **涉及文件（计划，尚未实现）**: 新建 `_infra/network/privacy_gateway/recognizers/secret_recognizers.py`
+- **输出**: 自定义 recognizers + 轻量 deterministic regex scanner
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/privacy_gateway/recognizers/secret_recognizers.py`
+  - 修改：`_infra/network/privacy_gateway/models.py`（补充 `SESSION_ID` / `COOKIE` / `OAUTH_TOKEN`）
+  - 修改：`_infra/network/privacy_gateway/detectors/presidio_detector.py`（注册 secret recognizers + 类型映射）
+  - 新建：`_infra/network/tests/unit/test_secret_recognizers.py`
 - **实现要求**:
   - JWT 格式：`eyJ...`
   - GitHub PAT：`ghp_*`、`github_pat_*`
   - OpenAI Key：`sk-*`
-  - AWS Key：`AKIA*`
-  - SSH Private Key 头部
-  - Cookie 关键词
+  - AWS Key：`AKIA*` / `ASIA*`
+  - SSH / OpenSSH Private Key 头部
+  - Cookie / Set-Cookie / Session ID 关键词
+  - OAuth Bearer token / access_token / refresh_token assignment
+  - 未安装 `presidio_analyzer` 时基础 regex scanner 仍可独立测试
 - **测试要求**:
   - 单元测试：每种类型
+  - 单元测试：结果排序与重叠去重
+  - 单元测试：Presidio recognizer 构造的可选依赖行为
 - **验收标准**:
   - secret 检测完整
 - **DoD**:
-  - [ ] secret_recognizers.py 实现
-  - [ ] 单元测试通过
+  - [x] secret_recognizers.py 实现
+  - [x] 单元测试通过（`test_secret_recognizers.py`: 12 passed）
 
 ---
 
@@ -2660,7 +2668,7 @@ graph TD
 | M3 | E5-C3 | E5-C3-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C3 | E5-C3-S1-T2 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C3 | E5-C3-S1-T3 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C3 | E5-C3-S1-T4 | [ ] | | |
+| M3 | E5-C3 | E5-C3-S1-T4 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C4 | E5-C4-S1-T1 | [ ] | | |
 | M3 | E5-C5 | E5-C5-S1-T1 | [ ] | | |
 | M3 | E5-C6 | E5-C6-S1-T1 | [ ] | | |
