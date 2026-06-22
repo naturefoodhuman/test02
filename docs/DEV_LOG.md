@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:54:33
+创建时间（北京时间）：2026-06-22 20:05:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -386,5 +386,66 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E5-C5-S1-T1：实现 QwenPIIClassifier（Ollama qwen3:8b，三分类：是/否/不确定，失败降级不阻断）。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 48 轮 · 2026-06-22（E5-C5-S1-T1: QwenPIIClassifier）
+
+**当前任务**：E5-C5-S1-T1 — 实现 QwenPIIClassifier。
+
+**完成内容**：
+
+1. **新增 QwenPIIClassifier**：
+   - 新建 `_infra/network/privacy_gateway/detectors/qwen_classifier.py`
+   - 定义 `QwenPIIClassification`：`yes` / `no` / `uncertain`
+   - 定义 `QwenPIIResult`，其中 `contains_pii` 对 `uncertain` 采用保守 true
+   - `QwenPIIClassifier.classify(text)` 使用 Ollama Python client（运行时 lazy import）
+
+2. **严格遵循架构约束**：
+   - 只作为 Privacy Gateway L4 辅助复核，不返回 PII spans，不替代 deterministic scanner / Presidio / NER
+   - prompt 强制只回答：是 / 否 / 不确定
+   - prompt 明确标记 `<untrusted_text>`，禁止执行网页指令、禁止解释策略、禁止摘要
+   - Ollama options：`temperature=0.0`、`num_predict=10`
+   - 默认超时：10s
+   - 缺失 `ollama`、调用异常、超时均降级为 `uncertain`，不抛异常、不阻断主流程
+
+3. **导出与 import isolation**：
+   - 更新 `_infra/network/privacy_gateway/detectors/__init__.py`
+   - `QwenPIIClassifier` lazy-load，不要求导入 detectors 包时已安装 `ollama`
+
+4. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_qwen_classifier.py`
+   - 通过 fake Ollama client 测试，不依赖真实 Ollama 服务
+   - 覆盖三分类解析、prompt 约束、Ollama options、空文本、异常降级、缺失依赖降级、health_check
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_qwen_classifier.py -q
+# 10 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 144 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/detectors/qwen_classifier.py`
+- 新增：`_infra/network/tests/unit/test_qwen_classifier.py`
+- 修改：`_infra/network/privacy_gateway/detectors/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前单元测试未调用真实 Ollama / qwen3:8b；真机完整验证需要 Ollama 服务与 qwen3:8b 模型。
+- LLM 分类器只能作为辅助复核，不能替代 E5-C6 placeholder、E5-C7 schema validation、E5-C8 canary、E5-C9 主管线。
+
+**下一步计划**：
+- E5-C6-S1-T1：实现 PIIReplacer（占位符替换，同值复用）。
+- E5-C6-S1-T2：再处理 PII map 持久化 / 加密存储。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

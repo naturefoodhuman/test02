@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:54:33
+创建时间（北京时间）：2026-06-22 20:05:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -757,3 +757,35 @@ python -m compileall -q _infra/network
 - Full real-model validation requires downloading spaCy models on the user's machine:
   `python _infra/network/scripts/download_spacy_models.py`
 - Next recommended task: `E5-C5-S1-T1` QwenPIIClassifier.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — QwenPIIClassifier (E5-C5-S1-T1)
+
+### Added
+- `_infra/network/privacy_gateway/detectors/qwen_classifier.py`
+  - `QwenPIIClassification` (`yes` / `no` / `uncertain`)
+  - `QwenPIIResult`
+  - `QwenPIIClassifier`
+- `_infra/network/tests/unit/test_qwen_classifier.py`
+  - 10 fake-client unit tests with no real Ollama dependency
+
+### Changed
+- `_infra/network/privacy_gateway/detectors/__init__.py` lazy-loads `QwenPIIClassifier`.
+- `TASK_BACKLOG.md` marks `E5-C5-S1-T1` as done and sets the next TODO to `E5-C6-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_qwen_classifier.py -q
+# 10 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 144 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Full local integration requires Ollama service and qwen3:8b:
+  `ollama pull qwen3:8b`
+- Next recommended task: `E5-C6-S1-T1` PIIReplacer.

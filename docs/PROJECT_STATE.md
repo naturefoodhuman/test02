@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:54:33
+创建时间（北京时间）：2026-06-22 20:05:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-22 19:54 CST
-**当前版本**：v1.3.0-dossier + Network Increment（E5-C4 SpaCyNERDetector 完成）
+**更新日期**：2026-06-22 20:05 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E5-C5 QwenPIIClassifier 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -56,17 +56,18 @@
 - **E5-C3-S1-T3** 中文 PII recognizers 源码已存在；相关单测同样依赖门控跳过
 - **E5-C3-S1-T4** Token / API Key / JWT / Cookie / Session / OAuth / Private Key recognizers 完成；同时提供不依赖 Presidio 的 deterministic regex scanner
 - **E5-C4-S1-T1** SpaCyNERDetector 完成；支持 zh/en 模型加载、依赖注入测试、PERSON/ORG/GPE/LOC/FAC → PIIEntity 映射，并提供 spaCy 模型下载脚本
-- **测试**：`test_ner_detector.py` 7 passed；全量 network 单元测试 134 passed / 2 skipped / 3 warnings；`compileall` 通过
-- **当前单任务**：E5-C4-S1-T1 SpaCyNERDetector 已完成
-- **下一任务候选**：E5-C5-S1-T1 QwenPIIClassifier（尚未实现）
+- **E5-C5-S1-T1** QwenPIIClassifier 完成；使用 Ollama Python client lazy import，prompt 强制三选一（是/否/不确定），temperature=0.0，num_predict=10，10s 超时，失败降级为 uncertain 不阻断主流程
+- **测试**：`test_qwen_classifier.py` 10 passed；全量 network 单元测试 144 passed / 2 skipped / 3 warnings；`compileall` 通过
+- **当前单任务**：E5-C5-S1-T1 QwenPIIClassifier 已完成
+- **下一任务候选**：E5-C6-S1-T1 PIIReplacer（尚未实现）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_ner_detector.py -q
-# 7 passed
+python -m pytest _infra/network/tests/unit/test_qwen_classifier.py -q
+# 10 passed
 python -m pytest _infra/network/tests/unit/ -q
-# 134 passed, 2 skipped, 3 warnings
+# 144 passed, 2 skipped, 3 warnings
 python -m compileall -q _infra/network
 # pass
 ```

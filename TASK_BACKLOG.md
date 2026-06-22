@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:54:33
+创建时间（北京时间）：2026-06-22 20:05:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C4-S1-T1 SpaCyNERDetector 完成）
+> **最近同步**: 2026-06-22（E5-C5-S1-T1 QwenPIIClassifier 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1265,24 +1265,29 @@ P3 = 可选增强
 - **前置依赖**: E5-C3-S1-T1
 - **输入**: Ollama qwen3:8b
 - **输出**: QwenPIIClassifier 类
-- **涉及文件**:
-  - 新建：`src/privacy/detectors/qwen_classifier.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/privacy_gateway/detectors/qwen_classifier.py`
+  - 新建：`_infra/network/tests/unit/test_qwen_classifier.py`
+  - 修改：`_infra/network/privacy_gateway/detectors/__init__.py`（lazy-load `QwenPIIClassifier`）
 - **实现要求**:
-  - 使用 `ollama` Python 客户端
+  - 使用 `ollama` Python 客户端（可选依赖，运行时 lazy import）
   - prompt：仅询问是/否/不确定
-  - 限制 max_tokens=10
+  - 限制 `num_predict=10`（Ollama 对应 max tokens）
   - temperature=0.0
   - 超时 10s
   - **仅作为复核**，不作为唯一判定
+  - 缺失 Ollama / 调用异常 / 超时均降级为 `uncertain`，不抛异常、不阻断主流程
 - **测试要求**:
-  - 单元测试：mock ollama
-  - 集成测试：真实调用 qwen3:8b（@integration）
+  - 单元测试：fake Ollama client
+  - 单元测试：是/否/不确定解析
+  - 单元测试：prompt 约束、options、异常降级、缺失依赖降级
+  - 集成测试：真实调用 qwen3:8b（后续 @integration，不在最小沙箱强制执行）
 - **验收标准**:
   - 调用返回三选一
   - 失败时降级（不阻断主流程）
 - **DoD**:
-  - [ ] qwen_classifier.py 实现
-  - [ ] 单元测试通过
+  - [x] qwen_classifier.py 实现
+  - [x] 单元测试通过（`test_qwen_classifier.py`: 10 passed）
 
 ---
 
@@ -2676,7 +2681,7 @@ graph TD
 | M3 | E5-C3 | E5-C3-S1-T3 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C3 | E5-C3-S1-T4 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C4 | E5-C4-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C5 | E5-C5-S1-T1 | [ ] | | |
+| M3 | E5-C5 | E5-C5-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C6 | E5-C6-S1-T1 | [ ] | | |
 | M3 | E5-C6 | E5-C6-S1-T2 | [ ] | | |
 | M3 | E5-C7 | E5-C7-S1-T1 | [ ] | | |
