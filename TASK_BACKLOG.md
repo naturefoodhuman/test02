@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:15:00
+创建时间（北京时间）：2026-06-22 21:30:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C9-S1-T1 PrivacyGateway 主管线完成）
+> **最近同步**: 2026-06-22（E5-C9-S1-T2 build_privacy_gateway 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1460,15 +1460,21 @@ P3 = 可选增强
 - **前置依赖**: E5-C9-S1-T1
 - **输入**: 配置
 - **输出**: 工厂函数
-- **涉及文件**: 修改 `src/privacy/gateway.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 修改：`_infra/network/privacy_gateway/gateway.py`
+  - 修改：`_infra/network/privacy_gateway/__init__.py`
+  - 修改：`_infra/network/tests/unit/test_privacy_gateway.py`
 - **实现要求**:
   - `build_privacy_gateway(config) -> PrivacyGateway`
-  - 自动注册所有检测器
+  - config 可为 `NetworkConfig` / mapping / None（None 时读取 `config/network.yaml`）
+  - 自动注册 PresidioDetector（可用时）、SpaCyNERDetector、QwenPIIClassifier、PIIReplacer、PrivacyOutputValidator、CanaryTokenMonitor
+  - 按 `privacy_gateway` 配置读取 qwen model/base_url/timeout、spacy_model、pii_map_db、pii_map_encryption_key_env、canary_tokens、placeholder_format
+  - PII map key 缺失时非严格模式 fallback 到 InMemory store 并记录 warning；生产可用 `require_sqlcipher=True` 强制失败
 - **测试要求**: 单元测试
 - **验收标准**: 一行代码构建 gateway
 - **DoD**:
-  - [ ] 工厂函数实现
-  - [ ] 单元测试通过
+  - [x] 工厂函数实现
+  - [x] 单元测试通过（`test_privacy_gateway.py`: 10 passed）
 
 ---
 
@@ -2710,7 +2716,7 @@ graph TD
 | M3 | E5-C7 | E5-C7-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C8 | E5-C8-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C9 | E5-C9-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C9 | E5-C9-S1-T2 | [ ] | | |
+| M3 | E5-C9 | E5-C9-S1-T2 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E11-C2 | E11-C2-S1-T1 | [ ] | | |
 | M3 | E11-C4 | E11-C4-S1-T1 | [ ] | | |
 | M3 | E11-C6 | E11-C6-S1-T1 | [ ] | | |

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 21:15:00
+# 创建时间（北京时间）：2026-06-22 21:30:00
 
 """Unit/integration-style tests for PrivacyGateway orchestration (E5-C9-S1-T1)."""
 
@@ -199,3 +199,70 @@ def test_privacy_gateway_schema_failure_propagates():
 
     with pytest.raises(SchemaValidationFailedError):
         run(gateway.process_text("safe"))
+
+
+def test_build_privacy_gateway_from_mapping_config_without_secret_falls_back(monkeypatch):
+    from _infra.network.config_loader.schemas import NetworkConfig
+    from _infra.network.privacy_gateway.gateway import build_privacy_gateway
+
+    monkeypatch.delenv("PII_MAP_ENCRYPTION_KEY", raising=False)
+    cfg = NetworkConfig(
+        privacy_gateway={
+            "qwen_model": "qwen3:test",
+            "qwen_base_url": "http://127.0.0.1:11434",
+            "qwen_timeout_seconds": 10,
+            "spacy_model": "zh_core_web_sm",
+            "pii_map_db": "runtime/test_pii_map.db",
+            "pii_map_encryption_key_env": "PII_MAP_ENCRYPTION_KEY",
+            "canary_tokens": ["FACTORY_CANARY"],
+            "output_schema_strict": True,
+            "placeholder_format": "<<{entity_type}_{index}>>",
+        }
+    )
+
+    gateway = build_privacy_gateway(
+        cfg,
+        enable_presidio=False,
+        enable_ner=False,
+        enable_qwen=True,
+    )
+
+    assert gateway.qwen_classifier.model == "qwen3:test"
+    assert gateway.qwen_classifier.timeout == 10.0
+    assert gateway.replacer.placeholder_format == "<<{entity_type}_{index}>>"
+    assert gateway.canary_monitor.has_canary("FACTORY_CANARY") is True
+    assert any(warning.startswith("pii_map_db_fallback:missing_secret") for warning in gateway.warnings)
+
+    result = run(gateway.process_text("key sk-proj-abcdefghijklmnopqrstuvwxyz123456"))
+    assert "sk-proj" not in result.text
+    assert result.text == "key <<API_KEY_1>>"
+
+
+def test_build_privacy_gateway_uses_encrypted_pii_map_db_when_key_present(tmp_path, monkeypatch):
+    from _infra.network.config_loader.schemas import NetworkConfig
+    from _infra.network.privacy_gateway.gateway import build_privacy_gateway
+    from _infra.network.privacy_gateway.pii_map_db import PIIMapDB
+
+    monkeypatch.setenv("TEST_PII_KEY", "factory-test-key-at-least-16")
+    db_path = tmp_path / "pii_map.db"
+    cfg = NetworkConfig(
+        privacy_gateway={
+            "pii_map_db": str(db_path),
+            "pii_map_encryption_key_env": "TEST_PII_KEY",
+            "canary_tokens": ["FACTORY_CANARY"],
+            "placeholder_format": "PII_{entity_type}_{index:03d}",
+        }
+    )
+
+    gateway = build_privacy_gateway(
+        cfg,
+        enable_presidio=False,
+        enable_ner=False,
+        enable_qwen=False,
+    )
+
+    assert isinstance(gateway.replacer.store, PIIMapDB)
+    result = run(gateway.process_text("Alice", source_url="factory://unit"))
+    # No detectors were enabled, so mapping is empty but DB is initialized.
+    assert result.text == "Alice"
+    assert db_path.exists()

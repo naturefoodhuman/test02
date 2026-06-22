@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 21:15:00
+# 创建时间（北京时间）：2026-06-22 21:30:00
 
 """
 Privacy Gateway module (FORGE Network incremental).
@@ -14,6 +14,7 @@ Core exports:
 - PrivacyOutputValidator (JSON Schema output validation)
 - CanaryTokenMonitor (canary leak detection)
 - PrivacyGateway (L1-L7 orchestration)
+- build_privacy_gateway (config-driven factory)
 
 Concrete detectors with optional heavy dependencies (for example
 PresidioDetector / presidio_analyzer, spaCy models, Ollama) are lazy-loaded from
@@ -23,7 +24,7 @@ importable and testable.
 
 from .canary import CanaryHit, CanaryTokenMonitor
 from .detectors import PIIDetector
-from .gateway import PrivacyContext, PrivacyGateway, RedactedContent
+from .gateway import PrivacyContext, PrivacyGateway, RedactedContent, build_privacy_gateway
 from .models import PIIEntity, PIIType
 from .pii_map_db import PIIMapDB, PIIMapDBConfig, PIIMapDecryptionError
 from .replacer import InMemoryPIIMapStore, PIIPlaceholderMapping, PIIReplacementResult, PIIReplacer
@@ -46,6 +47,7 @@ __all__ = [
     "PrivacyGateway",
     "PrivacyOutputValidator",
     "RedactedContent",
+    "build_privacy_gateway",
     "build_privacy_output",
     "validate_privacy_output",
 ]

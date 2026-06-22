@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:15:00
+创建时间（北京时间）：2026-06-22 21:30:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -768,5 +768,71 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E5-C9-S1-T2：实现 `build_privacy_gateway(config)` 工厂函数，自动按 `config/network.yaml` 装配 gateway。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 54 轮 · 2026-06-22（E5-C9-S1-T2: build_privacy_gateway 工厂函数）
+
+**当前任务**：E5-C9-S1-T2 — 实现工厂函数 `build_privacy_gateway`。
+
+**完成内容**：
+
+1. **新增 config-driven factory**：
+   - 在 `_infra/network/privacy_gateway/gateway.py` 中新增 `build_privacy_gateway(config=None, ...)`
+   - `config=None` 时自动读取 `config/network.yaml`
+   - 也支持传入 `NetworkConfig` 或 mapping，方便单元测试与未来 CLI / workflow 调用
+
+2. **按 `config/network.yaml` 装配组件**：
+   - Qwen：`qwen_model` / `qwen_base_url` / `qwen_timeout_seconds`
+   - spaCy：`spacy_model`
+   - PII Map DB：`pii_map_db` / `pii_map_encryption_key_env`
+   - Canary：`canary_tokens`
+   - Placeholder：`placeholder_format`
+
+3. **自动注册组件**：
+   - PresidioDetector（可用时，含 CN recognizers best-effort）
+   - SpaCyNERDetector
+   - QwenPIIClassifier
+   - PIIReplacer
+   - PIIMapDB / InMemoryPIIMapStore fallback
+   - PrivacyOutputValidator
+   - CanaryTokenMonitor
+
+4. **严格 / 非严格 PII Map 行为**：
+   - 默认开发模式：PII map key 缺失时 fallback 到 in-memory store，并记录 `gateway.warnings`
+   - 生产严格模式：可传 `require_sqlcipher=True` 让 PIIMapDB 初始化失败时直接抛出
+
+5. **测试更新**：
+   - 扩展 `_infra/network/tests/unit/test_privacy_gateway.py`
+   - 覆盖缺失 PII key fallback、config 参数装配、placeholder_format 生效、canary token 生效、加密 PIIMapDB key 存在时使用 DB store
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_privacy_gateway.py -q
+# 10 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 189 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 修改：`_infra/network/privacy_gateway/gateway.py`
+- 修改：`_infra/network/privacy_gateway/__init__.py`
+- 修改：`_infra/network/tests/unit/test_privacy_gateway.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- `build_privacy_gateway()` 默认会按配置尝试装配本地模型/NER/Presidio，但在依赖缺失环境中依赖各组件 graceful degradation；真机完整体验需安装 Presidio、spaCy models、Ollama/qwen3:8b。
+- E5 Privacy Gateway MVP 已完成，但尚未接入 NetworkWorkflow / Search / Extract 主流程；下一阶段需明确进入安全测试还是 workflow 集成。
+
+**下一步计划**：
+- E5 已按 backlog 完成。建议下一步进入 M3 安全测试：E11-C2 Prompt Injection 测试、E11-C4 PII 绕过测试、E11-C6 Canary Token 端到端测试；或按用户指令进入 E2/MCP Guard 或 NetworkWorkflow。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

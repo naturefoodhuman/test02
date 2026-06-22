@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:15:00
+创建时间（北京时间）：2026-06-22 21:30:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-22 21:15 CST
-**当前版本**：v1.3.0-dossier + Network Increment（E5-C9 PrivacyGateway 主管线完成）
+**更新日期**：2026-06-22 21:30 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E5 Privacy Gateway MVP 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -62,17 +62,18 @@
 - **E5-C7-S1-T1** JSON Schema 输出验证完成；默认 schema 限制 `text` / `mapping_id` / `entities`，禁止 raw PII `value` 出现在输出实体中，校验失败抛 `SchemaValidationFailedError`
 - **E5-C8-S1-T1** CanaryTokenMonitor 完成；支持配置驱动 canary token、suffix/wildcard/regex 匹配、命中立即抛 `CanaryTokenDetectedError`，审计日志仅记录 masked token 与 metadata
 - **E5-C9-S1-T1** PrivacyGateway 主管线完成；组装 L1 Unicode normalize、L2 Presidio/regex、L3 spaCy NER、L4 Qwen 复核、L5 placeholder、L6 JSON Schema、L7 Canary，提供 `PrivacyContext(mode=light/full)`
-- **测试**：`test_privacy_gateway.py` 8 passed；全量 network 单元测试 187 passed / 2 skipped / 4 warnings；`compileall` 通过
-- **当前单任务**：E5-C9-S1-T1 PrivacyGateway 主管线已完成
-- **下一任务候选**：E5-C9-S1-T2 build_privacy_gateway 工厂函数（尚未实现）
+- **E5-C9-S1-T2** `build_privacy_gateway` 工厂函数完成；可从 `config/network.yaml` 一行装配 detectors / qwen / replacer / PII map store / validator / canary monitor
+- **测试**：`test_privacy_gateway.py` 10 passed；全量 network 单元测试 189 passed / 2 skipped / 4 warnings；`compileall` 通过
+- **当前单任务**：E5-C9-S1-T2 build_privacy_gateway 已完成
+- **E5 状态**：Privacy Gateway MVP（E5-C1 ~ E5-C9）已按 backlog 完成；下一候选任务转入 E11 安全测试或按用户指定进入下一 Epic
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
 python -m pytest _infra/network/tests/unit/test_privacy_gateway.py -q
-# 8 passed
+# 10 passed
 python -m pytest _infra/network/tests/unit/ -q
-# 187 passed, 2 skipped, 4 warnings
+# 189 passed, 2 skipped, 4 warnings
 python -m compileall -q _infra/network
 # pass
 ```

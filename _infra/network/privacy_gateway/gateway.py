@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 21:15:00
+# 创建时间（北京时间）：2026-06-22 21:30:00
 
 """
 PrivacyGateway orchestration pipeline (E5-C9-S1-T1).
@@ -16,15 +16,19 @@ Pipeline:
 7. Canary token detection
 
 This module composes already-implemented E5-C1~E5-C8 components without
-changing their responsibilities. It intentionally does not expose the factory
-function requested by E5-C9-S1-T2; that remains the next task.
+changing their responsibilities. E5-C9-S1-T2 adds ``build_privacy_gateway`` so
+callers can construct the pipeline from ``config/network.yaml`` in one line.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
+from pathlib import Path
 from typing import Any, Iterable, List, Literal, Mapping, Optional
 
+from _infra.network.config_loader import load_network_config
+from _infra.network.config_loader.schemas import NetworkConfig
 from _infra.network.utils.unicode_norm import normalize_for_pii_detection
 
 from .canary import CanaryTokenMonitor
@@ -32,8 +36,9 @@ from .detectors.base import PIIDetector
 from .detectors.ner_detector import SpaCyNERDetector
 from .detectors.qwen_classifier import QwenPIIClassifier, QwenPIIResult
 from .models import PIIEntity
+from .pii_map_db import PIIMapDB
 from .recognizers.secret_recognizers import detect_secrets
-from .replacer import PIIReplacer
+from .replacer import InMemoryPIIMapStore, PIIReplacer
 from .validator import PrivacyOutputValidator, build_privacy_output
 
 
@@ -204,4 +209,124 @@ class PrivacyGateway:
         return await self.process(text, PrivacyContext(mode=mode, source_url=source_url))
 
 
-__all__ = ["PrivacyContext", "PrivacyGateway", "RedactedContent"]
+def _coerce_network_config(config: NetworkConfig | Mapping[str, Any] | None) -> NetworkConfig:
+    if config is None:
+        return load_network_config()
+    if isinstance(config, NetworkConfig):
+        return config
+    return NetworkConfig(**dict(config))
+
+
+def _build_presidio_detector_from_config() -> PIIDetector | None:
+    """Build PresidioDetector with CN recognizers when optional deps exist."""
+    try:
+        from .detectors.presidio_detector import PresidioDetector
+
+        additional_recognizers = []
+        try:
+            from .recognizers.cn_recognizers import get_cn_recognizers
+
+            additional_recognizers.extend(get_cn_recognizers())
+        except Exception:
+            pass
+
+        return PresidioDetector(language="en", additional_recognizers=additional_recognizers)
+    except Exception:
+        return None
+
+
+def _build_mapping_store(cfg: NetworkConfig, require_sqlcipher: bool, warnings: list[str]):
+    pg = cfg.privacy_gateway
+    key = os.getenv(pg.pii_map_encryption_key_env)
+    if not key:
+        warnings.append(f"pii_map_db_fallback:missing_secret:{pg.pii_map_encryption_key_env}")
+        return InMemoryPIIMapStore()
+
+    try:
+        return PIIMapDB(
+            db_path=Path(pg.pii_map_db),
+            encryption_key=key,
+            require_sqlcipher=require_sqlcipher,
+        )
+    except Exception as exc:
+        if require_sqlcipher:
+            raise
+        warnings.append(f"pii_map_db_fallback:{type(exc).__name__}")
+        return InMemoryPIIMapStore()
+
+
+def build_privacy_gateway(
+    config: NetworkConfig | Mapping[str, Any] | None = None,
+    *,
+    require_sqlcipher: bool = False,
+    enable_presidio: bool = True,
+    enable_ner: bool = True,
+    enable_qwen: bool = True,
+) -> PrivacyGateway:
+    """
+    Build PrivacyGateway from config/network.yaml in one call (E5-C9-S1-T2).
+
+    This factory wires already-implemented components according to
+    ``privacy_gateway`` config values:
+    - qwen_model / qwen_base_url / qwen_timeout_seconds
+    - spacy_model
+    - pii_map_db / pii_map_encryption_key_env
+    - canary_tokens
+    - placeholder_format
+
+    If the PII DB encryption key is missing and ``require_sqlcipher`` is false,
+    the factory falls back to in-process mapping storage and records a warning on
+    ``gateway.warnings``. This keeps development/test environments usable while
+    production can fail fast with strict flags.
+    """
+    cfg = _coerce_network_config(config)
+    pg = cfg.privacy_gateway
+    warnings: list[str] = []
+
+    detectors: list[PIIDetector] = []
+    if enable_presidio:
+        presidio = _build_presidio_detector_from_config()
+        if presidio is not None:
+            detectors.append(presidio)
+        else:
+            warnings.append("presidio_unavailable")
+
+    ner_detector = None
+    if enable_ner:
+        ner_detector = SpaCyNERDetector(
+            zh_model=pg.spacy_model,
+            en_model="en_core_web_sm",
+        )
+
+    qwen_classifier = None
+    if enable_qwen:
+        qwen_classifier = QwenPIIClassifier(
+            model=pg.qwen_model,
+            base_url=pg.qwen_base_url,
+            timeout=float(pg.qwen_timeout_seconds),
+        )
+
+    mapping_store = _build_mapping_store(cfg, require_sqlcipher=require_sqlcipher, warnings=warnings)
+    replacer = PIIReplacer(
+        placeholder_format=pg.placeholder_format,
+        store=mapping_store,
+    )
+
+    canary_monitor = CanaryTokenMonitor(tokens=pg.canary_tokens or None)
+
+    gateway = PrivacyGateway(
+        detectors=detectors,
+        ner_detector=ner_detector,
+        qwen_classifier=qwen_classifier,
+        replacer=replacer,
+        output_validator=PrivacyOutputValidator(),
+        canary_monitor=canary_monitor,
+        enable_presidio_default=False,
+        enable_ner_default=False,
+        enable_qwen_default=False,
+    )
+    gateway.warnings.extend(warnings)
+    return gateway
+
+
+__all__ = ["PrivacyContext", "PrivacyGateway", "RedactedContent", "build_privacy_gateway"]

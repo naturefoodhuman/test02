@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:15:00
+创建时间（北京时间）：2026-06-22 21:30:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -956,3 +956,33 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E5-C9-S1-T2` build_privacy_gateway factory function.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — build_privacy_gateway Factory (E5-C9-S1-T2)
+
+### Added
+- `build_privacy_gateway(config=None, ...)` in `_infra/network/privacy_gateway/gateway.py`
+  - reads `config/network.yaml` when config is omitted
+  - supports `NetworkConfig` or mapping input
+  - wires detectors, Qwen classifier, replacer, PII map store, validator, canary monitor
+
+### Changed
+- `_infra/network/privacy_gateway/__init__.py` exports `build_privacy_gateway`.
+- `_infra/network/tests/unit/test_privacy_gateway.py` adds factory tests.
+- `TASK_BACKLOG.md` marks `E5-C9-S1-T2` as done; E5 Privacy Gateway MVP is now complete.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_privacy_gateway.py -q
+# 10 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 189 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- E5 Privacy Gateway MVP is complete but not yet wired into NetworkWorkflow / CLI flows.
+- Recommended next tasks: M3 security tests (E11-C2/E11-C4/E11-C6) or workflow integration, depending on user priority.
