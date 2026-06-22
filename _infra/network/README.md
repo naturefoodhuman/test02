@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:41:55
+创建时间（北京时间）：2026-06-22 19:54:33
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -43,5 +43,6 @@ python -m pytest _infra/network/tests/unit/ -q
 - E4 提取核心（Crawl4AIProvider / trafilatura fallback / Markdown cleaner / ExtractorChain）
 - E5-C1 / E5-C2（InputSanitizer + Unicode normalize）
 - E5-C3-S1-T1/T2/T3/T4（PIIDetector ABC / PresidioDetector / 中文 recognizers / Token & API Key recognizers；Presidio 相关测试在未安装 `presidio_analyzer` 时依赖门控跳过）
+- E5-C4-S1-T1（SpaCyNERDetector + spaCy 模型下载脚本；单元测试通过依赖注入 fake NLP，避免强制下载模型）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C4-S1-T1 — SpaCyNERDetector。
+当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C5-S1-T1 — QwenPIIClassifier。

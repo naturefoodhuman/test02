@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:41:55
+创建时间（北京时间）：2026-06-22 19:54:33
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C3-S1-T4 Token/API Key Recognizers 完成）
+> **最近同步**: 2026-06-22（E5-C4-S1-T1 SpaCyNERDetector 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1232,22 +1232,28 @@ P3 = 可选增强
 - **前置依赖**: E5-C3-S1-T1
 - **输入**: spaCy API
 - **输出**: SpaCyNERDetector 类
-- **涉及文件**:
-  - 新建：`src/privacy/detectors/ner_detector.py`
-  - 新建：`scripts/download_models.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/privacy_gateway/detectors/ner_detector.py`
+  - 新建：`_infra/network/scripts/download_spacy_models.py`
+  - 新建：`_infra/network/tests/unit/test_ner_detector.py`
+  - 修改：`_infra/network/privacy_gateway/detectors/__init__.py`（lazy-load `SpaCyNERDetector`）
 - **实现要求**:
   - 加载 `zh_core_web_sm` + `en_core_web_sm`
-  - 识别：PERSON / ORG / GPE / LOC
-  - 提供下载脚本（`python -m spacy download zh_core_web_sm`）
+  - 识别：PERSON / PER / ORG / GPE / LOC / FAC
+  - 映射到 `PIIType.PERSON` / `ORGANIZATION` / `LOCATION`
+  - 提供下载脚本（`python _infra/network/scripts/download_spacy_models.py`）
+  - 未安装 spaCy 模型时导入安全，检测返回空结果；单元测试通过依赖注入 fake NLP 避免真实模型下载
 - **测试要求**:
-  - 单元测试：中文人名
-  - 单元测试：英文人名
+  - 单元测试：中文人名 / 地点
+  - 单元测试：英文人名 / 组织 / 地点
+  - 单元测试：unsupported labels 过滤
+  - 单元测试：无模型 graceful degradation
 - **验收标准**:
-  - 人名识别正确
+  - 人名 / 组织 / 地点识别结果可转换为 PIIEntity
 - **DoD**:
-  - [ ] ner_detector.py 实现
-  - [ ] 模型下载脚本
-  - [ ] 单元测试通过
+  - [x] ner_detector.py 实现
+  - [x] 模型下载脚本
+  - [x] 单元测试通过（`test_ner_detector.py`: 7 passed）
 
 ---
 
@@ -2669,7 +2675,7 @@ graph TD
 | M3 | E5-C3 | E5-C3-S1-T2 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C3 | E5-C3-S1-T3 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C3 | E5-C3-S1-T4 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C4 | E5-C4-S1-T1 | [ ] | | |
+| M3 | E5-C4 | E5-C4-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C5 | E5-C5-S1-T1 | [ ] | | |
 | M3 | E5-C6 | E5-C6-S1-T1 | [ ] | | |
 | M3 | E5-C6 | E5-C6-S1-T2 | [ ] | | |

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:41:55
+创建时间（北京时间）：2026-06-22 19:54:33
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -322,5 +322,69 @@ python -m _infra.network.cli config
 **下一步计划**：
 - E5-C4-S1-T1：实现 SpaCyNERDetector（人名/组织/地点 NER）。
 - 或如用户优先要求 deterministic-first 完整管线，也可先推进 E5-C6 placeholder replacement。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 47 轮 · 2026-06-22（E5-C4-S1-T1: SpaCyNERDetector）
+
+**当前任务**：E5-C4-S1-T1 — 实现 SpaCyNERDetector。
+
+**完成内容**：
+
+1. **新增 SpaCyNERDetector**：
+   - 新建 `_infra/network/privacy_gateway/detectors/ner_detector.py`
+   - 支持 zh/en 双模型：`zh_core_web_sm`、`en_core_web_sm`
+   - 支持依赖注入 `zh_nlp` / `en_nlp`，便于单元测试与后续管线组装
+   - CJK 文本优先使用中文模型，非 CJK 文本优先使用英文模型
+   - 模型缺失时 graceful degradation：返回空检测结果，不破坏导入与基础单测
+
+2. **NER 标签映射**：
+   - `PERSON` / `PER` → `PIIType.PERSON`
+   - `ORG` → `PIIType.ORGANIZATION`
+   - `GPE` / `LOC` / `FAC` → `PIIType.LOCATION`
+
+3. **新增模型下载脚本**：
+   - `_infra/network/scripts/download_spacy_models.py`
+   - 默认下载：`zh_core_web_sm`、`en_core_web_sm`
+   - 支持 `--model` 多次指定
+
+4. **导出与 import isolation**：
+   - 更新 `_infra/network/privacy_gateway/detectors/__init__.py`
+   - `SpaCyNERDetector` lazy-load，不要求导入 detectors 包时已经下载 spaCy 模型
+
+5. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_ner_detector.py`
+   - 使用 fake spaCy-compatible NLP 对象，不依赖真实模型下载
+   - 覆盖中文人名/地点、英文人名/组织/地点、unsupported label 过滤、无模型降级、health/supports_type
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_ner_detector.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 134 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/detectors/ner_detector.py`
+- 新增：`_infra/network/scripts/download_spacy_models.py`
+- 新增：`_infra/network/tests/unit/test_ner_detector.py`
+- 修改：`_infra/network/privacy_gateway/detectors/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前单元测试不下载真实 spaCy 模型；真机完整验证需要运行 `_infra/network/scripts/download_spacy_models.py` 后再做集成测试。
+- NER 是 Privacy Gateway L3 辅助检测层，不能替代 E5-C6 placeholder、E5-C7 schema、E5-C8 canary、E5-C9 主管线。
+
+**下一步计划**：
+- E5-C5-S1-T1：实现 QwenPIIClassifier（Ollama qwen3:8b，三分类：是/否/不确定，失败降级不阻断）。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

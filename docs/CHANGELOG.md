@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 19:41:55
+创建时间（北京时间）：2026-06-22 19:54:33
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -723,3 +723,37 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Presidio-specific recognizer runtime path remains skipped in sandbox without `presidio_analyzer`; full local validation should run on the user's Python environment with Presidio installed.
 - Next recommended task: `E5-C4-S1-T1` SpaCyNERDetector.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — SpaCyNERDetector (E5-C4-S1-T1)
+
+### Added
+- `_infra/network/privacy_gateway/detectors/ner_detector.py`
+  - `SpaCyNERDetector`
+  - `SPACY_LABEL_TO_PII_TYPE`
+  - zh/en model selection with graceful degradation
+- `_infra/network/scripts/download_spacy_models.py`
+  - downloads `zh_core_web_sm` and `en_core_web_sm` by default
+- `_infra/network/tests/unit/test_ner_detector.py`
+  - 7 dependency-injected unit tests, no real model download required
+
+### Changed
+- `_infra/network/privacy_gateway/detectors/__init__.py` lazy-loads `SpaCyNERDetector`.
+- `TASK_BACKLOG.md` marks `E5-C4-S1-T1` as done and sets the next TODO to `E5-C5-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_ner_detector.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 134 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Full real-model validation requires downloading spaCy models on the user's machine:
+  `python _infra/network/scripts/download_spacy_models.py`
+- Next recommended task: `E5-C5-S1-T1` QwenPIIClassifier.
