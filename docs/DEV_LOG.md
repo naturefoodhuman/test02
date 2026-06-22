@@ -1,8 +1,13 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-06-22 19:32:46
+-->
+
 # DEV LOG —— 逐轮开发日志 (续)
 
 ## 第 41 轮 · 2026-06-21（M2 启动：SearchProvider + SearXNGProvider + 单元测试）
 
-**目标**：严格单任务进入 M2。  
+**目标**：严格单任务进入 M2。
 按 `TASK_BACKLOG.md` + `NETWORK_ENGINEERING_DESIGN.md` §5.1 实现搜索能力核心：
 - E3-C2-S1-T1: SearchProvider 抽象基类 + 数据模型
 - E3-C2-S1-T2: SearXNGProvider 完整实现
@@ -68,7 +73,7 @@ print("✅ Search module imports cleanly")
 - E3-C4：SearchCache（可选）
 - 然后进入 Extract（E4）
 
-**风险**：无。完全在已验证的 E1 基础设施上叠加。  
+**风险**：无。完全在已验证的 E1 基础设施上叠加。
 仓库保持可工作状态。
 
 ## 第 42 轮 · 2026-06-21（M2 完成：ExtractProvider + Crawl4AI + Trafilatura + Cleaner + Chain）
@@ -184,3 +189,68 @@ print('PIIDetector ABC ready')
 
 **风险**：低（纯抽象 + 本地测试）
 
+
+## 第 45 轮 · 2026-06-22（E5-C3-S1-T1 状态收敛 + 测试修复）
+
+**当前任务**：E5-C3-S1-T1 — PIIDetector 抽象基类状态收敛与测试修复。
+**用户指令**：已批准以源码为准，将文档与源码对齐；修复 E5-C3-S1-T1 相关测试阻塞。
+
+**完成内容**：
+
+1. **修复导入隔离问题**：
+   - `_infra/network/privacy_gateway/detectors/__init__.py` 改为只直接导出 `PIIDetector`，`PresidioDetector` 通过 `__getattr__` lazy-load。
+   - `_infra/network/privacy_gateway/__init__.py` 现在安全导出 `PIIDetector / PIIType / PIIEntity`。
+   - 结果：仅测试 ABC / PII 模型时，不再要求安装 `presidio_analyzer`。
+
+2. **测试收敛**：
+   - `test_pii_detector.py` 增加顶层导入隔离断言。
+   - `test_presidio_detector.py` 与 `test_cn_recognizers.py` 增加 `pytest.importorskip("presidio_analyzer")`，避免最小沙箱缺少可选 NLP 依赖时 collection 失败。
+   - 当前沙箱结果：
+     ```bash
+     python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
+     # 17 passed
+     python -m pytest _infra/network/tests/unit/ -q
+     # 115 passed, 2 skipped, 3 warnings
+     python -m compileall -q _infra/network
+     # pass
+     ```
+
+3. **源码头部治理**：
+   - 本轮修改的 E5-C3 源码 / 测试文件均补充或更新了 LLM 留痕头部。
+
+4. **文档与源码对齐**：
+   - `TASK_BACKLOG.md`：
+     - E5-C3-S1-T1 标记为 `[x]`。
+     - 源码中已存在的 E5-C3-S1-T2 / T3 同步为 `[x]`。
+     - 未实现的 E5-C3-S1-T4 仍为 `[ ]`，并作为下一候选任务。
+     - E5-C4 ~ E5-C9 详细 DoD 恢复为未完成状态，避免文档误报。
+   - `docs/PROJECT_STATE.md`：更新 E5-C3 当前真实状态与验证结果。
+   - `docs/CHANGELOG.md`：追加本轮变更。
+   - `_infra/network/README.md`：同步联网模块当前进度。
+
+**修改文件**：
+- `_infra/network/privacy_gateway/__init__.py`
+- `_infra/network/privacy_gateway/detectors/__init__.py`
+- `_infra/network/privacy_gateway/detectors/base.py`
+- `_infra/network/privacy_gateway/detectors/presidio_detector.py`
+- `_infra/network/privacy_gateway/models.py`
+- `_infra/network/privacy_gateway/recognizers/cn_recognizers.py`
+- `_infra/network/tests/unit/test_pii_detector.py`
+- `_infra/network/tests/unit/test_presidio_detector.py`
+- `_infra/network/tests/unit/test_cn_recognizers.py`
+- `TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- `docs/PROJECT_STATE.md`
+- `_infra/network/README.md`
+
+**风险**：
+- `presidio_analyzer` 当前沙箱未安装，因此 Presidio / 中文 recognizer 的真实检测测试被 skip；源码和测试已存在，但真机若要验证完整 Presidio 行为，需要安装 `presidio-analyzer` 及相关 NLP 依赖。
+- `TASK_BACKLOG.md` 仍存在历史 M1 表格重复项（本轮未做大规模 backlog 重构，避免超出单任务边界）。
+- 中文银行卡 Luhn 严格校验目前仅有辅助函数，后续在 T4 或 PrivacyGateway 主管线前需要复核 recognizer 是否真正调用校验逻辑。
+
+**下一步计划**：
+- 在用户批准后，进入 E5-C3-S1-T4：实现 Token / API Key / JWT / Cookie / Private Key recognizers。
+- 后续再推进 E5-C4 SpaCyNERDetector、E5-C5 QwenPIIClassifier、E5-C6 Placeholder/PII map、E5-C9 PrivacyGateway 主管线。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。

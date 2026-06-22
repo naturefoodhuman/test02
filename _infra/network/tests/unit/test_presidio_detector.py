@@ -1,12 +1,19 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建时间（北京时间）：2026-06-22 19:32:46
+
 """
-Unit tests for PresidioDetector (E5-C3-S1-T2)
+Unit tests for PresidioDetector (E5-C3-S1-T2).
 
 Uses asyncio.run() to match project convention (no pytest-asyncio).
+These tests require the optional ``presidio_analyzer`` dependency; they are
+skipped in minimal sandbox environments where that dependency is not installed.
 """
 
 import asyncio
 
 import pytest
+
+pytest.importorskip("presidio_analyzer")
 
 from _infra.network.privacy_gateway.detectors.presidio_detector import PresidioDetector
 from _infra.network.privacy_gateway.models import PIIType

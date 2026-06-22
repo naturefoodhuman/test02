@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-16 22:00:00
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-06-22 19:32:46
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -656,3 +656,34 @@ python -m pytest _infra/network/tests/unit/ -q
 # 113+ passed
 ```
 
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — E5-C3 状态收敛与导入隔离修复
+
+### Fixed
+- 修复 `_infra/network/privacy_gateway/detectors/__init__.py` 提前导入 `PresidioDetector` 导致 `PIIDetector` ABC 测试依赖 `presidio_analyzer` 的问题。
+- `_infra/network/privacy_gateway/__init__.py` 现在安全导出 `PIIDetector / PIIType / PIIEntity`，不触发 Presidio 可选依赖加载。
+- `test_presidio_detector.py` 与 `test_cn_recognizers.py` 增加可选依赖门控，最小沙箱未安装 `presidio_analyzer` 时跳过而非 collection error。
+
+### Changed
+- `TASK_BACKLOG.md` 以源码为准同步 E5-C3 状态：
+  - `E5-C3-S1-T1` / `T2` / `T3` 标记完成。
+  - `E5-C3-S1-T4` 保持 TODO，作为下一候选任务。
+  - E5-C4 ~ E5-C9 的详细 DoD 恢复为未完成状态，避免文档误报。
+- `docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、`_infra/network/README.md` 同步当前真实进度。
+- 本轮修改的 E5-C3 源码和测试文件补齐 LLM 留痕头部。
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
+# 17 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 115 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- `presidio_analyzer` 未安装的最小沙箱会跳过 Presidio / 中文 recognizer 真实行为测试；真机完整验证需安装该依赖。
+- 下一建议任务：`E5-C3-S1-T4` Token / API Key Recognizers。

@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-21 14:45:00 CST
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-06-22 19:32:46
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -23,13 +23,25 @@
 
 更多详情见根目录 `NETWORK_ARCHITECTURE_FINAL.md` 和 `NETWORK_ENGINEERING_DESIGN.md`（已按增量模式调整）。
 
-## 快速开发命令（未来）
+## 快速开发命令
 ```bash
-# 启动网络服务
-bash _infra/network/scripts/start_services.sh
+# 查看 network 配置加载状态
+python -m _infra.network.cli config
 
-# 健康检查
-python -m forge.network health   # 或待实现 CLI 集成
+# 运行 health 检查（外部服务未启动时可能显示 degraded）
+python -m _infra.network.cli health
+
+# 运行 network 单元测试
+python -m pytest _infra/network/tests/unit/ -q
 ```
 
-当前阶段：骨架已创建。下一步将按 TASK_BACKLOG E1-C1-S1-T1 继续实现最小配置 + 搜索层。
+## 当前阶段（2026-06-22）
+
+已完成：
+- E1 基础设施核心（config_loader / exceptions / logger / secrets / audit_log / health_check）
+- E3 搜索核心（SearXNGProvider / URL normalizer / domain scorer / SearchCache）
+- E4 提取核心（Crawl4AIProvider / trafilatura fallback / Markdown cleaner / ExtractorChain）
+- E5-C1 / E5-C2（InputSanitizer + Unicode normalize）
+- E5-C3-S1-T1/T2/T3（PIIDetector ABC / PresidioDetector / 中文 recognizers，Presidio 相关测试在未安装 `presidio_analyzer` 时依赖门控跳过）
+
+当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C3-S1-T4 — Token / API Key Recognizers。

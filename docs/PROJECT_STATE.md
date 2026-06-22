@@ -1,12 +1,12 @@
 <!--
-创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-20 22:40:00 CST
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-06-22 19:32:46
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-21 15:50 CST  
-**当前版本**：v1.3.0-dossier + Network Increment（E5 Privacy Gateway 启动）
+**更新日期**：2026-06-22 19:32 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E5-C3 状态收敛）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -47,19 +47,26 @@
   - 字段白名单解决 400 Bad Request
 
 
-## 4.1 Network Privacy Gateway 阶段进展（2026-06-21）
+## 4.1 Network Privacy Gateway 阶段进展（2026-06-22）
 
 - **E5-C1** InputSanitizer 完成（HTML 剥离 + Prompt Injection 检测 + 隐藏内容）
 - **E5-C2** Unicode 规范化完成（NFKC + 零宽字符 + PII 检测专用 normalize）
-- **E5 骨架**：`_infra/network/privacy_gateway/` + `models.py`（PIIType Enum + PIIEntity + mask()）
-- **测试**：98 passed（全量 network 单元测试）
-- **当前单任务**：E5-C3-S1-T1 [~] PIIDetector 抽象基类
-- **文档同步**：DEV_LOG / CHANGELOG / PROJECT_STATE / TASK_BACKLOG 已更新
+- **E5-C3-S1-T1** PIIDetector ABC + PIIType / PIIEntity 完成，并已修复导入隔离：ABC 与基础模型不再因 `detectors/__init__.py` 提前加载 `PresidioDetector` 而依赖 `presidio_analyzer`
+- **E5-C3-S1-T2** PresidioDetector 源码已存在；相关单测在未安装 `presidio_analyzer` 的最小沙箱中依赖门控跳过
+- **E5-C3-S1-T3** 中文 PII recognizers 源码已存在；相关单测同样依赖门控跳过
+- **测试**：`test_pii_detector.py` 17 passed；全量 network 单元测试 115 passed / 2 skipped / 3 warnings；`compileall` 通过
+- **当前单任务**：E5-C3-S1-T1 状态收敛与测试修复已完成
+- **下一任务候选**：E5-C3-S1-T4 Token / API Key Recognizers（尚未实现）
+- **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
+python -m pytest _infra/network/tests/unit/test_pii_detector.py -q
+# 17 passed
 python -m pytest _infra/network/tests/unit/ -q
-# 98 passed
+# 115 passed, 2 skipped, 3 warnings
+python -m compileall -q _infra/network
+# pass
 ```
 
 ## 5. 待办事项 (Next)

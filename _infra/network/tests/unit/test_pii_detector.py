@@ -1,22 +1,28 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建时间（北京时间）：2026-06-22 19:32:46
+
 """
-Unit tests for PIIDetector ABC + supporting models (E5-C3-S1-T1)
+Unit tests for PIIDetector ABC + supporting models (E5-C3-S1-T1).
 
 Tests:
 - PIIType enum
 - PIIEntity Pydantic model + mask()
 - PIIDetector abstract enforcement
 - Basic detector interface
+- Import isolation from optional concrete detector dependencies
 """
 
 from typing import List
 
 import pytest
 
-from _infra.network.privacy_gateway.models import PIIType, PIIEntity
+from _infra.network.privacy_gateway import PIIDetector as TopLevelPIIDetector
+from _infra.network.privacy_gateway import PIIEntity, PIIType
 from _infra.network.privacy_gateway.detectors.base import PIIDetector
 
 
 # --- PIIType tests ---
+
 
 def test_pii_type_enum_values():
     """All expected PII types exist."""
@@ -34,6 +40,7 @@ def test_pii_type_is_str_enum():
 
 
 # --- PIIEntity tests ---
+
 
 def test_pii_entity_basic():
     entity = PIIEntity(
@@ -97,6 +104,12 @@ def test_pii_entity_extra_fields_forbidden():
 
 # --- PIIDetector ABC tests ---
 
+
+def test_piidetector_export_is_dependency_isolated():
+    """Importing the ABC must not require optional concrete detector deps."""
+    assert TopLevelPIIDetector is PIIDetector
+
+
 def test_piidetector_is_abstract():
     """Direct instantiation of ABC must fail."""
     with pytest.raises(TypeError):
@@ -105,6 +118,7 @@ def test_piidetector_is_abstract():
 
 def test_piidetector_abstract_detect():
     """Subclass must implement detect()."""
+
     class BadDetector(PIIDetector):
         pass
 
@@ -144,6 +158,7 @@ def test_dummy_detector_instantiation():
 def test_dummy_detector_detect():
     """Use asyncio.run() to match project convention (no pytest-asyncio)."""
     import asyncio
+
     det = DummyDetector()
     entities = asyncio.run(det.detect("Contact test@example.com please"))
     assert len(entities) == 1
@@ -154,6 +169,7 @@ def test_dummy_detector_detect():
 
 def test_dummy_detector_empty():
     import asyncio
+
     det = DummyDetector()
     entities = asyncio.run(det.detect("No PII here at all"))
     assert entities == []
@@ -161,6 +177,7 @@ def test_dummy_detector_empty():
 
 def test_dummy_health_check():
     import asyncio
+
     det = DummyDetector()
     assert asyncio.run(det.health_check()) is True
 
