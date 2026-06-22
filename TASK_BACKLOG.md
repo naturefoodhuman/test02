@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:45:00
+创建时间（北京时间）：2026-06-22 20:58:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C7-S1-T1 JSON Schema 验证完成）
+> **最近同步**: 2026-06-22（E5-C8-S1-T1 CanaryTokenMonitor 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1394,21 +1394,26 @@ P3 = 可选增强
 - **前置依赖**: E5-C3-S1-T1
 - **输入**: §10.9
 - **输出**: CanaryTokenMonitor 类
-- **涉及文件**:
-  - 新建：`src/privacy/canary.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/` 与根 `config/`）**:
+  - 新建：`_infra/network/privacy_gateway/canary.py`
   - 新建：`config/canary_tokens.yaml`
+  - 新建：`_infra/network/tests/unit/test_canary_monitor.py`
+  - 修改：`_infra/network/privacy_gateway/__init__.py`（导出 CanaryTokenMonitor）
 - **实现要求**:
   - 配置驱动 token 列表（`AI_CANARY_DO_NOT_LEAK_2026_*`）
-  - 正则匹配
-  - 命中时抛 `CanaryTokenHitError` + 写审计日志
+  - 正则匹配，支持 exact / suffix / wildcard / explicit regex patterns
+  - 命中时抛 `CanaryTokenDetectedError` 并可写审计日志
+  - 审计日志仅记录 masked token 与 metadata，不记录全文，避免 audit trail 自身成为 canary 泄漏位置
 - **测试要求**:
   - 单元测试：token 命中
-  - 安全测试：完整链路 canary 检测
+  - 安全测试：命中立即阻断
+  - 单元测试：audit 记录 masked hit 且不含原文
+  - 单元测试：配置加载与多 hit 排序
 - **验收标准**:
   - canary 出现时立即阻断
 - **DoD**:
-  - [ ] canary.py 实现
-  - [ ] 安全测试通过
+  - [x] canary.py 实现
+  - [x] 安全测试通过（`test_canary_monitor.py`: 8 passed）
 
 ---
 
@@ -2699,7 +2704,7 @@ graph TD
 | M3 | E5-C6 | E5-C6-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C6 | E5-C6-S1-T2 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C7 | E5-C7-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E5-C8 | E5-C8-S1-T1 | [ ] | | |
+| M3 | E5-C8 | E5-C8-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C9 | E5-C9-S1-T1 | [ ] | | |
 | M3 | E5-C9 | E5-C9-S1-T2 | [ ] | | |
 | M3 | E11-C2 | E11-C2-S1-T1 | [ ] | | |

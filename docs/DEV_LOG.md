@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:45:00
+创建时间（北京时间）：2026-06-22 20:58:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -637,5 +637,65 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E5-C8-S1-T1：实现 CanaryTokenMonitor（命中立即阻断 + 后续接入审计）。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 52 轮 · 2026-06-22（E5-C8-S1-T1: CanaryTokenMonitor）
+
+**当前任务**：E5-C8-S1-T1 — 实现 CanaryTokenMonitor。
+
+**完成内容**：
+
+1. **新增 CanaryTokenMonitor**：
+   - 新建 `_infra/network/privacy_gateway/canary.py`
+   - 支持默认 token：`AI_CANARY_DO_NOT_LEAK_2026`
+   - 未显式 wildcard 的 token 自动匹配 suffix 形式：`AI_CANARY_DO_NOT_LEAK_2026_xxxxx`
+   - 支持配置 wildcard token（`*` → `[A-Za-z0-9_-]*`）
+   - 支持 explicit regex patterns
+
+2. **配置文件**：
+   - 新建 `config/canary_tokens.yaml`
+   - 与 `config/network.yaml` 中 `privacy_gateway.canary_tokens` 共同作为配置来源
+   - `CanaryTokenMonitor.from_config()` 合并并去重 token / patterns
+
+3. **阻断与审计**：
+   - `scan(text, location)` 返回 `CanaryHit` 列表
+   - `assert_clean(text, location)` 命中时立即抛 `CanaryTokenDetectedError`
+   - 支持传入 `AuditLogger` 写入 `canary_hit` 审计事件
+   - 审计日志只记录 masked token + metadata，不记录全文，避免 audit trail 自身成为泄漏位置
+
+4. **单元 / 安全测试**：
+   - 新建 `_infra/network/tests/unit/test_canary_monitor.py`
+   - 覆盖默认 canary suffix 命中、自定义 token、wildcard token、clean pass、命中阻断、masked audit、配置加载、多 hit offset 排序
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_canary_monitor.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 179 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/canary.py`
+- 新增：`_infra/network/tests/unit/test_canary_monitor.py`
+- 新增：`config/canary_tokens.yaml`
+- 修改：`_infra/network/privacy_gateway/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- Canary monitor 已具备独立阻断能力；后续必须在 E5-C9 PrivacyGateway 主管线中接入 L7，否则不会自动作用于全流程。
+- 审计日志刻意不记录全文与完整 token；如未来需要溯源，只能依赖 location/start/end/masked token metadata。
+
+**下一步计划**：
+- E5-C9-S1-T1：实现 PrivacyGateway 主管线，将 E5-C1 ~ E5-C8 组装为可调用管线。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

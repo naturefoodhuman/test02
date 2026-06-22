@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:45:00
+创建时间（北京时间）：2026-06-22 20:58:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -891,3 +891,37 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E5-C8-S1-T1` CanaryTokenMonitor.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — CanaryTokenMonitor (E5-C8-S1-T1)
+
+### Added
+- `_infra/network/privacy_gateway/canary.py`
+  - `CanaryTokenMonitor`
+  - `CanaryHit`
+  - config-driven token / wildcard / regex matching
+  - immediate blocking via `CanaryTokenDetectedError`
+  - optional masked audit logging
+- `config/canary_tokens.yaml`
+  - default `AI_CANARY_DO_NOT_LEAK_2026`
+- `_infra/network/tests/unit/test_canary_monitor.py`
+  - 8 tests covering detection, blocking, wildcard, config loading, masked audit and sorting
+
+### Changed
+- `_infra/network/privacy_gateway/__init__.py` exports CanaryTokenMonitor / CanaryHit.
+- `TASK_BACKLOG.md` marks `E5-C8-S1-T1` as done and sets next TODO to `E5-C9-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_canary_monitor.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 179 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E5-C9-S1-T1` PrivacyGateway orchestration pipeline.
