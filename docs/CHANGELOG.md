@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:58:00
+创建时间（北京时间）：2026-06-22 21:15:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -925,3 +925,34 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E5-C9-S1-T1` PrivacyGateway orchestration pipeline.
+
+---
+
+## [2026-06-22] E5 Privacy Gateway — PrivacyGateway Pipeline (E5-C9-S1-T1)
+
+### Added
+- `_infra/network/privacy_gateway/gateway.py`
+  - `PrivacyContext`
+  - `RedactedContent`
+  - `PrivacyGateway`
+  - `process()` / `process_text()`
+- `_infra/network/tests/unit/test_privacy_gateway.py`
+  - 8 integration-style unit tests covering L1-L7 orchestration and failure handling
+
+### Changed
+- `_infra/network/privacy_gateway/__init__.py` exports PrivacyGateway / PrivacyContext / RedactedContent.
+- `TASK_BACKLOG.md` marks `E5-C9-S1-T1` as done and keeps `E5-C9-S1-T2` as next TODO.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_privacy_gateway.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 187 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E5-C9-S1-T2` build_privacy_gateway factory function.

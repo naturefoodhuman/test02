@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:58:00
+创建时间（北京时间）：2026-06-22 21:15:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -49,5 +49,6 @@ python -m pytest _infra/network/tests/unit/ -q
 - E5-C6-S1-T2（PII Map DB；SQLCipher driver 优先 + sqlite3 field-level AES-256 fallback，错误密钥无法解密 original）
 - E5-C7-S1-T1（JSON Schema 输出验证；禁止 raw PII value 出现在输出 entities 中）
 - E5-C8-S1-T1（CanaryTokenMonitor；配置驱动 canary token，命中立即阻断 + masked audit metadata）
+- E5-C9-S1-T1（PrivacyGateway 主管线；L1-L7 组装，支持 light/full mode 与依赖注入测试）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C9-S1-T1 — PrivacyGateway 主管线。
+当前下一候选任务：`TASK_BACKLOG.md` 中的 E5-C9-S1-T2 — build_privacy_gateway 工厂函数。

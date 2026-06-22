@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 20:58:00
+创建时间（北京时间）：2026-06-22 21:15:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -697,5 +697,76 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E5-C9-S1-T1：实现 PrivacyGateway 主管线，将 E5-C1 ~ E5-C8 组装为可调用管线。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 53 轮 · 2026-06-22（E5-C9-S1-T1: PrivacyGateway 主管线）
+
+**当前任务**：E5-C9-S1-T1 — 实现 PrivacyGateway 编排主管线。
+
+**完成内容**：
+
+1. **新增 PrivacyGateway 主管线**：
+   - 新建 `_infra/network/privacy_gateway/gateway.py`
+   - 定义 `PrivacyContext`（mode: light/full, source_url, require_schema_validation）
+   - 定义 `RedactedContent`（schema-safe 输出 + 本地执行 metadata）
+   - 定义 `PrivacyGateway.process()` / `process_text()`
+
+2. **组装 L1-L7**：
+   - L1: Unicode normalize (`normalize_for_pii_detection`)
+   - L2: Presidio detectors（可用时）+ deterministic secret regex (`detect_secrets`)
+   - L3: SpaCyNERDetector
+   - L4: QwenPIIClassifier（辅助复核，失败不阻断）
+   - L5: PIIReplacer placeholder replacement + mapping store
+   - L6: PrivacyOutputValidator JSON Schema validation
+   - L7: CanaryTokenMonitor final output check
+
+3. **失败处理策略**：
+   - detector 异常：记录 warning，继续流程
+   - Qwen classifier degraded：记录 warning，继续流程
+   - Qwen 标记 contains_pii 但没有 spans：记录 warning，不替代 deterministic boundary
+   - Schema failure：抛 `SchemaValidationFailedError`
+   - Canary hit：抛 `CanaryTokenDetectedError`
+
+4. **测试覆盖**：
+   - 新建 `_infra/network/tests/unit/test_privacy_gateway.py`
+   - 覆盖完整管线 redaction + schema validation
+   - 覆盖 Unicode normalize 后检测
+   - 覆盖 secret regex 无外部依赖检测
+   - 覆盖 canary final output block
+   - 覆盖 detector failure graceful degradation
+   - 覆盖 Qwen uncertain no spans warning
+   - 覆盖 SanitizedContent + full mode
+   - 覆盖 schema failure propagation
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_privacy_gateway.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ -q
+# 187 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/gateway.py`
+- 新增：`_infra/network/tests/unit/test_privacy_gateway.py`
+- 修改：`_infra/network/privacy_gateway/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 默认构造会尝试加载可用的 Presidio / spaCy；当前最小沙箱无 Presidio 模块、无 spaCy 模型时会 graceful degrade。真机完整 L2/L3 验证需要安装对应依赖和模型。
+- `build_privacy_gateway(config)` 工厂函数按 backlog 是独立任务 E5-C9-S1-T2，本轮未提前实现，避免越界。
+- 主管线当前仍未接入 Search/Extract workflow；该集成属于后续 NetworkWorkflow / CLI 任务。
+
+**下一步计划**：
+- E5-C9-S1-T2：实现 `build_privacy_gateway(config)` 工厂函数，自动按 `config/network.yaml` 装配 gateway。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。
