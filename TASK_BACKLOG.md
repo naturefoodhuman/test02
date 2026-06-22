@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:30:00
+创建时间（北京时间）：2026-06-22 21:45:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E5-C9-S1-T2 build_privacy_gateway 完成）
+> **最近同步**: 2026-06-22（E11-C2-S1-T1 Prompt Injection 安全测试完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -2121,16 +2121,19 @@ P3 = 可选增强
 - **前置依赖**: E5-C1-S1-T2
 - **输入**: 恶意 HTML 样本
 - **输出**: 安全测试
-- **涉及文件**:
-  - 新建：`tests/security/test_prompt_injection.py`
-  - 新建：`tests/fixtures/malicious_pages/`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/tests/security/test_prompt_injection.py`
+  - 新建：`_infra/network/tests/fixtures/malicious_pages/`
+  - 修改：`_infra/network/input_sanitizer/sanitizer.py`
 - **实现要求**:
-  - 多种攻击向量：隐藏指令 / display:none / 注释 / Unicode 混淆
+  - 多种攻击向量：隐藏指令 / display:none / visibility:hidden / 注释 / Unicode 混淆 / URL encoding / tool-call trigger
   - 验证 Input Sanitizer 清除
+  - NFKC + URL decode 先于注入检测，防止全角/编码绕过
+  - hidden HTML block 在 token 级清理前整体移除，避免留下隐藏指令残片
 - **测试要求**: 所有用例通过
 - **验收标准**: 注入指令 100% 被移除
 - **DoD**:
-  - [x] 测试编写
+  - [x] 测试编写（`test_prompt_injection.py`: 12 passed）
   - [x] 全部通过
 
 ---
@@ -2717,7 +2720,7 @@ graph TD
 | M3 | E5-C8 | E5-C8-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C9 | E5-C9-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C9 | E5-C9-S1-T2 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E11-C2 | E11-C2-S1-T1 | [ ] | | |
+| M3 | E11-C2 | E11-C2-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E11-C4 | E11-C4-S1-T1 | [ ] | | |
 | M3 | E11-C6 | E11-C6-S1-T1 | [ ] | | |
 | M4 | E2-C1 | E2-C1-S1-T1 | [ ] | | |

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:30:00
+创建时间（北京时间）：2026-06-22 21:45:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -986,3 +986,35 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - E5 Privacy Gateway MVP is complete but not yet wired into NetworkWorkflow / CLI flows.
 - Recommended next tasks: M3 security tests (E11-C2/E11-C4/E11-C6) or workflow integration, depending on user priority.
+
+---
+
+## [2026-06-22] Security — Prompt Injection Tests (E11-C2-S1-T1)
+
+### Added
+- `_infra/network/tests/security/test_prompt_injection.py`
+  - 12 security tests covering hidden instructions, display:none, visibility:hidden, HTML comments, Unicode full-width obfuscation, URL encoding and tool-call triggers
+- Malicious HTML fixtures under `_infra/network/tests/fixtures/malicious_pages/`
+
+### Changed
+- `_infra/network/input_sanitizer/sanitizer.py`
+  - runs NFKC + URL decode before injection detection
+  - removes hidden HTML blocks before token-level stripping
+  - strips tool-trigger hints (`execute_js`, `document.cookie`, storage access, `rm -rf /`)
+- `TASK_BACKLOG.md` marks `E11-C2-S1-T1` as done and sets next TODO to `E11-C4-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/security/test_prompt_injection.py -q
+# 12 passed
+python -m pytest _infra/network/tests/unit/test_input_sanitizer.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 201 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E11-C4-S1-T1` PII bypass security tests.

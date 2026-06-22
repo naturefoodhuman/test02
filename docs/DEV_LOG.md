@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:30:00
+创建时间（北京时间）：2026-06-22 21:45:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -834,5 +834,61 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E5 已按 backlog 完成。建议下一步进入 M3 安全测试：E11-C2 Prompt Injection 测试、E11-C4 PII 绕过测试、E11-C6 Canary Token 端到端测试；或按用户指令进入 E2/MCP Guard 或 NetworkWorkflow。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 55 轮 · 2026-06-22（E11-C2-S1-T1: Prompt Injection 安全测试）
+
+**当前任务**：E11-C2-S1-T1 — 编写恶意网页 fixture 与 Prompt Injection 安全测试。
+
+**完成内容**：
+
+1. **新增 security tests**：
+   - 新建 `_infra/network/tests/security/test_prompt_injection.py`
+   - 覆盖隐藏指令、display:none、visibility:hidden、HTML 注释、`<|im_start|>`、代码块注入、中文超级管理员、Unicode 全角混淆、URL encoding、tool-call trigger
+
+2. **新增恶意网页 fixtures**：
+   - `_infra/network/tests/fixtures/malicious_pages/display_none.html`
+   - `_infra/network/tests/fixtures/malicious_pages/comment_injection.html`
+   - `_infra/network/tests/fixtures/malicious_pages/visibility_hidden.html`
+
+3. **InputSanitizer 加固**：
+   - `_infra/network/input_sanitizer/sanitizer.py` 增加 LLM 留痕头部。
+   - 注入检测前先做 NFKC + URL decode，修复全角 / URL encoding 绕过。
+   - hidden HTML block 在 token 级清理前整体移除，避免删除 `display:none` 标记后留下隐藏指令正文。
+   - 增加危险工具触发词清理：`execute_js` / `evaluate_js` / `document.cookie` / storage / `rm -rf /`。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/security/test_prompt_injection.py -q
+# 12 passed
+python -m pytest _infra/network/tests/unit/test_input_sanitizer.py -q
+# 8 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 201 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 修改：`_infra/network/input_sanitizer/sanitizer.py`
+- 新增：`_infra/network/tests/security/test_prompt_injection.py`
+- 新增：`_infra/network/tests/fixtures/malicious_pages/display_none.html`
+- 新增：`_infra/network/tests/fixtures/malicious_pages/comment_injection.html`
+- 新增：`_infra/network/tests/fixtures/malicious_pages/visibility_hidden.html`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前安全测试覆盖 E11-C2 prompt injection；PII bypass 与 Canary E2E 仍是独立后续任务。
+- InputSanitizer 采用确定性 pattern；后续应通过 E11-C2 用例持续扩展新攻击样本。
+
+**下一步计划**：
+- E11-C4-S1-T1：编写 PII 绕过测试套件（Unicode 同形、零宽、Base64、URL encoding、表格拆分、JSON key/value）。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。
