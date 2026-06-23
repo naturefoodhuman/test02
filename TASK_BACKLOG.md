@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E8-C3/C4 私域客户端与 Full Mode 管线完成）
+> **最近同步**: 2026-06-23（E7 Playwright MCP Client + AI-Public Profile 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1669,19 +1669,27 @@ P3 = 可选增强
 - **目标**: 按 §8.1 安装
 - **前置依赖**: E2-C1-S1-T1
 - **输入**: §8.1
-- **输出**: 本地 MCP server
-- **涉及文件**:
+- **输出**: 本地 MCP server pinned metadata
+- **涉及文件（已按增量架构落地）**:
   - 修改：`config/mcp_lockfile.yaml`
-  - `mcp-servers/playwright/`（git clone）
+  - 修改：`.mcp.json.research`
+  - 新建：`_infra/network/tests/unit/test_playwright_client.py`
 - **实现要求**:
-  - 查询当前版本：`npm view @playwright/mcp version`
-  - 固定 commit hash
-  - 本地路径配置
-- **测试要求**: `mcp-scan` 通过
+  - 固定 repo：`https://github.com/microsoft/playwright-mcp.git`
+  - 固定 commit：`0f4e6ff6be93c63af843c3d67894d83b37ae27a3`
+  - 固定 package version：`@playwright/mcp@0.0.76`
+  - 本地路径：`mcp-servers/playwright-public`
+  - research profile 使用 `mcp-servers/playwright-public/cli.js`
+  - 配置 `--browser=chromium` / `--headed` / `--user-data-dir=${HOME}/ai-agent/profiles/ai-public` / timeout 参数
+  - 真实 clone/install/scan 使用 `_infra/network/scripts/install_mcp.sh` 在用户 Mac 执行
+- **测试要求**:
+  - 静态测试：lockfile 固定 repo/commit/package/path/args
+  - 真机测试：安装后 `mcp-scan` 通过
 - **验收标准**: 可启动
 - **DoD**:
-  - [x] 安装成功
   - [x] lockfile 更新
+  - [x] 静态测试通过（`test_playwright_client.py`: 6 passed）
+  - [ ] 真机安装/mcp-scan 验证（需用户 Mac 环境）
 
 ---
 
@@ -1693,20 +1701,26 @@ P3 = 可选增强
 - **前置依赖**: E7-C1-S1-T1, E2-C4-S1-T1
 - **输入**: §5.1
 - **输出**: PlaywrightMCPClient 类
-- **涉及文件**:
-  - 新建：`src/browser/playwright_client.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/browser/playwright_client.py`
+  - 新建：`_infra/network/tests/unit/test_playwright_client.py`
+  - 修改：`_infra/network/browser/__init__.py`
 - **实现要求**:
-  - 实现 MCPClient ABC
-  - 通过 stdio / SSE 通信
-  - 工具调用：navigate / snapshot / click / type / wait / close
-  - 超时控制（navigate 30s / action 10s）
+  - 实现 testable transport Protocol boundary
+  - 默认 server_id=`playwright-public` / mode=`research`
+  - 工具调用：navigate / snapshot / click / type_text / wait / close
+  - 超时控制：navigate 30s / action 10s
+  - 所有调用先经过 MCPGuard；禁止 cookie/storage 等危险参数
 - **测试要求**:
-  - 单元测试：mock 调用
-  - 集成测试：真实浏览器
+  - 单元测试：mock transport 调用
+  - 单元测试：mode policy 拒绝 coding 模式使用 playwright-public
+  - 单元测试：argument validator 拦截 `document.cookie`
+  - 真机集成测试：真实浏览器（需用户 Mac 环境）
 - **验收标准**: 基本浏览成功
 - **DoD**:
   - [x] playwright_client.py 实现
-  - [x] 集成测试通过
+  - [x] mock 单元测试通过（`test_playwright_client.py`: 6 passed）
+  - [ ] 真机 Playwright MCP 集成测试（需用户 Mac 环境）
 
 ---
 
@@ -1739,17 +1753,19 @@ P3 = 可选增强
 - **前置依赖**: E1-C2-S1-T1
 - **输入**: §5.6
 - **输出**: ProfileManager 类
-- **涉及文件**:
-  - 新建：`src/browser/profile_manager.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/browser/profile_manager.py`
+  - 新建：`_infra/network/tests/unit/test_profile_manager.py`
+  - 修改：`_infra/network/browser/__init__.py`
 - **实现要求**:
-  - 加载 `config/privacy_policy.yaml` domain_policies
-  - 提供 `get_profile(name)`
-  - 物理路径管理（`profiles/<name>`）
+  - 加载 `config/network.yaml` 中 browser.profiles
+  - 提供 `get_profile(name)` / `list_profiles()` / `ensure_profile_dir()`
+  - 物理路径管理（支持测试 profile_root override）
 - **测试要求**: 单元测试
 - **验收标准**: Profile 配置可读
 - **DoD**:
   - [x] profile_manager.py 实现
-  - [x] 单元测试通过
+  - [x] 单元测试通过（`test_profile_manager.py`: 6 passed）
 
 ---
 
@@ -1759,15 +1775,19 @@ P3 = 可选增强
 - **前置依赖**: E7-C3-S1-T1
 - **输入**: profile 名称
 - **输出**: profile 目录
-- **涉及文件**: `profiles/ai-public/`
+- **涉及文件**:
+  - 新建：`profiles/ai-public/README.md`
+  - 修改：`profiles/README.md`
 - **实现要求**:
   - 目录创建
-  - 文档说明（`profiles/README.md`）
-- **测试要求**: 目录存在
+  - 文档说明 public profile rules
+  - 禁止私域账号登录 / password manager / payment info
+- **测试要求**: 目录/文档存在
 - **验收标准**: 可被 Playwright 使用
 - **DoD**:
   - [x] 目录创建
   - [x] 文档完成
+  - [x] 单元测试通过（`test_profile_manager.py`: 6 passed）
 
 ---
 
@@ -2842,11 +2862,11 @@ graph TD
 | M5 | E6-C3 | E6-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E10-C1 | E10-C1-S1-T1 | [ ] | | |
 | M5 | E10-C3 | E10-C3-S1-T1 | [ ] | | |
-| M6 | E7-C1 | E7-C1-S1-T1 | [ ] | | |
-| M6 | E7-C2 | E7-C2-S1-T1 | [ ] | | |
+| M6 | E7-C1 | E7-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M6 | E7-C2 | E7-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C2 | E7-C2-S1-T2 | [ ] | | |
-| M6 | E7-C3 | E7-C3-S1-T1 | [ ] | | |
-| M6 | E7-C3 | E7-C3-S1-T2 | [ ] | | |
+| M6 | E7-C3 | E7-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M6 | E7-C3 | E7-C3-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C4 | E7-C4-S1-T1 | [ ] | | |
 | M6 | E7-C5 | E7-C5-S1-T1 | [ ] | | |
 | M6 | E7-C6 | E7-C6-S1-T1 | [ ] | | |

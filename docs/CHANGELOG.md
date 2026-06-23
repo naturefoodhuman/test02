@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:20:00
+创建时间（北京时间）：2026-06-23 15:16:58
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1496,3 +1496,45 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Real Chrome DevTools MCP integration requires user Mac runtime validation.
 - Next recommended task: E7 Playwright MCP installation/client or E10 ops scripts.
+
+---
+
+## [2026-06-23] Browser Automation — Playwright MCP Client + AI-Public Profile (E7-C1/C2/C3)
+
+### Added
+- `_infra/network/browser/playwright_client.py`
+  - guarded Playwright MCP client facade with navigate/snapshot/click/type/wait/close
+- `_infra/network/browser/profile_manager.py`
+  - browser profile config reader and directory manager
+- `_infra/network/tests/unit/test_playwright_client.py`
+  - 6 tests
+- `_infra/network/tests/unit/test_profile_manager.py`
+  - 6 tests
+- `profiles/ai-public/README.md`
+
+### Changed
+- `config/mcp_lockfile.yaml`
+  - added pinned microsoft/playwright-mcp metadata at commit `0f4e6ff6be93c63af843c3d67894d83b37ae27a3`
+  - pinned package version `@playwright/mcp@0.0.76`
+- `.mcp.json.research`
+  - updated playwright-public local path and startup args
+- `_infra/network/browser/__init__.py` exports Playwright and profile manager components.
+- `profiles/README.md` lists active public/private profiles.
+- `TASK_BACKLOG.md` marks E7-C1-S1-T1, E7-C2-S1-T1, E7-C3-S1-T1 and E7-C3-S1-T2 as done with real-machine validation caveat.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_playwright_client.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_profile_manager.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 313 passed, 2 skipped, 38 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real Playwright MCP install/mcp-scan/browser validation must run on the user's Mac.
+- Next recommended task: E7-C2-S1-T2 PlaywrightOrchestrator or E7-C4-S1-T1 SessionDetector.

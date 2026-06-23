@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:55:00
+创建时间（北京时间）：2026-06-23 15:16:58
 -->
 
 # Browser Profiles
@@ -23,3 +23,8 @@ never be used by agents.
 - Use only allowed domains documented in each profile README.
 - All content must pass InputSanitizer + PrivacyGateway before model use.
 - Write actions require human approval.
+
+## Active profile directories
+
+- `ai-public/` — public browsing automation profile.
+- `ai-private-github/` — read-only private GitHub example profile.

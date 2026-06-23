@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:20:00
+创建时间（北京时间）：2026-06-23 15:16:58
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 15:20 CST
-**当前版本**：v1.3.0-dossier + Network Increment（Private Access Pipeline 完成）
+**更新日期**：2026-06-23 15:16 CST
+**当前版本**：v1.3.0-dossier + Network Increment（Playwright MCP Client + AI-Public Profile 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -85,19 +85,22 @@
 - **E6-C3-S1-T1** PreToolUse Hook 完成；`scripts/hooks/pre_tool_use.sh` 从 stdin 接收 JSON，调用 MCPGuard，输出 `{allow, reason, decision}`，非交互 approval 默认 fail-closed
 - **E8-C3-S1-T1** ChromeDevToolsMCPClient 完成；提供 get_page_text / get_network_logs / screenshot（需审批）/ storage 禁止访问，并与 MCPGuard 集成
 - **E8-C4-S1-T1** PrivateAccessPipeline 完成；Chrome private page text → InputSanitizer → PrivacyGateway full mode → schema-safe redacted output，并审计 private_access_complete metadata
-- **测试**：`test_chrome_devtools_client.py` 5 passed；`test_private_pipeline.py` 4 passed；network unit+security 全量 301 passed / 2 skipped / 30 warnings；`compileall` 通过
-- **当前单任务批次**：E8-C3-S1-T1 + E8-C4-S1-T1 已顺次完成 mock/static 验证
-- **下一任务候选**：E7-C1-S1-T1 Playwright MCP 安装（固定版本），或 E10-C1/E10-C3 运维脚本
+- **E7-C1-S1-T1** Playwright MCP pinned metadata 完成；`config/mcp_lockfile.yaml` 固定 microsoft/playwright-mcp commit、package `@playwright/mcp@0.0.76` 与 public profile args
+- **E7-C2-S1-T1** PlaywrightMCPClient 完成；提供 navigate / snapshot / click / type_text / wait / close，所有调用先过 MCPGuard，navigate/action timeout 分别 30s/10s
+- **E7-C3-S1-T1/T2** ProfileManager 与 AI-Public Profile 文档完成；可读取 `config/network.yaml` browser profiles，并创建/管理 profile 目录
+- **测试**：`test_playwright_client.py` 6 passed；`test_profile_manager.py` 6 passed；network unit+security 全量 313 passed / 2 skipped / 38 warnings；`compileall` 通过
+- **当前单任务批次**：E7-C1-S1-T1 + E7-C2-S1-T1 + E7-C3-S1-T1/T2 已顺次完成 mock/static 验证
+- **下一任务候选**：E7-C2-S1-T2 PlaywrightOrchestrator，或 E7-C4-S1-T1 SessionDetector
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_chrome_devtools_client.py -q
-# 5 passed
-python -m pytest _infra/network/tests/unit/test_private_pipeline.py -q
-# 4 passed
+python -m pytest _infra/network/tests/unit/test_playwright_client.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_profile_manager.py -q
+# 6 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 301 passed, 2 skipped, 30 warnings
+# 313 passed, 2 skipped, 38 warnings
 python -m compileall -q _infra/network
 # pass
 ```

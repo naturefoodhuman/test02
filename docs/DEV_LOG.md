@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:20:00
+创建时间（北京时间）：2026-06-23 15:16:58
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1881,5 +1881,85 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - 可进入 E7-C1-S1-T1 Playwright MCP 安装（固定版本），或处理 E10-C1/E10-C3 运维脚本。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 70 轮 · 2026-06-23（E7-C1/C2/C3: Playwright MCP Client + AI-Public Profile）
+
+**当前任务（顺次执行）**：
+1. E7-C1-S1-T1 — Playwright MCP pinned metadata。
+2. E7-C2-S1-T1 — PlaywrightMCPClient。
+3. E7-C3-S1-T1 — ProfileManager。
+4. E7-C3-S1-T2 — AI-Public Profile 目录/文档。
+
+**执行说明**：本批次均属于公开浏览器自动化基础。先补 Playwright MCP lockfile/profile metadata，再实现 guarded client，最后补 public profile 管理。真实 Playwright MCP install/mcp-scan 需用户 Mac 执行。
+
+### 完成内容
+
+1. **Playwright MCP pinned metadata**：
+   - 更新 `config/mcp_lockfile.yaml`
+   - 固定 repo：`https://github.com/microsoft/playwright-mcp.git`
+   - 固定 commit：`0f4e6ff6be93c63af843c3d67894d83b37ae27a3`
+   - 固定 package：`@playwright/mcp@0.0.76`
+   - local path：`mcp-servers/playwright-public`
+   - 更新 `.mcp.json.research` 的 playwright-public args 为 `mcp-servers/playwright-public/cli.js` + chromium/headed/public profile/timeouts
+
+2. **PlaywrightMCPClient**：
+   - 新建 `_infra/network/browser/playwright_client.py`
+   - 提供 navigate / snapshot / click / type_text / wait / close
+   - 默认 server_id=`playwright-public`，mode=`research`
+   - 所有调用先过 MCPGuard
+   - navigate timeout 30s，action timeout 10s
+   - 无 transport 时 fail closed
+
+3. **ProfileManager + AI-Public profile**：
+   - 新建 `_infra/network/browser/profile_manager.py`
+   - 支持读取 `config/network.yaml` 的 browser.profiles
+   - 支持 get/list/ensure profile dir
+   - 新建 `profiles/ai-public/README.md`
+   - 更新 `profiles/README.md`
+
+4. **测试**：
+   - 新建 `_infra/network/tests/unit/test_playwright_client.py`
+   - 新建 `_infra/network/tests/unit/test_profile_manager.py`
+   - 覆盖 lockfile/profile metadata、client mock transport、mode policy block、argument validator block、profile config/dir/doc
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_playwright_client.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_profile_manager.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 313 passed, 2 skipped, 38 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/browser/playwright_client.py`
+- 新增：`_infra/network/browser/profile_manager.py`
+- 新增：`_infra/network/tests/unit/test_playwright_client.py`
+- 新增：`_infra/network/tests/unit/test_profile_manager.py`
+- 新增：`profiles/ai-public/README.md`
+- 修改：`.mcp.json.research`
+- 修改：`_infra/network/browser/__init__.py`
+- 修改：`config/mcp_lockfile.yaml`
+- 修改：`profiles/README.md`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- Playwright MCP 真实安装、浏览器启动、mcp-scan 仍需用户 Mac 环境。
+- `.mcp.json.research` 引用本地 pinned path，只有执行 install_mcp 后才可真实运行。
+- Orchestrator / SessionDetector / action classifier 尚未接入。
+
+**下一步计划**：
+- E7-C2-S1-T2：实现 PlaywrightOrchestrator，或先 E7-C4-S1-T1 SessionDetector。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

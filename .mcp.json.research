@@ -1,7 +1,7 @@
 {
   "_forge_trace": {
     "llm": "Arena.ai Agent Mode - Execution Lead Engineer",
-    "modified_at_beijing": "2026-06-23 14:24:45",
+    "modified_at_beijing": "2026-06-23 15:16:58",
     "task": "E6-C1-S1-T2"
   },
   "mcpServers": {
@@ -27,7 +27,13 @@
     "playwright-public": {
       "command": "node",
       "args": [
-        "mcp-servers/playwright-public/dist/index.js"
+        "mcp-servers/playwright-public/cli.js",
+        "--browser=chromium",
+        "--headed",
+        "--user-data-dir=${HOME}/ai-agent/profiles/ai-public",
+        "--blocked-origins=https://accounts.google.com;https://bank.example.com",
+        "--timeout-navigation=30000",
+        "--timeout-action=10000"
       ],
       "env": {
         "PLAYWRIGHT_PROFILE": "ai-public",
