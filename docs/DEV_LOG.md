@@ -1320,3 +1320,96 @@ python -m _infra.network.cli config
 - E2-C4-S1-T3：实现高危工具人工审批流。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 63 轮 · 2026-06-23（E2-C4-S1-T3/T4: 高危审批 + 参数安全验证）
+
+**当前任务（顺次执行）**：
+1. E2-C4-S1-T3 — 实现高危工具人工审批流。
+2. E2-C4-S1-T4 — 实现参数安全验证。
+
+**执行说明**：按用户最新指令，本轮顺次推进多个 Task；已确保 T3 测试通过后才进入 T4 开发。
+
+### E2-C4-S1-T3 完成内容
+
+1. **新增 HighRiskApprovalEngine**：
+   - 新建 `_infra/network/mcp_guard/approval.py`
+   - 检测高危操作：post / comment / DM / like / buy / purchase / pay / delete / edit_profile / send_email / submit_form
+   - tool name 或 arguments 中匹配高危操作即触发审批
+   - 审批输入严格要求小写 `yes`
+   - 其他任何输入均视为拒绝
+   - 审批仅对当前 `MCPGuard.check()` 调用生效，不缓存批准
+
+2. **MCPGuard 集成审批流**：
+   - 高危操作在 mode policy + schema check 后进入审批
+   - `yes` → allow，reason=`human_approved`
+   - 非 `yes` → deny，reason=`human_rejected`
+   - audit details 记录 high_risk / matched_terms / approved，但不记录 raw args
+
+3. **T3 测试**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_approval.py -q
+# 6 passed
+```
+
+### E2-C4-S1-T4 完成内容
+
+1. **新增 ArgumentValidator**：
+   - 新建 `_infra/network/mcp_guard/argument_validator.py`
+   - 拦截危险参数：`document.cookie` / `localStorage` / `sessionStorage` / `eval(` / `Function(`
+   - URL allowlist：支持 allowed_url_domains，并允许子域
+   - 最大参数长度限制
+   - 参数中 PII / secret 检测：复用 deterministic common PII recognizers + secret recognizers
+
+2. **MCPGuard 集成参数验证**：
+   - 参数验证在 high-risk approval 前执行
+   - 失败时直接 deny，reason 为具体原因：
+     - `forbidden_argument_pattern`
+     - `url_not_allowed`
+     - `arguments_too_long`
+     - `secret_detected_in_arguments`
+     - `pii_detected_in_arguments`
+   - audit details 不记录 raw args，仅记录 arg_keys / reason / matches 类型
+
+3. **T4 测试**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_argument_validator.py -q
+# 7 passed
+```
+
+**整体验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_approval.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_mcp_argument_validator.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 261 passed, 2 skipped, 16 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/mcp_guard/approval.py`
+- 新增：`_infra/network/mcp_guard/argument_validator.py`
+- 新增：`_infra/network/tests/unit/test_mcp_approval.py`
+- 新增：`_infra/network/tests/unit/test_mcp_argument_validator.py`
+- 修改：`_infra/network/mcp_guard/guard.py`
+- 修改：`_infra/network/mcp_guard/__init__.py`
+- 修改：`_infra/network/mcp_guard/models.py`
+- 修改：`_infra/network/tests/unit/test_mcp_guard.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 高危审批与参数验证均已默认接入 MCPGuard；后续 hook/CLI 调用必须避免绕过 MCPGuard 直接执行工具。
+- URL allowlist 目前是 `ArgumentValidator` 构造参数，尚未接入独立 YAML；后续如需要 per-server allowlist，应扩展 policy config。
+
+**下一步计划**：
+- M4 E2-C4 core policy tasks 已完成。下一候选为 E11-C5-S1-T1 Cookie 泄露测试，或进入 M5 模式隔离文件输出。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。

@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:02:00
+创建时间（北京时间）：2026-06-23 11:25:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 11:02 CST
-**当前版本**：v1.3.0-dossier + Network Increment（M4 模式权限策略完成）
+**更新日期**：2026-06-23 11:25 CST
+**当前版本**：v1.3.0-dossier + Network Increment（M4 MCP Guard 策略闭环完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -71,17 +71,21 @@
 - **E2-C3-S1-T1** MCP Schema Hash 校验完成；实现 canonical JSON SHA256、lockfile tool schema pin、tools/list 提取、tool description mutation 检测、schema change 写入 `mcp_schema_changes` 并抛 `MCPSchemaChangedError`
 - **E2-C4-S1-T1** MCP Guard 核心抽象完成；定义 `MCPToolCall` / `MCPToolResult` / `GuardDecision` / `PolicyDecision`，实现 `MCPGuard.check()`、schema verification 集成与所有决策审计（只记录 arg_keys，不记录 raw args）
 - **E2-C4-S1-T2** 模式权限策略完成；新增 `config/mode_policies.yaml` 与 `ModePolicyEngine`，MCPGuard 默认启用 coding/research/private mode policy，拒绝不符合模式边界的 server/tool 并写 audit
-- **测试**：`test_mcp_mode_policy.py` 6 passed；network unit+security 全量 248 passed / 2 skipped / 13 warnings；`compileall` 通过
-- **当前单任务**：E2-C4-S1-T2 模式权限策略已完成
-- **下一任务候选**：E2-C4-S1-T3 高危工具人工审批流（尚未实现）
+- **E2-C4-S1-T3** 高危工具人工审批流完成；新增 `HighRiskApprovalEngine`，post/comment/DM/like/buy/pay/delete/edit_profile/send_email/submit_form 等高危操作需严格输入 `yes` 才单次放行
+- **E2-C4-S1-T4** 参数安全验证完成；新增 `ArgumentValidator`，拦截 document.cookie/localStorage/sessionStorage/eval/Function、URL allowlist 违规、参数超长、参数内 PII/secret，并写 audit
+- **测试**：`test_mcp_approval.py` 6 passed；`test_mcp_argument_validator.py` 7 passed；network unit+security 全量 261 passed / 2 skipped / 16 warnings；`compileall` 通过
+- **当前单任务**：E2-C4-S1-T4 参数安全验证已完成
+- **下一任务候选**：E11-C5-S1-T1 Cookie 泄露测试（尚未实现），或进入 M5 模式隔离文件输出
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_mcp_mode_policy.py -q
+python -m pytest _infra/network/tests/unit/test_mcp_approval.py -q
 # 6 passed
+python -m pytest _infra/network/tests/unit/test_mcp_argument_validator.py -q
+# 7 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 248 passed, 2 skipped, 13 warnings
+# 261 passed, 2 skipped, 16 warnings
 python -m compileall -q _infra/network
 # pass
 ```

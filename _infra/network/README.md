@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:02:00
+创建时间（北京时间）：2026-06-23 11:25:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -58,5 +58,7 @@ python -m pytest _infra/network/tests/unit/ -q
 - E2-C3-S1-T1（MCP Schema Hash 校验；canonical hash + lockfile pin + schema change audit）
 - E2-C4-S1-T1（MCP Guard 核心抽象；tool call/result/decision models + check 接口 + audit + schema guard）
 - E2-C4-S1-T2（模式权限策略；coding/research/private 配置驱动 server/tool 边界）
+- E2-C4-S1-T3（高危工具人工审批流；严格 yes 单次审批 + audit）
+- E2-C4-S1-T4（参数安全验证；危险 JS/cookie/storage/URL/长度/PII/secret 拦截）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M4 E2-C4-S1-T3 — 高危工具人工审批流。
+当前下一候选任务：`TASK_BACKLOG.md` 中 M4 E11-C5-S1-T1 — Cookie 泄露测试；或进入 M5 模式隔离文件输出。

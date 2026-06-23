@@ -1239,3 +1239,47 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E2-C4-S1-T3` high-risk tool human approval flow.
+
+---
+
+## [2026-06-23] MCP Guard — High-Risk Approval + Argument Validation (E2-C4-S1-T3/T4)
+
+### Added
+- `_infra/network/mcp_guard/approval.py`
+  - `HighRiskApprovalEngine`
+  - strict `yes` one-shot approval
+  - high-risk action detection by tool name and arguments
+- `_infra/network/mcp_guard/argument_validator.py`
+  - blocks dangerous JS/cookie/storage patterns
+  - URL allowlist support
+  - max argument length support
+  - PII / secret detection in args
+- `_infra/network/tests/unit/test_mcp_approval.py`
+  - 6 tests
+- `_infra/network/tests/unit/test_mcp_argument_validator.py`
+  - 7 tests
+
+### Changed
+- `_infra/network/mcp_guard/guard.py`
+  - integrates high-risk approval flow
+  - integrates argument validation before approval
+  - all denial/approval decisions are audited without logging raw argument values
+- `_infra/network/mcp_guard/__init__.py` exports approval and argument validation classes.
+- `TASK_BACKLOG.md` marks `E2-C4-S1-T3` and `E2-C4-S1-T4` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_approval.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_mcp_argument_validator.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 261 passed, 2 skipped, 16 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Note
+- This round follows the user's updated instruction allowing multiple sequential tasks in one turn; E2-C4-S1-T4 development started only after E2-C4-S1-T3 tests passed.
+- LLM trace headers use `Arena.ai Agent Mode - Execution Lead Engineer`.

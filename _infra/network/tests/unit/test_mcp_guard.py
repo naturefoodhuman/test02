@@ -26,7 +26,7 @@ def build_guard(tmp_path):
         lockfile_path=tmp_path / "mcp_lockfile.yaml",
         audit_db_path=tmp_path / "audit.db",
     )
-    return MCPGuard(audit_logger=audit, schema_validator=schema_validator, enable_mode_policy=False), audit
+    return MCPGuard(audit_logger=audit, schema_validator=schema_validator, enable_mode_policy=False, enable_approval=False, enable_argument_validation=False), audit
 
 
 def test_mcp_models_instantiation():
@@ -127,7 +127,7 @@ def test_guard_verify_and_record_schema_methods(tmp_path):
 def test_guard_default_require_approval_decision_is_audited(tmp_path):
     audit = AuditLogger(tmp_path / "audit.db")
     validator = MCPToolSchemaValidator(tmp_path / "mcp_lockfile.yaml", tmp_path / "audit.db")
-    guard = MCPGuard(audit_logger=audit, schema_validator=validator, default_decision=PolicyDecision.REQUIRE_APPROVAL, enable_mode_policy=False)
+    guard = MCPGuard(audit_logger=audit, schema_validator=validator, default_decision=PolicyDecision.REQUIRE_APPROVAL, enable_mode_policy=False, enable_approval=False, enable_argument_validation=False)
 
     decision = guard.check(MCPToolCall(server_id="browser", tool_name="click", mode="private"))
 

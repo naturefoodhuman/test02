@@ -18,6 +18,8 @@ from typing import Any, Mapping
 
 from ..audit_log.logger import AuditLogger
 from ..exceptions import MCPSchemaChangedError
+from .approval import HighRiskApprovalEngine
+from .argument_validator import ArgumentValidator
 from .mode_policy import ModePolicyEngine
 from .models import GuardDecision, MCPToolCall, PolicyDecision
 from .schema_validator import MCPToolSchemaValidator
@@ -31,12 +33,18 @@ class MCPGuard:
         audit_logger: AuditLogger | None = None,
         schema_validator: MCPToolSchemaValidator | None = None,
         mode_policy: ModePolicyEngine | None = None,
+        approval_engine: HighRiskApprovalEngine | None = None,
+        argument_validator: ArgumentValidator | None = None,
         default_decision: PolicyDecision = PolicyDecision.ALLOW,
         enable_mode_policy: bool = True,
+        enable_approval: bool = True,
+        enable_argument_validation: bool = True,
     ):
         self.audit_logger = audit_logger or AuditLogger()
         self.schema_validator = schema_validator or MCPToolSchemaValidator()
         self.mode_policy = mode_policy if mode_policy is not None else (ModePolicyEngine.from_config() if enable_mode_policy else None)
+        self.approval_engine = approval_engine if approval_engine is not None else (HighRiskApprovalEngine() if enable_approval else None)
+        self.argument_validator = argument_validator if argument_validator is not None else (ArgumentValidator() if enable_argument_validation else None)
         self.default_decision = default_decision
 
     def check(self, call: MCPToolCall) -> GuardDecision:
@@ -71,6 +79,24 @@ class MCPGuard:
                     details=details,
                 )
 
+        if self.argument_validator is not None:
+            arg_result = self.argument_validator.validate(call)
+            details["argument_validation_reason"] = arg_result.reason
+            details["argument_length"] = arg_result.arg_length
+            if not arg_result.allowed:
+                details["reason"] = "argument_validation_denied"
+                details["argument_matches"] = list(arg_result.matches)
+                audit_id = self._audit(call, PolicyDecision.DENY, details)
+                return GuardDecision(
+                    decision=PolicyDecision.DENY,
+                    reason=arg_result.reason,
+                    server_id=call.server_id,
+                    tool_name=call.tool_name,
+                    mode=call.mode,
+                    audit_event_id=audit_id,
+                    details=details,
+                )
+
         if call.schema is not None:
             try:
                 result = self.schema_validator.verify_schema(call.server_id, call.tool_name, call.schema)
@@ -88,6 +114,27 @@ class MCPGuard:
                 return GuardDecision(
                     decision=PolicyDecision.DENY,
                     reason="schema_changed",
+                    server_id=call.server_id,
+                    tool_name=call.tool_name,
+                    mode=call.mode,
+                    audit_event_id=audit_id,
+                    details=details,
+                )
+
+        if self.approval_engine is not None:
+            approval_check = self.approval_engine.check_requires_approval(call)
+            if approval_check.requires_approval:
+                details["high_risk"] = True
+                details["approval_reason"] = approval_check.reason
+                details["matched_terms"] = list(approval_check.matched_terms)
+                approval_result = self.approval_engine.request_approval(call, approval_check)
+                details["approved"] = approval_result.approved
+                details["reason"] = approval_result.reason
+                decision = PolicyDecision.ALLOW if approval_result.approved else PolicyDecision.DENY
+                audit_id = self._audit(call, decision, details)
+                return GuardDecision(
+                    decision=decision,
+                    reason=approval_result.reason,
                     server_id=call.server_id,
                     tool_name=call.tool_name,
                     mode=call.mode,

@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:02:00
+创建时间（北京时间）：2026-06-23 11:25:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E2-C4-S1-T2 模式权限策略完成）
+> **最近同步**: 2026-06-23（E2-C4-S1-T3/T4 审批与参数验证完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -700,24 +700,28 @@ P3 = 可选增强
 - **前置依赖**: E2-C4-S1-T2
 - **输入**: §7.3 写操作流程
 - **输出**: 审批模块
-- **涉及文件**:
-  - 新建：`src/mcp/policies/approval.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/mcp_guard/approval.py`
+  - 新建：`_infra/network/tests/unit/test_mcp_approval.py`
+  - 修改：`_infra/network/mcp_guard/guard.py`
+  - 修改：`_infra/network/mcp_guard/__init__.py`
 - **实现要求**:
-  - 高危操作清单：post / comment / DM / buy / pay / delete / edit_profile / send_email / submit_form
+  - 高危操作清单：post / comment / DM / like / buy / purchase / pay / delete / edit_profile / send_email / submit_form
   - 触发条件：tool name 或 arguments 匹配
-  - 审批方式：CLI 输入 `yes`（与 FORGE DataPrivacyGate 一致）
-  - 审批仅生效一次
-  - 写审计日志
+  - 审批方式：CLI 输入严格小写 `yes`（与 FORGE DataPrivacyGate 一致）
+  - 审批仅对当前 `check()` 调用生效，不缓存批准
+  - 写审计日志；audit 仅记录 arg_keys / matched_terms，不记录 raw args
 - **测试要求**:
   - 单元测试：高危操作识别
   - 单元测试：审批流程（mock input）
   - 单元测试：拒绝时阻断
+  - 单元测试：非高危操作不触发 input
 - **验收标准**:
   - 高危操作必须审批
   - "yes" 之外输入视为拒绝
 - **DoD**:
   - [x] approval.py 实现
-  - [x] 单元测试通过
+  - [x] 单元测试通过（`test_mcp_approval.py`: 6 passed）
 
 ---
 
@@ -727,24 +731,29 @@ P3 = 可选增强
 - **前置依赖**: E2-C4-S1-T1
 - **输入**: §13.1 cookie 防护、§5.4 注入防护
 - **输出**: 参数验证器
-- **涉及文件**:
-  - 新建：`src/mcp/policies/argument_validator.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/mcp_guard/argument_validator.py`
+  - 新建：`_infra/network/tests/unit/test_mcp_argument_validator.py`
+  - 修改：`_infra/network/mcp_guard/guard.py`
+  - 修改：`_infra/network/mcp_guard/__init__.py`
 - **实现要求**:
-  - 黑名单：`document.cookie`、`localStorage`、`sessionStorage` 字符串
-  - URL allowlist 检查
+  - 黑名单：`document.cookie`、`localStorage`、`sessionStorage`、`eval(`、`Function(` 字符串
+  - URL allowlist 检查（可配置 `allowed_url_domains`，支持子域）
   - 最大参数长度限制
-  - 检测 PII / secret 在参数中
-  - 失败时返回 deny + 原因
+  - 检测 PII / secret 在参数中（复用 deterministic common PII 与 secret recognizers）
+  - 失败时返回 deny + 明确原因，并写审计日志；audit 不记录 raw args
 - **测试要求**:
   - 单元测试：document.cookie 拦截
   - 单元测试：URL 白名单
   - 单元测试：长度限制
+  - 单元测试：secret / PII 参数拦截
+  - 单元测试：MCPGuard 集成拒绝并审计
 - **验收标准**:
   - 危险参数被拦截
   - 错误信息明确
 - **DoD**:
   - [x] argument_validator.py 实现
-  - [x] 单元测试覆盖率 ≥ 90%
+  - [x] 单元测试通过（`test_mcp_argument_validator.py`: 7 passed）
 
 ---
 
@@ -2758,8 +2767,8 @@ graph TD
 | M4 | E2-C3 | E2-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C4 | E2-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C4 | E2-C4-S1-T2 | [x] | 2026-06-23 | Arena Agent |
-| M4 | E2-C4 | E2-C4-S1-T3 | [ ] | | |
-| M4 | E2-C4 | E2-C4-S1-T4 | [ ] | | |
+| M4 | E2-C4 | E2-C4-S1-T3 | [x] | 2026-06-23 | Arena Agent |
+| M4 | E2-C4 | E2-C4-S1-T4 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E11-C5 | E11-C5-S1-T1 | [ ] | | |
 | M5 | E6-C1 | E6-C1-S1-T1 | [ ] | | |
 | M5 | E6-C1 | E6-C1-S1-T2 | [ ] | | |

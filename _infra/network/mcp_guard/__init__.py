@@ -3,6 +3,8 @@
 
 """MCP Guard package for FORGE Network."""
 
+from .approval import ApprovalCheckResult, HIGH_RISK_ACTIONS, HighRiskApprovalEngine, HumanApprovalResult
+from .argument_validator import ArgumentValidationResult, ArgumentValidator
 from .guard import MCPGuard
 from .mode_policy import DEFAULT_MODE_POLICY_PATH, ModePolicy, ModePolicyEngine, ModePolicyResult
 from .models import GuardDecision, MCPMode, MCPToolCall, MCPToolResult, PolicyDecision
@@ -17,7 +19,13 @@ from .schema_validator import (
 )
 
 __all__ = [
+    "ApprovalCheckResult",
+    "ArgumentValidationResult",
+    "ArgumentValidator",
     "DEFAULT_MODE_POLICY_PATH",
+    "HIGH_RISK_ACTIONS",
+    "HighRiskApprovalEngine",
+    "HumanApprovalResult",
     "GuardDecision",
     "ModePolicy",
     "ModePolicyEngine",
