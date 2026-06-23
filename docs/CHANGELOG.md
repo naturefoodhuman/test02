@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:02:00
+创建时间（北京时间）：2026-06-23 11:45:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1283,3 +1283,37 @@ python -m compileall -q _infra/network
 ### Note
 - This round follows the user's updated instruction allowing multiple sequential tasks in one turn; E2-C4-S1-T4 development started only after E2-C4-S1-T3 tests passed.
 - LLM trace headers use `Arena.ai Agent Mode - Execution Lead Engineer`.
+
+---
+
+## [2026-06-23] Security + Mode Profiles — Cookie Leak Tests and Coding MCP Profile
+
+### Added
+- `_infra/network/tests/security/test_cookie_leak.py`
+  - 9 tests covering `document.cookie`, `localStorage`, `sessionStorage`, eval/Function cookie leakage, Cookie/Set-Cookie output redaction, clean snapshot pass
+- `.mcp.json.coding`
+  - Coding-mode MCP profile using local pinned paths under `mcp-servers/`
+  - JSON-safe `_forge_trace` metadata for LLM traceability
+- `_infra/network/tests/unit/test_mcp_profiles.py`
+  - 3 tests validating JSON legality, trace metadata, allowed/forbidden server boundaries and no `npx`/`uvx`/`@latest`
+
+### Changed
+- `TASK_BACKLOG.md` marks `E11-C5-S1-T1` and `E6-C1-S1-T1` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+- LLM trace uses `Arena.ai Agent Mode - Execution Lead Engineer`.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/security/test_cookie_leak.py -q
+# 9 passed
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 273 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- `.mcp.json.coding` references local pinned paths; actual MCP servers must be installed under `mcp-servers/` via the pinned installer.
+- Research/private MCP profiles still pending.

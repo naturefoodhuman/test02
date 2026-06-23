@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:02:00
+创建时间（北京时间）：2026-06-23 11:45:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1411,5 +1411,88 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - M4 E2-C4 core policy tasks 已完成。下一候选为 E11-C5-S1-T1 Cookie 泄露测试，或进入 M5 模式隔离文件输出。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 64 轮 · 2026-06-23（E11-C5-S1-T1 + E6-C1-S1-T1: Cookie 泄露测试 + Coding MCP Profile）
+
+**当前任务（顺次执行）**：
+1. E11-C5-S1-T1 — Cookie 泄露测试。
+2. E6-C1-S1-T1 — 创建 `.mcp.json.coding`。
+
+**批量策略说明**：按用户要求，在质量可控时顺次完成多个小型/相关 Task。本轮先完成 E11-C5 测试并通过，再进入 E6-C1 coding profile。
+
+### E11-C5-S1-T1 完成内容
+
+1. **新增 Cookie 泄露安全测试**：
+   - 新建 `_infra/network/tests/security/test_cookie_leak.py`
+   - 覆盖：
+     - `document.cookie` MCP 参数拦截
+     - `localStorage` / `sessionStorage` MCP 参数拦截
+     - `eval('document.cookie')` / `Function('return document.cookie')` 拦截
+     - Cookie header / Set-Cookie 在 PrivacyGateway 输出层脱敏
+     - clean snapshot 参数不误拦截
+
+2. **验证结果**：
+```bash
+python -m pytest _infra/network/tests/security/test_cookie_leak.py -q
+# 9 passed
+```
+
+### E6-C1-S1-T1 完成内容
+
+1. **新增 Coding MCP profile**：
+   - 新建 `.mcp.json.coding`
+   - 只包含 coding 允许的本地 MCP server 引用：filesystem / git / tests / shell-approved
+   - 不引用 browser / search / private profile 相关 server
+   - 所有 server 均使用本地 `mcp-servers/...` 路径，不使用 `npx` / `uvx` / `@latest`
+
+2. **JSON 留痕处理**：
+   - JSON 不支持注释头；为保持 JSON 合法，本文件使用顶层 `_forge_trace` 字段记录：
+     - `llm`: `Arena.ai Agent Mode - Execution Lead Engineer`
+     - `modified_at_beijing`
+     - `task`
+
+3. **新增 profile 测试**：
+   - 新建 `_infra/network/tests/unit/test_mcp_profiles.py`
+   - 验证 JSON 合法、trace 存在、coding profile 不包含 forbidden servers、不包含 `npx` / `uvx` / `@latest`
+
+4. **验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
+# 3 passed
+```
+
+**整体验证结果**：
+```bash
+python -m pytest _infra/network/tests/security/test_cookie_leak.py -q
+# 9 passed
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 273 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`.mcp.json.coding`
+- 新增：`_infra/network/tests/security/test_cookie_leak.py`
+- 新增：`_infra/network/tests/unit/test_mcp_profiles.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- `.mcp.json.coding` 引用本地 pinned path（`mcp-servers/...`），对应 server 需通过 E2-C1 安装脚本安装后才能真实启动。
+- E6-C1-S1-T2 Research profile 的原始前置依赖 E3-C1/E4-C1 部署任务在表格中仍未完成，下一步继续时需要谨慎处理前置依赖。
+
+**下一步计划**：
+- 候选 1：E6-C1-S1-T2 `.mcp.json.research`（需处理 E3-C1/E4-C1 前置状态）。
+- 候选 2：先补 E3-C1/E4-C1 部署任务，满足 Research profile 前置依赖。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

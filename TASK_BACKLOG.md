@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:25:00
+创建时间（北京时间）：2026-06-23 11:45:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E2-C4-S1-T3/T4 审批与参数验证完成）
+> **最近同步**: 2026-06-23（E11-C5 Cookie 泄露测试 + E6-C1 Coding profile 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1523,16 +1523,19 @@ P3 = 可选增强
 - **前置依赖**: E2-C1-S1-T1
 - **输入**: §4.1
 - **输出**: `.mcp.json.coding`
-- **涉及文件**: 新建 `.mcp.json.coding`
+- **涉及文件**:
+  - 新建：`.mcp.json.coding`
+  - 新建：`_infra/network/tests/unit/test_mcp_profiles.py`
 - **实现要求**:
   - 允许：repo / git / tests / limited shell（如需 MCP）
   - 禁止：browser / search / private profile
   - 不引用 playwright / chrome-devtools / searxng / crawl4ai
+  - JSON 文件无法使用注释头，改用 `_forge_trace` 字段记录 `Arena.ai Agent Mode - Execution Lead Engineer`
 - **测试要求**: 静态校验 JSON 合法
 - **验收标准**: 文件合法
 - **DoD**:
   - [x] 文件创建
-  - [x] JSON 合法
+  - [x] JSON 合法（`test_mcp_profiles.py`: 3 passed）
 
 ---
 
@@ -2208,16 +2211,17 @@ P3 = 可选增强
 - **前置依赖**: E2-C4-S1-T4
 - **输入**: §13.1
 - **输出**: 测试用例
-- **涉及文件**:
-  - 新建：`tests/security/test_cookie_leak.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/tests/security/test_cookie_leak.py`
 - **实现要求**:
-  - `document.cookie` 参数 → MCPGuard 拒绝
-  - localStorage / sessionStorage 拒绝
-  - 输出层扫描（cookie 格式）
+  - `document.cookie` 参数 → MCPGuard / ArgumentValidator 拒绝
+  - `localStorage` / `sessionStorage` / `eval(document.cookie)` / `Function(document.cookie)` 拒绝
+  - Cookie / Set-Cookie 输出层经 PrivacyGateway 扫描并脱敏
+  - 清洁 snapshot 参数不误拦截
 - **测试要求**: 所有用例通过
 - **验收标准**: 100% 拦截
 - **DoD**:
-  - [x] 测试编写
+  - [x] 测试编写（`test_cookie_leak.py`: 9 passed）
   - [x] 全部通过
 
 ---
@@ -2769,8 +2773,8 @@ graph TD
 | M4 | E2-C4 | E2-C4-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C4 | E2-C4-S1-T3 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C4 | E2-C4-S1-T4 | [x] | 2026-06-23 | Arena Agent |
-| M4 | E11-C5 | E11-C5-S1-T1 | [ ] | | |
-| M5 | E6-C1 | E6-C1-S1-T1 | [ ] | | |
+| M4 | E11-C5 | E11-C5-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M5 | E6-C1 | E6-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E6-C1 | E6-C1-S1-T2 | [ ] | | |
 | M5 | E6-C2 | E6-C2-S1-T1 | [ ] | | |
 | M5 | E6-C3 | E6-C3-S1-T1 | [ ] | | |

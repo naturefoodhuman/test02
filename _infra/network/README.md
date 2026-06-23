@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:25:00
+创建时间（北京时间）：2026-06-23 11:45:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -60,5 +60,7 @@ python -m pytest _infra/network/tests/unit/ -q
 - E2-C4-S1-T2（模式权限策略；coding/research/private 配置驱动 server/tool 边界）
 - E2-C4-S1-T3（高危工具人工审批流；严格 yes 单次审批 + audit）
 - E2-C4-S1-T4（参数安全验证；危险 JS/cookie/storage/URL/长度/PII/secret 拦截）
+- E11-C5-S1-T1（Cookie 泄露测试；MCP args + output layer cookie/session 拦截）
+- E6-C1-S1-T1（Coding MCP profile；`.mcp.json.coding` JSON 合法且不引用 browser/search/private servers）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M4 E11-C5-S1-T1 — Cookie 泄露测试；或进入 M5 模式隔离文件输出。
+当前下一候选任务：`TASK_BACKLOG.md` 中 M5 E6-C1-S1-T2 — Research MCP profile（需注意 E3-C1/E4-C1 部署任务前置状态）。

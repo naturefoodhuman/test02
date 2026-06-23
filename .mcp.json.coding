@@ -1,0 +1,37 @@
+{
+  "_forge_trace": {
+    "llm": "Arena.ai Agent Mode - Execution Lead Engineer",
+    "modified_at_beijing": "2026-06-23 11:45:00",
+    "task": "E6-C1-S1-T1"
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "node",
+      "args": [
+        "mcp-servers/filesystem/dist/index.js",
+        "."
+      ]
+    },
+    "git": {
+      "command": "node",
+      "args": [
+        "mcp-servers/git/dist/index.js"
+      ]
+    },
+    "tests": {
+      "command": "node",
+      "args": [
+        "mcp-servers/tests/dist/index.js"
+      ]
+    },
+    "shell-approved": {
+      "command": "node",
+      "args": [
+        "mcp-servers/shell-approved/dist/index.js"
+      ],
+      "env": {
+        "FORGE_MCP_APPROVAL_REQUIRED": "1"
+      }
+    }
+  }
+}

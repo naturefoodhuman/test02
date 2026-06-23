@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:25:00
+创建时间（北京时间）：2026-06-23 11:45:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 11:25 CST
-**当前版本**：v1.3.0-dossier + Network Increment（M4 MCP Guard 策略闭环完成）
+**更新日期**：2026-06-23 11:45 CST
+**当前版本**：v1.3.0-dossier + Network Increment（Cookie 泄露测试 + Coding MCP Profile 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -73,9 +73,11 @@
 - **E2-C4-S1-T2** 模式权限策略完成；新增 `config/mode_policies.yaml` 与 `ModePolicyEngine`，MCPGuard 默认启用 coding/research/private mode policy，拒绝不符合模式边界的 server/tool 并写 audit
 - **E2-C4-S1-T3** 高危工具人工审批流完成；新增 `HighRiskApprovalEngine`，post/comment/DM/like/buy/pay/delete/edit_profile/send_email/submit_form 等高危操作需严格输入 `yes` 才单次放行
 - **E2-C4-S1-T4** 参数安全验证完成；新增 `ArgumentValidator`，拦截 document.cookie/localStorage/sessionStorage/eval/Function、URL allowlist 违规、参数超长、参数内 PII/secret，并写 audit
-- **测试**：`test_mcp_approval.py` 6 passed；`test_mcp_argument_validator.py` 7 passed；network unit+security 全量 261 passed / 2 skipped / 16 warnings；`compileall` 通过
-- **当前单任务**：E2-C4-S1-T4 参数安全验证已完成
-- **下一任务候选**：E11-C5-S1-T1 Cookie 泄露测试（尚未实现），或进入 M5 模式隔离文件输出
+- **E11-C5-S1-T1** Cookie 泄露测试完成；覆盖 MCPGuard 拦截 document.cookie/localStorage/sessionStorage/eval/Function，ArgumentValidator 拦截 Cookie header secret，PrivacyGateway 输出层脱敏 Cookie/Set-Cookie
+- **E6-C1-S1-T1** `.mcp.json.coding` 完成；JSON 合法，采用 `_forge_trace` 字段记录 LLM 留痕，且不引用 browser/search/private MCP server
+- **测试**：`test_cookie_leak.py` 9 passed；`test_mcp_profiles.py` 3 passed；network unit+security 全量 273 passed / 2 skipped / 22 warnings
+- **当前单任务批次**：E11-C5-S1-T1 + E6-C1-S1-T1 已顺次完成（先完成 Cookie 测试，再创建 Coding profile）
+- **下一任务候选**：E6-C1-S1-T2 `.mcp.json.research`（注意其原始前置依赖 E3-C1/E4-C1 部署任务在表中仍未完成，需谨慎）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
