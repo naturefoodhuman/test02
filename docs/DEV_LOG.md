@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-23 10:24:12
+创建时间（北京时间）：2026-06-23 10:42:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1129,5 +1129,62 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E2-C3-S1-T1：实现 MCP Schema Hash 计算与比对。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 60 轮 · 2026-06-23（E2-C3-S1-T1: MCP Schema Hash 校验）
+
+**当前任务**：E2-C3-S1-T1 — 实现 MCP Schema Hash 计算与比对。
+
+**完成内容**：
+
+1. **新增 schema validator 模块**：
+   - 新建 `_infra/network/mcp_guard/schema_validator.py`
+   - 定义 `SchemaHashStore`、`MCPToolSchemaValidator`、`ToolSchemaPin`、`ToolSchemaValidationResult`
+   - `compute_schema_hash()` 使用 canonical JSON（sort_keys + compact separators）计算 SHA256
+
+2. **lockfile schema pin**：
+   - schema hash 写入 `config/mcp_lockfile.yaml` 的 `servers.<server>.tools.<tool>.schema_hash`
+   - 首次见到 schema 自动 pin
+   - 相同 schema 重复验证返回 `unchanged`
+
+3. **schema mutation / rug pull 检测**：
+   - `extract_tool_schemas()` 支持 MCP `tools/list` response
+   - hash payload 包含：tool name / description / inputSchema
+   - 因此 tool description 变化也会触发 hash 变化
+   - 变化时写入 `runtime/audit.db` 的 `mcp_schema_changes` 表，并抛 `MCPSchemaChangedError`
+
+4. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_mcp_schema_validator.py`
+   - 覆盖 schema key 顺序稳定 hash、lockfile 写入、首次 pin / unchanged、schema change audit row、tools/list 提取、description mutation 检测
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_schema_validator.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 235 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/mcp_guard/schema_validator.py`
+- 新增：`_infra/network/tests/unit/test_mcp_schema_validator.py`
+- 修改：`_infra/network/mcp_guard/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前模块接收 MCP `tools/list` 数据结构，但不负责 MCP transport；后续 E2-C4 PreToolUse / MCPGuard 需要接入实际 MCP client。
+- 首次 schema 自动 pin 适合安装/准入阶段；生产环境可在 E2-C4 中增加人工审批策略。
+
+**下一步计划**：
+- E2-C4-S1-T1：设计 MCP Guard 核心抽象与数据模型。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

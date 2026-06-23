@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-23 10:24:12
+创建时间（北京时间）：2026-06-23 10:42:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1137,3 +1137,34 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Real environment validation requires installing `mcp-scan`.
 - Next recommended task: `E2-C3-S1-T1` MCP Schema Hash calculation and comparison.
+
+---
+
+## [2026-06-23] MCP Guard — Schema Hash Validator (E2-C3-S1-T1)
+
+### Added
+- `_infra/network/mcp_guard/schema_validator.py`
+  - canonical schema JSON hashing
+  - lockfile-backed schema pin store
+  - tools/list extraction
+  - schema mutation detection with audit DB write
+- `_infra/network/tests/unit/test_mcp_schema_validator.py`
+  - 6 tests covering stable hash, pin/unchanged, mutation detection, audit row and description rug-pull detection
+
+### Changed
+- `_infra/network/mcp_guard/__init__.py` exports schema validator helpers.
+- `TASK_BACKLOG.md` marks `E2-C3-S1-T1` as done and sets next TODO to `E2-C4-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_schema_validator.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 235 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E2-C4-S1-T1` MCP Guard core abstraction.
