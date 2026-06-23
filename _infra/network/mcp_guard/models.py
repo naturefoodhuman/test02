@@ -1,4 +1,4 @@
-# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
 # 创建时间（北京时间）：2026-06-23 11:02:00
 
 """Core MCP Guard data models (E2-C4-S1-T1)."""

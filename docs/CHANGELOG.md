@@ -1,5 +1,5 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
 创建时间（北京时间）：2026-06-23 11:02:00
 -->
 
@@ -1204,3 +1204,38 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Mode policy, high-risk approval and argument validation remain separate follow-up tasks.
 - Next recommended task: `E2-C4-S1-T2` mode permission policy.
+
+---
+
+## [2026-06-23] MCP Guard — Mode Permission Policy (E2-C4-S1-T2)
+
+### Added
+- `config/mode_policies.yaml`
+  - coding / research / private mode boundaries
+  - allowed/denied servers and allowed/forbidden tools
+- `_infra/network/mcp_guard/mode_policy.py`
+  - `ModePolicy`
+  - `ModePolicyResult`
+  - `ModePolicyEngine`
+- `_infra/network/tests/unit/test_mcp_mode_policy.py`
+  - 6 tests covering coding/browser deny, research/shell deny, private read-only, config reload and MCPGuard integration
+
+### Changed
+- `_infra/network/mcp_guard/guard.py` now applies mode policy by default.
+- `_infra/network/mcp_guard/__init__.py` exports mode policy classes.
+- `TASK_BACKLOG.md` marks `E2-C4-S1-T2` as done and sets next TODO to `E2-C4-S1-T3`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+- LLM trace headers for files touched this round use `Arena.ai Agent Mode - Execution Lead Engineer` per user request.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_mode_policy.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 248 passed, 2 skipped, 13 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E2-C4-S1-T3` high-risk tool human approval flow.

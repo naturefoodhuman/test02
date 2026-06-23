@@ -1,4 +1,4 @@
-# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
 # 创建时间（北京时间）：2026-06-23 11:02:00
 
 """
@@ -18,6 +18,7 @@ from typing import Any, Mapping
 
 from ..audit_log.logger import AuditLogger
 from ..exceptions import MCPSchemaChangedError
+from .mode_policy import ModePolicyEngine
 from .models import GuardDecision, MCPToolCall, PolicyDecision
 from .schema_validator import MCPToolSchemaValidator
 
@@ -29,10 +30,13 @@ class MCPGuard:
         self,
         audit_logger: AuditLogger | None = None,
         schema_validator: MCPToolSchemaValidator | None = None,
+        mode_policy: ModePolicyEngine | None = None,
         default_decision: PolicyDecision = PolicyDecision.ALLOW,
+        enable_mode_policy: bool = True,
     ):
         self.audit_logger = audit_logger or AuditLogger()
         self.schema_validator = schema_validator or MCPToolSchemaValidator()
+        self.mode_policy = mode_policy if mode_policy is not None else (ModePolicyEngine.from_config() if enable_mode_policy else None)
         self.default_decision = default_decision
 
     def check(self, call: MCPToolCall) -> GuardDecision:
@@ -50,6 +54,22 @@ class MCPGuard:
         }
         if call.trace_id:
             details["trace_id"] = call.trace_id
+
+        if self.mode_policy is not None:
+            policy_result = self.mode_policy.evaluate(call)
+            details["mode_policy_reason"] = policy_result.reason
+            if not policy_result.allowed:
+                details["reason"] = "mode_policy_denied"
+                audit_id = self._audit(call, PolicyDecision.DENY, details)
+                return GuardDecision(
+                    decision=PolicyDecision.DENY,
+                    reason=policy_result.reason,
+                    server_id=call.server_id,
+                    tool_name=call.tool_name,
+                    mode=call.mode,
+                    audit_event_id=audit_id,
+                    details=details,
+                )
 
         if call.schema is not None:
             try:

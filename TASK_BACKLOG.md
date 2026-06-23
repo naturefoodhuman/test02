@@ -1,5 +1,5 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
 创建时间（北京时间）：2026-06-23 11:02:00
 -->
 
@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E2-C4-S1-T1 MCP Guard 核心抽象完成）
+> **最近同步**: 2026-06-23（E2-C4-S1-T2 模式权限策略完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -666,25 +666,31 @@ P3 = 可选增强
 - **前置依赖**: E2-C4-S1-T1
 - **输入**: §4 三模式定义
 - **输出**: 模式策略引擎
-- **涉及文件**:
-  - 新建：`src/mcp/policies/mode_policy.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/` 与根 `config/`）**:
+  - 新建：`_infra/network/mcp_guard/mode_policy.py`
   - 新建：`config/mode_policies.yaml`
+  - 新建：`_infra/network/tests/unit/test_mcp_mode_policy.py`
+  - 修改：`_infra/network/mcp_guard/guard.py`
+  - 修改：`_infra/network/mcp_guard/__init__.py`
 - **实现要求**:
-  - 配置驱动（mode_policies.yaml）
+  - 配置驱动（`config/mode_policies.yaml`）
   - 三个模式：coding / research / private
-  - 每个模式定义 `allowed_servers`、`allowed_tools`、`forbidden_tools`
+  - 每个模式定义 `allowed_servers`、`denied_servers`、`allowed_tools`、`forbidden_tools`
   - `check_mode_policy(call) -> bool`
+  - MCPGuard 默认启用 mode policy；命中拒绝时写 audit，reason 形如 `server_denied:*` / `tool_forbidden:*`
 - **测试要求**:
   - 单元测试：coding 模式拒绝 browser
   - 单元测试：research 模式拒绝 shell
   - 单元测试：private 模式只读
+  - 单元测试：配置变更加载后立即生效
+  - 单元测试：MCPGuard mode policy deny / allow+schema check 均可审计
 - **验收标准**:
   - 三模式策略正确执行
   - 配置变更后立即生效
 - **DoD**:
   - [x] mode_policy.py 实现
   - [x] mode_policies.yaml 创建
-  - [x] 单元测试覆盖率 ≥ 90%
+  - [x] 单元测试通过（`test_mcp_mode_policy.py`: 6 passed）
 
 ---
 
@@ -2751,7 +2757,7 @@ graph TD
 | M4 | E2-C2 | E2-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C3 | E2-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C4 | E2-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
-| M4 | E2-C4 | E2-C4-S1-T2 | [ ] | | |
+| M4 | E2-C4 | E2-C4-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C4 | E2-C4-S1-T3 | [ ] | | |
 | M4 | E2-C4 | E2-C4-S1-T4 | [ ] | | |
 | M4 | E11-C5 | E11-C5-S1-T1 | [ ] | | |

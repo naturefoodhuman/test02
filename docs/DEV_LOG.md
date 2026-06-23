@@ -1,5 +1,5 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
 创建时间（北京时间）：2026-06-23 11:02:00
 -->
 
@@ -1250,5 +1250,73 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E2-C4-S1-T2：实现模式权限策略（coding / research / private）。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 62 轮 · 2026-06-23（E2-C4-S1-T2: 模式权限策略）
+
+**当前任务**：E2-C4-S1-T2 — 实现模式权限策略。
+
+**完成内容**：
+
+1. **新增 mode policy 配置**：
+   - 新建 `config/mode_policies.yaml`
+   - 定义 coding / research / private 三模式边界
+   - 每个模式包含：`allowed_servers` / `denied_servers` / `allowed_tools` / `forbidden_tools`
+
+2. **新增 ModePolicyEngine**：
+   - 新建 `_infra/network/mcp_guard/mode_policy.py`
+   - 支持 wildcard / namespaced tool 匹配（`server.tool`）
+   - 提供 `evaluate(call) -> ModePolicyResult`
+   - 提供 backlog 要求的 `check_mode_policy(call) -> bool`
+
+3. **MCPGuard 接入 mode policy**：
+   - 修改 `_infra/network/mcp_guard/guard.py`
+   - MCPGuard 默认启用 `ModePolicyEngine.from_config()`
+   - mode policy 拒绝时返回 `PolicyDecision.DENY` 并写 audit
+   - audit details 记录 `mode_policy_reason`，仍只记录 arg_keys 不记录 raw args
+   - 保留 `enable_mode_policy=False` 供核心抽象单元测试和后续特殊场景使用
+
+4. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_mcp_mode_policy.py`
+   - 覆盖 coding 拒绝 browser、research 拒绝 shell、private 只读、配置变更即时生效、MCPGuard mode policy deny audit、mode allow 后 schema check
+   - 同步调整 `test_mcp_guard.py` 中 core abstraction 测试，显式关闭 mode policy，避免与策略层测试耦合
+
+5. **LLM 留痕头部调整**：
+   - 根据用户要求，本轮修改/新增文件头部不再只写笼统 `Arena.ai Agent Mode`，改为 `Arena.ai Agent Mode - Execution Lead Engineer`。
+   - 说明：底层模型身份不由平台暴露，本项目后续以该执行角色名作为可追溯 LLM 留痕标识。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_mode_policy.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 248 passed, 2 skipped, 13 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`config/mode_policies.yaml`
+- 新增：`_infra/network/mcp_guard/mode_policy.py`
+- 新增：`_infra/network/tests/unit/test_mcp_mode_policy.py`
+- 修改：`_infra/network/mcp_guard/guard.py`
+- 修改：`_infra/network/mcp_guard/models.py`
+- 修改：`_infra/network/mcp_guard/__init__.py`
+- 修改：`_infra/network/tests/unit/test_mcp_guard.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- mode policy 已默认接入 MCPGuard；后续高危审批和参数校验需要在该基础上继续叠加，避免出现“mode 允许但高危操作无需审批”的缺口。
+- 当前策略配置是 Phase 1 默认边界，真实 MCP server 名称落地后可能需要调整 `allowed_servers` / `forbidden_tools`。
+
+**下一步计划**：
+- E2-C4-S1-T3：实现高危工具人工审批流。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。
