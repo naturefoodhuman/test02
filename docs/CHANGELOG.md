@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:58:00
+创建时间（北京时间）：2026-06-23 14:24:45
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1353,3 +1353,33 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Real Docker runtime verification must be run on the user's Mac, because the current sandbox has no Docker binary.
 - Next recommended task: `E6-C1-S1-T2` Research MCP profile.
+
+---
+
+## [2026-06-23] Mode Profiles — Research MCP Profile (E6-C1-S1-T2)
+
+### Added
+- `.mcp.json.research`
+  - allows local pinned `searxng`, `crawl4ai`, and `playwright-public`
+  - points to local-only SearXNG / Crawl4AI endpoints
+  - disables private profile usage for public Playwright
+  - includes JSON-safe `_forge_trace` metadata
+
+### Changed
+- `_infra/network/tests/unit/test_mcp_profiles.py`
+  - adds research profile JSON validation and security boundary checks
+- `TASK_BACKLOG.md` marks `E6-C1-S1-T2` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 280 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Private MCP profile depends on Chrome DevTools MCP / private profile setup (E8-C1/E8-C2).

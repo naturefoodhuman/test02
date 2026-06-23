@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:45:00
+创建时间（北京时间）：2026-06-23 14:24:45
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E11-C5 Cookie 泄露测试 + E6-C1 Coding profile 完成）
+> **最近同步**: 2026-06-23（E6-C1-S1-T2 Research MCP Profile 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1560,16 +1560,20 @@ P3 = 可选增强
 - **前置依赖**: E3-C1-S1-T1, E4-C1-S1-T1
 - **输入**: §4.2
 - **输出**: `.mcp.json.research`
-- **涉及文件**: 新建 `.mcp.json.research`
+- **涉及文件**:
+  - 新建：`.mcp.json.research`
+  - 修改：`_infra/network/tests/unit/test_mcp_profiles.py`
 - **实现要求**:
   - 允许：searxng / crawl4ai / playwright-public
-  - 禁止：任意 shell / private profile
-  - 本地路径引用
+  - 禁止：任意 shell / filesystem / filesystem-write / private profile
+  - 本地路径引用：`mcp-servers/...`
+  - 服务端点仅指向本机：SearXNG `http://127.0.0.1:8080`，Crawl4AI `http://127.0.0.1:11235`
+  - JSON 文件无法使用注释头，改用 `_forge_trace` 字段记录 `Arena.ai Agent Mode - Execution Lead Engineer`
 - **测试要求**: JSON 合法
 - **验收标准**: 文件合法
 - **DoD**:
   - [x] 文件创建
-  - [x] 测试通过
+  - [x] 测试通过（`test_mcp_profiles.py`: 6 passed）
 
 ---
 
@@ -2790,7 +2794,7 @@ graph TD
 | M4 | E2-C4 | E2-C4-S1-T4 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E11-C5 | E11-C5-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E6-C1 | E6-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
-| M5 | E6-C1 | E6-C1-S1-T2 | [ ] | | |
+| M5 | E6-C1 | E6-C1-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E6-C2 | E6-C2-S1-T1 | [ ] | | |
 | M5 | E6-C3 | E6-C3-S1-T1 | [ ] | | |
 | M5 | E10-C1 | E10-C1-S1-T1 | [ ] | | |

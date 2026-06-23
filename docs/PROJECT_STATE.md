@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:58:00
+创建时间（北京时间）：2026-06-23 14:24:45
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 11:58 CST
-**当前版本**：v1.3.0-dossier + Network Increment（SearXNG/Crawl4AI Docker 配置完成）
+**更新日期**：2026-06-23 14:24 CST
+**当前版本**：v1.3.0-dossier + Network Increment（Research MCP Profile 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -77,22 +77,22 @@
 - **E6-C1-S1-T1** `.mcp.json.coding` 完成；JSON 合法，采用 `_forge_trace` 字段记录 LLM 留痕，且不引用 browser/search/private MCP server
 - **E3-C1-S1-T1/T2** SearXNG Docker Compose + settings 完成；端口仅绑定 `127.0.0.1:8080`，JSON format 启用，Google disabled，静态配置测试通过
 - **E4-C1-S1-T1** Crawl4AI Docker Compose service 完成；端口仅绑定 `127.0.0.1:11235`，`shm_size=1g`，默认禁用 JS，静态配置测试通过
-- **测试**：`test_docker_services.py` 4 passed；network unit+security 全量 277 passed / 2 skipped / 22 warnings；Docker runtime/curl 验证需在用户 Mac 上执行
-- **当前单任务批次**：E3-C1-S1-T1 + E3-C1-S1-T2 + E4-C1-S1-T1 已顺次完成静态验证
-- **下一任务候选**：E6-C1-S1-T2 `.mcp.json.research`（SearXNG/Crawl4AI 配置前置已补齐，真实启动仍需用户 Mac Docker 验证）
+- **E6-C1-S1-T2** `.mcp.json.research` 完成；允许 searxng / crawl4ai / playwright-public，禁止 shell/filesystem/private profile，使用本地 pinned `mcp-servers/...` 路径与本机服务端点
+- **测试**：`test_mcp_profiles.py` 6 passed；network unit+security 全量 280 passed / 2 skipped / 22 warnings；Docker runtime/curl 验证仍需在用户 Mac 上执行
+- **当前单任务**：E6-C1-S1-T2 Research MCP Profile 已完成
+- **下一任务候选**：E6-C1-S1-T3 `.mcp.json.private`（前置 E8-C1 Chrome DevTools MCP 安装尚未完成），或先执行 E8-C1-S1-T1 以满足前置依赖
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_mcp_approval.py -q
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
 # 6 passed
-python -m pytest _infra/network/tests/unit/test_mcp_argument_validator.py -q
-# 7 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 261 passed, 2 skipped, 16 warnings
+# 280 passed, 2 skipped, 22 warnings
 python -m compileall -q _infra/network
 # pass
 ```
+
 
 ## 5. 待办事项 (Next)
 - [ ] **P0 – 测试护栏**：补 llm_client / smart_proxy / privacy_gate 单测，覆盖率 15% → 60% （ADR-C002）

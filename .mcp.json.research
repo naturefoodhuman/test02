@@ -1,0 +1,38 @@
+{
+  "_forge_trace": {
+    "llm": "Arena.ai Agent Mode - Execution Lead Engineer",
+    "modified_at_beijing": "2026-06-23 14:24:45",
+    "task": "E6-C1-S1-T2"
+  },
+  "mcpServers": {
+    "searxng": {
+      "command": "node",
+      "args": [
+        "mcp-servers/searxng/dist/index.js"
+      ],
+      "env": {
+        "SEARXNG_URL": "http://127.0.0.1:8080"
+      }
+    },
+    "crawl4ai": {
+      "command": "node",
+      "args": [
+        "mcp-servers/crawl4ai/dist/index.js"
+      ],
+      "env": {
+        "CRAWL4AI_URL": "http://127.0.0.1:11235",
+        "CRAWL4AI_DISABLE_JS": "true"
+      }
+    },
+    "playwright-public": {
+      "command": "node",
+      "args": [
+        "mcp-servers/playwright-public/dist/index.js"
+      ],
+      "env": {
+        "PLAYWRIGHT_PROFILE": "ai-public",
+        "PLAYWRIGHT_ALLOW_PRIVATE_PROFILE": "0"
+      }
+    }
+  }
+}

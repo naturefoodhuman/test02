@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:58:00
+创建时间（北京时间）：2026-06-23 14:24:45
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1562,5 +1562,64 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E6-C1-S1-T2：创建 `.mcp.json.research`。SearXNG/Crawl4AI 配置前置已补齐；真实服务启动仍需用户 Mac Docker 验证。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 66 轮 · 2026-06-23（E6-C1-S1-T2: Research MCP Profile）
+
+**当前任务**：E6-C1-S1-T2 — 创建 `.mcp.json.research`。
+
+**完成内容**：
+
+1. **新增 Research MCP profile**：
+   - 新建 `.mcp.json.research`
+   - 允许 server：`searxng` / `crawl4ai` / `playwright-public`
+   - 禁止引入 shell / filesystem / filesystem-write / chrome-devtools private
+   - 所有 MCP server 均使用本地 pinned path：`mcp-servers/...`
+   - SearXNG endpoint：`http://127.0.0.1:8080`
+   - Crawl4AI endpoint：`http://127.0.0.1:11235`
+   - Crawl4AI 默认 `CRAWL4AI_DISABLE_JS=true`
+   - Playwright public profile 显式 `PLAYWRIGHT_ALLOW_PRIVATE_PROFILE=0`
+
+2. **JSON 留痕**：
+   - JSON 文件不能使用注释头，因此使用 `_forge_trace` 字段记录：
+     - `llm`: `Arena.ai Agent Mode - Execution Lead Engineer`
+     - `modified_at_beijing`
+     - `task`: `E6-C1-S1-T2`
+
+3. **测试扩展**：
+   - 扩展 `_infra/network/tests/unit/test_mcp_profiles.py`
+   - 验证 research profile JSON 合法
+   - 验证只包含 research 允许的 server
+   - 验证无 `npx` / `uvx` / `@latest`
+   - 验证本机服务 endpoint 与 private profile 禁用标志
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 280 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`.mcp.json.research`
+- 修改：`_infra/network/tests/unit/test_mcp_profiles.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- `.mcp.json.research` 引用本地 pinned paths；实际 MCP server 需通过安装脚本安装到 `mcp-servers/` 后才能运行。
+- `.mcp.json.private` 的原始前置依赖 E8-C1（Chrome DevTools MCP 安装）尚未完成，因此未继续创建 private profile。
+
+**下一步计划**：
+- 建议先执行 E8-C1-S1-T1 Chrome DevTools MCP 安装/固定配置，以解锁 E6-C1-S1-T3 Private MCP profile。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

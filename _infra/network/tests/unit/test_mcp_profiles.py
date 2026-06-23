@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-23 11:45:00
+# 创建时间（北京时间）：2026-06-23 14:24:45
 
 """Tests for mode-specific .mcp.json profiles (E6-C1)."""
 
@@ -42,3 +42,38 @@ def test_coding_profile_uses_local_pinned_paths_not_latest():
         args = server.get("args", [])
         assert args
         assert str(args[0]).startswith("mcp-servers/")
+
+
+
+def test_research_profile_json_valid_and_trace_present():
+    profile = load_profile(".mcp.json.research")
+
+    assert profile["_forge_trace"]["llm"] == "Arena.ai Agent Mode - Execution Lead Engineer"
+    assert profile["_forge_trace"]["task"] == "E6-C1-S1-T2"
+    assert isinstance(profile["mcpServers"], dict)
+
+
+def test_research_profile_allows_only_research_servers():
+    profile = load_profile(".mcp.json.research")
+    servers = set(profile["mcpServers"])
+
+    assert servers == {"searxng", "crawl4ai", "playwright-public"}
+    assert not ({"shell", "filesystem", "filesystem-write", "chrome-devtools", "chrome-devtools-private"} & servers)
+
+
+def test_research_profile_uses_local_services_and_pinned_paths():
+    profile = load_profile(".mcp.json.research")
+    serialized = json.dumps(profile, ensure_ascii=False)
+
+    assert "@latest" not in serialized
+    assert "npx" not in serialized
+    assert "uvx" not in serialized
+    for server in profile["mcpServers"].values():
+        args = server.get("args", [])
+        assert args
+        assert str(args[0]).startswith("mcp-servers/")
+
+    assert profile["mcpServers"]["searxng"]["env"]["SEARXNG_URL"] == "http://127.0.0.1:8080"
+    assert profile["mcpServers"]["crawl4ai"]["env"]["CRAWL4AI_URL"] == "http://127.0.0.1:11235"
+    assert profile["mcpServers"]["crawl4ai"]["env"]["CRAWL4AI_DISABLE_JS"] == "true"
+    assert profile["mcpServers"]["playwright-public"]["env"]["PLAYWRIGHT_ALLOW_PRIVATE_PROFILE"] == "0"
