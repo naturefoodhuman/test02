@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:05:00
+创建时间（北京时间）：2026-06-22 22:20:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -950,5 +950,59 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E11-C6-S1-T1：编写 Canary Token 端到端测试。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 57 轮 · 2026-06-22（E11-C6-S1-T1: Canary Token 端到端测试）
+
+**当前任务**：E11-C6-S1-T1 — 编写完整链路 Canary 测试。
+
+**完成内容**：
+
+1. **新增 Canary E2E security tests**：
+   - 新建 `_infra/network/tests/security/test_canary_e2e.py`
+   - 覆盖 canary 出现在：
+     - search result
+     - extracted markdown
+     - browser page（先经 InputSanitizer，再进 PrivacyGateway full mode）
+     - privacy output
+
+2. **完整链路阻断验证**：
+   - 通过 `PrivacyGateway.process_text()` / `PrivacyGateway.process()` 验证最终 L7 Canary 检测。
+   - 任一位置出现 `AI_CANARY_DO_NOT_LEAK_2026_*` 均抛 `CanaryTokenDetectedError`。
+   - 验证 canary 与 PII 同时存在时，PII redaction 不会掩盖 canary 泄露。
+
+3. **审计安全验证**：
+   - 使用 `AuditLogger` 验证 canary hit 写入 `canary_hit` 事件。
+   - 审计 details 仅记录 masked token + location / hit_count 等 metadata。
+   - 审计日志不包含完整 canary token，也不包含原始全文。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/security/test_canary_e2e.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 219 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/tests/security/test_canary_e2e.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- Canary E2E 当前覆盖 PrivacyGateway 链路模拟的 search/extract/browser/privacy output；尚未接入未来 NetworkWorkflow 的真实 Search/Extract orchestration。
+- 审计不记录全文是安全设计取舍；如需溯源需依赖 location + masked token metadata。
+
+**下一步计划**：
+- M3（E5 + E11-C2/C4/C6）已完成。
+- 下一候选按 backlog 进入 M4：E2-C1-S1-T1 MCP Server 安装管理；或根据用户优先级先做 NetworkWorkflow/CLI 集成。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

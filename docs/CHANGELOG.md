@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:05:00
+创建时间（北京时间）：2026-06-22 22:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1047,3 +1047,28 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E11-C6-S1-T1` Canary Token end-to-end test.
+
+---
+
+## [2026-06-22] Security — Canary Token E2E Tests (E11-C6-S1-T1)
+
+### Added
+- `_infra/network/tests/security/test_canary_e2e.py`
+  - 7 end-to-end style tests covering canary in search result, extracted markdown, browser page, privacy output, mixed PII+canary, masked audit logging, and clean pass
+
+### Changed
+- `TASK_BACKLOG.md` marks `E11-C6-S1-T1` as done; M3 Privacy Gateway + security tests are complete.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/security/test_canary_e2e.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 219 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- M3 is complete; next backlog milestone is M4 MCP security governance, or NetworkWorkflow/CLI integration if prioritized.
