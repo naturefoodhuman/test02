@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:38:00
+创建时间（北京时间）：2026-06-23 10:24:12
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -54,5 +54,6 @@ python -m pytest _infra/network/tests/unit/ -q
 - E11-C4-S1-T1（PII 绕过安全测试；Unicode/零宽/Base64/URL encoding/表格/JSON/code variable 覆盖）
 - E11-C6-S1-T1（Canary Token 端到端测试；search/extract/browser/privacy output 任一位置命中立即阻断）
 - E2-C1-S1-T1（MCP Server 安装脚本；pinned git clone + exact commit checkout + mcp-scan admission + lockfile）
+- E2-C2-S1-T1（mcp-scan 集成；scanner parser + scan scripts + lockfile local_path 扫描）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M4 E2-C2-S1-T1 — mcp-scan 集成。
+当前下一候选任务：`TASK_BACKLOG.md` 中 M4 E2-C3-S1-T1 — MCP Schema Hash 计算与比对。

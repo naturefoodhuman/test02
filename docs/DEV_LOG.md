@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:38:00
+创建时间（北京时间）：2026-06-23 10:24:12
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1070,5 +1070,64 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E2-C2-S1-T1：集成 mcp-scan 扫描脚本与输出解析。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 59 轮 · 2026-06-23（E2-C2-S1-T1: mcp-scan 集成）
+
+**当前任务**：E2-C2-S1-T1 — 集成 mcp-scan 工具。
+
+**完成内容**：
+
+1. **新增 MCP Guard scanner 模块**：
+   - 新建 `_infra/network/mcp_guard/__init__.py`
+   - 新建 `_infra/network/mcp_guard/scanner.py`
+   - 定义 `MCPScanFinding` / `MCPScanReport` / `MCPScanRunner`
+   - `parse_mcp_scan_output()` 兼容多种 mcp-scan JSON 输出结构：findings / issues / vulnerabilities / violations / warnings / errors / per-server nested results
+
+2. **扫描行为**：
+   - 调用 `mcp-scan scan --json`
+   - 支持从 `config/mcp_lockfile.yaml` 读取 pinned local_path 批量扫描
+   - 任一 finding、失败 status 或 mcp-scan 非 0 退出码均视为失败
+   - `--from-json` 支持解析已有 mcp-scan JSON 输出，便于 CI / 测试 / 离线诊断
+
+3. **新增扫描脚本**：
+   - `_infra/network/scripts/scan_mcp.sh`
+   - `_infra/network/scripts/scan-mcp.sh`（兼容 backlog 命名 wrapper）
+
+4. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_mcp_scanner.py`
+   - 覆盖 clean report、finding report、nested server issues、non-json failure、lockfile path 解析、CLI from-json success/failure
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_scanner.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 229 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/mcp_guard/__init__.py`
+- 新增：`_infra/network/mcp_guard/scanner.py`
+- 新增：`_infra/network/scripts/scan_mcp.sh`
+- 新增：`_infra/network/scripts/scan-mcp.sh`
+- 新增：`_infra/network/tests/unit/test_mcp_scanner.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前测试不运行真实 `mcp-scan` 二进制；真实扫描需要用户真机安装 `mcp-scan`。
+- mcp-scan JSON schema 可能演进，因此解析器采用宽松容器识别策略；后续如确定真实版本 schema，可补强专用解析分支。
+
+**下一步计划**：
+- E2-C3-S1-T1：实现 MCP Schema Hash 计算与比对。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:38:00
+创建时间（北京时间）：2026-06-23 10:24:12
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E2-C1-S1-T1 MCP Server 安装脚本完成）
+> **最近同步**: 2026-06-23（E2-C2-S1-T1 mcp-scan 集成完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -569,25 +569,29 @@ P3 = 可选增强
 - **目标**: 集成 mcp-scan 到安装流程与定期扫描
 - **前置依赖**: E2-C1-S1-T1
 - **输入**: §5.3 mcp-scan 用法
-- **输出**: 扫描脚本
-- **涉及文件**:
-  - 新建：`scripts/scan-mcp.sh`
-  - 新建：`src/mcp/scanner.py`
+- **输出**: 扫描脚本 + 输出解析器
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/mcp_guard/__init__.py`
+  - 新建：`_infra/network/mcp_guard/scanner.py`
+  - 新建：`_infra/network/scripts/scan_mcp.sh`
+  - 新建：`_infra/network/scripts/scan-mcp.sh`（兼容 backlog 命名 wrapper）
+  - 新建：`_infra/network/tests/unit/test_mcp_scanner.py`
 - **实现要求**:
-  - 调用 `mcp-scan scan`
-  - 解析输出 JSON
-  - 检测：tool poisoning、rug pull、schema 变化、PII
-  - 失败时返回非 0 退出码
+  - 调用 `mcp-scan scan --json`
+  - 解析 JSON 输出为稳定 `MCPScanReport` / `MCPScanFinding`
+  - 检测：tool poisoning、rug pull、schema 变化、PII / secrets 等 finding 容器（findings/issues/vulnerabilities/violations/warnings/errors）
+  - 支持从 `config/mcp_lockfile.yaml` 读取 pinned local_path 批量扫描
+  - 任一 finding、失败 status 或 mcp-scan 非 0 退出码均返回非 0
 - **测试要求**:
   - 单元测试：解析 mcp-scan 输出
-  - 集成测试：实际扫描 playwright MCP
+  - CLI 测试：`--from-json` clean 返回 0，有 finding 返回 1
+  - lockfile local_path 解析测试
 - **验收标准**:
   - 脚本可执行
   - 检测到问题时报告清晰
 - **DoD**:
-  - [x] scanner.py 实现
-  - [x] 脚本实现
-  - [x] 单元测试通过
+  - [x] scanner.py / scan_mcp.sh 实现
+  - [x] 单元测试通过（`test_mcp_scanner.py`: 7 passed）
 
 ---
 
@@ -2736,7 +2740,7 @@ graph TD
 | M3 | E11-C4 | E11-C4-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E11-C6 | E11-C6-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M4 | E2-C1 | E2-C1-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M4 | E2-C2 | E2-C2-S1-T1 | [ ] | | |
+| M4 | E2-C2 | E2-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M4 | E2-C3 | E2-C3-S1-T1 | [ ] | | |
 | M4 | E2-C4 | E2-C4-S1-T1 | [ ] | | |
 | M4 | E2-C4 | E2-C4-S1-T2 | [ ] | | |

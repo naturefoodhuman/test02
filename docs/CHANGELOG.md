@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:38:00
+创建时间（北京时间）：2026-06-23 10:24:12
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1104,3 +1104,36 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E2-C2-S1-T1` mcp-scan integration and scanner output parsing.
+
+---
+
+## [2026-06-23] MCP Guard — mcp-scan Integration (E2-C2-S1-T1)
+
+### Added
+- `_infra/network/mcp_guard/scanner.py`
+  - `MCPScanFinding`
+  - `MCPScanReport`
+  - `MCPScanRunner`
+  - tolerant `parse_mcp_scan_output()` parser
+- `_infra/network/scripts/scan_mcp.sh`
+- `_infra/network/scripts/scan-mcp.sh`
+- `_infra/network/tests/unit/test_mcp_scanner.py`
+  - 7 tests covering parser, nested findings, process failure, lockfile paths, CLI from-json behavior
+
+### Changed
+- `TASK_BACKLOG.md` marks `E2-C2-S1-T1` as done and sets next TODO to `E2-C3-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_scanner.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 229 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real environment validation requires installing `mcp-scan`.
+- Next recommended task: `E2-C3-S1-T1` MCP Schema Hash calculation and comparison.
