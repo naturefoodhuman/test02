@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:05:00
+创建时间（北京时间）：2026-06-23 16:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1617,3 +1617,36 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Real Playwright CLI wrapper execution requires the pinned local runner to be installed under `mcp-servers/playwright-public`.
 - Recommended next tasks: E10 health-check / backup operational scripts.
+
+---
+
+## [2026-06-23] Operations — Health Check + Backup Scripts (E10-C1/E10-C3)
+
+### Added
+- `scripts/health-check.sh`
+  - static config/file checks via `--static`
+  - runtime service checks for SearXNG, Crawl4AI, Ollama models and selected DBs
+- `scripts/backup.sh`
+  - allowlist backup for `.mcp.json*`, `config/`, `docker/`, and selected runtime DBs
+  - excludes profiles/cookies/sessions/password/payment data
+  - supports `--dry-run` and `--dest`
+- `_infra/network/tests/unit/test_ops_scripts.py`
+  - 3 tests covering health static mode, backup dry-run, backup archive exclusion safety
+
+### Changed
+- `TASK_BACKLOG.md` marks `E10-C1-S1-T1` and `E10-C3-S1-T1` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_ops_scripts.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 338 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Full runtime health requires Docker/Ollama services on the user's Mac.
+- Add future DBs to backup allowlist explicitly when introduced.

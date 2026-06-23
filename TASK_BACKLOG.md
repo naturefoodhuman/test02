@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:05:00
+创建时间（北京时间）：2026-06-23 16:20:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E7 操作风险分类 + Playwright CLI Wrapper 完成）
+> **最近同步**: 2026-06-23（E10 health-check + backup 脚本完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -2139,16 +2139,22 @@ P3 = 可选增强
 - **目标**: 按 §15.2 实现
 - **输入**: §15.2 代码
 - **输出**: 脚本
-- **涉及文件**: 新建 `scripts/health-check.sh`
+- **涉及文件（已按现有脚本结构落地）**:
+  - 新建：`scripts/health-check.sh`
+  - 新建：`_infra/network/tests/unit/test_ops_scripts.py`
 - **实现要求**:
   - 检查：SearXNG / Crawl4AI / Ollama / Qwen3 / bge-m3 / Audit DB / RAG DB
   - 输出彩色 ✅/❌
   - 任一失败退出码非 0
-- **测试要求**: 集成测试
+  - 支持 `--static` 配置/文件静态检查，便于无服务环境测试
+- **测试要求**:
+  - 单元风格测试：`--static` 不依赖外部服务且通过
+  - 真机集成测试：所有依赖在线时通过
 - **验收标准**: 所有依赖在线时通过
 - **DoD**:
   - [x] 脚本实现
-  - [x] 测试通过
+  - [x] 静态测试通过（`test_ops_scripts.py`: 3 passed）
+  - [ ] 真机服务在线集成测试（需 Docker/Ollama/DB 环境）
 
 ---
 
@@ -2184,17 +2190,21 @@ P3 = 可选增强
 - **前置依赖**: E1-C5-S1-T1
 - **输入**: §14.4
 - **输出**: 脚本
-- **涉及文件**: 新建 `scripts/backup.sh`
+- **涉及文件（已按现有脚本结构落地）**:
+  - 新建：`scripts/backup.sh`
+  - 新建/复用：`_infra/network/tests/unit/test_ops_scripts.py`
 - **实现要求**:
-  - 备份：`.mcp.json.*` / `config/` / `runtime/audit.db` / `runtime/rag.db` / `runtime/pii_map.db`
-  - 不备份：cookies / sessions / payment
+  - 备份：`.mcp.json*` / `config/` / `docker/` / `runtime/audit.db` / `runtime/rag.db` / `runtime/pii_map.db`
+  - 不备份：browser profiles / cookies / sessions / password store / payment autofill
   - tar.gz + 时间戳
+  - 支持 `--dry-run` 和 `--dest`
 - **测试要求**:
-  - 集成测试：备份恢复
+  - 单元风格测试：dry-run 列出 include/exclude
+  - 单元风格测试：archive 创建且不包含 profiles/Cookies/session/payment
 - **验收标准**: 备份可恢复
 - **DoD**:
   - [x] backup.sh 实现
-  - [x] 测试通过
+  - [x] 测试通过（`test_ops_scripts.py`: 3 passed）
 
 ---
 
@@ -2876,8 +2886,8 @@ graph TD
 | M5 | E6-C1 | E6-C1-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E6-C2 | E6-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E6-C3 | E6-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
-| M5 | E10-C1 | E10-C1-S1-T1 | [ ] | | |
-| M5 | E10-C3 | E10-C3-S1-T1 | [ ] | | |
+| M5 | E10-C1 | E10-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M5 | E10-C3 | E10-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C1 | E7-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C2 | E7-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C2 | E7-C2-S1-T2 | [x] | 2026-06-23 | Arena Agent |

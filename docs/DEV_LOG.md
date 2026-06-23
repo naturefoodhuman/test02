@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:05:00
+创建时间（北京时间）：2026-06-23 16:20:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -2115,5 +2115,58 @@ python -m _infra.network.cli config
 **下一步计划**：
 - E7 Browser Automation 基础已覆盖：pinned metadata / client / orchestrator / profile / session / action classifier / CLI wrapper。
 - 建议进入 E10-C1 health-check.sh 或 E10-C3 backup.sh 做运维收尾。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 73 轮 · 2026-06-23（E10-C1-S1-T1 + E10-C3-S1-T1: Health Check + Backup）
+
+**当前任务（顺次执行）**：
+1. E10-C1-S1-T1 — 实现 `health-check.sh`。
+2. E10-C3-S1-T1 — 实现 `backup.sh`。
+
+**完成内容**：
+
+### E10-C1-S1-T1
+- 新建 `scripts/health-check.sh`
+- 支持 `--static`：仅检查配置和关键文件，不访问外部服务，适合 CI / 沙箱。
+- 运行时检查：SearXNG、Crawl4AI、Ollama、Qwen3、bge-m3、Audit DB、RAG DB。
+- 彩色 ✅/❌ 输出，任一失败返回非 0。
+
+### E10-C3-S1-T1
+- 新建 `scripts/backup.sh`
+- 备份：`.mcp.json*`、`config/`、`docker/`、`runtime/audit.db`、`runtime/rag.db`、`runtime/pii_map.db`
+- 显式排除：profiles、cookies、sessions、password store、payment autofill
+- 支持 `--dry-run` 和 `--dest`
+- 生成 `forge-network-<timestamp>.tar.gz`
+- 归档后检查是否误包含 cookie/session/payment 相关路径，命中则 fail closed 并删除 archive。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_ops_scripts.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 338 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`scripts/health-check.sh`
+- 新增：`scripts/backup.sh`
+- 新增：`_infra/network/tests/unit/test_ops_scripts.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前沙箱无 Docker / Ollama 服务，因此运行时 health check 未执行；已通过 `--static` 测试。真机需在服务启动后运行完整 `scripts/health-check.sh`。
+- 备份脚本按 allowlist 备份选定路径，不备份整个 runtime/profiles，避免 cookie/session 泄漏；如未来新增 DB 文件需显式加入 include list。
+
+**下一步计划**：
+- E10-C2-S1-T1：launchd 守护进程；或按用户优先级进入 RAG / NetworkWorkflow。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。
