@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:39:26
+创建时间（北京时间）：2026-06-23 16:05:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 15:39 CST
-**当前版本**：v1.3.0-dossier + Network Increment（Playwright Orchestrator + SessionDetector 完成）
+**更新日期**：2026-06-23 16:05 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E7 Browser Automation 基础完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -90,19 +90,21 @@
 - **E7-C3-S1-T1/T2** ProfileManager 与 AI-Public Profile 文档完成；可读取 `config/network.yaml` browser profiles，并创建/管理 profile 目录
 - **E7-C4-S1-T1** SessionDetector 完成；支持 login/CAPTCHA/2FA/Verify 关键词检测、snapshot dict 输入、配置加载与 notifier 注入
 - **E7-C2-S1-T2** PlaywrightOrchestrator 完成；封装 go_and_extract / fill_form_field / close，调用 ProfileManager 和 SessionDetector，登录页/CAPTCHA 命中抛 `SessionExpiredError`
-- **测试**：`test_session_detector.py` 6 passed；`test_playwright_orchestrator.py` 4 passed；network unit+security 全量 323 passed / 2 skipped / 44 warnings；`compileall` 通过
-- **当前单任务批次**：E7-C4-S1-T1 + E7-C2-S1-T2 已顺次完成 mock/static 验证
-- **下一任务候选**：E7-C5-S1-T1 操作风险分类，或 E7-C6-S1-T1 Playwright CLI Wrapper
+- **E7-C5-S1-T1** BrowserActionClassifier 完成；将浏览器动作分为 read_only / low_risk / high_risk，并提供不含 raw payload 的 diff_preview
+- **E7-C6-S1-T1** 受限 Playwright CLI Wrapper 完成；仅允许 open/snapshot/click/type/wait/close，参数先过 ArgumentValidator，使用 subprocess argv list 且支持 dry-run JSON plan
+- **测试**：`test_action_classifier.py` 6 passed；`test_playwright_cli_wrapper.py` 6 passed；network unit+security 全量 335 passed / 2 skipped / 44 warnings；`compileall` 通过
+- **当前单任务批次**：E7-C5-S1-T1 + E7-C6-S1-T1 已顺次完成；E7 Browser Automation 基础任务已覆盖 pinned metadata/client/orchestrator/profile/session/risk/wrapper
+- **下一任务候选**：E10-C1-S1-T1 health-check.sh 或 E10-C3-S1-T1 backup.sh，进入运维收尾
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_session_detector.py -q
+python -m pytest _infra/network/tests/unit/test_action_classifier.py -q
 # 6 passed
-python -m pytest _infra/network/tests/unit/test_playwright_orchestrator.py -q
-# 4 passed
+python -m pytest _infra/network/tests/unit/test_playwright_cli_wrapper.py -q
+# 6 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 323 passed, 2 skipped, 44 warnings
+# 335 passed, 2 skipped, 44 warnings
 python -m compileall -q _infra/network
 # pass
 ```

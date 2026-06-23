@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:39:26
+创建时间（北京时间）：2026-06-23 16:05:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -2038,5 +2038,82 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E7-C5-S1-T1：实现操作风险分类；或 E7-C6-S1-T1：Playwright CLI Wrapper。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 72 轮 · 2026-06-23（E7-C5-S1-T1 + E7-C6-S1-T1: 操作风险分类 + Playwright CLI Wrapper）
+
+**当前任务（顺次执行）**：
+1. E7-C5-S1-T1 — 实现操作风险分类。
+2. E7-C6-S1-T1 — 实现受限 Playwright CLI Wrapper。
+
+**执行说明**：两个任务均属于 Playwright/browser action 安全边界。先完成 action classifier 并测试通过，再实现 CLI wrapper。
+
+### E7-C5-S1-T1 完成内容
+
+1. **新增 BrowserActionClassifier**：
+   - 新建 `_infra/network/browser/action_classifier.py`
+   - 定义 `BrowserActionRisk`：read_only / low_risk / high_risk
+   - 定义 `BrowserAction` / `BrowserActionRiskResult`
+   - 支持从 action_type、target、payload key/value 识别高风险意图
+   - 提供 `diff_preview`，只包含 action_type / target / page_url / account / payload_keys，不包含 raw payload
+
+2. **测试**：
+```bash
+python -m pytest _infra/network/tests/unit/test_action_classifier.py -q
+# 6 passed
+```
+
+### E7-C6-S1-T1 完成内容
+
+1. **新增受限 Playwright CLI Wrapper**：
+   - 新建 `_infra/network/scripts/run_playwright_action.py`
+   - 新建 root wrapper `scripts/run_playwright_action.py`
+   - 允许命令：open / snapshot / click / type / wait / close
+   - 参数经 ArgumentValidator 校验，拦截 cookie/storage/PII/secret/超长参数
+   - 不使用 shell；真实执行使用 subprocess argv list
+   - 支持 `--dry-run` 输出 JSON plan，便于测试
+   - 默认 runner：`mcp-servers/playwright-public/cli.js`；runner 不存在时 fail closed
+
+2. **测试**：
+```bash
+python -m pytest _infra/network/tests/unit/test_playwright_cli_wrapper.py -q
+# 6 passed
+```
+
+**整体验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_action_classifier.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_playwright_cli_wrapper.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 335 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/browser/action_classifier.py`
+- 新增：`_infra/network/scripts/run_playwright_action.py`
+- 新增：`scripts/run_playwright_action.py`
+- 新增：`_infra/network/tests/unit/test_action_classifier.py`
+- 新增：`_infra/network/tests/unit/test_playwright_cli_wrapper.py`
+- 修改：`_infra/network/browser/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- Wrapper 真实执行依赖本地 pinned runner 存在；当前测试使用 `--dry-run` 验证安全边界。
+- Action classifier 是规则型分类，后续可在真实浏览操作样本中扩展高风险 hints。
+
+**下一步计划**：
+- E7 Browser Automation 基础已覆盖：pinned metadata / client / orchestrator / profile / session / action classifier / CLI wrapper。
+- 建议进入 E10-C1 health-check.sh 或 E10-C3 backup.sh 做运维收尾。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

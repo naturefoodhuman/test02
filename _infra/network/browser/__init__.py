@@ -3,6 +3,7 @@
 
 """Browser-related FORGE Network components."""
 
+from .action_classifier import BrowserAction, BrowserActionClassifier, BrowserActionRisk, BrowserActionRiskResult, classify_action
 from .chrome_devtools_client import ChromeDevToolsClientConfig, ChromeDevToolsMCPClient, ChromeDevToolsTransport
 from .private_pipeline import PrivateAccessPipeline, PrivateAccessResult
 from .profile_manager import BrowserProfile, ProfileManager
@@ -10,6 +11,10 @@ from .playwright_client import PlaywrightClientConfig, PlaywrightMCPClient, Play
 from .playwright_orchestrator import BrowserExtractionResult, PlaywrightOrchestrator
 
 __all__ = [
+    "BrowserAction",
+    "BrowserActionClassifier",
+    "BrowserActionRisk",
+    "BrowserActionRiskResult",
     "ChromeDevToolsClientConfig",
     "ChromeDevToolsMCPClient",
     "ChromeDevToolsTransport",
@@ -22,4 +27,5 @@ __all__ = [
     "PlaywrightMCPClient",
     "PlaywrightOrchestrator",
     "PlaywrightTransport",
+    "classify_action",
 ]

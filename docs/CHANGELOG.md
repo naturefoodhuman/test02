@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:39:26
+创建时间（北京时间）：2026-06-23 16:05:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1577,3 +1577,43 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Real Playwright MCP integration requires user Mac runtime validation.
 - Recommended next task: E7-C5 action risk classifier or E7-C6 Playwright CLI wrapper.
+
+---
+
+## [2026-06-23] Browser Automation — Action Classifier + Playwright CLI Wrapper (E7-C5/E7-C6)
+
+### Added
+- `_infra/network/browser/action_classifier.py`
+  - read_only / low_risk / high_risk classification
+  - high-risk detection from action type, target and payload hints
+  - safe diff_preview without raw payload
+- `_infra/network/scripts/run_playwright_action.py`
+  - restricted wrapper for open/snapshot/click/type/wait/close
+  - argument validation and dry-run JSON plan
+- `scripts/run_playwright_action.py`
+  - root wrapper
+- `_infra/network/tests/unit/test_action_classifier.py`
+  - 6 tests
+- `_infra/network/tests/unit/test_playwright_cli_wrapper.py`
+  - 6 tests
+
+### Changed
+- `_infra/network/browser/__init__.py` exports action classifier.
+- `TASK_BACKLOG.md` marks `E7-C5-S1-T1` and `E7-C6-S1-T1` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_action_classifier.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_playwright_cli_wrapper.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 335 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real Playwright CLI wrapper execution requires the pinned local runner to be installed under `mcp-servers/playwright-public`.
+- Recommended next tasks: E10 health-check / backup operational scripts.

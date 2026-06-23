@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:39:26
+创建时间（北京时间）：2026-06-23 16:05:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E7 Playwright Orchestrator + SessionDetector 完成）
+> **最近同步**: 2026-06-23（E7 操作风险分类 + Playwright CLI Wrapper 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1834,19 +1834,24 @@ P3 = 可选增强
 - **前置依赖**: E2-C4-S1-T3
 - **输入**: §12.4 高危列表
 - **输出**: 分类函数
-- **涉及文件**:
-  - 新建：`src/browser/action_classifier.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/browser/action_classifier.py`
+  - 新建：`_infra/network/tests/unit/test_action_classifier.py`
+  - 修改：`_infra/network/browser/__init__.py`
 - **实现要求**:
   - 风险等级：read_only / low_risk / high_risk
   - 高风险触发审批
-  - 显示 diff / target / 账号
+  - 提供 diff_preview（action_type / target / page_url / account / payload_keys），避免记录 raw payload
+  - 支持通过 action_type、target、payload key/value 识别高风险意图
 - **测试要求**:
-  - 单元测试：分类正确
+  - 单元测试：read_only / low_risk / high_risk 分类正确
+  - 单元测试：payload hint 触发 high_risk
+  - 单元测试：自定义高风险动作
 - **验收标准**:
   - 高危操作必审批
 - **DoD**:
   - [x] action_classifier.py 实现
-  - [x] 单元测试通过
+  - [x] 单元测试通过（`test_action_classifier.py`: 6 passed）
 
 ---
 
@@ -1858,19 +1863,23 @@ P3 = 可选增强
 - **前置依赖**: E7-C2-S1-T1
 - **输入**: §8.2 允许命令
 - **输出**: wrapper 脚本
-- **涉及文件**:
+- **涉及文件（已按增量架构落地到 `_infra/network/` 与根 `scripts/`）**:
+  - 新建：`_infra/network/scripts/run_playwright_action.py`
   - 新建：`scripts/run_playwright_action.py`
+  - 新建：`_infra/network/tests/unit/test_playwright_cli_wrapper.py`
 - **实现要求**:
   - 命令 allowlist：open / snapshot / click / type / wait / close
-  - 禁止任意 shell
-  - 调用 Playwright CLI
+  - 禁止任意 shell；使用 subprocess argv list，不使用 shell=True
+  - 参数进入 ArgumentValidator，拦截 cookie/storage/PII/secret/超长参数
+  - 支持 `--dry-run` 输出 JSON plan，便于测试
+  - 真实执行仅调用本地 runner（默认 `mcp-servers/playwright-public/cli.js`），不存在则 fail closed
 - **测试要求**:
-  - 单元测试：allowlist 强制
+  - 单元测试：allowlist / required args / dry-run plan / unsafe argument / wait range
 - **验收标准**:
   - 仅允许命令可执行
 - **DoD**:
   - [x] wrapper 实现
-  - [x] 单元测试通过
+  - [x] 单元测试通过（`test_playwright_cli_wrapper.py`: 6 passed）
 
 ---
 
@@ -2875,8 +2884,8 @@ graph TD
 | M6 | E7-C3 | E7-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C3 | E7-C3-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C4 | E7-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
-| M6 | E7-C5 | E7-C5-S1-T1 | [ ] | | |
-| M6 | E7-C6 | E7-C6-S1-T1 | [ ] | | |
+| M6 | E7-C5 | E7-C5-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M6 | E7-C6 | E7-C6-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E6-C1 | E6-C1-S1-T3 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C1 | E8-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C2 | E8-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
