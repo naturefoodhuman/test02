@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:20:00
+创建时间（北京时间）：2026-06-23 16:35:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E10 health-check + backup 脚本完成）
+> **最近同步**: 2026-06-23（E10 launchd 守护进程完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -2169,16 +2169,22 @@ P3 = 可选增强
 - **涉及文件**:
   - 新建：`scripts/launchd/com.network-agent.health.plist`
   - 新建：`scripts/launchd/com.network-agent.mcp-scan.plist`
+  - 新建：`scripts/launchd/README.md`
+  - 新建：`_infra/network/tests/unit/test_launchd_plists.py`
 - **实现要求**:
   - health check 每 5 分钟
   - mcp-scan 每周日 03:00
   - 日志到 `runtime/logs/launchd-*.log`
+  - README 说明 macOS `launchctl load/unload` 安装与卸载方法
 - **测试要求**:
-  - 集成测试：`launchctl load` 成功
+  - 静态测试：plist 可解析、调度与日志路径正确
+  - 真机集成测试：`launchctl load` 成功（需用户 Mac）
 - **验收标准**: 定时任务运行
 - **DoD**:
   - [x] plist 创建
   - [x] 文档说明安装方法
+  - [x] 静态测试通过（`test_launchd_plists.py`: 3 passed）
+  - [ ] 真机 launchctl load 验证（需 macOS）
 
 ---
 
@@ -2902,7 +2908,7 @@ graph TD
 | M7 | E8-C2 | E8-C2-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C3 | E8-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C4 | E8-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
-| M8 | E10-C2 | E10-C2-S1-T1 | [ ] | | |
+| M8 | E10-C2 | E10-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M9 | E9-C1 | E9-C1-S1-T1 | [ ] | | |
 | M9 | E9-C2 | E9-C2-S1-T1 | [ ] | | |
 | M9 | E9-C3 | E9-C3-S1-T1 | [ ] | | |

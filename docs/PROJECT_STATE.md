@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:20:00
+创建时间（北京时间）：2026-06-23 16:35:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 16:20 CST
-**当前版本**：v1.3.0-dossier + Network Increment（E10 运维脚本完成）
+**更新日期**：2026-06-23 16:35 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E10 launchd 守护进程完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -94,17 +94,18 @@
 - **E7-C6-S1-T1** 受限 Playwright CLI Wrapper 完成；仅允许 open/snapshot/click/type/wait/close，参数先过 ArgumentValidator，使用 subprocess argv list 且支持 dry-run JSON plan
 - **E10-C1-S1-T1** `scripts/health-check.sh` 完成；支持静态配置检查与运行时 SearXNG/Crawl4AI/Ollama/DB 健康检查
 - **E10-C3-S1-T1** `scripts/backup.sh` 完成；备份 `.mcp.json*` / `config` / `docker` / 选定 runtime DB，显式排除 profiles/cookies/sessions/payment
-- **测试**：`test_ops_scripts.py` 3 passed；network unit+security 全量 338 passed / 2 skipped / 44 warnings；`compileall` 通过
-- **当前单任务批次**：E10-C1-S1-T1 + E10-C3-S1-T1 已顺次完成
-- **下一任务候选**：继续运维 E10-C2 launchd，或进入后续 RAG/Workflow 任务
+- **E10-C2-S1-T1** launchd plist 完成；`com.network-agent.health` 每 5 分钟运行 health check，`com.network-agent.mcp-scan` 每周日 03:00 运行 mcp-scan，日志写入 `runtime/logs/launchd-*.log`
+- **测试**：`test_launchd_plists.py` 3 passed；network unit+security 全量待本轮最终验证；`launchctl load` 需用户 Mac 验证
+- **当前单任务**：E10-C2-S1-T1 launchd 守护进程已完成
+- **下一任务候选**：M9 E9-C1-S1-T1 RAG DB Schema，或 NetworkWorkflow/CLI 集成
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_ops_scripts.py -q
+python -m pytest _infra/network/tests/unit/test_launchd_plists.py -q
 # 3 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 338 passed, 2 skipped, 44 warnings
+# (see DEV_LOG for current total)
 python -m compileall -q _infra/network
 # pass
 ```

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-06-23 16:35:00
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.network-agent.health</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd "$HOME/MusicProject/AI-Project-Incubation-Factory" &amp;&amp; mkdir -p runtime/logs &amp;&amp; scripts/health-check.sh &gt;&gt; runtime/logs/launchd-health.log 2&gt;&amp;1</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>300</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/tmp/forge-network-health.out</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/forge-network-health.err</string>
+</dict>
+</plist>

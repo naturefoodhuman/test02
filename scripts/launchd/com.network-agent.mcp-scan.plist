@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-06-23 16:35:00
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.network-agent.mcp-scan</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>cd "$HOME/MusicProject/AI-Project-Incubation-Factory" &amp;&amp; mkdir -p runtime/logs &amp;&amp; _infra/network/scripts/scan_mcp.sh --lockfile config/mcp_lockfile.yaml &gt;&gt; runtime/logs/launchd-mcp-scan.log 2&gt;&amp;1</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key>
+    <integer>0</integer>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/tmp/forge-network-mcp-scan.out</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/forge-network-mcp-scan.err</string>
+</dict>
+</plist>

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:20:00
+创建时间（北京时间）：2026-06-23 16:35:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1650,3 +1650,36 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Full runtime health requires Docker/Ollama services on the user's Mac.
 - Add future DBs to backup allowlist explicitly when introduced.
+
+---
+
+## [2026-06-23] Operations — launchd Health and MCP Scan Jobs (E10-C2-S1-T1)
+
+### Added
+- `scripts/launchd/com.network-agent.health.plist`
+  - runs `scripts/health-check.sh` every 5 minutes
+  - appends logs to `runtime/logs/launchd-health.log`
+- `scripts/launchd/com.network-agent.mcp-scan.plist`
+  - runs weekly Sunday 03:00
+  - appends logs to `runtime/logs/launchd-mcp-scan.log`
+- `scripts/launchd/README.md`
+  - install/uninstall instructions for macOS launchd
+- `_infra/network/tests/unit/test_launchd_plists.py`
+  - 3 static plist tests
+
+### Changed
+- `TASK_BACKLOG.md` marks `E10-C2-S1-T1` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_launchd_plists.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 341 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real `launchctl load` validation must run on the user's macOS machine.

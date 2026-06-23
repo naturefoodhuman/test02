@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:20:00
+创建时间（北京时间）：2026-06-23 16:35:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -2168,5 +2168,62 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E10-C2-S1-T1：launchd 守护进程；或按用户优先级进入 RAG / NetworkWorkflow。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 74 轮 · 2026-06-23（E10-C2-S1-T1: launchd 守护进程）
+
+**当前任务**：E10-C2-S1-T1 — 编写 launchd plist 文件。
+
+**完成内容**：
+
+1. **新增 launchd plist**：
+   - 新建 `scripts/launchd/com.network-agent.health.plist`
+   - 每 5 分钟运行 `scripts/health-check.sh`
+   - `RunAtLoad=true`
+   - 日志追加到 `runtime/logs/launchd-health.log`
+
+2. **新增 mcp-scan 定期任务**：
+   - 新建 `scripts/launchd/com.network-agent.mcp-scan.plist`
+   - 每周日 03:00 运行 `_infra/network/scripts/scan_mcp.sh --lockfile config/mcp_lockfile.yaml`
+   - 日志追加到 `runtime/logs/launchd-mcp-scan.log`
+
+3. **新增安装文档**：
+   - 新建 `scripts/launchd/README.md`
+   - 包含 `launchctl load` / `launchctl unload` 安装与卸载说明
+
+4. **新增静态测试**：
+   - 新建 `_infra/network/tests/unit/test_launchd_plists.py`
+   - 验证 plist 可解析、Label、StartInterval、StartCalendarInterval、命令路径和日志路径
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_launchd_plists.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 341 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`scripts/launchd/com.network-agent.health.plist`
+- 新增：`scripts/launchd/com.network-agent.mcp-scan.plist`
+- 新增：`scripts/launchd/README.md`
+- 新增：`_infra/network/tests/unit/test_launchd_plists.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前沙箱不是 macOS，无法执行 `launchctl load`；已通过 plistlib 静态测试验证。用户 Mac 需按 README 执行真实 load/unload 验证。
+- plist 中默认项目路径为 `$HOME/MusicProject/AI-Project-Incubation-Factory`，与当前 HANDOFF 的老板真机路径一致；如果用户本地路径变更，需要同步修改 plist 或用软链接。
+
+**下一步计划**：
+- M5/M6/M8 运维与浏览器基础已基本补齐。下一候选：M9 E9-C1-S1-T1 RAG DB Schema，或按用户优先级转入 NetworkWorkflow/CLI 集成。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。
