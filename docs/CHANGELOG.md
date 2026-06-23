@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:45:00
+创建时间（北京时间）：2026-06-23 11:58:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1317,3 +1317,39 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - `.mcp.json.coding` references local pinned paths; actual MCP servers must be installed under `mcp-servers/` via the pinned installer.
 - Research/private MCP profiles still pending.
+
+---
+
+## [2026-06-23] Docker Deployment — SearXNG + Crawl4AI (E3-C1-S1-T1/T2, E4-C1-S1-T1)
+
+### Added
+- `docker/docker-compose.yml`
+  - local-only SearXNG service on `127.0.0.1:8080`
+  - local-only Crawl4AI service on `127.0.0.1:11235`
+  - healthchecks and persistent Docker volumes
+- `docker/searxng/settings.yml`
+  - JSON format enabled
+  - Google disabled
+  - request timeouts configured
+- `docker/README.md`
+  - local start and verification instructions
+- `_infra/network/tests/unit/test_docker_services.py`
+  - 4 static tests for compose/settings safety properties
+
+### Changed
+- `TASK_BACKLOG.md` marks `E3-C1-S1-T1`, `E3-C1-S1-T2`, and `E4-C1-S1-T1` as done with static validation notes.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_docker_services.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 277 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real Docker runtime verification must be run on the user's Mac, because the current sandbox has no Docker binary.
+- Next recommended task: `E6-C1-S1-T2` Research MCP profile.

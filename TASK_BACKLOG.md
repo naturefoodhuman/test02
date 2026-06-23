@@ -769,20 +769,24 @@ P3 = 可选增强
 - **前置依赖**: 无
 - **输入**: §6.1 部署方式
 - **输出**: docker-compose 配置
-- **涉及文件**:
+- **涉及文件（已按现有 FORGE 增量架构落地到根 `docker/`）**:
   - 新建：`docker/docker-compose.yml`
+  - 新建：`docker/README.md`
+  - 新建：`_infra/network/tests/unit/test_docker_services.py`
 - **实现要求**:
   - 端口绑定 `127.0.0.1:8080`（仅本地）
-  - volume 挂载 `config/searxng_settings.yml`
-  - 镜像版本固定（如 `searxng/searxng:2025.x.x`）
+  - volume 挂载 `docker/searxng/settings.yml`
+  - 镜像版本固定为可覆盖环境变量默认值（不使用裸 `latest`）
   - `restart: unless-stopped`
-- **测试要求**: `docker-compose config` 验证
+- **测试要求**:
+  - 静态测试：compose YAML 可解析，端口仅绑定本机，未使用 `:latest`，healthcheck 存在
+  - 真机运行验证：需用户 Mac 安装 Docker 后执行 `cd docker && docker compose up -d`
 - **验收标准**:
-  - `docker-compose up -d` 成功
-  - `curl http://127.0.0.1:8080/search?q=test&format=json` 返回 JSON
+  - `docker compose up -d` 后 `curl http://127.0.0.1:8080/search?q=test&format=json` 返回 JSON
 - **DoD**:
   - [x] docker-compose.yml 创建
-  - [x] 手动启动验证
+  - [x] 静态测试通过（`test_docker_services.py`: 4 passed）
+  - [ ] 真机手动启动验证（需 Docker 环境）
 
 ---
 
@@ -792,21 +796,24 @@ P3 = 可选增强
 - **前置依赖**: E3-C1-S1-T1
 - **输入**: §6.1 关键配置
 - **输出**: settings.yml
-- **涉及文件**:
+- **涉及文件（已按现有 FORGE 增量架构落地到根 `docker/`）**:
   - 新建：`docker/searxng/settings.yml`
 - **实现要求**:
   - 启用 JSON format
-  - secret_key 从环境变量读取
-  - engines：DuckDuckGo / Brave / Bing / Wikipedia / GitHub / StackOverflow / arXiv
+  - secret_key 从环境变量占位读取：`${SEARXNG_SECRET_KEY}`
+  - engines：DuckDuckGo / Bing / Wikipedia / GitHub / StackOverflow / arXiv
   - Google 禁用
-  - request_timeout: 3.0
-- **测试要求**: 启动 SearXNG 后 JSON 接口可用
+  - request_timeout: 3.0 / max_request_timeout: 6.0
+- **测试要求**:
+  - 静态测试：settings YAML 可解析，json format 启用，Google disabled，timeout 配置正确
+  - 真机运行验证：启动 SearXNG 后 JSON 接口可用
 - **验收标准**:
   - JSON 返回正常
   - 禁用 engine 不调用
 - **DoD**:
   - [x] settings.yml 创建
-  - [x] curl 测试通过
+  - [x] 静态测试通过（`test_docker_services.py`: 4 passed）
+  - [ ] 真机 curl 测试（需 Docker 环境）
 
 ---
 
@@ -950,20 +957,28 @@ P3 = 可选增强
 
 ##### **Task E4-C1-S1-T1: 添加 Crawl4AI 到 docker-compose**
 
-- **目标**: 在同一 docker-compose 添加 Crawl4AI
+- **目标**: 在 FORGE Network docker-compose 中部署 Crawl4AI
 - **前置依赖**: E3-C1-S1-T1
-- **输入**: §7.1 Crawl4AI 部署方式
-- **输出**: 更新 docker-compose.yml
-- **涉及文件**: 修改 `docker/docker-compose.yml`
+- **输入**: NETWORK_ARCHITECTURE_FINAL.md §7.1
+- **输出**: Crawl4AI Docker service
+- **涉及文件（已按现有 FORGE 增量架构落地到根 `docker/`）**:
+  - 修改：`docker/docker-compose.yml`
+  - 修改：`docker/README.md`
+  - 新建/复用：`_infra/network/tests/unit/test_docker_services.py`
 - **实现要求**:
-  - 端口 `127.0.0.1:11235`
-  - `--shm-size=1g`
-  - 镜像版本固定
-- **测试要求**: `curl http://127.0.0.1:11235/health` 成功
-- **验收标准**: 服务可用
+  - 端口绑定 `127.0.0.1:11235:11235`
+  - `shm_size: 1g`
+  - `restart: unless-stopped`
+  - 默认禁用 JS（`CRAWL4AI_DISABLE_JS=true`），高危 JS 执行后续通过审批流处理
+- **测试要求**:
+  - 静态测试：compose 中 crawl4ai service 存在，端口仅本机，未使用 `:latest`，healthcheck 存在
+  - 真机运行验证：`curl http://127.0.0.1:11235/health`
+- **验收标准**:
+  - Crawl4AI health check 正常
 - **DoD**:
   - [x] docker-compose 更新
-  - [x] 健康检查通过
+  - [x] 静态测试通过（`test_docker_services.py`: 4 passed）
+  - [ ] 真机健康检查（需 Docker 环境）
 
 ---
 
@@ -2737,13 +2752,13 @@ graph TD
 | M1 | E1-C5 | E1-C5-S1-T2 | [ ] | | |
 | M1 | E11-C1 | E11-C1-S1-T1 | [ ] | | |
 | M1 | E11-C1 | E11-C1-S1-T2 | [ ] | | |
-| M2 | E3-C1 | E3-C1-S1-T1 | [ ] | | |
-| M2 | E3-C1 | E3-C1-S1-T2 | [ ] | | |
+| M2 | E3-C1 | E3-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M2 | E3-C1 | E3-C1-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M2 | E3-C2 | E3-C2-S1-T2 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C3 | E3-C3-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C3 | E3-C3-S1-T2 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C4 | E3-C4-S1-T1 | [x] | 2026-06-21 | Arena Agent |
-| M2 | E4-C1 | E4-C1-S1-T1 | [ ] | | |
+| M2 | E4-C1 | E4-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M2 | E4-C2 | E4-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E4-C2 | E4-C2-S1-T2 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E4-C2 | E4-C2-S1-T3 | [x] | 2026-06-21 | Arena Agent |

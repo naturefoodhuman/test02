@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:45:00
+创建时间（北京时间）：2026-06-23 11:58:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -62,5 +62,7 @@ python -m pytest _infra/network/tests/unit/ -q
 - E2-C4-S1-T4（参数安全验证；危险 JS/cookie/storage/URL/长度/PII/secret 拦截）
 - E11-C5-S1-T1（Cookie 泄露测试；MCP args + output layer cookie/session 拦截）
 - E6-C1-S1-T1（Coding MCP profile；`.mcp.json.coding` JSON 合法且不引用 browser/search/private servers）
+- E3-C1-S1-T1/T2（SearXNG Docker Compose + settings；本地 127.0.0.1:8080 + JSON format）
+- E4-C1-S1-T1（Crawl4AI Docker Compose service；本地 127.0.0.1:11235）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M5 E6-C1-S1-T2 — Research MCP profile（需注意 E3-C1/E4-C1 部署任务前置状态）。
+当前下一候选任务：`TASK_BACKLOG.md` 中 M5 E6-C1-S1-T2 — Research MCP profile。

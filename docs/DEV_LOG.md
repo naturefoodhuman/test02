@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:45:00
+创建时间（北京时间）：2026-06-23 11:58:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1494,5 +1494,73 @@ python -m _infra.network.cli config
 **下一步计划**：
 - 候选 1：E6-C1-S1-T2 `.mcp.json.research`（需处理 E3-C1/E4-C1 前置状态）。
 - 候选 2：先补 E3-C1/E4-C1 部署任务，满足 Research profile 前置依赖。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 65 轮 · 2026-06-23（E3-C1-S1-T1/T2 + E4-C1-S1-T1: Docker 部署配置）
+
+**当前任务（顺次执行）**：
+1. E3-C1-S1-T1 — SearXNG docker-compose。
+2. E3-C1-S1-T2 — SearXNG settings.yml。
+3. E4-C1-S1-T1 — Crawl4AI docker-compose service。
+
+**批量策略说明**：三个 Task 均为本地 Docker 部署配置，强相关且风险较低。本轮采用“配置生成 → 静态测试 → 更新状态”的方式顺次完成。当前沙箱无 Docker 二进制，因此真实 `docker compose up` / curl 验证需在用户 Mac 上执行。
+
+### 完成内容
+
+1. **新增 Docker Compose**：
+   - 新建 `docker/docker-compose.yml`
+   - services：`searxng` / `crawl4ai`
+   - 端口均仅绑定本机：
+     - SearXNG: `127.0.0.1:8080:8080`
+     - Crawl4AI: `127.0.0.1:11235:11235`
+   - 均配置 `restart: unless-stopped`
+   - 均配置 healthcheck
+   - 不使用裸 `latest` tag；镜像可通过环境变量覆盖
+
+2. **新增 SearXNG settings**：
+   - 新建 `docker/searxng/settings.yml`
+   - 启用 JSON format
+   - `secret_key` 使用 `${SEARXNG_SECRET_KEY}` 占位
+   - Google disabled
+   - request_timeout=3.0 / max_request_timeout=6.0
+
+3. **新增 Docker README**：
+   - 新建 `docker/README.md`
+   - 记录启动与 curl 验证命令
+
+4. **新增静态测试**：
+   - 新建 `_infra/network/tests/unit/test_docker_services.py`
+   - 覆盖 compose YAML 可解析、本地端口绑定、非 latest tag、settings JSON format、Google disabled、Crawl4AI shm_size/healthcheck 等
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_docker_services.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 277 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`docker/docker-compose.yml`
+- 新增：`docker/searxng/settings.yml`
+- 新增：`docker/README.md`
+- 新增：`_infra/network/tests/unit/test_docker_services.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前沙箱没有 Docker，无法执行真实 `docker compose config/up` 或 curl；已用静态测试验证配置结构。用户 Mac 需执行 `cd docker && docker compose up -d` 后验证服务健康。
+- Docker image tags 使用固定默认值但可能需要按用户真机 Docker Hub 可用版本调整；compose 支持通过 `SEARXNG_IMAGE` / `CRAWL4AI_IMAGE` 覆盖。
+
+**下一步计划**：
+- E6-C1-S1-T2：创建 `.mcp.json.research`。SearXNG/Crawl4AI 配置前置已补齐；真实服务启动仍需用户 Mac Docker 验证。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

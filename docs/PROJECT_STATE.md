@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 11:45:00
+创建时间（北京时间）：2026-06-23 11:58:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 11:45 CST
-**当前版本**：v1.3.0-dossier + Network Increment（Cookie 泄露测试 + Coding MCP Profile 完成）
+**更新日期**：2026-06-23 11:58 CST
+**当前版本**：v1.3.0-dossier + Network Increment（SearXNG/Crawl4AI Docker 配置完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -75,9 +75,11 @@
 - **E2-C4-S1-T4** 参数安全验证完成；新增 `ArgumentValidator`，拦截 document.cookie/localStorage/sessionStorage/eval/Function、URL allowlist 违规、参数超长、参数内 PII/secret，并写 audit
 - **E11-C5-S1-T1** Cookie 泄露测试完成；覆盖 MCPGuard 拦截 document.cookie/localStorage/sessionStorage/eval/Function，ArgumentValidator 拦截 Cookie header secret，PrivacyGateway 输出层脱敏 Cookie/Set-Cookie
 - **E6-C1-S1-T1** `.mcp.json.coding` 完成；JSON 合法，采用 `_forge_trace` 字段记录 LLM 留痕，且不引用 browser/search/private MCP server
-- **测试**：`test_cookie_leak.py` 9 passed；`test_mcp_profiles.py` 3 passed；network unit+security 全量 273 passed / 2 skipped / 22 warnings
-- **当前单任务批次**：E11-C5-S1-T1 + E6-C1-S1-T1 已顺次完成（先完成 Cookie 测试，再创建 Coding profile）
-- **下一任务候选**：E6-C1-S1-T2 `.mcp.json.research`（注意其原始前置依赖 E3-C1/E4-C1 部署任务在表中仍未完成，需谨慎）
+- **E3-C1-S1-T1/T2** SearXNG Docker Compose + settings 完成；端口仅绑定 `127.0.0.1:8080`，JSON format 启用，Google disabled，静态配置测试通过
+- **E4-C1-S1-T1** Crawl4AI Docker Compose service 完成；端口仅绑定 `127.0.0.1:11235`，`shm_size=1g`，默认禁用 JS，静态配置测试通过
+- **测试**：`test_docker_services.py` 4 passed；network unit+security 全量 277 passed / 2 skipped / 22 warnings；Docker runtime/curl 验证需在用户 Mac 上执行
+- **当前单任务批次**：E3-C1-S1-T1 + E3-C1-S1-T2 + E4-C1-S1-T1 已顺次完成静态验证
+- **下一任务候选**：E6-C1-S1-T2 `.mcp.json.research`（SearXNG/Crawl4AI 配置前置已补齐，真实启动仍需用户 Mac Docker 验证）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
