@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:55:00
+创建时间（北京时间）：2026-06-23 14:54:47
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1419,3 +1419,39 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - User Mac must run pinned MCP install and mcp-scan for actual Chrome DevTools MCP checkout.
 - User Mac must run private Chrome script for real browser validation.
+
+---
+
+## [2026-06-23] Mode Integration — switch-mode + PreToolUse Hook (E6-C2-S1-T1, E6-C3-S1-T1)
+
+### Added
+- `scripts/switch-mode.sh`
+  - switches `.mcp.json` symlink between coding / research / private profiles
+- `_infra/network/tests/unit/test_switch_mode.py`
+  - 3 tests for symlink switching, current status, invalid mode handling
+- `_infra/network/mcp_guard/hooks/pre_tool_use.py`
+  - stdin JSON parser + MCPGuard invocation + JSON allow/deny output
+- `scripts/hooks/pre_tool_use.sh`
+  - shell wrapper for Claude Code hook integration
+- `_infra/network/tests/unit/test_pre_tool_use_hook.py`
+  - 5 tests for parser aliases, allow/deny decisions and shell wrapper behavior
+
+### Changed
+- `TASK_BACKLOG.md` marks `E6-C2-S1-T1` and `E6-C3-S1-T1` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_switch_mode.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/test_pre_tool_use_hook.py -q
+# 5 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 292 passed, 2 skipped, 24 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real Claude Code hook field names may require adding aliases; parser is intentionally tolerant.
+- Recommended next task: `E8-C3-S1-T1` ChromeDevToolsMCPClient or E7 Playwright client tasks.

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:55:00
+创建时间（北京时间）：2026-06-23 14:54:47
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1701,5 +1701,94 @@ python -m _infra.network.cli config
 **下一步计划**：
 - E6-C2-S1-T1：实现模式切换脚本 `.mcp.json` → `.mcp.json.<mode>`。
 - 或 E8-C3-S1-T1：实现 ChromeDevToolsMCPClient。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 68 轮 · 2026-06-23（E6-C2-S1-T1 + E6-C3-S1-T1: 模式切换 + PreToolUse Hook）
+
+**当前任务（顺次执行）**：
+1. E6-C2-S1-T1 — 实现 `switch-mode.sh`。
+2. E6-C3-S1-T1 — 实现 Claude Code PreToolUse Hook 入口。
+
+**执行说明**：这两个任务同属 E6 模式隔离与 Claude Code 集成，强相关。本轮先完成 switch-mode 脚本并通过测试，再实现 PreToolUse hook。
+
+### E6-C2-S1-T1 完成内容
+
+1. **新增模式切换脚本**：
+   - 新建 `scripts/switch-mode.sh`
+   - 支持：`coding` / `research` / `private` / `current`
+   - 创建/更新 `.mcp.json -> .mcp.json.<mode>` symlink
+   - 遇到无效模式、profile 缺失、已有非 symlink `.mcp.json` 时 fail fast
+   - 支持 `FORGE_ROOT`，便于测试和不同工作目录调用
+
+2. **新增测试**：
+   - 新建 `_infra/network/tests/unit/test_switch_mode.py`
+   - 覆盖 symlink 可重复切换、current 输出、无效模式错误
+
+3. **验证**：
+```bash
+python -m pytest _infra/network/tests/unit/test_switch_mode.py -q
+# 3 passed
+```
+
+### E6-C3-S1-T1 完成内容
+
+1. **新增 Hook 入口**：
+   - 新建 `_infra/network/mcp_guard/hooks/__init__.py`
+   - 新建 `_infra/network/mcp_guard/hooks/pre_tool_use.py`
+   - 新建 `scripts/hooks/pre_tool_use.sh`
+
+2. **Hook 行为**：
+   - 从 stdin 读取 JSON
+   - 兼容字段别名：`tool_name/tool/name`、`server_id/server_name/server`、`args/arguments/input`
+   - 支持 `FORGE_MCP_MODE` 环境变量
+   - 调用 `MCPGuard.check()`
+   - 输出 JSON：`allow` / `reason` / `decision` / `server_id` / `tool_name` / `audit_event_id`
+   - fail closed：异常时输出 `allow=false`
+   - 非交互 approval：默认不阻塞 stdin；可用 `FORGE_MCP_APPROVAL=yes` 做一次性审批测试/手动场景
+
+3. **新增测试**：
+   - 新建 `_infra/network/tests/unit/test_pre_tool_use_hook.py`
+   - 覆盖 payload alias parse、safe research allow、research shell deny、shell wrapper JSON output、bad argument deny
+
+4. **验证**：
+```bash
+python -m pytest _infra/network/tests/unit/test_pre_tool_use_hook.py -q
+# 5 passed
+```
+
+**整体验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_switch_mode.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/test_pre_tool_use_hook.py -q
+# 5 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 292 passed, 2 skipped, 24 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`scripts/switch-mode.sh`
+- 新增：`_infra/network/tests/unit/test_switch_mode.py`
+- 新增：`_infra/network/mcp_guard/hooks/__init__.py`
+- 新增：`_infra/network/mcp_guard/hooks/pre_tool_use.py`
+- 新增：`scripts/hooks/pre_tool_use.sh`
+- 新增：`_infra/network/tests/unit/test_pre_tool_use_hook.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- Hook 当前按 JSON stdin 协议做宽松兼容；真实 Claude Code 版本如字段名有差异，可在 parser alias 中扩展。
+- Hook 使用 MCPGuard，若真实环境启用 high-risk approval，默认非交互会拒绝；需要人工审批场景可通过后续 UI/CLI 流程或 `FORGE_MCP_APPROVAL=yes` 明确控制。
+
+**下一步计划**：
+- E8-C3-S1-T1 ChromeDevToolsMCPClient，或进入 E7 Playwright MCP 安装/客户端。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

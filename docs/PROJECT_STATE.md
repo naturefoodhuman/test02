@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:55:00
+创建时间（北京时间）：2026-06-23 14:54:47
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 14:55 CST
-**当前版本**：v1.3.0-dossier + Network Increment（Private Chrome/DevTools MCP 配置完成）
+**更新日期**：2026-06-23 14:54 CST
+**当前版本**：v1.3.0-dossier + Network Increment（MCP 模式切换 + PreToolUse Hook 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -81,17 +81,21 @@
 - **E8-C1-S1-T1** Chrome DevTools MCP pinned metadata 完成；`config/mcp_lockfile.yaml` 固定 ChromeDevTools/chrome-devtools-mcp commit 与 `--no-usage-statistics` / `--no-performance-crux` / browser-url 参数
 - **E8-C2-S1-T1/T2** AI Private Chrome 启动脚本与 `ai-private-github` profile 文档完成；支持 isolated user-data-dir、remote debugging port、禁用扩展/同步、手动登录流程
 - **E6-C1-S1-T3** `.mcp.json.private` 完成；仅暴露 `chrome-devtools-private`，不包含 shell/public search/crawl4ai/playwright-public
-- **测试**：`test_private_profile.py` 4 passed；network unit+security 全量 284 passed / 2 skipped / 22 warnings；Chrome/MCP 实机启动与 mcp-scan 需在用户 Mac 上执行
-- **当前单任务批次**：E8-C1-S1-T1 + E8-C2-S1-T1/T2 + E6-C1-S1-T3 已顺次完成静态验证
-- **下一任务候选**：E6-C2-S1-T1 模式切换脚本，或 E8-C3-S1-T1 ChromeDevToolsMCPClient
+- **E6-C2-S1-T1** 模式切换脚本完成；`scripts/switch-mode.sh coding|research|private|current` 可重复维护 `.mcp.json -> .mcp.json.<mode>` symlink
+- **E6-C3-S1-T1** PreToolUse Hook 完成；`scripts/hooks/pre_tool_use.sh` 从 stdin 接收 JSON，调用 MCPGuard，输出 `{allow, reason, decision}`，非交互 approval 默认 fail-closed
+- **测试**：`test_switch_mode.py` 3 passed；`test_pre_tool_use_hook.py` 5 passed；network unit+security 全量 292 passed / 2 skipped / 24 warnings；`compileall` 通过
+- **当前单任务批次**：E6-C2-S1-T1 + E6-C3-S1-T1 已顺次完成
+- **下一任务候选**：E8-C3-S1-T1 ChromeDevToolsMCPClient，或进入 E7 Playwright MCP 安装/客户端
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_private_profile.py -q
-# 4 passed
+python -m pytest _infra/network/tests/unit/test_switch_mode.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/test_pre_tool_use_hook.py -q
+# 5 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 284 passed, 2 skipped, 22 warnings
+# 292 passed, 2 skipped, 24 warnings
 python -m compileall -q _infra/network
 # pass
 ```

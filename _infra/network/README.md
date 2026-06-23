@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:55:00
+创建时间（北京时间）：2026-06-23 14:54:47
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -68,5 +68,7 @@ python -m pytest _infra/network/tests/unit/ -q
 - E8-C1-S1-T1（Chrome DevTools MCP pinned metadata；lockfile 固定 repo/commit/args，真机安装需执行 install_mcp）
 - E8-C2-S1-T1/T2（Private Chrome 启动脚本 + ai-private-github profile 文档）
 - E6-C1-S1-T3（Private MCP profile；仅 chrome-devtools-private）
+- E6-C2-S1-T1（模式切换脚本；`.mcp.json` symlink 切换 coding/research/private）
+- E6-C3-S1-T1（Claude Code PreToolUse hook；stdin JSON → MCPGuard → JSON allow/deny）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M5 E6-C2-S1-T1 — 模式切换脚本；或 M7 E8-C3-S1-T1 — ChromeDevToolsMCPClient。
+当前下一候选任务：`TASK_BACKLOG.md` 中 M7 E8-C3-S1-T1 — ChromeDevToolsMCPClient；或进入 E7 Playwright MCP 安装/客户端。

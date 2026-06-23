@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:55:00
+创建时间（北京时间）：2026-06-23 14:54:47
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E8-C1/C2 + E6 Private MCP Profile 完成）
+> **最近同步**: 2026-06-23（E6-C2/C3 模式切换与 PreToolUse Hook 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1607,18 +1607,23 @@ P3 = 可选增强
 - **前置依赖**: E6-C1-S1-T1/T2/T3
 - **输入**: 模式名
 - **输出**: 切换脚本
-- **涉及文件**: 新建 `scripts/switch-mode.sh`
+- **涉及文件**:
+  - 新建：`scripts/switch-mode.sh`
+  - 新建：`_infra/network/tests/unit/test_switch_mode.py`
 - **实现要求**:
-  - 参数：`coding` / `research` / `private`
+  - 参数：`coding` / `research` / `private` / `current`
   - 创建软链接 `.mcp.json` → `.mcp.json.<mode>`
   - 显示当前模式
-  - 错误处理（无效模式）
+  - 错误处理（无效模式、profile 缺失、非 symlink .mcp.json 拒绝覆盖）
+  - 支持 `FORGE_ROOT`，便于测试与不同工作目录调用
 - **测试要求**:
   - 集成测试：切换后 readlink 正确
+  - 集成测试：current 显示正确模式
+  - 集成测试：无效模式返回非 0
 - **验收标准**: 切换可重复
 - **DoD**:
   - [x] 脚本实现
-  - [x] 集成测试通过
+  - [x] 集成测试通过（`test_switch_mode.py`: 3 passed）
 
 ---
 
@@ -1631,20 +1636,25 @@ P3 = 可选增强
 - **输入**: Claude Code Hook 协议
 - **输出**: Hook 可执行
 - **涉及文件**:
-  - 新建：`src/mcp/hooks/pre_tool_use.py`
+  - 新建：`_infra/network/mcp_guard/hooks/__init__.py`
+  - 新建：`_infra/network/mcp_guard/hooks/pre_tool_use.py`
   - 新建：`scripts/hooks/pre_tool_use.sh`
+  - 新建：`_infra/network/tests/unit/test_pre_tool_use_hook.py`
 - **实现要求**:
   - 接收 stdin JSON（Claude Code 格式）
+  - 兼容字段别名：`tool_name/tool/name`、`server_id/server_name/server`、`args/arguments/input`
   - 调用 MCPGuard.check
-  - 输出 JSON：`{allow: bool, reason: str}`
+  - 输出 JSON：`{allow: bool, reason: str, decision: str, ...}`
   - 写审计日志
+  - Hook 模式非交互，默认不阻塞 stdin；`FORGE_MCP_APPROVAL=yes` 可用于一次性审批测试/手动场景
 - **测试要求**:
   - 集成测试：模拟 Claude Code 调用
+  - 单元测试：payload alias parse、safe allow、mode deny、bad argument deny
 - **验收标准**: Hook 可被 Claude Code 调用
 - **DoD**:
   - [x] Hook 实现
-  - [x] 集成测试通过
-  - [x] 文档说明 Claude Code 配置方式
+  - [x] 集成测试通过（`test_pre_tool_use_hook.py`: 5 passed）
+  - [x] 文档说明 Claude Code 配置方式（脚本用法与 JSON 输出见 hook module docstring / DEV_LOG）
 
 ---
 
@@ -2817,8 +2827,8 @@ graph TD
 | M4 | E11-C5 | E11-C5-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E6-C1 | E6-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E6-C1 | E6-C1-S1-T2 | [x] | 2026-06-23 | Arena Agent |
-| M5 | E6-C2 | E6-C2-S1-T1 | [ ] | | |
-| M5 | E6-C3 | E6-C3-S1-T1 | [ ] | | |
+| M5 | E6-C2 | E6-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M5 | E6-C3 | E6-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M5 | E10-C1 | E10-C1-S1-T1 | [ ] | | |
 | M5 | E10-C3 | E10-C3-S1-T1 | [ ] | | |
 | M6 | E7-C1 | E7-C1-S1-T1 | [ ] | | |
