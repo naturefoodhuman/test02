@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:45:00
+创建时间（北京时间）：2026-06-22 22:05:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -890,5 +890,65 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E11-C4-S1-T1：编写 PII 绕过测试套件（Unicode 同形、零宽、Base64、URL encoding、表格拆分、JSON key/value）。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 56 轮 · 2026-06-22（E11-C4-S1-T1: PII 绕过测试）
+
+**当前任务**：E11-C4-S1-T1 — 编写 PII 绕过测试套件。
+
+**完成内容**：
+
+1. **新增 deterministic common PII recognizers**：
+   - 新建 `_infra/network/privacy_gateway/recognizers/pii_recognizers.py`
+   - 覆盖 CN_PHONE（含分隔符 / 表格拆分）、EMAIL、CN_ID_CARD、Luhn BANK_CARD、Base64-encoded PII
+   - 无 Presidio 依赖，保证最小环境也能执行 PII 绕过测试
+
+2. **接入 PrivacyGateway L2**：
+   - 修改 `_infra/network/privacy_gateway/gateway.py`
+   - L2 现在包含：Presidio（可用时）+ deterministic common PII + deterministic secret regex
+
+3. **新增 PII 绕过 security tests**：
+   - 新建 `_infra/network/tests/security/test_pii_bypass.py`
+   - 覆盖：
+     - Unicode 全角手机号
+     - 零宽插入手机号
+     - URL encoding + 分隔符手机号
+     - 表格拆分手机号
+     - JSON key/value 手机号
+     - code variable 中手机号
+     - Base64 encoded 手机号
+     - email + phone 组合
+     - Luhn bank card
+     - schema output 不含 raw `value`
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/security/test_pii_bypass.py -q
+# 11 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 212 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/privacy_gateway/recognizers/pii_recognizers.py`
+- 新增：`_infra/network/tests/security/test_pii_bypass.py`
+- 修改：`_infra/network/privacy_gateway/gateway.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- deterministic recognizers 覆盖常见安全测试路径；更复杂的现实世界 PII 格式仍需后续红队样本继续扩展。
+- Base64 检测当前是 token-level 解码；多段 base64 / 分块编码可在后续 E11 扩展。
+
+**下一步计划**：
+- E11-C6-S1-T1：编写 Canary Token 端到端测试。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

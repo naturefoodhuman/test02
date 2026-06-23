@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:45:00
+创建时间（北京时间）：2026-06-22 22:05:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E11-C2-S1-T1 Prompt Injection 安全测试完成）
+> **最近同步**: 2026-06-22（E11-C4-S1-T1 PII 绕过测试完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -2146,19 +2146,23 @@ P3 = 可选增强
 - **前置依赖**: E5-C9-S1-T1
 - **输入**: §13.6 攻击路径
 - **输出**: 测试用例
-- **涉及文件**:
-  - 新建：`tests/security/test_pii_bypass.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/tests/security/test_pii_bypass.py`
+  - 新建：`_infra/network/privacy_gateway/recognizers/pii_recognizers.py`
+  - 修改：`_infra/network/privacy_gateway/gateway.py`（L2 增加 deterministic common PII recognizers）
 - **实现要求**:
-  - Unicode 同形：`１３８５５５５`
-  - 零宽插入：`138\u200B5555`
-  - Base64：`MTM4NTU1NQ==`
-  - URL encoding：`138%2D5555`
-  - 表格拆分
+  - Unicode 同形：`１３８５５５５１２３４`
+  - 零宽插入：`138\u200B5555\u200C1234`
+  - Base64：`MTM4NTU1NTEyMzQ=`
+  - URL encoding：`138%2D5555%2D1234`
+  - 分隔符 / 表格拆分
   - JSON key/value
-- **测试要求**: 所有绕过被检测
-- **验收标准**: 检测率 100%
+  - 代码变量名隐藏
+  - email + CN phone + Luhn bank card deterministic detection
+- **测试要求**: 所有绕过被检测并脱敏
+- **验收标准**: 检测率 100%，输出 schema 中不包含 raw PII `value`
 - **DoD**:
-  - [x] 测试编写
+  - [x] 测试编写（`test_pii_bypass.py`: 11 passed）
   - [x] 全部通过
 
 ---
@@ -2721,7 +2725,7 @@ graph TD
 | M3 | E5-C9 | E5-C9-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E5-C9 | E5-C9-S1-T2 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E11-C2 | E11-C2-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M3 | E11-C4 | E11-C4-S1-T1 | [ ] | | |
+| M3 | E11-C4 | E11-C4-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E11-C6 | E11-C6-S1-T1 | [ ] | | |
 | M4 | E2-C1 | E2-C1-S1-T1 | [ ] | | |
 | M4 | E2-C2 | E2-C2-S1-T1 | [ ] | | |

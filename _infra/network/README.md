@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:45:00
+创建时间（北京时间）：2026-06-22 22:05:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -51,5 +51,6 @@ python -m pytest _infra/network/tests/unit/ -q
 - E5-C8-S1-T1（CanaryTokenMonitor；配置驱动 canary token，命中立即阻断 + masked audit metadata）
 - E5-C9-S1-T1/T2（PrivacyGateway 主管线 + build_privacy_gateway 工厂函数；L1-L7 组装，支持 light/full mode 与 config-driven 一行构建）
 - E11-C2-S1-T1（Prompt Injection 安全测试；恶意 HTML fixtures + Unicode/URL 编码/隐藏指令/tool-call trigger 覆盖）
+- E11-C4-S1-T1（PII 绕过安全测试；Unicode/零宽/Base64/URL encoding/表格/JSON/code variable 覆盖）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中的 E11-C4-S1-T1 — PII 绕过测试。
+当前下一候选任务：`TASK_BACKLOG.md` 中的 E11-C6-S1-T1 — Canary Token 端到端测试。

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-06-22 21:30:00
+# 创建时间（北京时间）：2026-06-22 22:05:00
 
 """
 PrivacyGateway orchestration pipeline (E5-C9-S1-T1).
@@ -37,6 +37,7 @@ from .detectors.ner_detector import SpaCyNERDetector
 from .detectors.qwen_classifier import QwenPIIClassifier, QwenPIIResult
 from .models import PIIEntity
 from .pii_map_db import PIIMapDB
+from .recognizers.pii_recognizers import detect_common_pii
 from .recognizers.secret_recognizers import detect_secrets
 from .replacer import InMemoryPIIMapStore, PIIReplacer
 from .validator import PrivacyOutputValidator, build_privacy_output
@@ -155,6 +156,7 @@ class PrivacyGateway:
         entities: list[PIIEntity] = []
         for detector in self.detectors:
             entities.extend(await self._run_detector(detector, normalized_text, warnings))
+        entities.extend(detect_common_pii(normalized_text))
         entities.extend(detect_secrets(normalized_text))
 
         # L3: spaCy NER

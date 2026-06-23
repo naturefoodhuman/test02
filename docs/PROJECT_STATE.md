@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:45:00
+创建时间（北京时间）：2026-06-22 22:05:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-22 21:45 CST
-**当前版本**：v1.3.0-dossier + Network Increment（E11 Prompt Injection 安全测试完成）
+**更新日期**：2026-06-22 22:05 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E11 PII 绕过安全测试完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -64,19 +64,18 @@
 - **E5-C9-S1-T1** PrivacyGateway 主管线完成；组装 L1 Unicode normalize、L2 Presidio/regex、L3 spaCy NER、L4 Qwen 复核、L5 placeholder、L6 JSON Schema、L7 Canary，提供 `PrivacyContext(mode=light/full)`
 - **E5-C9-S1-T2** `build_privacy_gateway` 工厂函数完成；可从 `config/network.yaml` 一行装配 detectors / qwen / replacer / PII map store / validator / canary monitor
 - **E11-C2-S1-T1** Prompt Injection 安全测试完成；新增恶意 HTML fixtures 与 security tests，覆盖隐藏指令、display:none、visibility:hidden、HTML comment、Unicode 全角混淆、URL encoding、tool-call trigger；InputSanitizer 同步加固 NFKC/URL decode 前置与 hidden block 整体移除
-- **测试**：`test_prompt_injection.py` 12 passed；`test_input_sanitizer.py` 8 passed；network unit+security 全量 201 passed / 2 skipped / 4 warnings；`compileall` 通过
-- **当前单任务**：E11-C2-S1-T1 Prompt Injection 测试已完成
-- **下一任务候选**：E11-C4-S1-T1 PII 绕过测试（尚未实现）
+- **E11-C4-S1-T1** PII 绕过测试完成；新增 deterministic common PII recognizers，覆盖 Unicode 全角、零宽插入、Base64 编码、URL encoding、分隔符/表格拆分、JSON key/value、代码变量隐藏、email、CN phone、Luhn bank card
+- **测试**：`test_pii_bypass.py` 11 passed；network unit+security 全量 212 passed / 2 skipped / 4 warnings；`compileall` 通过
+- **当前单任务**：E11-C4-S1-T1 PII 绕过测试已完成
+- **下一任务候选**：E11-C6-S1-T1 Canary Token 端到端测试（尚未实现）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/security/test_prompt_injection.py -q
-# 12 passed
-python -m pytest _infra/network/tests/unit/test_input_sanitizer.py -q
-# 8 passed
+python -m pytest _infra/network/tests/security/test_pii_bypass.py -q
+# 11 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 201 passed, 2 skipped, 4 warnings
+# 212 passed, 2 skipped, 4 warnings
 python -m compileall -q _infra/network
 # pass
 ```

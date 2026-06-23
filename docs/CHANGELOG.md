@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 21:45:00
+创建时间（北京时间）：2026-06-22 22:05:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1018,3 +1018,32 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E11-C4-S1-T1` PII bypass security tests.
+
+---
+
+## [2026-06-22] Security — PII Bypass Tests (E11-C4-S1-T1)
+
+### Added
+- `_infra/network/privacy_gateway/recognizers/pii_recognizers.py`
+  - deterministic CN phone / email / CN ID / Luhn bank card / Base64-encoded PII detection
+- `_infra/network/tests/security/test_pii_bypass.py`
+  - 11 security tests covering Unicode homoglyphs, zero-width, Base64, URL encoding, separators, table split, JSON key/value, code variable hiding and schema-safe output
+
+### Changed
+- `_infra/network/privacy_gateway/gateway.py`
+  - L2 now includes deterministic common PII recognizers in addition to optional Presidio and secret regex recognizers
+- `TASK_BACKLOG.md` marks `E11-C4-S1-T1` as done and sets next TODO to `E11-C6-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/security/test_pii_bypass.py -q
+# 11 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 212 passed, 2 skipped, 4 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E11-C6-S1-T1` Canary Token end-to-end test.
