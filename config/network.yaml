@@ -67,7 +67,7 @@ browser:
 
 # ── 隐私网关 ──────────────────────────────────────
 privacy_gateway:
-  qwen_model: "qwen3:8b"
+  qwen_model: "qwen3:14b"
   qwen_base_url: "http://127.0.0.1:11434"
   qwen_timeout_seconds: 30
   spacy_model: "zh_core_web_sm"
@@ -81,7 +81,7 @@ privacy_gateway:
 # ── 本地 RAG ──────────────────────────────────────
 local_rag:
   rag_db: "runtime/rag.db"
-  embed_model: "bge-m3"
+  embed_model: "bge-m3:latest"
   embed_base_url: "http://127.0.0.1:11434"
   chunk_size_tokens: 512
   chunk_overlap_tokens: 50
