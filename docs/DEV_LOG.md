@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-23 10:42:00
+创建时间（北京时间）：2026-06-23 11:02:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1186,5 +1186,69 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E2-C4-S1-T1：设计 MCP Guard 核心抽象与数据模型。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 61 轮 · 2026-06-23（E2-C4-S1-T1: MCP Guard 核心抽象）
+
+**当前任务**：E2-C4-S1-T1 — 设计 MCP Guard 核心抽象。
+
+**完成内容**：
+
+1. **新增 MCP Guard models**：
+   - 新建 `_infra/network/mcp_guard/models.py`
+   - 定义：
+     - `PolicyDecision`（allow / deny / require_approval）
+     - `MCPToolCall`
+     - `MCPToolResult`
+     - `GuardDecision`
+
+2. **新增 MCPGuard 核心入口**：
+   - 新建 `_infra/network/mcp_guard/guard.py`
+   - `MCPGuard.check(call) -> GuardDecision`
+   - 支持 default decision（当前 core task 默认 allow，后续 mode policy / approval / argument validator 接入）
+   - 所有 decision 写入 AuditLogger
+   - 审计 details 只记录 `arg_keys`，不记录 raw args，避免工具参数中敏感内容进入审计日志
+
+3. **Schema guard 集成**：
+   - `call.schema` 存在时调用 `MCPToolSchemaValidator.verify_schema()`
+   - 首次 schema pin 后 allow
+   - schema unchanged 后 allow
+   - schema changed 时 deny + audit，并返回 `reason="schema_changed"`
+   - 暴露 `verify_schema()` / `record_schema()` 便捷方法
+
+4. **单元测试**：
+   - 新建 `_infra/network/tests/unit/test_mcp_guard.py`
+   - 覆盖模型实例化、非法 mode、allow audit、schema pin/unchanged、schema changed deny audit、record/verify schema、require_approval 默认决策审计
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_guard.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 242 passed, 2 skipped, 11 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/mcp_guard/models.py`
+- 新增：`_infra/network/mcp_guard/guard.py`
+- 新增：`_infra/network/tests/unit/test_mcp_guard.py`
+- 修改：`_infra/network/mcp_guard/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前 MCPGuard core 只建立统一入口、审计与 schema guard；真正的 mode policy / high-risk approval / argument validator 是后续 E2-C4-S1-T2/T3/T4。
+- 当前默认 allow 是为了保持 core abstraction 可用；生产安全策略必须在后续 policy task 接入后启用。
+
+**下一步计划**：
+- E2-C4-S1-T2：实现模式权限策略（coding / research / private）。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-23 10:42:00
+创建时间（北京时间）：2026-06-23 11:02:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1168,3 +1168,39 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Next recommended task: `E2-C4-S1-T1` MCP Guard core abstraction.
+
+---
+
+## [2026-06-23] MCP Guard — Core Abstraction (E2-C4-S1-T1)
+
+### Added
+- `_infra/network/mcp_guard/models.py`
+  - `PolicyDecision`
+  - `MCPToolCall`
+  - `MCPToolResult`
+  - `GuardDecision`
+- `_infra/network/mcp_guard/guard.py`
+  - `MCPGuard.check(call) -> GuardDecision`
+  - schema hash verification integration
+  - decision audit logging
+- `_infra/network/tests/unit/test_mcp_guard.py`
+  - 7 tests covering models, allow/deny/approval decisions, schema change denial, audit logging
+
+### Changed
+- `_infra/network/mcp_guard/__init__.py` exports MCPGuard and core models.
+- `TASK_BACKLOG.md` marks `E2-C4-S1-T1` as done and sets next TODO to `E2-C4-S1-T2`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_guard.py -q
+# 7 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 242 passed, 2 skipped, 11 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Mode policy, high-risk approval and argument validation remain separate follow-up tasks.
+- Next recommended task: `E2-C4-S1-T2` mode permission policy.

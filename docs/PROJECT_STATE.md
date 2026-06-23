@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-23 10:42:00
+创建时间（北京时间）：2026-06-23 11:02:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 10:42 CST
-**当前版本**：v1.3.0-dossier + Network Increment（M4 MCP Schema Hash 完成）
+**更新日期**：2026-06-23 11:02 CST
+**当前版本**：v1.3.0-dossier + Network Increment（M4 MCP Guard 核心抽象完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -69,17 +69,18 @@
 - **E2-C1-S1-T1** MCP Server 安装脚本完成；实现 pinned git clone + exact commit checkout + lockfile-based install + mcp-scan admission + `config/mcp_lockfile.yaml`，禁止 `@latest` / branch / HEAD
 - **E2-C2-S1-T1** mcp-scan 集成完成；新增 scanner parser / CLI / 脚本，支持解析 findings/issues/vulnerabilities/violations/warnings/errors、lockfile local_path 扫描，任一 finding 或失败状态返回非 0
 - **E2-C3-S1-T1** MCP Schema Hash 校验完成；实现 canonical JSON SHA256、lockfile tool schema pin、tools/list 提取、tool description mutation 检测、schema change 写入 `mcp_schema_changes` 并抛 `MCPSchemaChangedError`
-- **测试**：`test_mcp_schema_validator.py` 6 passed；network unit+security 全量 235 passed / 2 skipped / 5 warnings；`compileall` 通过
-- **当前单任务**：E2-C3-S1-T1 MCP Schema Hash 校验已完成
-- **下一任务候选**：E2-C4-S1-T1 MCP Guard 核心抽象（尚未实现）
+- **E2-C4-S1-T1** MCP Guard 核心抽象完成；定义 `MCPToolCall` / `MCPToolResult` / `GuardDecision` / `PolicyDecision`，实现 `MCPGuard.check()`、schema verification 集成与所有决策审计（只记录 arg_keys，不记录 raw args）
+- **测试**：`test_mcp_guard.py` 7 passed；network unit+security 全量 242 passed / 2 skipped / 11 warnings；`compileall` 通过
+- **当前单任务**：E2-C4-S1-T1 MCP Guard 核心抽象已完成
+- **下一任务候选**：E2-C4-S1-T2 模式权限策略（尚未实现）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_mcp_schema_validator.py -q
-# 6 passed
+python -m pytest _infra/network/tests/unit/test_mcp_guard.py -q
+# 7 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 235 passed, 2 skipped, 5 warnings
+# 242 passed, 2 skipped, 11 warnings
 python -m compileall -q _infra/network
 # pass
 ```
