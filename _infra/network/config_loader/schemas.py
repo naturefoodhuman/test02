@@ -39,6 +39,8 @@ class Crawl4AIConfig(BaseModel):
     timeout_seconds: int = Field(30, ge=5, le=120)
     js_exec_allowed: bool = False
     screenshot_requires_approval: bool = True
+    api_token: Optional[str] = None
+    api_token_env: str = "CRAWL4AI_API_TOKEN"
 
 class TrafilaturaConfig(BaseModel):
     enabled: bool = True
