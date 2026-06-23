@@ -7,16 +7,19 @@ from .chrome_devtools_client import ChromeDevToolsClientConfig, ChromeDevToolsMC
 from .private_pipeline import PrivateAccessPipeline, PrivateAccessResult
 from .profile_manager import BrowserProfile, ProfileManager
 from .playwright_client import PlaywrightClientConfig, PlaywrightMCPClient, PlaywrightTransport
+from .playwright_orchestrator import BrowserExtractionResult, PlaywrightOrchestrator
 
 __all__ = [
     "ChromeDevToolsClientConfig",
     "ChromeDevToolsMCPClient",
     "ChromeDevToolsTransport",
+    "BrowserExtractionResult",
     "BrowserProfile",
     "PrivateAccessPipeline",
     "PrivateAccessResult",
     "ProfileManager",
     "PlaywrightClientConfig",
     "PlaywrightMCPClient",
+    "PlaywrightOrchestrator",
     "PlaywrightTransport",
 ]

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:16:58
+创建时间（北京时间）：2026-06-23 15:39:26
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1961,5 +1961,82 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E7-C2-S1-T2：实现 PlaywrightOrchestrator，或先 E7-C4-S1-T1 SessionDetector。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 71 轮 · 2026-06-23（E7-C4-S1-T1 + E7-C2-S1-T2: SessionDetector + PlaywrightOrchestrator）
+
+**当前任务（顺次执行）**：
+1. E7-C4-S1-T1 — 实现 SessionDetector。
+2. E7-C2-S1-T2 — 实现 PlaywrightOrchestrator。
+
+**执行说明**：PlaywrightOrchestrator 需要调用 SessionDetector，因此本轮先完成 E7-C4 并测试通过，再实现 E7-C2 orchestrator。
+
+### E7-C4-S1-T1 完成内容
+
+1. **新增 SessionDetector**：
+   - 新建 `_infra/network/browser/session_detector.py`
+   - 新建 `config/session_keywords.yaml`
+   - 支持 login / CAPTCHA / 2FA / verification 关键词检测
+   - 支持 string 与 snapshot dict 输入
+   - 返回 `SessionDetectionResult(expired, needs_login, needs_captcha, needs_2fa, needs_verification, matched_keywords, reason)`
+   - 支持 injected notifier；macOS 下 best-effort `osascript` notification
+
+2. **测试**：
+```bash
+python -m pytest _infra/network/tests/unit/test_session_detector.py -q
+# 6 passed
+```
+
+### E7-C2-S1-T2 完成内容
+
+1. **新增 PlaywrightOrchestrator**：
+   - 新建 `_infra/network/browser/playwright_orchestrator.py`
+   - 封装 `go_and_extract(url, profile_name="ai_public")`
+   - 调用 ProfileManager 获取/确保 profile dir
+   - 调用 PlaywrightMCPClient navigate + snapshot
+   - 调用 SessionDetector 检测登录/CAPTCHA/2FA/Verify 页面
+   - 命中 session expired 时抛 `SessionExpiredError`
+   - 提供 `fill_form_field()` 与 `close()` 代理方法；写操作仍通过 PlaywrightMCPClient → MCPGuard
+
+2. **测试**：
+```bash
+python -m pytest _infra/network/tests/unit/test_playwright_orchestrator.py -q
+# 4 passed
+```
+
+**整体验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_session_detector.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_playwright_orchestrator.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 323 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`config/session_keywords.yaml`
+- 新增：`_infra/network/browser/session_detector.py`
+- 新增：`_infra/network/browser/playwright_orchestrator.py`
+- 新增：`_infra/network/tests/unit/test_session_detector.py`
+- 新增：`_infra/network/tests/unit/test_playwright_orchestrator.py`
+- 修改：`_infra/network/browser/__init__.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- Orchestrator 当前使用 mock transport 测试；真实 Playwright MCP 浏览器集成仍需用户 Mac 安装/启动 Playwright MCP。
+- SessionDetector 是关键词规则，后续可通过真实站点样本扩展关键词。
+
+**下一步计划**：
+- E7-C5-S1-T1：实现操作风险分类；或 E7-C6-S1-T1：Playwright CLI Wrapper。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

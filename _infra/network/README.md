@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:16:58
+创建时间（北京时间）：2026-06-23 15:39:26
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -75,5 +75,7 @@ python -m pytest _infra/network/tests/unit/ -q
 - E7-C1-S1-T1（Playwright MCP pinned metadata；microsoft/playwright-mcp commit + @playwright/mcp@0.0.76）
 - E7-C2-S1-T1（PlaywrightMCPClient；navigate/snapshot/click/type/wait/close + MCPGuard）
 - E7-C3-S1-T1/T2（ProfileManager + AI-Public Profile 文档）
+- E7-C4-S1-T1（SessionDetector；login/CAPTCHA/2FA/Verify 检测）
+- E7-C2-S1-T2（PlaywrightOrchestrator；go_and_extract + profile/session integration）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M6 E7-C2-S1-T2 — PlaywrightOrchestrator；或 E7-C4-S1-T1 — SessionDetector。
+当前下一候选任务：`TASK_BACKLOG.md` 中 M6 E7-C5-S1-T1 — 操作风险分类；或 E7-C6-S1-T1 — Playwright CLI Wrapper。

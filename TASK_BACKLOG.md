@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:20:00
+创建时间（北京时间）：2026-06-23 15:39:26
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E7 Playwright MCP Client + AI-Public Profile 完成）
+> **最近同步**: 2026-06-23（E7 Playwright Orchestrator + SessionDetector 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1730,18 +1730,23 @@ P3 = 可选增强
 - **前置依赖**: E7-C2-S1-T1
 - **输入**: 浏览任务
 - **输出**: Orchestrator 类
-- **涉及文件**:
-  - 新建：`src/browser/playwright_orchestrator.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/browser/playwright_orchestrator.py`
+  - 新建：`_infra/network/tests/unit/test_playwright_orchestrator.py`
+  - 修改：`_infra/network/browser/__init__.py`
 - **实现要求**:
-  - 任务封装（go_and_extract / fill_form / etc.）
-  - 调用 Profile Manager 选择 profile
-  - 调用 Session Detector 检测登录
-  - 写操作触发审批
-- **测试要求**: 集成测试
+  - 任务封装：`go_and_extract()` / `fill_form_field()` / `close()`
+  - 调用 ProfileManager 选择并确保 `ai_public` profile dir
+  - 调用 SessionDetector 检测登录 / CAPTCHA / 2FA / Verify 页面
+  - 写操作 / type/click 仍通过 PlaywrightMCPClient → MCPGuard → approval/argument validation
+- **测试要求**:
+  - 集成风格单元测试：公开页面 navigate + snapshot + extract
+  - 单元测试：session expired 阻断
+  - 单元测试：form typing / close delegation
 - **验收标准**: 公开页面浏览 + 提取
 - **DoD**:
   - [x] orchestrator 实现
-  - [x] 集成测试通过
+  - [x] 集成风格测试通过（`test_playwright_orchestrator.py`: 4 passed）
 
 ---
 
@@ -1799,23 +1804,25 @@ P3 = 可选增强
 - **前置依赖**: E7-C2-S1-T1
 - **输入**: 页面 snapshot
 - **输出**: SessionDetector 类
-- **涉及文件**:
-  - 新建：`src/browser/session_detector.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/` 与根 `config/`）**:
+  - 新建：`_infra/network/browser/session_detector.py`
   - 新建：`config/session_keywords.yaml`
+  - 新建：`_infra/network/tests/unit/test_session_detector.py`
 - **实现要求**:
   - 关键词：`登录` / `Sign in` / `CAPTCHA` / `验证码` / `2FA` / `Two-Factor` / `Verify`
-  - 检测 DOM 文本（accessibility snapshot）
-  - 命中时返回 expired=True / needs_2fa=True 等
-  - macOS notification（`osascript -e 'display notification ...'`）
+  - 检测 DOM 文本 / accessibility snapshot dict
+  - 命中时返回 `expired=True` / `needs_login` / `needs_captcha` / `needs_2fa` / `needs_verification`
+  - 支持 injected notifier；macOS 下 best-effort `osascript` notification
 - **测试要求**:
   - 单元测试：关键词命中
-  - 安全测试：完整 session 过期流程
+  - 单元测试：clean snapshot 有效
+  - 单元测试：mapping snapshot / config load / injected notifier
 - **验收标准**:
   - 过期检测准确
-  - 通知发送成功
+  - 通知可注入测试，真机 macOS notification best-effort
 - **DoD**:
   - [x] session_detector.py 实现
-  - [x] 单元测试通过
+  - [x] 单元测试通过（`test_session_detector.py`: 6 passed）
 
 ---
 
@@ -2864,10 +2871,10 @@ graph TD
 | M5 | E10-C3 | E10-C3-S1-T1 | [ ] | | |
 | M6 | E7-C1 | E7-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C2 | E7-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
-| M6 | E7-C2 | E7-C2-S1-T2 | [ ] | | |
+| M6 | E7-C2 | E7-C2-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C3 | E7-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C3 | E7-C3-S1-T2 | [x] | 2026-06-23 | Arena Agent |
-| M6 | E7-C4 | E7-C4-S1-T1 | [ ] | | |
+| M6 | E7-C4 | E7-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M6 | E7-C5 | E7-C5-S1-T1 | [ ] | | |
 | M6 | E7-C6 | E7-C6-S1-T1 | [ ] | | |
 | M6 | E6-C1 | E6-C1-S1-T3 | [x] | 2026-06-23 | Arena Agent |

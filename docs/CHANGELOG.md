@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 15:16:58
+创建时间（北京时间）：2026-06-23 15:39:26
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1538,3 +1538,42 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Real Playwright MCP install/mcp-scan/browser validation must run on the user's Mac.
 - Next recommended task: E7-C2-S1-T2 PlaywrightOrchestrator or E7-C4-S1-T1 SessionDetector.
+
+---
+
+## [2026-06-23] Browser Automation — SessionDetector + PlaywrightOrchestrator (E7-C4, E7-C2-S1-T2)
+
+### Added
+- `config/session_keywords.yaml`
+- `_infra/network/browser/session_detector.py`
+  - detects login / CAPTCHA / 2FA / verification pages
+  - supports snapshot dict input and injected notifier
+- `_infra/network/browser/playwright_orchestrator.py`
+  - `go_and_extract()` public browsing flow
+  - profile selection via ProfileManager
+  - session detection before returning extracted text
+- `_infra/network/tests/unit/test_session_detector.py`
+  - 6 tests
+- `_infra/network/tests/unit/test_playwright_orchestrator.py`
+  - 4 tests
+
+### Changed
+- `_infra/network/browser/__init__.py` exports SessionDetector and PlaywrightOrchestrator.
+- `TASK_BACKLOG.md` marks `E7-C4-S1-T1` and `E7-C2-S1-T2` as done.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_session_detector.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/test_playwright_orchestrator.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 323 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real Playwright MCP integration requires user Mac runtime validation.
+- Recommended next task: E7-C5 action risk classifier or E7-C6 Playwright CLI wrapper.
