@@ -2383,3 +2383,37 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - 功能开发建议继续 NetworkWorkflow / CLI 集成，或按用户优先级进行真机验证。
+
+---
+
+## 第 42 轮 · 2026-06-23 (M10 启动：Workflow 集成 + CLI 增强)
+
+**目标**：将搜索、提取、脱敏、存储串联成自动化工作流。
+按 `TASK_BACKLOG.md` Milestone 10 实现：
+- E12-C1-S1-T1: NetworkWorkflow 编排类实现
+- E12-C1-S1-T2: CLI `search` 命令集成
+
+**完成内容**：
+
+1. **新建 `_infra/network/network_workflow/` 模块**：
+   - `workflow.py`: 实现 `NetworkWorkflow` 类。
+     - 流程：Query 清洗 -> SearXNG 搜索 -> Crawl4AI/Trafilatura 批量提取 -> PrivacyGateway 脫敏 -> Local RAG 存储。
+     - 结构化返回 `WorkflowResult`，包含脱敏文本、引用列表和隐私审计信息。
+   - 适配了 `InputSanitizer` 的 source_url 要求。
+   - 适配了 `RAGStore` 的初始化参数。
+
+2. **增强 `_infra/network/cli.py`**：
+   - 新增 `search` 子命令。
+   - 支持 `--mode` 选择和 `--json` 输出。
+   - 美化了终端输出，包含 [QUERY], [MODE], [CITATIONS] 和 [PRIVACY] 区块。
+
+3. **单元测试** (`_infra/network/tests/unit/test_workflow.py`)：
+   - 模拟了全流程组件。
+   - 验证了正常搜索路径和空结果路径。
+   - 全部通过。
+
+**测试验证**：
+```bash
+python3 -m pytest _infra/network/tests/unit/test_workflow.py -v
+# 2 passed
+```
