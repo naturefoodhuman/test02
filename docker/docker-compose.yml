@@ -13,6 +13,9 @@ services:
     environment:
       SEARXNG_SECRET_KEY: ${SEARXNG_SECRET_KEY:-CHANGE_ME_LOCAL_ONLY_32_CHARS}
       SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://127.0.0.1:8090/}
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
     volumes:
       - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
       - searxng_data:/var/cache/searxng
@@ -37,6 +40,9 @@ services:
       CRAWL4AI_PORT: 11235
       CRAWL4AI_API_TOKEN: "my_secret_token_1234"  # <--- 新增这一行（密码可以随便改）
       CRAWL4AI_DISABLE_JS: ${CRAWL4AI_DISABLE_JS:-true}
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
     volumes:
       - crawl4ai_cache:/app/.cache
     networks:

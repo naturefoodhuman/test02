@@ -26,9 +26,10 @@ class WorkflowResult(BaseModel):
 class NetworkWorkflow:
     def __init__(self, config=None):
         self.config = config or load_network_config()
-        self.search_provider = SearXNGProvider(config=self.config)
-        # Fix: ExtractorChain doesn't take config directly in its __init__
-        # It takes providers. We pass config-aware providers.
+        # Pass the specific sub-configs to providers
+        self.search_provider = SearXNGProvider(config=self.config.search.searxng)
+        
+        # Initialize ExtractorChain with values from config
         crawl_provider = Crawl4AIProvider(config=self.config.extract.crawl4ai)
         self.extractor = ExtractorChain(providers=[
             crawl_provider,
