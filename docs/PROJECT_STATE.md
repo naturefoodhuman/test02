@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:54:47
+创建时间（北京时间）：2026-06-23 15:20:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 14:54 CST
-**当前版本**：v1.3.0-dossier + Network Increment（MCP 模式切换 + PreToolUse Hook 完成）
+**更新日期**：2026-06-23 15:20 CST
+**当前版本**：v1.3.0-dossier + Network Increment（Private Access Pipeline 完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -83,19 +83,21 @@
 - **E6-C1-S1-T3** `.mcp.json.private` 完成；仅暴露 `chrome-devtools-private`，不包含 shell/public search/crawl4ai/playwright-public
 - **E6-C2-S1-T1** 模式切换脚本完成；`scripts/switch-mode.sh coding|research|private|current` 可重复维护 `.mcp.json -> .mcp.json.<mode>` symlink
 - **E6-C3-S1-T1** PreToolUse Hook 完成；`scripts/hooks/pre_tool_use.sh` 从 stdin 接收 JSON，调用 MCPGuard，输出 `{allow, reason, decision}`，非交互 approval 默认 fail-closed
-- **测试**：`test_switch_mode.py` 3 passed；`test_pre_tool_use_hook.py` 5 passed；network unit+security 全量 292 passed / 2 skipped / 24 warnings；`compileall` 通过
-- **当前单任务批次**：E6-C2-S1-T1 + E6-C3-S1-T1 已顺次完成
-- **下一任务候选**：E8-C3-S1-T1 ChromeDevToolsMCPClient，或进入 E7 Playwright MCP 安装/客户端
+- **E8-C3-S1-T1** ChromeDevToolsMCPClient 完成；提供 get_page_text / get_network_logs / screenshot（需审批）/ storage 禁止访问，并与 MCPGuard 集成
+- **E8-C4-S1-T1** PrivateAccessPipeline 完成；Chrome private page text → InputSanitizer → PrivacyGateway full mode → schema-safe redacted output，并审计 private_access_complete metadata
+- **测试**：`test_chrome_devtools_client.py` 5 passed；`test_private_pipeline.py` 4 passed；network unit+security 全量 301 passed / 2 skipped / 30 warnings；`compileall` 通过
+- **当前单任务批次**：E8-C3-S1-T1 + E8-C4-S1-T1 已顺次完成 mock/static 验证
+- **下一任务候选**：E7-C1-S1-T1 Playwright MCP 安装（固定版本），或 E10-C1/E10-C3 运维脚本
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_switch_mode.py -q
-# 3 passed
-python -m pytest _infra/network/tests/unit/test_pre_tool_use_hook.py -q
+python -m pytest _infra/network/tests/unit/test_chrome_devtools_client.py -q
 # 5 passed
+python -m pytest _infra/network/tests/unit/test_private_pipeline.py -q
+# 4 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 292 passed, 2 skipped, 24 warnings
+# 301 passed, 2 skipped, 30 warnings
 python -m compileall -q _infra/network
 # pass
 ```

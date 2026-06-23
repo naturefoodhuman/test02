@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:54:47
+创建时间（北京时间）：2026-06-23 15:20:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1790,5 +1790,96 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - E8-C3-S1-T1 ChromeDevToolsMCPClient，或进入 E7 Playwright MCP 安装/客户端。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 69 轮 · 2026-06-23（E8-C3-S1-T1 + E8-C4-S1-T1: ChromeDevToolsMCPClient + PrivateAccessPipeline）
+
+**当前任务（顺次执行）**：
+1. E8-C3-S1-T1 — 实现 ChromeDevToolsMCPClient。
+2. E8-C4-S1-T1 — 实现 Private 模式 Privacy Full Mode。
+
+**执行说明**：先完成 ChromeDevToolsMCPClient mock 单元测试，再进入 PrivateAccessPipeline。真实 Chrome/MCP 集成测试需要用户 Mac 环境，本轮完成可测试边界对象与完整 mock pipeline。
+
+### E8-C3-S1-T1 完成内容
+
+1. **新增 browser package 与 ChromeDevToolsMCPClient**：
+   - 新建 `_infra/network/browser/__init__.py`
+   - 新建 `_infra/network/browser/chrome_devtools_client.py`
+   - 定义 `ChromeDevToolsMCPClient`、`ChromeDevToolsTransport`、`ChromeDevToolsClientConfig`
+
+2. **安全边界**：
+   - 默认 server：`chrome-devtools-private`
+   - 默认 mode：`private`
+   - `get_page_text()` 和 `get_network_logs()` 为 read-only tool，经 MCPGuard 检查后调用 transport
+   - `screenshot()` 通过 MCPGuard 审批后才能执行
+   - `read_storage()` 永远抛 `ForbiddenBrowserActionError`，禁止 cookies/localStorage/sessionStorage
+   - 无 transport 时提供 `/json` metadata fallback；screenshot 必须真实 transport
+
+3. **策略微调**：
+   - `HighRiskApprovalEngine` 增加 `screenshot` 作为高风险审批项
+   - `config/mode_policies.yaml` private mode 允许 `get_network_logs` / `screenshot`，其中 screenshot 仍走人工审批
+
+4. **测试**：
+```bash
+python -m pytest _infra/network/tests/unit/test_chrome_devtools_client.py -q
+# 5 passed
+```
+
+### E8-C4-S1-T1 完成内容
+
+1. **新增 PrivateAccessPipeline**：
+   - 新建 `_infra/network/browser/private_pipeline.py`
+   - `ChromeDevToolsMCPClient.get_page_text()` → `InputSanitizer` → `PrivacyGateway full mode` → `RedactedContent`
+   - 返回 `PrivateAccessResult`
+
+2. **审计**：
+   - 可注入 `AuditLogger`
+   - 写入 `private_access_complete`
+   - audit details 只记录 source_url / mapping_id / detection_types / redacted_length，不记录原文或 raw PII
+
+3. **测试**：
+   - 新建 `_infra/network/tests/unit/test_private_pipeline.py`
+   - 覆盖 private full-mode redaction、audit 不含 raw PII、canary block、HTML sanitizer 前置
+
+```bash
+python -m pytest _infra/network/tests/unit/test_private_pipeline.py -q
+# 4 passed
+```
+
+**整体验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_chrome_devtools_client.py -q
+# 5 passed
+python -m pytest _infra/network/tests/unit/test_private_pipeline.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 301 passed, 2 skipped, 30 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/browser/__init__.py`
+- 新增：`_infra/network/browser/chrome_devtools_client.py`
+- 新增：`_infra/network/browser/private_pipeline.py`
+- 新增：`_infra/network/tests/unit/test_chrome_devtools_client.py`
+- 新增：`_infra/network/tests/unit/test_private_pipeline.py`
+- 修改：`_infra/network/mcp_guard/approval.py`
+- 修改：`config/mode_policies.yaml`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前测试使用 mock transport；真实 Chrome DevTools MCP 连接需要用户 Mac 启动 private Chrome 并完成 MCP install/mcp-scan。
+- `get_network_logs()` 当前依赖 transport；无 transport 时返回空列表，后续真实 MCP transport/client 可扩展。
+
+**下一步计划**：
+- 可进入 E7-C1-S1-T1 Playwright MCP 安装（固定版本），或处理 E10-C1/E10-C3 运维脚本。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

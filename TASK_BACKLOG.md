@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:54:47
+创建时间（北京时间）：2026-06-23 15:20:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E6-C2/C3 模式切换与 PreToolUse Hook 完成）
+> **最近同步**: 2026-06-23（E8-C3/C4 私域客户端与 Full Mode 管线完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1941,21 +1941,26 @@ P3 = 可选增强
 - **前置依赖**: E8-C1-S1-T1, E2-C4-S1-T4
 - **输入**: §5.1
 - **输出**: 客户端类
-- **涉及文件**:
-  - 新建：`src/browser/chrome_devtools_client.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/browser/__init__.py`
+  - 新建：`_infra/network/browser/chrome_devtools_client.py`
+  - 新建：`_infra/network/tests/unit/test_chrome_devtools_client.py`
+  - 修改：`_infra/network/mcp_guard/approval.py`（screenshot 作为高风险审批项）
+  - 修改：`config/mode_policies.yaml`（private read-only 允许 get_network_logs/screenshot，screenshot 仍需审批）
 - **实现要求**:
-  - 实现 MCPClient ABC
-  - 连接 `127.0.0.1:9222`
+  - 实现 testable Chrome DevTools MCP client boundary / transport Protocol
+  - 默认连接 `http://127.0.0.1:9222`
   - 工具：get_page_text / screenshot（审批）/ get_network_logs
-  - 禁止 storage 工具
-  - 与 MCPGuard 集成
+  - 禁止 storage 工具（`read_storage()` 直接抛 `ForbiddenBrowserActionError`）
+  - 与 MCPGuard 集成，所有工具调用先过 mode policy / argument validator / approval
 - **测试要求**:
-  - 单元测试：mock
-  - 集成测试：连接真实 Chrome
+  - 单元测试：mock transport
+  - 真机集成测试：连接真实 Chrome（需用户 Mac 启动 Chrome + MCP）
 - **验收标准**: 只读访问成功
 - **DoD**:
   - [x] chrome_devtools_client.py 实现
-  - [x] 集成测试通过
+  - [x] mock 单元测试通过（`test_chrome_devtools_client.py`: 5 passed）
+  - [ ] 真机 Chrome/MCP 集成测试（需用户 Mac 环境）
 
 ---
 
@@ -1967,20 +1972,26 @@ P3 = 可选增强
 - **前置依赖**: E5-C9-S1-T1, E8-C3-S1-T1
 - **输入**: §7.3 私域访问流
 - **输出**: 编排函数
-- **涉及文件**:
-  - 新建：`src/browser/private_pipeline.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/browser/private_pipeline.py`
+  - 新建：`_infra/network/tests/unit/test_private_pipeline.py`
+  - 修改：`_infra/network/browser/__init__.py`
 - **实现要求**:
-  - 从 Chrome DevTools 提取 → Input Sanitizer → Privacy Gateway full mode → 输出占位符 JSON
-  - 主模型只接收占位符
-  - 审计日志标记 `private_access`
+  - 从 Chrome DevTools client 提取 page text
+  - Input Sanitizer 清洗 HTML / 外部文本
+  - Privacy Gateway full mode 输出占位符 JSON
+  - 主模型只接收 schema-safe redacted output
+  - 审计日志标记 `private_access_complete`，仅记录 source_url / mapping_id / detection_types / redacted_length，不记录原文
 - **测试要求**:
-  - 集成测试：完整私域流程
-  - 安全测试：PII 不泄露
+  - 集成风格测试：完整私域流程（mock client）
+  - 安全测试：PII 不泄露，Canary 命中阻断，审计不含 raw PII
+  - 真机集成测试：真实 ChromeDevTools MCP（需用户 Mac 环境）
 - **验收标准**:
   - 输出无原始 PII
 - **DoD**:
   - [x] private_pipeline.py 实现
-  - [x] 安全测试通过
+  - [x] 安全测试通过（`test_private_pipeline.py`: 4 passed）
+  - [ ] 真机 ChromeDevTools MCP 集成测试（需用户 Mac 环境）
 
 ---
 
@@ -2843,8 +2854,8 @@ graph TD
 | M7 | E8-C1 | E8-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C2 | E8-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C2 | E8-C2-S1-T2 | [x] | 2026-06-23 | Arena Agent |
-| M7 | E8-C3 | E8-C3-S1-T1 | [ ] | | |
-| M7 | E8-C4 | E8-C4-S1-T1 | [ ] | | |
+| M7 | E8-C3 | E8-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M7 | E8-C4 | E8-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M8 | E10-C2 | E10-C2-S1-T1 | [ ] | | |
 | M9 | E9-C1 | E9-C1-S1-T1 | [ ] | | |
 | M9 | E9-C2 | E9-C2-S1-T1 | [ ] | | |

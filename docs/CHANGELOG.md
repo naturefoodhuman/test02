@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:54:47
+创建时间（北京时间）：2026-06-23 15:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1455,3 +1455,44 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - Real Claude Code hook field names may require adding aliases; parser is intentionally tolerant.
 - Recommended next task: `E8-C3-S1-T1` ChromeDevToolsMCPClient or E7 Playwright client tasks.
+
+---
+
+## [2026-06-23] Private Access — ChromeDevToolsMCPClient + PrivateAccessPipeline (E8-C3/E8-C4)
+
+### Added
+- `_infra/network/browser/chrome_devtools_client.py`
+  - guarded Chrome DevTools MCP client boundary
+  - read-only page text / network logs helpers
+  - screenshot approval path
+  - storage access forbidden
+- `_infra/network/browser/private_pipeline.py`
+  - private page text → InputSanitizer → PrivacyGateway full mode → schema-safe redacted output
+  - optional audit logging without raw PII
+- `_infra/network/tests/unit/test_chrome_devtools_client.py`
+  - 5 tests
+- `_infra/network/tests/unit/test_private_pipeline.py`
+  - 4 tests
+
+### Changed
+- `_infra/network/browser/__init__.py` exports browser/private pipeline components.
+- `_infra/network/mcp_guard/approval.py` treats screenshot as high-risk.
+- `config/mode_policies.yaml` allows private read-only `get_network_logs` and gated `screenshot`.
+- `TASK_BACKLOG.md` marks `E8-C3-S1-T1` and `E8-C4-S1-T1` as done with real-machine validation caveat.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_chrome_devtools_client.py -q
+# 5 passed
+python -m pytest _infra/network/tests/unit/test_private_pipeline.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 301 passed, 2 skipped, 30 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Real Chrome DevTools MCP integration requires user Mac runtime validation.
+- Next recommended task: E7 Playwright MCP installation/client or E10 ops scripts.
