@@ -5,14 +5,14 @@ name: forge-network
 
 services:
   searxng:
-    image: ${SEARXNG_IMAGE:-searxng/searxng:2025.6.21}
+    image: ${SEARXNG_IMAGE:-searxng/searxng:latest}
     container_name: forge-searxng
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:8090:8080"
     environment:
       SEARXNG_SECRET_KEY: ${SEARXNG_SECRET_KEY:-CHANGE_ME_LOCAL_ONLY_32_CHARS}
-      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://127.0.0.1:8080/}
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://127.0.0.1:8090/}
     volumes:
       - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
       - searxng_data:/var/cache/searxng
@@ -26,7 +26,7 @@ services:
       start_period: 30s
 
   crawl4ai:
-    image: ${CRAWL4AI_IMAGE:-unclecode/crawl4ai:0.6.3}
+    image: ${CRAWL4AI_IMAGE:-unclecode/crawl4ai:latest}
     container_name: forge-crawl4ai
     restart: unless-stopped
     ports:
@@ -35,6 +35,7 @@ services:
     environment:
       CRAWL4AI_HOST: 0.0.0.0
       CRAWL4AI_PORT: 11235
+      CRAWL4AI_API_TOKEN: "my_secret_token_1234"  # <--- 新增这一行（密码可以随便改）
       CRAWL4AI_DISABLE_JS: ${CRAWL4AI_DISABLE_JS:-true}
     volumes:
       - crawl4ai_cache:/app/.cache
