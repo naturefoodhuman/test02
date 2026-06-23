@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:24:45
+创建时间（北京时间）：2026-06-23 14:55:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1383,3 +1383,39 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Private MCP profile depends on Chrome DevTools MCP / private profile setup (E8-C1/E8-C2).
+
+---
+
+## [2026-06-23] Private Access — Chrome DevTools MCP Metadata + Private Profile + Private MCP Profile
+
+### Added
+- `.mcp.json.private`
+  - exposes only `chrome-devtools-private`
+  - includes `--browser-url=http://127.0.0.1:9222`, `--no-usage-statistics`, `--no-performance-crux`
+- `_infra/network/scripts/start_private_chrome.sh`
+- `scripts/start-private-chrome.sh`
+- `profiles/README.md`
+- `profiles/ai-private-github/README.md`
+- `_infra/network/tests/unit/test_private_profile.py`
+
+### Changed
+- `config/mcp_lockfile.yaml`
+  - added pinned ChromeDevTools/chrome-devtools-mcp metadata at commit `0cafee074cc4947f5672f71cb2f50dec863caa3e`
+- `TASK_BACKLOG.md` marks E8-C1-S1-T1, E8-C2-S1-T1, E8-C2-S1-T2 and E6-C1-S1-T3 as done with static validation caveats.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_private_profile.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 284 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- User Mac must run pinned MCP install and mcp-scan for actual Chrome DevTools MCP checkout.
+- User Mac must run private Chrome script for real browser validation.

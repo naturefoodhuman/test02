@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:24:45
+创建时间（北京时间）：2026-06-23 14:55:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -65,5 +65,8 @@ python -m pytest _infra/network/tests/unit/ -q
 - E3-C1-S1-T1/T2（SearXNG Docker Compose + settings；本地 127.0.0.1:8080 + JSON format）
 - E4-C1-S1-T1（Crawl4AI Docker Compose service；本地 127.0.0.1:11235）
 - E6-C1-S1-T2（Research MCP profile；searxng/crawl4ai/playwright-public，本地端点 + pinned paths）
+- E8-C1-S1-T1（Chrome DevTools MCP pinned metadata；lockfile 固定 repo/commit/args，真机安装需执行 install_mcp）
+- E8-C2-S1-T1/T2（Private Chrome 启动脚本 + ai-private-github profile 文档）
+- E6-C1-S1-T3（Private MCP profile；仅 chrome-devtools-private）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M7 E8-C1-S1-T1 — Chrome DevTools MCP 安装（用于解锁 E6-C1-S1-T3 Private profile 前置依赖），或按用户指定继续其他任务。
+当前下一候选任务：`TASK_BACKLOG.md` 中 M5 E6-C2-S1-T1 — 模式切换脚本；或 M7 E8-C3-S1-T1 — ChromeDevToolsMCPClient。

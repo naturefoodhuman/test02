@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:24:45
+创建时间（北京时间）：2026-06-23 14:55:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 14:24 CST
-**当前版本**：v1.3.0-dossier + Network Increment（Research MCP Profile 完成）
+**更新日期**：2026-06-23 14:55 CST
+**当前版本**：v1.3.0-dossier + Network Increment（Private Chrome/DevTools MCP 配置完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -78,17 +78,20 @@
 - **E3-C1-S1-T1/T2** SearXNG Docker Compose + settings 完成；端口仅绑定 `127.0.0.1:8080`，JSON format 启用，Google disabled，静态配置测试通过
 - **E4-C1-S1-T1** Crawl4AI Docker Compose service 完成；端口仅绑定 `127.0.0.1:11235`，`shm_size=1g`，默认禁用 JS，静态配置测试通过
 - **E6-C1-S1-T2** `.mcp.json.research` 完成；允许 searxng / crawl4ai / playwright-public，禁止 shell/filesystem/private profile，使用本地 pinned `mcp-servers/...` 路径与本机服务端点
-- **测试**：`test_mcp_profiles.py` 6 passed；network unit+security 全量 280 passed / 2 skipped / 22 warnings；Docker runtime/curl 验证仍需在用户 Mac 上执行
-- **当前单任务**：E6-C1-S1-T2 Research MCP Profile 已完成
-- **下一任务候选**：E6-C1-S1-T3 `.mcp.json.private`（前置 E8-C1 Chrome DevTools MCP 安装尚未完成），或先执行 E8-C1-S1-T1 以满足前置依赖
+- **E8-C1-S1-T1** Chrome DevTools MCP pinned metadata 完成；`config/mcp_lockfile.yaml` 固定 ChromeDevTools/chrome-devtools-mcp commit 与 `--no-usage-statistics` / `--no-performance-crux` / browser-url 参数
+- **E8-C2-S1-T1/T2** AI Private Chrome 启动脚本与 `ai-private-github` profile 文档完成；支持 isolated user-data-dir、remote debugging port、禁用扩展/同步、手动登录流程
+- **E6-C1-S1-T3** `.mcp.json.private` 完成；仅暴露 `chrome-devtools-private`，不包含 shell/public search/crawl4ai/playwright-public
+- **测试**：`test_private_profile.py` 4 passed；network unit+security 全量 284 passed / 2 skipped / 22 warnings；Chrome/MCP 实机启动与 mcp-scan 需在用户 Mac 上执行
+- **当前单任务批次**：E8-C1-S1-T1 + E8-C2-S1-T1/T2 + E6-C1-S1-T3 已顺次完成静态验证
+- **下一任务候选**：E6-C2-S1-T1 模式切换脚本，或 E8-C3-S1-T1 ChromeDevToolsMCPClient
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
-# 6 passed
+python -m pytest _infra/network/tests/unit/test_private_profile.py -q
+# 4 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 280 passed, 2 skipped, 22 warnings
+# 284 passed, 2 skipped, 22 warnings
 python -m compileall -q _infra/network
 # pass
 ```

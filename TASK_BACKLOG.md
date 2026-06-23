@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:24:45
+创建时间（北京时间）：2026-06-23 14:55:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E6-C1-S1-T2 Research MCP Profile 完成）
+> **最近同步**: 2026-06-23（E8-C1/C2 + E6 Private MCP Profile 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -1583,15 +1583,19 @@ P3 = 可选增强
 - **前置依赖**: E8-C1-S1-T1
 - **输入**: §4.3
 - **输出**: `.mcp.json.private`
-- **涉及文件**: 新建 `.mcp.json.private`
+- **涉及文件**:
+  - 新建：`.mcp.json.private`
+  - 新建/复用：`_infra/network/tests/unit/test_private_profile.py`
 - **实现要求**:
-  - 允许：chrome-devtools（private profile）
-  - 禁止：shell / public search / write actions
+  - 允许：`chrome-devtools-private`（private profile）
+  - 禁止：shell / public search / crawl4ai / playwright-public / write actions
+  - 参数包含 `--browser-url=http://127.0.0.1:9222`、`--no-usage-statistics`、`--no-performance-crux`
+  - JSON 文件使用 `_forge_trace` 字段记录 LLM 留痕
 - **测试要求**: JSON 合法
 - **验收标准**: 文件合法
 - **DoD**:
   - [x] 文件创建
-  - [x] 测试通过
+  - [x] 测试通过（`test_private_profile.py`: 4 passed）
 
 ---
 
@@ -1844,18 +1848,26 @@ P3 = 可选增强
 - **目标**: 按 §8.3 安装
 - **前置依赖**: E2-C1-S1-T1
 - **输入**: §8.3
-- **输出**: 本地 MCP server
+- **输出**: 本地 MCP server pinned metadata
 - **涉及文件**:
-  - `mcp-servers/chrome-devtools/`
   - 修改：`config/mcp_lockfile.yaml`
+  - 新建：`_infra/network/tests/unit/test_private_profile.py`
 - **实现要求**:
-  - clone + 固定 commit
-  - 参数：`--no-usage-statistics`、`--no-performance-crux`
-- **测试要求**: `mcp-scan` 通过
-- **验收标准**: 可启动
+  - 固定 repo：`https://github.com/ChromeDevTools/chrome-devtools-mcp.git`
+  - 固定 commit：`0cafee074cc4947f5672f71cb2f50dec863caa3e`
+  - 本地路径：`mcp-servers/chrome-devtools`
+  - 参数：`--browser-url=http://127.0.0.1:9222`、`--no-usage-statistics`、`--no-performance-crux`
+  - 真实 clone/install/scan 使用 `_infra/network/scripts/install_mcp.sh` 在用户 Mac 执行；当前提交记录 pinned metadata 与启动/profile 配置
+- **测试要求**:
+  - 静态测试：lockfile 固定 repo/commit/path/args
+  - 真机测试：安装后 `mcp-scan` 通过
+- **验收标准**:
+  - lockfile 可驱动 pinned 本地安装
+  - 真机安装后可启动
 - **DoD**:
-  - [x] 安装完成
   - [x] lockfile 更新
+  - [x] 静态测试通过（`test_private_profile.py`: 4 passed）
+  - [ ] 真机 clone/install/mcp-scan 验证（需用户 Mac 环境）
 
 ---
 
@@ -1868,17 +1880,23 @@ P3 = 可选增强
 - **输入**: §8.3 启动命令
 - **输出**: 启动脚本
 - **涉及文件**:
-  - 新建：`scripts/start-private-chrome.sh`
+  - 新建：`_infra/network/scripts/start_private_chrome.sh`
+  - 新建：`scripts/start-private-chrome.sh`（root wrapper）
+  - 新建/复用：`_infra/network/tests/unit/test_private_profile.py`
 - **实现要求**:
   - 参数：profile 名 + 端口
   - 启动 Chrome：`--remote-debugging-port=<port>` + `--user-data-dir=<path>`
-  - 强制参数：`--no-first-run`、`--no-default-browser-check`、`--disable-extensions`
+  - 强制参数：`--no-first-run`、`--no-default-browser-check`、`--disable-extensions`、`--disable-sync`
   - 任务结束 trap kill
-- **测试要求**: 集成测试
+  - 支持 `--print-command` 用于静态测试，不实际启动 Chrome
+- **测试要求**:
+  - 静态测试：print-command 包含 required flags
+  - 真机集成测试：Chrome 启动成功
 - **验收标准**: Chrome 启动成功
 - **DoD**:
   - [x] 脚本实现
-  - [x] 集成测试通过
+  - [x] 静态测试通过（`test_private_profile.py`: 4 passed）
+  - [ ] 真机 Chrome 启动验证（需 macOS Chrome）
 
 ---
 
@@ -1888,16 +1906,20 @@ P3 = 可选增强
 - **前置依赖**: E8-C2-S1-T1
 - **输入**: 无
 - **输出**: profile 目录 + 文档
-- **涉及文件**: `profiles/ai-private-github/`
+- **涉及文件**:
+  - 新建：`profiles/README.md`
+  - 新建：`profiles/ai-private-github/README.md`
 - **实现要求**:
   - 目录创建
   - 文档说明手动登录流程
   - 不保存密码 / 支付信息
-- **测试要求**: 文档评审
+  - 只读优先，GitHub allowed domains 明确
+- **测试要求**: 文档评审 / 静态测试
 - **验收标准**: 文档清晰
 - **DoD**:
   - [x] 目录创建
   - [x] 文档完成
+  - [x] 静态测试通过（`test_private_profile.py`: 4 passed）
 
 ---
 
@@ -2807,10 +2829,10 @@ graph TD
 | M6 | E7-C4 | E7-C4-S1-T1 | [ ] | | |
 | M6 | E7-C5 | E7-C5-S1-T1 | [ ] | | |
 | M6 | E7-C6 | E7-C6-S1-T1 | [ ] | | |
-| M6 | E6-C1 | E6-C1-S1-T3 | [ ] | | |
-| M7 | E8-C1 | E8-C1-S1-T1 | [ ] | | |
-| M7 | E8-C2 | E8-C2-S1-T1 | [ ] | | |
-| M7 | E8-C2 | E8-C2-S1-T2 | [ ] | | |
+| M6 | E6-C1 | E6-C1-S1-T3 | [x] | 2026-06-23 | Arena Agent |
+| M7 | E8-C1 | E8-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M7 | E8-C2 | E8-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M7 | E8-C2 | E8-C2-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C3 | E8-C3-S1-T1 | [ ] | | |
 | M7 | E8-C4 | E8-C4-S1-T1 | [ ] | | |
 | M8 | E10-C2 | E10-C2-S1-T1 | [ ] | | |

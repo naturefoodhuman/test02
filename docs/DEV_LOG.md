@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 14:24:45
+创建时间（北京时间）：2026-06-23 14:55:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1621,5 +1621,85 @@ python -m _infra.network.cli config
 
 **下一步计划**：
 - 建议先执行 E8-C1-S1-T1 Chrome DevTools MCP 安装/固定配置，以解锁 E6-C1-S1-T3 Private MCP profile。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 67 轮 · 2026-06-23（E8-C1/C2 + E6-C1-S1-T3: Chrome DevTools Private Profile）
+
+**当前任务（顺次执行）**：
+1. E8-C1-S1-T1 — Chrome DevTools MCP pinned metadata。
+2. E8-C2-S1-T1 — Private Chrome 启动脚本。
+3. E8-C2-S1-T2 — 首个 Private Profile（GitHub）文档。
+4. E6-C1-S1-T3 — `.mcp.json.private`。
+
+**执行说明**：本批次为强相关私域访问准备任务。当前沙箱无法实际启动 macOS Chrome 或运行 mcp-scan，因此完成 pinned metadata、启动脚本、profile 文档、private MCP profile 与静态测试；真机安装/启动验证需用户在 Mac 上执行。
+
+**完成内容**：
+
+1. **Chrome DevTools MCP pinned metadata**：
+   - 更新 `config/mcp_lockfile.yaml`
+   - 固定 repo：`https://github.com/ChromeDevTools/chrome-devtools-mcp.git`
+   - 固定 commit：`0cafee074cc4947f5672f71cb2f50dec863caa3e`
+   - local path：`mcp-servers/chrome-devtools`
+   - args：`--browser-url=http://127.0.0.1:9222`、`--no-usage-statistics`、`--no-performance-crux`
+
+2. **Private Chrome 启动脚本**：
+   - 新建 `_infra/network/scripts/start_private_chrome.sh`
+   - 新建 root wrapper `scripts/start-private-chrome.sh`
+   - 支持 profile name + port
+   - 强制 isolated user-data-dir、remote debugging port、禁用 first-run/default-browser/extensions/sync/background networking
+   - 提供 `--print-command` 静态测试模式
+
+3. **Private Profile 文档**：
+   - 新建 `profiles/README.md`
+   - 新建 `profiles/ai-private-github/README.md`
+   - 记录手动登录、禁止保存密码/支付信息、只读优先、GitHub allowed domains、PrivacyGateway full mode 要求
+
+4. **Private MCP Profile**：
+   - 新建 `.mcp.json.private`
+   - 仅暴露 `chrome-devtools-private`
+   - 不包含 shell / public search / crawl4ai / playwright-public
+   - 使用 `_forge_trace` 记录 LLM 留痕，保持 JSON 合法
+
+5. **测试**：
+   - 新建 `_infra/network/tests/unit/test_private_profile.py`
+   - 覆盖 lockfile pin、Chrome 启动命令 required flags、private profile 文档、private MCP profile JSON 边界
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_private_profile.py -q
+# 4 passed
+python -m pytest _infra/network/tests/unit/test_mcp_profiles.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 284 passed, 2 skipped, 22 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`.mcp.json.private`
+- 新增：`_infra/network/scripts/start_private_chrome.sh`
+- 新增：`scripts/start-private-chrome.sh`
+- 新增：`profiles/README.md`
+- 新增：`profiles/ai-private-github/README.md`
+- 新增：`_infra/network/tests/unit/test_private_profile.py`
+- 修改：`config/mcp_lockfile.yaml`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 真实 Chrome DevTools MCP clone/npm install/mcp-scan 仍需在用户 Mac 上执行 `_infra/network/scripts/install_mcp.sh ...`。
+- 真实 Chrome 启动需 macOS Chrome；沙箱仅验证命令构造。
+- Remote debugging port 存在本机控制风险；仅允许 isolated private profile，任务完成后必须关闭。
+
+**下一步计划**：
+- E6-C2-S1-T1：实现模式切换脚本 `.mcp.json` → `.mcp.json.<mode>`。
+- 或 E8-C3-S1-T1：实现 ChromeDevToolsMCPClient。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

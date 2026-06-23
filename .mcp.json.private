@@ -1,0 +1,22 @@
+{
+  "_forge_trace": {
+    "llm": "Arena.ai Agent Mode - Execution Lead Engineer",
+    "modified_at_beijing": "2026-06-23 14:55:00",
+    "task": "E6-C1-S1-T3"
+  },
+  "mcpServers": {
+    "chrome-devtools-private": {
+      "command": "node",
+      "args": [
+        "mcp-servers/chrome-devtools/node_modules/chrome-devtools-mcp/dist/index.js",
+        "--browser-url=http://127.0.0.1:9222",
+        "--no-usage-statistics",
+        "--no-performance-crux"
+      ],
+      "env": {
+        "CHROME_DEVTOOLS_PROFILE": "ai-private-github",
+        "CHROME_DEVTOOLS_MODE": "read_only"
+      }
+    }
+  }
+}
