@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:20:00
+创建时间（北京时间）：2026-06-22 22:38:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1072,3 +1072,35 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - M3 is complete; next backlog milestone is M4 MCP security governance, or NetworkWorkflow/CLI integration if prioritized.
+
+---
+
+## [2026-06-22] MCP Guard — Pinned MCP Install Script (E2-C1-S1-T1)
+
+### Added
+- `_infra/network/scripts/install_mcp.sh`
+  - pinned git clone + exact commit checkout
+  - lockfile-based dependency install
+  - mcp-scan admission by default
+  - writes `config/mcp_lockfile.yaml`
+- `config/mcp_lockfile.yaml`
+- `_infra/network/tests/unit/test_mcp_install_script.py`
+  - 3 tests covering clone/checkout/lockfile and rejection of unsafe inputs
+
+### Changed
+- `.gitignore` ignores local `mcp-servers/` checkouts.
+- `TASK_BACKLOG.md` marks `E2-C1-S1-T1` as done and sets next TODO to `E2-C2-S1-T1`.
+- `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_install_script.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 222 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- Next recommended task: `E2-C2-S1-T1` mcp-scan integration and scanner output parsing.

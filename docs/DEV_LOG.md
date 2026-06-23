@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:20:00
+创建时间（北京时间）：2026-06-22 22:38:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -1004,5 +1004,71 @@ python -m _infra.network.cli config
 **下一步计划**：
 - M3（E5 + E11-C2/C4/C6）已完成。
 - 下一候选按 backlog 进入 M4：E2-C1-S1-T1 MCP Server 安装管理；或根据用户优先级先做 NetworkWorkflow/CLI 集成。
+
+**仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 58 轮 · 2026-06-22（E2-C1-S1-T1: MCP Server 安装脚本）
+
+**当前任务**：E2-C1-S1-T1 — 编写 MCP Server 安装脚本。
+
+**完成内容**：
+
+1. **新增 pinned MCP install script**：
+   - 新建 `_infra/network/scripts/install_mcp.sh`
+   - 参数：`<server-name> <repo-url> <commit-hash>`
+   - 安装路径默认：`mcp-servers/<server-name>`
+   - lockfile 默认：`config/mcp_lockfile.yaml`
+   - 支持环境变量：`FORGE_ROOT` / `MCP_SERVER_ROOT` / `MCP_LOCKFILE` / `FORGE_MCP_INSTALL_FORCE`
+
+2. **安全安装规则**：
+   - 禁止 `@latest` / `uvx` / `curl | sh`
+   - 禁止 branch/name commit：`HEAD` / `main` / `master` / `latest`
+   - commit hash 必须为 7-40 hex
+   - 流程：git clone → detached checkout exact commit → lockfile-based dependency install → mcp-scan scan
+   - 若有 `package.json` 但没有 `package-lock.json`，拒绝非可复现 npm install
+   - 默认要求 `mcp-scan`；仅测试允许 `FORGE_MCP_INSTALL_SKIP_SCAN=1`
+
+3. **新增 lockfile**：
+   - 新建 `config/mcp_lockfile.yaml`
+   - 记录：repo_url / commit_hash / local_path / scan_status / installed_at
+
+4. **本地 checkout ignore**：
+   - `.gitignore` 新增 `mcp-servers/`，防止第三方 MCP server checkout 被提交进仓库。
+
+5. **单元风格集成测试**：
+   - 新建 `_infra/network/tests/unit/test_mcp_install_script.py`
+   - 使用临时 fake git repo 验证 clone + exact checkout + lockfile 更新
+   - 验证拒绝 `@latest`
+   - 验证拒绝 branch name commit
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_mcp_install_script.py -q
+# 3 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 222 passed, 2 skipped, 5 warnings
+python -m compileall -q _infra/network
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改文件**：
+- 新增：`_infra/network/scripts/install_mcp.sh`
+- 新增：`config/mcp_lockfile.yaml`
+- 新增：`_infra/network/tests/unit/test_mcp_install_script.py`
+- 修改：`.gitignore`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 真机安装真实 MCP server 时必须先安装 `mcp-scan`，否则脚本默认失败；这是符合 Phase 1 安全准入要求的行为。
+- 当前测试通过 `FORGE_MCP_INSTALL_SKIP_SCAN=1` 跳过 mcp-scan，仅用于测试脚本逻辑，不代表生产安装流程。
+
+**下一步计划**：
+- E2-C2-S1-T1：集成 mcp-scan 扫描脚本与输出解析。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。

@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:20:00
+创建时间（北京时间）：2026-06-22 22:38:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-22 22:20 CST
-**当前版本**：v1.3.0-dossier + Network Increment（M3 Security Tests 完成）
+**更新日期**：2026-06-22 22:38 CST
+**当前版本**：v1.3.0-dossier + Network Increment（M4 MCP 安装管理启动）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -66,17 +66,18 @@
 - **E11-C2-S1-T1** Prompt Injection 安全测试完成；新增恶意 HTML fixtures 与 security tests，覆盖隐藏指令、display:none、visibility:hidden、HTML comment、Unicode 全角混淆、URL encoding、tool-call trigger；InputSanitizer 同步加固 NFKC/URL decode 前置与 hidden block 整体移除
 - **E11-C4-S1-T1** PII 绕过测试完成；新增 deterministic common PII recognizers，覆盖 Unicode 全角、零宽插入、Base64 编码、URL encoding、分隔符/表格拆分、JSON key/value、代码变量隐藏、email、CN phone、Luhn bank card
 - **E11-C6-S1-T1** Canary Token 端到端测试完成；覆盖 search result / extracted markdown / browser page / privacy output，验证任一位置出现 canary 立即阻断，audit 只记录 masked token metadata
-- **测试**：`test_canary_e2e.py` 7 passed；network unit+security 全量 219 passed / 2 skipped / 5 warnings；`compileall` 通过
-- **当前单任务**：E11-C6-S1-T1 Canary Token 端到端测试已完成
-- **M3 状态**：E5 Privacy Gateway + E11-C2/C4/C6 安全测试已完成；下一候选任务转入 M4 MCP 安全治理层（E2-C1-S1-T1）或按用户指定进入 NetworkWorkflow/CLI 集成
+- **E2-C1-S1-T1** MCP Server 安装脚本完成；实现 pinned git clone + exact commit checkout + lockfile-based install + mcp-scan admission + `config/mcp_lockfile.yaml`，禁止 `@latest` / branch / HEAD
+- **测试**：`test_mcp_install_script.py` 3 passed；network unit+security 全量 222 passed / 2 skipped / 5 warnings；`compileall` 通过
+- **当前单任务**：E2-C1-S1-T1 MCP Server 安装脚本已完成
+- **下一任务候选**：E2-C2-S1-T1 mcp-scan 集成（尚未实现）
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/security/test_canary_e2e.py -q
-# 7 passed
+python -m pytest _infra/network/tests/unit/test_mcp_install_script.py -q
+# 3 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 219 passed, 2 skipped, 5 warnings
+# 222 passed, 2 skipped, 5 warnings
 python -m compileall -q _infra/network
 # pass
 ```

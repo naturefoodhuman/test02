@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-06-22 22:20:00
+创建时间（北京时间）：2026-06-22 22:38:00
 -->
 
 # TASK_BACKLOG.md
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-22（E11-C6-S1-T1 Canary E2E 测试完成）
+> **最近同步**: 2026-06-22（E2-C1-S1-T1 MCP Server 安装脚本完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -538,21 +538,27 @@ P3 = 可选增强
 - **前置依赖**: E1-C2-S1-T2
 - **输入**: §5.2 安装规则
 - **输出**: 安装脚本
-- **涉及文件**:
-  - 新建：`scripts/install-mcp.sh`
+- **涉及文件（已按增量架构落地到 `_infra/network/` 与根 `config/`）**:
+  - 新建：`_infra/network/scripts/install_mcp.sh`
+  - 新建：`config/mcp_lockfile.yaml`
+  - 新建：`_infra/network/tests/unit/test_mcp_install_script.py`
+  - 修改：`.gitignore`（忽略本地 `mcp-servers/` third-party checkout）
 - **实现要求**:
   - 参数：`<server-name> <repo-url> <commit-hash>`
-  - 流程：clone → checkout commit → npm ci/poetry install → mcp-scan
-  - 禁止使用 `@latest`
-  - 写入 `config/mcp_lockfile.yaml`
+  - 流程：clone → checkout exact commit → lockfile-based dependency install → mcp-scan
+  - 禁止使用 `@latest` / branch name / HEAD / `uvx` / `curl | sh`
+  - 默认要求 `mcp-scan`；仅测试可通过 `FORGE_MCP_INSTALL_SKIP_SCAN=1` 跳过
+  - 写入 `config/mcp_lockfile.yaml`（repo_url / commit_hash / local_path / scan_status / installed_at）
 - **测试要求**:
-  - 集成测试：安装 playwright MCP
+  - 单元风格集成测试：本地 fake git repo clone + checkout + lockfile 更新
+  - 安全测试：拒绝 `@latest` 与 branch name commit
 - **验收标准**:
   - 脚本执行后 `mcp-servers/<name>/` 存在
   - lockfile 更新
 - **DoD**:
-  - [x] 脚本实现
+  - [x] 脚本实现（`install_mcp.sh`）
   - [x] 文档说明用法
+  - [x] 单元测试通过（`test_mcp_install_script.py`: 3 passed）
 
 ---
 
@@ -2729,7 +2735,7 @@ graph TD
 | M3 | E11-C2 | E11-C2-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E11-C4 | E11-C4-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M3 | E11-C6 | E11-C6-S1-T1 | [x] | 2026-06-22 | Arena Agent |
-| M4 | E2-C1 | E2-C1-S1-T1 | [ ] | | |
+| M4 | E2-C1 | E2-C1-S1-T1 | [x] | 2026-06-22 | Arena Agent |
 | M4 | E2-C2 | E2-C2-S1-T1 | [ ] | | |
 | M4 | E2-C3 | E2-C3-S1-T1 | [ ] | | |
 | M4 | E2-C4 | E2-C4-S1-T1 | [ ] | | |
