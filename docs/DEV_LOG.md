@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:35:00
+创建时间（北京时间）：2026-06-23 16:55:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -2227,3 +2227,73 @@ python -m _infra.network.cli config
 - M5/M6/M8 运维与浏览器基础已基本补齐。下一候选：M9 E9-C1-S1-T1 RAG DB Schema，或按用户优先级转入 NetworkWorkflow/CLI 集成。
 
 **仓库状态**：完成测试与文档同步，准备 commit + push。
+
+## 第 75 轮 · 2026-06-23（E9-C1~C4: Local RAG 基础）
+
+**当前任务（顺次执行）**：
+1. E9-C1-S1-T1 — rag.db Schema。
+2. E9-C2-S1-T1 — BGE_M3_Embedder。
+3. E9-C3-S1-T1 — RAGStore CRUD。
+4. E9-C4-S1-T1 — KNN 检索。
+
+**批量策略说明**：四个任务均为 Local RAG 基础链路，强相关。先创建 schema，再实现 embedder，再实现 store，最后实现 search；使用 mock embedder 完成可重复单元测试。
+
+### 完成内容
+
+1. **Local RAG schema**：
+   - 新建 `_infra/network/local_rag/schema.sql`
+   - 表：documents / chunks / embeddings / fts_index / access_log
+   - 新建 `_infra/network/scripts/init_rag_db.py`
+
+2. **BGE_M3_Embedder**：
+   - 新建 `_infra/network/local_rag/embedder.py`
+   - 支持 Ollama `embeddings()` / `embed()` 兼容接口
+   - 默认期望维度 1024
+   - SHA256 cache 避免重复 embedding
+   - 单元测试使用 fake client，不依赖真实 Ollama
+
+3. **RAGStore CRUD + chunk**：
+   - 新建 `_infra/network/local_rag/models.py`
+   - 新建 `_infra/network/local_rag/store.py`
+   - 支持 DocumentInput / StoredDocument / StoredChunk / RetrievedChunk
+   - 支持 raw_hash 去重
+   - 支持 chunk_size / overlap
+   - 写入 chunks / embeddings / fts_index
+
+4. **KNN search fallback**：
+   - `RAGStore.search(query, top_k)` 使用 Python cosine similarity over stored embeddings
+   - 写 access_log
+   - 保持 API 稳定，后续可替换为 sqlite-vec `vec_search`
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/test_local_rag.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 347 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+**修改文件**：
+- 新增：`_infra/network/local_rag/__init__.py`
+- 新增：`_infra/network/local_rag/schema.sql`
+- 新增：`_infra/network/local_rag/models.py`
+- 新增：`_infra/network/local_rag/embedder.py`
+- 新增：`_infra/network/local_rag/store.py`
+- 新增：`_infra/network/scripts/init_rag_db.py`
+- 新增：`_infra/network/tests/unit/test_local_rag.py`
+- 修改：`TASK_BACKLOG.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`_infra/network/README.md`
+
+**风险**：
+- 当前 KNN 使用 Python cosine fallback；尚未加载 sqlite-vec extension。这样可保证最小环境可测，并保留后续 sqlite-vec 替换空间。
+- 真机 bge-m3 embedding 集成需要 Ollama + bge-m3 模型。
+
+**下一步计划**：
+- NetworkWorkflow/CLI 集成，或按用户优先级进行文档治理/真实服务验证。
+
+**仓库状态**：完成本轮实现，准备全量验证与 commit。

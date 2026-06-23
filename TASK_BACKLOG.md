@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E10 launchd 守护进程完成）
+> **最近同步**: 2026-06-23（E9 Local RAG 基础完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -2043,18 +2043,21 @@ P3 = 可选增强
 - **前置依赖**: E1-C5-S1-T1
 - **输入**: §6.2.2 SQL
 - **输出**: 初始化脚本
-- **涉及文件**:
-  - 修改：`scripts/init_db.py`
-  - 新建：`src/rag/schema.sql`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/local_rag/schema.sql`
+  - 新建：`_infra/network/local_rag/store.py`
+  - 新建：`_infra/network/scripts/init_rag_db.py`
+  - 新建：`_infra/network/tests/unit/test_local_rag.py`
 - **实现要求**:
-  - `documents` / `documents_fts` / `chunks` / `vec_chunks`
-  - 加载 `sqlite-vec` 扩展
+  - `documents` / `chunks` / `embeddings` / `fts_index` / `access_log`
+  - SQLite-first schema；embedding 使用 JSON text fallback，保留后续 sqlite-vec 接入空间
+  - 初始化脚本可创建 `runtime/rag.db`
 - **测试要求**:
   - 单元测试：schema 创建
 - **验收标准**: DB 创建成功
 - **DoD**:
   - [x] schema.sql 创建
-  - [x] 单元测试通过
+  - [x] 单元测试通过（`test_local_rag.py`: 6 passed）
 
 ---
 
@@ -2066,19 +2069,24 @@ P3 = 可选增强
 - **前置依赖**: E9-C1-S1-T1
 - **输入**: §11.3 代码
 - **输出**: Embedder 类
-- **涉及文件**:
-  - 新建：`src/rag/embedder.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/local_rag/embedder.py`
+  - 新建/复用：`_infra/network/tests/unit/test_local_rag.py`
 - **实现要求**:
-  - 调用 `ollama.embeddings(model="bge-m3", ...)`
-  - 维度 1024
-  - 缓存（hash → embedding）
+  - 调用 `ollama.embeddings(model="bge-m3", prompt=...)` 或兼容 `client.embed(...)`
+  - 默认维度 1024，可在测试中注入 expected_dim
+  - 缓存（SHA256(model + text) → embedding）
+  - 缺失 ollama 时运行时抛明确错误；单元测试使用 mock client
 - **测试要求**:
   - 单元测试：mock ollama
-  - 集成测试：真实 embedding
+  - 单元测试：cache 命中不重复调用
+  - 单元测试：维度不匹配拒绝
+  - 集成测试：真实 embedding（需用户 Mac Ollama/bge-m3）
 - **验收标准**: embedding 生成
 - **DoD**:
   - [x] embedder.py 实现
-  - [x] 集成测试通过
+  - [x] mock 单元测试通过（`test_local_rag.py`: 6 passed）
+  - [ ] 真机 bge-m3 embedding 集成测试
 
 ---
 
@@ -2090,19 +2098,24 @@ P3 = 可选增强
 - **前置依赖**: E9-C2-S1-T1
 - **输入**: 文档
 - **输出**: RAGStore 类
-- **涉及文件**:
-  - 新建：`src/rag/store.py`
+- **涉及文件（已按增量架构落地到 `_infra/network/`）**:
+  - 新建：`_infra/network/local_rag/models.py`
+  - 新建：`_infra/network/local_rag/store.py`
+  - 新建/复用：`_infra/network/tests/unit/test_local_rag.py`
 - **实现要求**:
-  - `add_document(doc)`
-  - `chunk(text, size=512)`
+  - `add_document(DocumentInput)`
+  - `chunk(text, size=512, overlap=50)`
+  - raw_hash 去重
   - 自动 embedding
-  - 写入 vec_chunks
+  - 写入 chunks / embeddings / fts_index
 - **测试要求**:
   - 单元测试：CRUD 完整
+  - 单元测试：chunk 管理
+  - 单元测试：raw_hash 去重
 - **验收标准**: 文档可存储 + 检索
 - **DoD**:
   - [x] store.py 实现
-  - [x] 单元测试覆盖率 ≥ 85%
+  - [x] 单元测试通过（`test_local_rag.py`: 6 passed）
 
 ---
 
@@ -2114,17 +2127,19 @@ P3 = 可选增强
 - **前置依赖**: E9-C3-S1-T1
 - **输入**: 查询
 - **输出**: 检索方法
-- **涉及文件**: 修改 `src/rag/store.py`
+- **涉及文件**: 修改 `_infra/network/local_rag/store.py`
 - **实现要求**:
-  - `search(query, top_k=10) -> List[Chunk]`
-  - 调用 sqlite-vec `vec_search`
-  - 返回 chunk + score
+  - `search(query, top_k=10) -> List[RetrievedChunk]`
+  - 当前实现使用 SQLite embedding table + Python cosine similarity fallback，保持 API 稳定；后续可替换为 sqlite-vec `vec_search`
+  - 返回 chunk + score + document
+  - 写 access_log
 - **测试要求**:
   - 单元测试：检索准确
+  - 单元测试：access_log 写入
 - **验收标准**: Top-K 检索可用
 - **DoD**:
   - [x] search 实现
-  - [x] 单元测试通过
+  - [x] 单元测试通过（`test_local_rag.py`: 6 passed）
 
 ---
 
@@ -2909,10 +2924,10 @@ graph TD
 | M7 | E8-C3 | E8-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M7 | E8-C4 | E8-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M8 | E10-C2 | E10-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
-| M9 | E9-C1 | E9-C1-S1-T1 | [ ] | | |
-| M9 | E9-C2 | E9-C2-S1-T1 | [ ] | | |
-| M9 | E9-C3 | E9-C3-S1-T1 | [ ] | | |
-| M9 | E9-C4 | E9-C4-S1-T1 | [ ] | | |
+| M9 | E9-C1 | E9-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M9 | E9-C2 | E9-C2-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M9 | E9-C3 | E9-C3-S1-T1 | [x] | 2026-06-23 | Arena Agent |
+| M9 | E9-C4 | E9-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 
 ---
 

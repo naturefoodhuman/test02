@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:35:00
+创建时间（北京时间）：2026-06-23 16:55:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -82,5 +82,6 @@ python -m pytest _infra/network/tests/unit/ -q
 - E10-C1-S1-T1（health-check.sh；static + runtime health checks）
 - E10-C3-S1-T1（backup.sh；config/MCP profiles/docker/runtime DB backup，排除 cookies/sessions/payment）
 - E10-C2-S1-T1（launchd plist；health 每 5 分钟 + mcp-scan 每周日 03:00）
+- E9-C1~C4（Local RAG 基础；SQLite schema + bge-m3 embedder + RAGStore CRUD + KNN fallback）
 
-当前下一候选任务：`TASK_BACKLOG.md` 中 M9 E9-C1-S1-T1 — RAG DB Schema；或进入 NetworkWorkflow/CLI 集成。
+当前下一候选任务：NetworkWorkflow/CLI 集成，或按用户优先级做文档治理/真实服务验证。

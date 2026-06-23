@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:35:00
+创建时间（北京时间）：2026-06-23 16:55:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -1683,3 +1683,35 @@ python -m compileall -q _infra/network
 
 ### Known Follow-up
 - Real `launchctl load` validation must run on the user's macOS machine.
+
+---
+
+## [2026-06-23] Local RAG — SQLite Schema, Embedder, Store, Search (E9-C1~C4)
+
+### Added
+- `_infra/network/local_rag/schema.sql`
+- `_infra/network/local_rag/models.py`
+- `_infra/network/local_rag/embedder.py`
+- `_infra/network/local_rag/store.py`
+- `_infra/network/scripts/init_rag_db.py`
+- `_infra/network/tests/unit/test_local_rag.py`
+
+### Implemented
+- SQLite documents / chunks / embeddings / FTS / access_log schema
+- BGE_M3_Embedder with Ollama-compatible API and cache
+- RAGStore document add, chunking, raw_hash deduplication
+- Search API with Python cosine similarity fallback over stored embeddings
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/test_local_rag.py -q
+# 6 passed
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 347 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network
+# pass
+```
+
+### Known Follow-up
+- sqlite-vec native KNN remains a future optimization behind the same RAGStore API.
+- Real bge-m3 integration requires Ollama + bge-m3 on the user's Mac.

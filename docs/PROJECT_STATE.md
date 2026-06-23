@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:35:00
+创建时间（北京时间）：2026-06-23 16:55:00
 -->
 
 # PROJECT_STATE —— 工厂运行状态 (v1.3.0-dossier)
 
-**更新日期**：2026-06-23 16:35 CST
-**当前版本**：v1.3.0-dossier + Network Increment（E10 launchd 守护进程完成）
+**更新日期**：2026-06-23 16:55 CST
+**当前版本**：v1.3.0-dossier + Network Increment（E9 Local RAG 基础完成）
 
 ## 1. 核心资产概览
 - **系统版本**: v1.3.0-dossier (Project Dossier V2 + Streaming Smart Proxy + Real Model Call)
@@ -95,17 +95,18 @@
 - **E10-C1-S1-T1** `scripts/health-check.sh` 完成；支持静态配置检查与运行时 SearXNG/Crawl4AI/Ollama/DB 健康检查
 - **E10-C3-S1-T1** `scripts/backup.sh` 完成；备份 `.mcp.json*` / `config` / `docker` / 选定 runtime DB，显式排除 profiles/cookies/sessions/payment
 - **E10-C2-S1-T1** launchd plist 完成；`com.network-agent.health` 每 5 分钟运行 health check，`com.network-agent.mcp-scan` 每周日 03:00 运行 mcp-scan，日志写入 `runtime/logs/launchd-*.log`
-- **测试**：`test_launchd_plists.py` 3 passed；network unit+security 全量待本轮最终验证；`launchctl load` 需用户 Mac 验证
-- **当前单任务**：E10-C2-S1-T1 launchd 守护进程已完成
-- **下一任务候选**：M9 E9-C1-S1-T1 RAG DB Schema，或 NetworkWorkflow/CLI 集成
+- **E9-C1~C4** Local RAG 基础完成；新增 SQLite schema、BGE_M3_Embedder、RAGStore CRUD/chunk/raw_hash 去重、Python cosine KNN fallback 与 access_log
+- **测试**：`test_local_rag.py` 6 passed；network unit+security 全量 347 passed / 2 skipped / 44 warnings；真实 Ollama bge-m3 / sqlite-vec 集成需用户 Mac 环境
+- **当前单任务批次**：E9-C1-S1-T1 + E9-C2-S1-T1 + E9-C3-S1-T1 + E9-C4-S1-T1 已顺次完成
+- **下一任务候选**：NetworkWorkflow/CLI 集成，或按用户优先级做文档治理/真实服务验证
 - **文档同步**：TASK_BACKLOG / DEV_LOG / CHANGELOG / PROJECT_STATE / `_infra/network/README.md` 已按源码状态更新
 
 **验证命令**：
 ```bash
-python -m pytest _infra/network/tests/unit/test_launchd_plists.py -q
-# 3 passed
+python -m pytest _infra/network/tests/unit/test_local_rag.py -q
+# 6 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# (see DEV_LOG for current total)
+# 347 passed, 2 skipped, 44 warnings
 python -m compileall -q _infra/network
 # pass
 ```
