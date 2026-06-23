@@ -1,81 +1,158 @@
 <!--
-创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间，精确到秒）：2026-06-10 23:03:36 CST
-修改时间：2026-06-20 22:50:00 CST
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-06-23 17:20:00
 -->
 
 # FORGE Factory（AI 项目孵化工厂）
 
-> 在 macOS M1 Max 单机上，把"模糊想法"反复、可重复地变成"能跑的 AI 软件项目"的工作体系。
-> 不是一个单体软件，而是 **脚手架 + 配置 + 脚本 + 知识库 + 五阶段工作流**，驱动 VS Code 里的 Claude Code 运行。
+FORGE Factory 是在 macOS / 本地优先环境中，把“模糊想法”通过五阶段工作流、专家评审、配置化模型路由、隐私网关和联网取数能力，持续孵化为可运行 AI 软件项目的工程体系。
 
-## 快速开始
+> 当前开发重点：FORGE Factory 主体 + `_infra/network/` 联网增量模块。
+> 当前状态 SSOT：`docs/PROJECT_STATE.md`。
+> 任务状态 SSOT：`TASK_BACKLOG.md` §10。
+
+---
+
+## 1. 当前主要能力
+
+### Core FORGE
+- LangGraph HUB-SPOKE 多专家评审引擎。
+- 双文件模型管理：`config/models.yaml` + `config/routing_plans.yaml`。
+- Smart Proxy SSE 流式网关。
+- DataPrivacyGate + `config/privacy_policy.yaml`。
+- MemoryStore / forge compare-plans / retro。
+
+### Network Increment（`_infra/network/`）
+已实现并有单元/安全测试覆盖：
+
+- E3 Search：SearXNGProvider、URL normalizer、domain scorer、SearchCache、Docker Compose 配置。
+- E4 Extract：Crawl4AIProvider、trafilatura fallback、Markdown cleaner、ExtractorChain、Docker Compose 配置。
+- E5 Privacy Gateway：InputSanitizer、Unicode normalize、PII detectors、Presidio/regex/NER/Qwen classifier、PII replacer、PII map DB、JSON Schema、Canary、主管线与 factory。
+- E2 MCP Guard：pinned install、mcp-scan parser、schema hash、mode policy、approval、argument validator、PreToolUse hook。
+- E6 MCP Profiles：`.mcp.json.coding` / `.mcp.json.research` / `.mcp.json.private`、`scripts/switch-mode.sh`。
+- E7/E8 Browser：Playwright client/orchestrator/profile/session/action/CLI wrapper，Chrome DevTools private client + private full-mode pipeline。
+- E9 Local RAG：SQLite schema、BGE_M3 embedder wrapper、RAGStore CRUD、KNN fallback。
+- E10 Ops：health-check、backup、launchd plist。
+- E11 Security：prompt injection、PII bypass、cookie leak、canary E2E tests。
+
+最新测试基线见 `docs/PROJECT_STATE.md` 与 `docs/DEV_LOG.md` 顶部索引。
+
+---
+
+## 2. 快速命令
+
+### 环境自检
 ```bash
-bash _infra/setup.sh --check          # 环境自检
-cp _infra/.env.example _infra/.env    # 填 GLM_API_KEY 等
-cd _infra/forge_tools && uv pip install -e ".[dev]" && python -m pytest -q   # forge CLI 自测
+cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
+bash _infra/setup.sh --check
 ```
-完整真机验证见 `docs/REAL_MACHINE_VALIDATION.md`。
 
-## 目录速览
+### Network 静态健康检查
+```bash
+scripts/health-check.sh --static
 ```
+
+### Network 全量单元 + 安全测试
+```bash
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+```
+
+### Docker 服务（SearXNG + Crawl4AI）
+```bash
+cd docker
+export SEARXNG_SECRET_KEY="replace-with-local-random-secret"
+docker compose up -d
+```
+
+### MCP 模式切换
+```bash
+scripts/switch-mode.sh coding
+scripts/switch-mode.sh research
+scripts/switch-mode.sh private
+scripts/switch-mode.sh current
+```
+
+### MCP Guard Hook 手动测试
+```bash
+echo '{"server_id":"searxng","tool_name":"search","args":{"query":"public"},"mode":"research"}' \
+  | scripts/hooks/pre_tool_use.sh
+```
+
+### 备份
+```bash
+scripts/backup.sh --dry-run
+scripts/backup.sh
+```
+
+---
+
+## 3. 目录速览
+
+```text
 .
-├── HANDOFF.md                 # ⭐ 接力总入口（意外中止时接续 Agent 必读）
-├── README.md                  # 本文件
-├── _infra/                    # 基础设施：LiteLLM 路由 / 环境 / Manual Gate / forge CLI
-│   ├── litellm-config.yaml    # 模型路由 + Fallback + 成本日志
-│   ├── model-routing-rules.md # 路由决策（人类可读）
-│   ├── forge-cli.sh           # Manual Gate 辅助（境外模型手动接入）
-│   ├── setup.sh               # 一键自检
-│   ├── .env.example           # 环境变量模板
-│   ├── CLAUDE.global.md       # 全局 Orchestrator 配置模板（→ ~/.claude/CLAUDE.md）
-│   └── forge_tools/           # forge CLI（Python，零三方依赖，沙箱已测 19 passed）
-├── _factory/                  # 工厂知识库（跨项目共享）
-│   ├── skills/                # 5 个技能（discovery/arch/tdd/security + 模板）
-│   ├── patterns/              # 可运行脚手架（fastapi-backend，core 测试已过）
-│   └── lessons/               # 复盘模板
-├── _agents/                   # 全局 Agent 定义（arch/security/explorer/retro）
-├── projects/                  # 项目目录
-│   └── _TEMPLATE/             # 新项目脚手架（含 .claude Hooks + docs 全套模板）
-└── docs/                      # 需求书/架构书 + 维护文档体系
+├── HANDOFF.md                         # Agent 接手入口 + SOP
+├── PROJECT_DOSSIER_V3.md              # 项目卷宗 + Network Addendum
+├── NETWORK_ARCHITECTURE_FINAL.md      # 联网架构基准
+├── NETWORK_ENGINEERING_DESIGN.md      # 联网工程设计基准 + 实现映射
+├── TASK_BACKLOG.md                    # 任务定义；§10 为状态 SSOT
+├── config/                            # models/routing/privacy/network/mcp/mode/canary 配置
+├── docker/                            # SearXNG + Crawl4AI 本地 Docker Compose
+├── _infra/network/                    # 联网增量模块源码
+│   ├── search/
+│   ├── extract/
+│   ├── input_sanitizer/
+│   ├── privacy_gateway/
+│   ├── mcp_guard/
+│   ├── browser/
+│   ├── local_rag/
+│   ├── scripts/
+│   └── tests/
+├── _factory/                          # 工厂知识库、专家、patterns、skills
+├── projects/                          # 试点/样例项目
+├── scripts/                           # 运维、mode switch、hook、wrapper 等脚本
+└── docs/                              # 状态、日志、ADR、研究资料、手册
 ```
 
-## 五阶段
-DISCOVERY → SPEC → BUILD → HARDEN → RETRO，每阶段有进入条件、退出产物、HITL Gate。
+---
 
-## forge CLI 常用命令（在项目目录内）
-```bash
-forge status     # 当前阶段 + 任务图概览
-forge check      # 校验任务图（status/依赖/循环）+ 退出产物
-forge tasks      # 列出可执行任务（依赖已满足）
-forge advance    # 能否进入下一阶段 + 需过哪个 Gate
-forge gate GATE-2
-```
+## 4. 接手阅读顺序
 
-## 给接手的人 / Agent
-出问题或要接续开发，**必须按顺序阅读**：
-1. `docs/dossier_v2/PROJECT_DOSSIER_V2.md` §1 Executive Takeover Brief（架构师接管总览，含风险/约束/接管计划）
-2. `HANDOFF.md`（接力总入口 + 操作 SOP）
-3. `docs/PROJECT_STATE.md`（当前状态 SSOT）
-4. `docs/dossier_v2/risk_register.csv`（风险清单）
-5. `docs/adr/README.md`（工厂级 ADR 索引，含 ADR-001~007）+ `docs/dossier_v2/adr_candidates.md`（7 个待补 ADR）
-6. `docs/DEV_LOG.md` + `docs/CHANGELOG.md`
+任何新 Agent 接手必须先读：
 
-**治理原则**：项目已建立 Documentation Governance 体系（见 `DOCUMENT_AUDIT_REPORT.md` + `docs/dossier_v2/`）。任何变更必须遵循：
-Code → Tests → Documentation → CHANGELOG → ADR（如为重大决策）流程。
-新工厂级架构决策必须在 `docs/adr/` 创建对应 ADR（参考 `docs/adr/README.md` + `docs/dossier_v2/adr_candidates.md`）。
+1. `HANDOFF.md`
+2. `docs/PROJECT_STATE.md`
+3. `TASK_BACKLOG.md` §10
+4. `NETWORK_ARCHITECTURE_FINAL.md`
+5. `NETWORK_ENGINEERING_DESIGN.md`
+6. `docs/DEV_LOG.md` 顶部 Latest Index + 最新一轮
+7. `docs/CHANGELOG.md` 顶部 Latest Index + 最新一轮
+8. `docs/adr/README.md`
 
+历史/背景再读：
 
+- `PROJECT_DOSSIER_V3.md`
+- `DOCUMENT_AUDIT_REPORT.md`
+- `docs/UPGRADE_COMPLETION.md`
 
+---
 
-## Obsolete Assets
+## 5. 文档 SSOT 规则
 
-`_obsolete/` 现在作为**可追溯历史资产目录**纳入 GitHub 仓库，不再被 `.gitignore` 忽略。
+- 当前项目状态：`docs/PROJECT_STATE.md`
+- 当前任务状态：`TASK_BACKLOG.md` §10
+- 架构基准：`NETWORK_ARCHITECTURE_FINAL.md`
+- 工程设计基准：`NETWORK_ENGINEERING_DESIGN.md`
+- 决策记录：`docs/adr/`
+- 开发流水：`docs/DEV_LOG.md`
+- 变更摘要：`docs/CHANGELOG.md`
 
-原则：
-- 不直接删除历史资产。
-- 废弃实现、历史设计稿、一次性诊断脚本、运行诊断输出统一放入 `_obsolete/`。
-- 当前生产/运行路径不得 import 或执行 `_obsolete/` 内代码。
-- 用户明确要求保留并保持 active 的目录：`projects/legal-bot/`、`projects/project-b/`、`retro-data-share/`。
+如果文档冲突，优先级：用户最新指令 → `HANDOFF.md` → `docs/PROJECT_STATE.md` → `TASK_BACKLOG.md` §10 → 架构/设计文档 → 历史日志。
 
-清理证据与最终结果见 `docs/repository-audit.md` 与 `docs/repository-cleanup-report.md`。
+---
+
+## 6. Obsolete / Legacy 策略
+
+`_obsolete/` 必须保持 `.gitignore` 忽略，不 push 到 GitHub。
+历史诊断脚本统一放入 `scripts/diagnostics/`，不作为主流程入口。
+
+当前不删除历史文档；被标为历史参考的文档不得作为 Current State SSOT。

@@ -1,9 +1,19 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:55:00
+创建时间（北京时间）：2026-06-23 17:20:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
+
+## Latest Development Index
+
+- **当前状态 SSOT**：`docs/PROJECT_STATE.md`
+- **任务状态 SSOT**：`TASK_BACKLOG.md` §10
+- **最新测试基线**：`python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `347 passed, 2 skipped, 44 warnings`
+- **最近完成**：E9 Local RAG 基础（schema / embedder / store / search fallback）
+- **建议下一步**：NetworkWorkflow / CLI 集成，或真实服务验证。
+
+---
 
 ## 第 41 轮 · 2026-06-21（M2 启动：SearchProvider + SearXNGProvider + 单元测试）
 
@@ -2297,3 +2307,79 @@ python -m compileall -q _infra/network
 - NetworkWorkflow/CLI 集成，或按用户优先级进行文档治理/真实服务验证。
 
 **仓库状态**：完成本轮实现，准备全量验证与 commit。
+
+## 第 76 轮 · 2026-06-23（文档治理执行：入口文档、SSOT、路径映射、诊断脚本整理）
+
+**当前任务**：按用户批准的文档治理要求执行，不继续功能开发。
+
+**完成内容**：
+
+1. **核心入口文档更新**：
+   - 重写 `README.md`：移除不存在的 dossier_v2 / REAL_MACHINE_VALIDATION / repository audit 引用，改为当前 SSOT 阅读顺序。
+   - 重写 `HANDOFF.md`：更新为当前 Agent 接手入口，补充 Network Increment 已实现能力、测试基线、常用命令、真机验证清单、文档 SSOT。
+   - 重写 `docs/PROJECT_STATE.md`：作为当前状态 SSOT，清除已不存在资产引用，列出当前实现、测试基线、真机验证项和下一候选。
+
+2. **TASK_BACKLOG 路径治理**：
+   - 将详细任务中的旧 `src/...` 路径替换为当前已实现路径 `_infra/network/...`。
+   - 保留 §10 为任务状态唯一 SSOT 的说明。
+
+3. **历史日志索引**：
+   - `docs/DEV_LOG.md` 顶部新增 Latest Development Index。
+   - `docs/CHANGELOG.md` 顶部新增 Latest Change Index。
+
+4. **架构/设计文档补充映射**：
+   - `NETWORK_ARCHITECTURE_FINAL.md` 新增 Implementation Status Note。
+   - `NETWORK_ENGINEERING_DESIGN.md` 新增 Implementation Mapping。
+   - `PROJECT_DOSSIER_V3.md` 新增 Network Increment Addendum。
+
+5. **中文说明文档更新**：
+   - `docs/全功能最小示例项目.md` 增加当前适用说明。
+   - `docs/工厂使用手册.md` 更新版本并增加当前状态/文档入口说明。
+   - `docs/工厂能力覆盖检查.md` 增加 Network Increment 覆盖补充。
+
+6. **脚本整理**：
+   - 旧诊断脚本移动到 `scripts/diagnostics/`：
+     - `benchmark_test.py`
+     - `diagnose_proxy.sh`
+     - `test_single_plan.py`
+     - `test_streaming_plan.py`
+   - 新增 `scripts/diagnostics/README.md`。
+   - 为 diagnostic test_*.py 加 `__test__ = False`，避免 pytest 误收集。
+
+7. **Research 目录说明**：
+   - 新增 `docs/research/README.md`，说明 research 文档仅供参考，不是实现 SSOT。
+
+**遵守用户特别要求**：
+- `_obsolete/` 继续由 `.gitignore` 忽略，不 push 到 GitHub。
+- `HANDOFF.md` 中“模型名称必须写当前实际使用的模型比如 `Gpt 5.5 pro`”保留不变。
+- 未修改用户指定暂不改的历史文档：`DOCUMENT_AUDIT_REPORT.md`、`DOCUMENT_CHANGE_REPORT.md`、`docs/UPGRADE_COMPLETION.md`、`docs/DECISIONS.md`、`docs/LESSONS_LEARNED_SMART_PROXY_MTPX.md`、`docs/RETRO.md`、`docs/benchmark.md`、`docs/FACTORY_ASSESSMENT.md`。
+
+**验证结果**：
+```bash
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 347 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network scripts/diagnostics
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**修改/移动文件**：
+- `README.md`
+- `HANDOFF.md`
+- `docs/PROJECT_STATE.md`
+- `TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- `NETWORK_ARCHITECTURE_FINAL.md`
+- `NETWORK_ENGINEERING_DESIGN.md`
+- `PROJECT_DOSSIER_V3.md`
+- `docs/全功能最小示例项目.md`
+- `docs/工厂使用手册.md`
+- `docs/工厂能力覆盖检查.md`
+- `docs/research/README.md`
+- `scripts/diagnostics/README.md`
+- `scripts/diagnostics/*`（由旧诊断脚本移动而来）
+
+**下一步计划**：
+- 功能开发建议继续 NetworkWorkflow / CLI 集成，或按用户优先级进行真机验证。

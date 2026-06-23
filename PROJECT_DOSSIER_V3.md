@@ -1,9 +1,28 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-06-23 17:20:00
+-->
+
 # Project Dossier V3
 
 **版本**: v1.3.0-dossier (Current State)  
 **生成日期**: 2026-06-21 (基于仓库真实状态)  
 **生成依据**: 完整仓库扫描（Repository Scan / Source Code Scan / Configuration Scan / Database Scan / Infrastructure Scan / CI/CD Scan / Documentation Scan）  
 **原则遵守**: Reality Over Assumptions · Current State Only · Code Is Source Of Truth · Evidence Driven · Future-Agent Friendly  
+
+---
+
+## 0. Network Increment Addendum（2026-06-23）
+
+`PROJECT_DOSSIER_V3.md` 生成早于本轮大量联网功能落地。当前新增事实如下：
+
+- `_infra/network/` 已成为联网功能增量模块主实现位置。
+- 已实现 Search / Extract / Privacy Gateway / MCP Guard / Mode Profiles / Browser Automation / Private Access / Local RAG / Ops / Security Tests。
+- 当前任务状态以 `TASK_BACKLOG.md` §10 为准。
+- 当前状态以 `docs/PROJECT_STATE.md` 为准。
+- 当前仍需真机验证：Docker services、Ollama models、MCP install + mcp-scan、Chrome/Playwright runtime、launchd。
+
+本 Addendum 不改变原卷宗历史内容，只补充当前 Network Increment 状态。
 
 ---
 
@@ -633,7 +652,7 @@ DataPrivacyGate (privacy_policy.yaml)
 ### Documentation-Code Mismatches
 - 已通过 Phase 1 治理大幅修复（HANDOFF 清理、PROJECT_STATE 去重、ADR 建立）
 - 当前以代码为准：`docs/adr/README.md` 声明为 SSOT
-- 残留：部分 docs/ 提及旧 dossier_v2（已删除）
+- 2026-06-23 文档治理后：当前入口文档已改为 `HANDOFF.md` / `docs/PROJECT_STATE.md` / `TASK_BACKLOG.md` §10；旧 dossier_v2 引用仅保留于历史 CHANGELOG 条目。
 
 **Evidence**:
 - `DOCUMENT_AUDIT_REPORT.md`（Phase 1 状态）

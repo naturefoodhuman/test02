@@ -1,12 +1,19 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:55:00
+创建时间（北京时间）：2026-06-23 17:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
 
 > 老板每轮提出的"新增 / 删除 / 改动"需求，以及由此产生的文件变动，都记在这里。
 > 格式：每轮一节，列出【需求变动】和【文件影响】。
+
+## Latest Change Index
+
+- **当前状态 SSOT**：`docs/PROJECT_STATE.md`
+- **最新完成模块**：E9 Local RAG 基础。
+- **当前 Network 测试基线**：347 passed, 2 skipped, 44 warnings。
+- **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
 ## [第 44 轮] 2026-06-20
@@ -1715,3 +1722,40 @@ python -m compileall -q _infra/network
 ### Known Follow-up
 - sqlite-vec native KNN remains a future optimization behind the same RAGStore API.
 - Real bge-m3 integration requires Ollama + bge-m3 on the user's Mac.
+
+---
+
+## [2026-06-23] Documentation Governance Execution
+
+### Changed
+- Rewrote `README.md`, `HANDOFF.md`, and `docs/PROJECT_STATE.md` to remove stale references and align with current Network Increment implementation.
+- Added latest-state indexes to `docs/DEV_LOG.md` and `docs/CHANGELOG.md`.
+- Added implementation mapping/status notes to `NETWORK_ARCHITECTURE_FINAL.md`, `NETWORK_ENGINEERING_DESIGN.md`, and `PROJECT_DOSSIER_V3.md`.
+- Replaced old detailed-task `src/...` paths in `TASK_BACKLOG.md` with current `_infra/network/...` implementation paths.
+- Updated Chinese docs:
+  - `docs/全功能最小示例项目.md`
+  - `docs/工厂使用手册.md`
+  - `docs/工厂能力覆盖检查.md`
+- Added `docs/research/README.md` to clarify research docs are reference-only.
+
+### Moved
+- Moved old diagnostic scripts to `scripts/diagnostics/`:
+  - `scripts/benchmark_test.py` → `scripts/diagnostics/benchmark_test.py`
+  - `scripts/diagnose_proxy.sh` → `scripts/diagnostics/diagnose_proxy.sh`
+  - `scripts/test_single_plan.py` → `scripts/diagnostics/test_single_plan.py`
+  - `scripts/test_streaming_plan.py` → `scripts/diagnostics/test_streaming_plan.py`
+
+### Preserved by user request
+- `_obsolete/` remains ignored and should not be pushed to GitHub.
+- The HANDOFF model-name rule remains unchanged.
+- Did not modify the historical docs explicitly excluded by the user.
+
+### Verified
+```bash
+python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 347 passed, 2 skipped, 44 warnings
+python -m compileall -q _infra/network scripts/diagnostics
+# pass
+python -m _infra.network.cli config
+# Network Config loaded successfully
+```

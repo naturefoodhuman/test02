@@ -286,7 +286,7 @@ P3 = 可选增强
     test-sec    # pytest tests/security
     lint        # ruff check
     format      # ruff format
-    typecheck   # mypy src/
+    typecheck   # mypy _infra/network/（如启用）
     health      # bash scripts/health-check.sh
     clean       # 清理 __pycache__ 等
     ```
@@ -307,7 +307,7 @@ P3 = 可选增强
 - **输入**: §9.1 异常分类
 - **输出**: 异常类层次
 - **涉及模块**: core/exceptions
-- **涉及文件**: 新建 `src/core/exceptions.py`
+- **涉及文件**: 新建 `_infra/network/exceptions.py`
 - **实现要求**:
   - 基类 `NetworkAgentException`
   - 子类按 §9.1 分类：MCP / Search / Extract / Privacy / Browser
@@ -337,7 +337,7 @@ P3 = 可选增强
 - **输出**: Config 类
 - **涉及模块**: core/config
 - **涉及文件**:
-  - 新建：`src/core/config.py`
+  - 新建：`_infra/network/config_loader/loader.py`
   - 新建：`config/.env.example`
 - **实现要求**:
   - 使用 `pydantic-settings` 的 `BaseSettings`
@@ -396,10 +396,10 @@ P3 = 可选增强
 - **输入**: 4 个 YAML 文件结构
 - **输出**: schema 类
 - **涉及文件**:
-  - 新建：`src/core/schemas/__init__.py`
-  - 新建：`src/core/schemas/models_schema.py`
-  - 新建：`src/core/schemas/privacy_schema.py`
-  - 新建：`src/core/schemas/mcp_schema.py`
+  - 新建：`_infra/network/config_loader/__init__.py`
+  - 新建：`_infra/network/config_loader/schemas.py`
+  - 新建：`config/privacy_policy.yaml` / `_infra/network/config_loader/schemas.py`
+  - 新建：`config/mcp_lockfile.yaml` / `_infra/network/config_loader/schemas.py`
 - **实现要求**:
   - 借鉴 FORGE Factory `config/schemas.py` 模式
   - 严格类型检查
@@ -426,7 +426,7 @@ P3 = 可选增强
 - **输入**: 必需密钥列表
 - **输出**: 校验函数
 - **涉及文件**:
-  - 新建：`src/core/secrets.py`
+  - 新建：`_infra/network/core/secrets.py`
 - **实现要求**:
   - 必需密钥：`SEARXNG_SECRET_KEY`、`PII_DB_ENCRYPTION_KEY`
   - 启动时检查，缺失则抛 `ConfigurationError` 并退出
@@ -452,7 +452,7 @@ P3 = 可选增强
 - **输入**: §10.2 setup_logging 代码
 - **输出**: 日志配置函数
 - **涉及文件**:
-  - 新建：`src/utils/logger.py`
+  - 新建：`_infra/network/utils/logger.py`
 - **实现要求**:
   - JSON 格式输出
   - 文件 handler（`runtime/logs/network-agent.log`）
@@ -480,8 +480,8 @@ P3 = 可选增强
 - **输入**: §6.2.1 SQL
 - **输出**: 初始化脚本
 - **涉及文件**:
-  - 新建：`scripts/init_db.py`
-  - 新建：`src/audit/schema.sql`
+  - 新建：`_infra/network/scripts/init_audit_db.py`
+  - 新建：`_infra/network/audit_log/schema.sql`
 - **实现要求**:
   - 包含 `tool_calls`、`mcp_schema_changes`、`browser_sessions`、`browser_actions` 表
   - 包含所有索引
@@ -506,8 +506,8 @@ P3 = 可选增强
 - **输入**: §5.7 接口定义、§6.1 AuditEvent 模型
 - **输出**: AuditLogger 类 + AuditEvent 模型
 - **涉及文件**:
-  - 新建：`src/audit/logger.py`
-  - 新建：`src/audit/models.py`
+  - 新建：`_infra/network/audit_log/logger.py`
+  - 新建：`_infra/network/audit_log/models.py`
 - **实现要求**:
   - 异步接口（`async def log`）
   - 使用 `aiosqlite` 或同步 SQLite + thread pool
@@ -826,8 +826,8 @@ P3 = 可选增强
 - **输入**: §5.2 SearchProvider 接口
 - **输出**: 抽象类 + 数据模型
 - **涉及文件**:
-  - 新建：`src/search/base.py`
-  - 新建：`src/search/models.py`
+  - 新建：`_infra/network/search/base.py`
+  - 新建：`_infra/network/search/models.py`
 - **实现要求**:
   - 定义 `SearchQuery`、`SearchResult` Pydantic 模型
   - 定义 `SearchProvider` ABC
@@ -849,7 +849,7 @@ P3 = 可选增强
 - **输入**: SearXNG JSON API
 - **输出**: SearXNGProvider 类
 - **涉及文件**:
-  - 新建：`src/search/searxng_client.py`
+  - 新建：`_infra/network/search/searxng_client.py`
 - **实现要求**:
   - 使用 `httpx.AsyncClient`
   - 调用 `/search?q={query}&format=json`
@@ -879,7 +879,7 @@ P3 = 可选增强
 - **输入**: 任意 URL
 - **输出**: 规范化函数
 - **涉及文件**:
-  - 新建：`src/search/url_normalizer.py`
+  - 新建：`_infra/network/search/url_normalizer.py`
 - **实现要求**:
   - 移除 tracking 参数：utm_*、fbclid、gclid 等
   - 统一 scheme（强制 https）
@@ -903,7 +903,7 @@ P3 = 可选增强
 - **输入**: SearchResult 列表
 - **输出**: 评分函数
 - **涉及文件**:
-  - 新建：`src/search/result_scorer.py`
+  - 新建：`_infra/network/search/result_scorer.py`
   - 新建：`config/domain_reputation.yaml`
 - **实现要求**:
   - 加分域名：github.com / arxiv.org / *.edu / mdn.io / docs.* / wikipedia.org
@@ -931,7 +931,7 @@ P3 = 可选增强
 - **输入**: §11.2 代码
 - **输出**: SearchCache 类
 - **涉及文件**:
-  - 新建：`src/search/cache.py`
+  - 新建：`_infra/network/search/cache.py`
 - **实现要求**:
   - SQLite 存储
   - 默认 TTL 1 小时
@@ -991,8 +991,8 @@ P3 = 可选增强
 - **输入**: §5.3 ExtractProvider 接口
 - **输出**: 抽象类 + 数据模型
 - **涉及文件**:
-  - 新建：`src/extract/base.py`
-  - 新建：`src/extract/models.py`
+  - 新建：`_infra/network/extract/base.py`
+  - 新建：`_infra/network/extract/models.py`
 - **实现要求**:
   - 定义 `ExtractRequest`、`ExtractResult` 模型
   - 定义 `ExtractProvider` ABC
@@ -1011,7 +1011,7 @@ P3 = 可选增强
 - **输入**: Crawl4AI API
 - **输出**: Crawl4AIProvider 类
 - **涉及文件**:
-  - 新建：`src/extract/crawl4ai_client.py`
+  - 新建：`_infra/network/extract/crawl4ai_client.py`
 - **实现要求**:
   - HTTP API 调用（不强制 MCP）
   - 超时 30s
@@ -1035,7 +1035,7 @@ P3 = 可选增强
 - **输入**: 原始 Markdown
 - **输出**: 清洗函数
 - **涉及文件**:
-  - 新建：`src/extract/markdown_cleaner.py`
+  - 新建：`_infra/network/extract/markdown_cleaner.py`
 - **实现要求**:
   - 移除多余空行
   - 移除内联广告
@@ -1058,7 +1058,7 @@ P3 = 可选增强
 - **输入**: §7.2 用途
 - **输出**: TrafilaturaProvider 类
 - **涉及文件**:
-  - 新建：`src/extract/trafilatura_fallback.py`
+  - 新建：`_infra/network/extract/trafilatura_fallback.py`
 - **实现要求**:
   - 使用 `trafilatura` Python 库
   - 无浏览器、纯静态提取
@@ -1086,7 +1086,7 @@ P3 = 可选增强
 - **输入**: §9 职责
 - **输出**: InputSanitizer 类
 - **涉及文件**:
-  - 新建：`src/privacy/input_sanitizer.py`
+  - 新建：`_infra/network/input_sanitizer/sanitizer.py`
 - **实现要求**:
   - 移除 `<script>` / `<style>` / `<iframe>` 标签
   - 移除 HTML 注释
@@ -1111,7 +1111,7 @@ P3 = 可选增强
 - **前置依赖**: E5-C1-S1-T1
 - **输入**: §13.5 prompt injection 缓解
 - **输出**: 注入检测函数
-- **涉及文件**: 修改 `src/privacy/input_sanitizer.py`
+- **涉及文件**: 修改 `_infra/network/input_sanitizer/sanitizer.py`
 - **实现要求**:
   - 检测关键词：`ignore previous instructions`、`忽略之前的指令`、`system:`、`<|im_start|>` 等
   - 检测隐藏文本（`display:none` 内容）
@@ -1138,7 +1138,7 @@ P3 = 可选增强
 - **输入**: §10.4 代码
 - **输出**: 规范化函数
 - **涉及文件**:
-  - 新建：`src/utils/unicode_norm.py`
+  - 新建：`_infra/network/utils/unicode_norm.py`
 - **实现要求**:
   - NFKC 规范化
   - 移除零宽字符（U+200B-U+200D、U+FEFF）

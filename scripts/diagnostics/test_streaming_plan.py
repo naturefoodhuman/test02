@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-06-23 17:20:00
+__test__ = False  # pytest: diagnostic script, not a test module
 """
 流式压测脚本 v2.0（使用 Smart Proxy 流式版）
 """
@@ -10,7 +13,7 @@ import time
 # 强制使用流式 Smart Proxy
 os.environ["FORGE_SMART_PROXY"] = "streaming"
 
-sys.path.insert(0, str(Path(__file__).parent.parent / "_factory/patterns/peer-review/src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "_factory/patterns/peer-review/src"))
 
 from peer_review.graph.execution import run_langgraph_review
 

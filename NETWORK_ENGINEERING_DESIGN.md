@@ -1,3 +1,8 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-06-23 17:20:00
+-->
+
 # NETWORK_ENGINEERING_DESIGN.md
 
 > **Engineering Blueprint** — 面向 Claude Code、Codex 等 AI Agent 的工程实现指南。
@@ -25,6 +30,27 @@
 12. [测试策略](#12-测试策略)
 13. [扩展点设计](#13-扩展点设计)
 14. [开发风险分析](#14-开发风险分析)
+
+---
+
+
+## 0. Implementation Mapping（2026-06-23）
+
+本文件是工程设计基准。设计中早期出现的 `src/...` 路径，在当前 FORGE Factory 中统一落地为 `_infra/network/...`：
+
+| 设计路径 | 当前实现路径 |
+|---|---|
+| `src/core/*` | `_infra/network/config_loader/`, `_infra/network/core/`, `_infra/network/exceptions.py` |
+| `src/search/*` | `_infra/network/search/*` |
+| `src/extract/*` | `_infra/network/extract/*` |
+| `src/privacy/*` | `_infra/network/privacy_gateway/*`, `_infra/network/input_sanitizer/*`, `_infra/network/utils/unicode_norm.py` |
+| `src/mcp/*` | `_infra/network/mcp_guard/*` |
+| `src/browser/*` | `_infra/network/browser/*` |
+| `src/rag/*` | `_infra/network/local_rag/*` |
+| `tests/*` | `_infra/network/tests/*` |
+| `scripts/*`（network 专用） | `_infra/network/scripts/*` 或根 `scripts/*`（用户入口） |
+
+任务状态请以 `TASK_BACKLOG.md` §10 为准。
 
 ---
 

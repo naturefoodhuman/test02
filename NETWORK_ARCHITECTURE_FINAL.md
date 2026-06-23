@@ -1,3 +1,8 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-06-23 17:20:00
+-->
+
 # 联网功能最终架构设计方案
 
 ---
@@ -12,6 +17,14 @@
 | 主控系统 | Claude Code |
 | 来源文档 | 本地开源模型联网功能最终架构裁决 |
 | 上下文参考 | PROJECT_DOSSIER_V3.md (FORGE Factory 项目档案) |
+
+---
+
+## 0. Implementation Status Note（2026-06-23）
+
+本文件是联网功能的**架构基准**，不是进度 SSOT。当前实现状态请以 `docs/PROJECT_STATE.md` 与 `TASK_BACKLOG.md` §10 为准。
+
+当前落地原则：所有联网功能均作为现有 FORGE Factory 的增量模块实现，实际代码路径为 `_infra/network/`，配置路径为根 `config/`，Docker 配置路径为根 `docker/`。
 
 ---
 
