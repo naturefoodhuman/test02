@@ -2417,3 +2417,27 @@ python -m _infra.network.cli config
 python3 -m pytest _infra/network/tests/unit/test_workflow.py -v
 # 2 passed
 ```
+
+---
+
+## 第 43 轮 · 2026-06-24 (真机验证大决战：v9 - v21)
+
+**目标**：在用户 Mac 真实环境下跑通“Google 搜索 + 脱敏 + RAG 入库”。
+
+**完成内容**：
+1. **网络通路突围**：
+   - 解决了 Python 脚本与 Docker 之间的 404 代理回环（加入 `trust_env=False`）。
+   - 解决了 Docker 容器找不到宿主机代理的问题（引入 `host.docker.internal` 与 `extra_hosts`）。
+   - 适配了 `ChromeGoMac` (Clash.meta) 的 `Allow LAN` 访问逻辑。
+2. **Crawl4AI v0.9.x 深度适配**：
+   - 适配了批量 `/crawl` 接口。
+   - 实现了 `deep_clean_content` 递归剥壳算法，彻底清除了输出内容中的 JSON 括号干扰。
+3. **RAG 稳定性加固**：
+   - 解决了超长 Arxiv 论文导致 Ollama 500 报错的问题（限制 300 token 分段，强制截断 1500 词，声明 4096+ 上下文）。
+   - 实现了 RAG 非阻塞工作流，入库失败不再影响搜索展示。
+4. **Google 引擎隔离测试**：
+   - 提供了专门的 `settings.yml` 用于验证代理纯净度。
+
+**结论**：全链路逻辑已通，目前仅剩 Google 站点在大陆代理环境下的规则匹配调试。
+
+---

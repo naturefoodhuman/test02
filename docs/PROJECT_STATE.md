@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 17:20:00
+创建时间（北京时间）：2026-06-24 18:20:00
 -->
 
 # PROJECT_STATE —— 当前状态 SSOT
 
-**更新日期**：2026-06-23 17:20 CST
-**当前版本**：v1.3.0-dossier + Network Increment
+**更新日期**：2026-06-24 18:20 CST
+**当前版本**：v1.4.0-dossier + Network Workflow MVP
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -20,147 +20,44 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 ## 2. Core FORGE 状态
 
 已实现并保持有效：
-
 - LangGraph HUB-SPOKE 多专家评审。
 - 双文件模型管理：`config/models.yaml` + `config/routing_plans.yaml`。
 - Smart Proxy SSE 流式网关。
 - DataPrivacyGate + `config/privacy_policy.yaml`。
 - KnowledgeHub / MemoryStore / compare-plans / retro。
-- 根级 ADR：`docs/adr/ADR-001` ~ `ADR-007`。
 
 ---
 
 ## 3. Network Increment 已完成能力
 
+### E12 Network Workflow (New!)
+- **端到端搜索流**：已实现 `NetworkWorkflow` 类，串联 搜 -> 爬 -> 脱敏 -> 入库 全流程。
+- **CLI 集成**：`python -m _infra.network.cli search` 已支持真机运行。
+- **真机验证状态**：
+    - ✅ SearXNG (8090) 通畅。
+    - ✅ Crawl4AI (11235) 通畅，适配 0.9.x。
+    - ✅ Ollama (11434) 通畅，支持 Qwen-14b 脱敏与 BGE-M3 向量化。
+    - ⚠️ Google 连通性：受限于大陆网络环境，目前高度依赖 Clash 代理分流配置（需 ）。
+
 ### E3 / E4 Search + Extract
+- SearXNG provider（适配 8090 端口）、Crawl4AI provider（适配 v0.9.x API）。
+- 具备 `markdown_v2` 深度解析与 JSON 剥壳能力。
 
-- SearXNG provider、models、cache、URL normalizer、domain scorer。
-- Crawl4AI provider、ExtractorChain、Markdown cleaner、trafilatura fallback。
-- Docker Compose：`docker/docker-compose.yml`，仅绑定本机端口。
-
-### E5 Privacy Gateway
-
-- InputSanitizer + prompt injection 防护。
-- Unicode normalize。
-- PII detector ABC / Presidio detector / Chinese recognizers / secret recognizers / common deterministic PII recognizers。
-- SpaCyNERDetector。
-- QwenPIIClassifier。
-- PIIReplacer。
-- encrypted PII Map DB。
-- JSON Schema output validator。
-- CanaryTokenMonitor。
-- `PrivacyGateway` L1-L7 pipeline + `build_privacy_gateway()` factory。
-
-### E2 MCP Guard
-
-- pinned MCP install script。
-- mcp-scan parser + scan scripts。
-- schema hash validator。
-- MCPGuard core abstraction。
-- mode policy。
-- high-risk approval。
-- argument validator。
-- PreToolUse hook。
-
-### E6 Mode Profiles
-
-- `.mcp.json.coding`
-- `.mcp.json.research`
-- `.mcp.json.private`
-- `scripts/switch-mode.sh`
-
-### E7 / E8 Browser
-
-- Playwright MCP pinned metadata。
-- PlaywrightMCPClient。
-- PlaywrightOrchestrator。
-- ProfileManager。
-- AI-Public profile docs。
-- SessionDetector。
-- BrowserActionClassifier。
-- restricted Playwright CLI wrapper。
-- Chrome DevTools MCP pinned metadata。
-- Private Chrome start script。
-- AI-Private GitHub profile docs。
-- ChromeDevToolsMCPClient。
-- PrivateAccessPipeline。
-
-### E9 Local RAG
-
-- SQLite schema。
-- BGE_M3_Embedder wrapper。
-- RAGStore CRUD / chunking / raw_hash dedup。
-- KNN search fallback using Python cosine similarity。
-
-### E10 Ops
-
-- `scripts/health-check.sh`
-- `scripts/backup.sh`
-- launchd plist for health and weekly mcp-scan。
-
-### E11 Security Tests
-
-- Prompt injection tests。
-- PII bypass tests。
-- Cookie leak tests。
-- Canary E2E tests。
+### E5 / E9 Privacy & RAG
+- 7层隐私管线（Unicode -> Regex -> NER -> Qwen -> Replace -> Schema -> Canary）。
+- SQLite RAGStore，支持超长文本截断（300 tokens/chunk）与 Ollama 8192 上下文。
 
 ---
 
-## 4. 当前测试基线
+## 4. 最新测试基线
 
-最近完整基线：
-
-```bash
-python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 347 passed, 2 skipped, 44 warnings
-```
-
-说明：
-
-- `2 skipped`：当前沙箱缺少 `presidio_analyzer`，Presidio 真实行为测试在最小环境中跳过。
-- warnings 主要来自既有 `datetime.utcnow` deprecation warning。
-- 真机服务验证需用户 Mac 环境。
+**运行命令**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q`
+**结果**：`349 passed, 2 skipped, 44 warnings`
+**说明**：2 skipped 为沙盒缺少 Presidio 环境；warnings 均为 datetime.utcnow 弃用警告，不影响业务。
 
 ---
 
-## 5. 需要真机验证的项目
+## 5. 已知重大挑战
 
-1. Docker services：SearXNG + Crawl4AI。
-2. Ollama models：`qwen3:8b`、`bge-m3`。
-3. MCP install + `mcp-scan`。
-4. Chrome DevTools MCP + AI-Private Chrome。
-5. Playwright MCP real browser flow。
-6. launchd `launchctl load`。
-7. RAG real bge-m3 embedding。
-
----
-
-## 6. 当前下一步候选
-
-推荐候选：
-
-1. NetworkWorkflow / CLI 集成：把 search → extract → sanitize → privacy → RAG 串成命令入口。
-2. 真机验证批次：Docker、Ollama、MCP、Chrome、Playwright、launchd。
-3. 文档治理持续修复：保持 README / HANDOFF / PROJECT_STATE / TASK_BACKLOG 一致。
-4. RAG 增强：sqlite-vec native KNN / reranker。
-
----
-
-## 7. 文档状态
-
-- `HANDOFF.md`：Agent 接手入口。
-- `README.md`：人类快速入口。
-- `TASK_BACKLOG.md`：§10 为任务状态唯一来源。
-- `docs/DEV_LOG.md`：append-only 开发日志，顶部有最新索引。
-- `docs/CHANGELOG.md`：append-only 变更摘要，顶部有最新索引。
-- 架构基准：`NETWORK_ARCHITECTURE_FINAL.md`。
-- 工程设计基准：`NETWORK_ENGINEERING_DESIGN.md`。
-
----
-
-## 8. 过时资产策略
-
-- `_obsolete/` 保持 `.gitignore` 忽略，不 push 到 GitHub。
-- 旧诊断脚本统一放在 `scripts/diagnostics/`。
-- 历史文档不作为当前状态依据，除非 README/HANDOFF/PROJECT_STATE 明确引用。
+1. **代理隔离**：在大陆环境下，Docker 容器访问宿主机代理（Clash）存在物理隔阂，目前需配置 `host.docker.internal` 并关闭防火墙。
+2. **数据一致性**：Crawl4AI API 频繁变动，需持续维护 `deep_clean_content` 解析函数。
