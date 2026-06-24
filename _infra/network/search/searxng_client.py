@@ -1,4 +1,4 @@
-"""SearXNGProvider v18 - Final No-Proxy Fix"""
+"""SearXNGProvider v19 - Async Context Manager Fixed"""
 from __future__ import annotations
 import httpx
 from typing import Any, List, Optional
@@ -20,8 +20,6 @@ class SearXNGProvider(SearchProvider):
     @property
     def client(self) -> httpx.AsyncClient:
         if self._client is None:
-            # 双重保险：trust_env=False + proxy=None
-            # 彻底解决终端全局代理导致无法连接 127.0.0.1 的 404/ConnectionError 问题
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 timeout=httpx.Timeout(self.timeout),
@@ -46,7 +44,15 @@ class SearXNGProvider(SearchProvider):
             raise RuntimeError(f"SearXNG connection error: {e}")
 
     async def health_check(self) -> bool:
-        try: return (await self.client.get("/search", params={"q": "ping", "format": "json", "limit": 1}, timeout=5.0)).status_code == 200
+        try:
+            resp = await self.client.get("/search", params={"q": "ping", "format": "json", "limit": 1}, timeout=5.0)
+            return resp.status_code == 200
         except: return False
-    async def __aenter__(self): return self
-    async def __aexit__(self, *args): await self.client.aclose()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        if self._client:
+            await self._client.aclose()
+            self._client = None

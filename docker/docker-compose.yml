@@ -1,8 +1,4 @@
-# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-23 11:58:00
-
 name: forge-network
-
 services:
   searxng:
     image: ${SEARXNG_IMAGE:-searxng/searxng:latest}
@@ -10,6 +6,11 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:8090:8080"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       SEARXNG_SECRET_KEY: ${SEARXNG_SECRET_KEY:-CHANGE_ME_LOCAL_ONLY_32_CHARS}
       SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://127.0.0.1:8090/}
@@ -21,12 +22,6 @@ services:
       - searxng_data:/var/cache/searxng
     networks:
       - forge-network
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null 'http://127.0.0.1:8080/search?q=health&format=json' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
 
   crawl4ai:
     image: ${CRAWL4AI_IMAGE:-unclecode/crawl4ai:latest}
@@ -34,11 +29,15 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:11235:11235"
+    dns:
+      - 8.8.8.8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     shm_size: "1g"
     environment:
       CRAWL4AI_HOST: 0.0.0.0
       CRAWL4AI_PORT: 11235
-      CRAWL4AI_API_TOKEN: "my_secret_token_1234"  # <--- 新增这一行（密码可以随便改）
+      CRAWL4AI_API_TOKEN: "my_secret_token_1234"
       CRAWL4AI_DISABLE_JS: ${CRAWL4AI_DISABLE_JS:-true}
       HTTP_PROXY: ${HTTP_PROXY:-}
       HTTPS_PROXY: ${HTTPS_PROXY:-}
@@ -47,17 +46,10 @@ services:
       - crawl4ai_cache:/app/.cache
     networks:
       - forge-network
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null 'http://127.0.0.1:11235/health' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
 
 networks:
   forge-network:
     driver: bridge
-
 volumes:
   searxng_data:
   crawl4ai_cache:
