@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from ..search.searxng_client import SearXNGProvider
 from ..extract import ExtractorChain, Crawl4AIProvider, TrafilaturaProvider
-from ..privacy_gateway import build_privacy_gateway
+from ..privacy_gateway import build_privacy_gateway, PrivacyContext
 from ..local_rag.store import RAGStore
 from ..input_sanitizer.sanitizer import InputSanitizer
 from ..config_loader import load_network_config
@@ -99,19 +99,18 @@ class NetworkWorkflow:
 
         # 4. Privacy Gateway (Anonymization)
         # Choose privacy level based on mode
-        # Research mode might be lighter, but for safety we use full pipeline
-        # PrivacyGateway.process handles L1-L7
-        gateway_result = self.privacy_gateway.process(combined_raw_text)
+        # PrivacyGateway.process handles L1-L7 and is async
+        ctx = PrivacyContext(mode="full" if mode == "research" else "light", source_url="network_workflow")
+        gateway_result = await self.privacy_gateway.process(combined_raw_text, ctx=ctx)
         
         # 5. Local RAG Store (Async add)
-        # Note: rag_store.add is currently synchronous in the E9 implementation
-        # we should wrap it or keep it simple for now.
+        # Note: rag_store.add_document is currently synchronous in the E9 implementation
         for i, doc in enumerate(extracted_docs):
             if doc.content:
                 # Store anonymized version of each doc individually for better RAG
-                doc_privacy_result = self.privacy_gateway.process(doc.content)
+                doc_privacy_result = await self.privacy_gateway.process(doc.content, ctx=ctx)
                 self.rag_store.add_document(
-                    content=doc_privacy_result.anonymized_text,
+                    content=doc_privacy_result.text,
                     metadata={
                         "url": targets[i].url,
                         "title": targets[i].title,
@@ -123,8 +122,8 @@ class NetworkWorkflow:
         return WorkflowResult(
             query=query,
             processed_query=sanitized_query,
-            anonymized_content=gateway_result.anonymized_text,
+            anonymized_content=gateway_result.text,
             citations=citations,
-            tokens_removed=len(gateway_result.pii_map),
+            tokens_removed=len(gateway_result.detections),
             mode=mode
         )

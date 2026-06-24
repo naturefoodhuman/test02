@@ -87,20 +87,33 @@ class Crawl4AIProvider(ExtractProvider):
             # In production this would be blocked by higher layer; here we still allow but warn
             logger.warning("screenshot requested without approval flag", url=url)
 
+        # Crawl4AI 0.9.x API compatibility
+        # It expects "urls" (list) and optionally "crawler_params"
         payload: dict[str, Any] = {
-            "url": req.url,
-            "mode": "markdown" if mode == ExtractMode.MARKDOWN else "html",
-            "js": req.allow_js and self.js_exec_allowed,
-            "max_chars": req.max_chars,
+            "urls": [req.url],
+            "crawler_params": {
+                "bypass_cache": True,
+                "only_text": True,
+            }
         }
 
         try:
             resp = await self.client.post("/crawl", json=payload)
+            if resp.status_code == 422:
+                # Fallback to legacy single-url format if 422 occurs
+                legacy_payload = {
+                    "url": req.url,
+                    "mode": "markdown" if mode == ExtractMode.MARKDOWN else "html",
+                    "js": req.allow_js and self.js_exec_allowed,
+                    "max_chars": req.max_chars,
+                }
+                resp = await self.client.post("/crawl", json=legacy_payload)
+            
             resp.raise_for_status()
             data = resp.json()
         except httpx.HTTPStatusError as e:
-            logger.error("Crawl4AI HTTP error", status=e.response.status_code, url=req.url)
-            raise ExtractError(f"Crawl4AI error {e.response.status_code}") from e
+            logger.error("Crawl4AI HTTP error", status=e.response.status_code, url=req.url, response=e.response.text)
+            raise ExtractError(f"Crawl4AI error {e.response.status_code}: {e.response.text}") from e
         except httpx.TimeoutException as e:
             logger.error("Crawl4AI timeout", url=req.url)
             raise ExtractTimeout("Crawl4AI extraction timeout") from e
@@ -108,10 +121,15 @@ class Crawl4AIProvider(ExtractProvider):
             logger.error("Crawl4AI connection error", error=str(e), url=req.url)
             raise ExtractError(f"Crawl4AI unavailable: {e}") from e
 
-        content = data.get("markdown") or data.get("html") or data.get("content", "")
-        if not content and mode != ExtractMode.SCREENSHOT:
-            # For screenshot we expect different response shape in real impl
-            pass
+        # Handle 0.9.x response shape (results list)
+        content = ""
+        results = data.get("results")
+        if isinstance(results, list) and len(results) > 0:
+            result_obj = results[0]
+            content = result_obj.get("markdown") or result_obj.get("html") or result_obj.get("content", "")
+        else:
+            # Legacy or direct object
+            content = data.get("markdown") or data.get("html") or data.get("content", "")
 
         result = ExtractResult(
             url=req.url,
