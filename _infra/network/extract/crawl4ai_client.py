@@ -1,6 +1,7 @@
 """Crawl4AIProvider implementation (v0.9.x compat)"""
 from __future__ import annotations
 import os
+import json
 from typing import Any, Optional
 import httpx
 from _infra.network.config_loader import load_network_config
@@ -54,16 +55,30 @@ class Crawl4AIProvider(ExtractProvider):
             logger.error("Crawl4AI error", error=str(e), url=url)
             return ExtractResult(url=url, content="", mode=mode, error=str(e))
 
+        # Comprehensive extraction for Crawl4AI 0.9.x
         results = data.get("results", [])
         content = ""
-        if results and isinstance(results, list):
+        if isinstance(results, list) and len(results) > 0:
             res_obj = results[0]
-            content = (res_obj.get("markdown_v2") or res_obj.get("fit_markdown") or 
-                       res_obj.get("markdown") or res_obj.get("raw_markdown") or "")
+            # Priority list for content fields in v0.9.x
+            content = (
+                res_obj.get("markdown_v2") or 
+                res_obj.get("markdown") or 
+                res_obj.get("fit_markdown") or 
+                res_obj.get("raw_markdown") or 
+                res_obj.get("content") or 
+                ""
+            )
+            # If it's a dict (e.g. structured data), try to serialize it
+            if isinstance(content, dict):
+                content = json.dumps(content, ensure_ascii=False)
         else:
-            content = data.get("markdown") or data.get("content") or ""
+            # Legacy or other format
+            content = data.get("markdown") or data.get("content") or data.get("text") or ""
+            if isinstance(content, dict):
+                content = json.dumps(content, ensure_ascii=False)
 
-        return ExtractResult(url=url, content=content, mode=mode, extractor_used="crawl4ai", raw=data)
+        return ExtractResult(url=url, content=str(content), mode=mode, extractor_used="crawl4ai", raw=data)
 
     async def health_check(self) -> bool:
         try:

@@ -7,6 +7,7 @@ from ..search.searxng_client import SearXNGProvider
 from ..extract import ExtractorChain, Crawl4AIProvider, TrafilaturaProvider
 from ..privacy_gateway import build_privacy_gateway, PrivacyContext
 from ..local_rag.store import RAGStore
+from ..local_rag.models import DocumentInput
 from ..input_sanitizer.sanitizer import InputSanitizer
 from ..config_loader import load_network_config
 
@@ -46,7 +47,7 @@ class NetworkWorkflow:
         for i, t in enumerate(targets, 1):
             print(f"[INFO] ({i}/{len(targets)}) Extracting: {t.url}")
             doc = await self.extractor.extract(t.url)
-            # Fallback to snippet if extraction failed
+            # Fallback to snippet if extraction failed or content is empty
             if not doc.content:
                 print(f"      [Fallback to snippet]")
                 doc.content = t.snippet
@@ -56,17 +57,26 @@ class NetworkWorkflow:
         citations = []
         for i, doc in enumerate(extracted_docs):
             if doc.content:
-                combined_text += f"\n--- Source: {targets[i].title} ---\n{doc.content}"
-                citations.append({"title": targets[i].title, "url": targets[i].url})
+                source_meta = targets[i]
+                combined_text += f"\n--- Source: {source_meta.title} ({source_meta.url}) ---\n"
+                combined_text += doc.content
+                citations.append({"title": source_meta.title, "url": source_meta.url})
 
         ctx = PrivacyContext(mode="full" if mode=="research" else "light", source_url="network_workflow")
         gw_res = await self.privacy_gateway.process(combined_text, ctx=ctx)
         
-        # Async add to RAG (simplified)
-        for doc in extracted_docs:
+        # Async add to RAG (simplified sync call in loop as store is sync)
+        for i, doc in enumerate(extracted_docs):
             if doc.content:
                 res = await self.privacy_gateway.process(doc.content, ctx=ctx)
-                self.rag_store.add_document(content=res.text, metadata={"query": sanitized})
+                self.rag_store.add_document(
+                    DocumentInput(
+                        content=res.text,
+                        source_url=targets[i].url,
+                        title=targets[i].title,
+                        metadata={"query": sanitized}
+                    )
+                )
 
         return WorkflowResult(query=query, processed_query=sanitized, anonymized_content=gw_res.text, 
                               citations=citations, tokens_removed=len(gw_res.detections), mode=mode)
