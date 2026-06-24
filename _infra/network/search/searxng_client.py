@@ -1,10 +1,13 @@
-"""SearXNGProvider v19 - Async Context Manager Fixed"""
+"""SearXNGProvider v20 - Full Async Protocol & Detailed Logging"""
 from __future__ import annotations
 import httpx
+import logging
 from typing import Any, List, Optional
 from _infra.network.config_loader import load_network_config
 from .base import SearchProvider
 from .models import SearchQuery, SearchResult
+
+logger = logging.getLogger("network.search.searxng")
 
 class SearXNGProvider(SearchProvider):
     def __init__(self, config: Any = None, client: httpx.AsyncClient | None = None):
@@ -23,7 +26,7 @@ class SearXNGProvider(SearchProvider):
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 timeout=httpx.Timeout(self.timeout),
-                headers={"Accept": "application/json"},
+                headers={"Accept": "application/json", "User-Agent": "Mozilla/5.0"},
                 proxy=None,
                 trust_env=False
             )
@@ -41,17 +44,19 @@ class SearXNGProvider(SearchProvider):
                 results.append(SearchResult(url=item.get("url", ""), title=item.get("title", ""), snippet=item.get("content", ""), score=1.0))
             return results
         except Exception as e:
-            raise RuntimeError(f"SearXNG connection error: {e}")
+            msg = f"SearXNG Connection Error: {type(e).__name__} - {str(e)}"
+            logger.error(msg)
+            raise RuntimeError(msg)
 
     async def health_check(self) -> bool:
         try:
             resp = await self.client.get("/search", params={"q": "ping", "format": "json", "limit": 1}, timeout=5.0)
             return resp.status_code == 200
-        except: return False
+        except Exception as e:
+            logger.warning(f"Health check failed: {e}")
+            return False
 
-    async def __aenter__(self):
-        return self
-
+    async def __aenter__(self): return self
     async def __aexit__(self, exc_type, exc, tb):
         if self._client:
             await self._client.aclose()

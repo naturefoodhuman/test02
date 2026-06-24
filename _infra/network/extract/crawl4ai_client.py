@@ -1,6 +1,5 @@
-"""Crawl4AIProvider v19 - Async Context Manager Fixed"""
+"""Crawl4AIProvider v20 - Full Async Protocol"""
 from __future__ import annotations
-import os
 import json
 import httpx
 from typing import Any, Optional
@@ -27,25 +26,18 @@ class Crawl4AIProvider(ExtractProvider):
             cfg = load_network_config().extract.crawl4ai
             self.base_url = cfg.base_url.rstrip("/")
             self.timeout = cfg.timeout_seconds
-            self.api_token = cfg.api_token or os.environ.get(cfg.api_token_env)
+            self.api_token = cfg.api_token or "my_secret_token_1234"
         else:
             self.base_url = getattr(config, "base_url", "http://127.0.0.1:11235").rstrip("/")
             self.timeout = getattr(config, "timeout_seconds", 30)
-            self.api_token = getattr(config, "api_token", None)
+            self.api_token = getattr(config, "api_token", "my_secret_token_1234")
         self._client = client
 
     @property
     def client(self) -> httpx.AsyncClient:
         if self._client is None:
-            headers = {"Accept": "application/json"}
-            if self.api_token: headers["Authorization"] = f"Bearer {self.api_token}"
-            self._client = httpx.AsyncClient(
-                base_url=self.base_url,
-                timeout=httpx.Timeout(self.timeout),
-                headers=headers,
-                proxy=None,
-                trust_env=False
-            )
+            headers = {"Accept": "application/json", "Authorization": f"Bearer {self.api_token}"}
+            self._client = httpx.AsyncClient(base_url=self.base_url, timeout=httpx.Timeout(self.timeout), headers=headers, proxy=None, trust_env=False)
         return self._client
 
     async def extract(self, url: str, mode: ExtractMode = ExtractMode.MARKDOWN) -> ExtractResult:
@@ -60,15 +52,11 @@ class Crawl4AIProvider(ExtractProvider):
             return ExtractResult(url=url, content="", mode=mode, error=str(e))
 
     async def health_check(self) -> bool:
-        try:
-            resp = await self.client.get("/health", timeout=5.0)
-            return resp.status_code == 200
+        try: return (await self.client.get("/health")).status_code == 200
         except: return False
 
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
+    async def __aenter__(self): return self
+    async def __aexit__(self, *args):
         if self._client:
             await self._client.aclose()
             self._client = None
