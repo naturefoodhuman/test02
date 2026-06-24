@@ -1,4 +1,5 @@
-# Arena.ai Agent Mode - Execution Lead Engineer
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-06-24 14:48:00
 import asyncio
 import logging
 from typing import List, Optional, Dict, Any
@@ -39,14 +40,11 @@ class NetworkWorkflow:
         print(f"[INFO] SearXNG found {len(results)} results.")
         targets = results[:self.config.search.searxng.fetch_top_k]
         
-        extracted_docs = []
-        for i, t in enumerate(targets, 1):
-            print(f"[INFO] ({i}/{len(targets)}) Extracting: {t.url}")
-            doc = await self.extractor.extract(t.url)
+        extracted_docs = await self.extractor.extract_batch([t.url for t in targets])
+        for i, doc in enumerate(extracted_docs):
             if not doc.content:
-                print(f"      [Fallback to snippet]")
-                doc.content = t.snippet
-            extracted_docs.append(doc)
+                print(f"      [Fallback to snippet for {targets[i].url}]")
+                doc.content = targets[i].snippet
 
         combined_text = ""
         citations = []

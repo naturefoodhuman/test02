@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 17:20:00
+创建时间（北京时间）：2026-06-24 14:48:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,8 +11,8 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：E9 Local RAG 基础。
-- **当前 Network 测试基线**：347 passed, 2 skipped, 44 warnings。
+- **最新完成模块**：联网功能开发4（多源数据扩充、Google CAPTCHA 风控隔离与维基百科反爬加固）
+- **当前 Network 测试基线**：349 passed, 2 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
@@ -1714,7 +1714,7 @@ python -m compileall -q _infra/network
 python -m pytest _infra/network/tests/unit/test_local_rag.py -q
 # 6 passed
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 347 passed, 2 skipped, 44 warnings
+# 349 passed, 2 skipped, 44 warnings
 python -m compileall -q _infra/network
 # pass
 ```
@@ -1753,7 +1753,7 @@ python -m compileall -q _infra/network
 ### Verified
 ```bash
 python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 347 passed, 2 skipped, 44 warnings
+# 349 passed, 2 skipped, 44 warnings
 python -m compileall -q _infra/network scripts/diagnostics
 # pass
 python -m _infra.network.cli config

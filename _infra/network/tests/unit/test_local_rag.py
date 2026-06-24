@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-23 16:55:00
+# 创建时间（北京时间）：2026-06-24 14:48:00
 
 """Unit tests for Local RAG (E9-C1/C2/C3/C4)."""
 
@@ -14,7 +14,7 @@ class FakeEmbedClient:
     def __init__(self):
         self.calls = []
 
-    def embeddings(self, model, prompt):
+    def embeddings(self, model, prompt, **kwargs):
         self.calls.append((model, prompt))
         vec = [0.0] * 8
         lower = prompt.lower()
@@ -52,7 +52,7 @@ def test_embedder_uses_cache():
 
 def test_embedder_rejects_wrong_dimension():
     class BadClient:
-        def embeddings(self, model, prompt):
+        def embeddings(self, model, prompt, **kwargs):
             return {"embedding": [1.0, 2.0]}
 
     embedder = BGE_M3_Embedder(client=BadClient(), expected_dim=8)

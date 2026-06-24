@@ -1,4 +1,5 @@
-# Arena.ai Agent Mode
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-06-24 14:48:00
 from __future__ import annotations
 import hashlib
 import os
@@ -19,12 +20,13 @@ class BGE_M3_Embedder:
         return self.client
 
     def embed(self, text: str) -> list[float]:
-        # 强制截断防 500 错误
         trunc = " ".join(text.split()[:1500])
         key = hashlib.sha256(f"{self.model}:{trunc}".encode()).hexdigest()
         if key in self._cache: return self._cache[key]
         client = self._get_client()
         res = client.embeddings(model=self.model, prompt=trunc, options={"num_ctx": 4096})
         emb = [float(x) for x in res.get("embedding", [])]
+        if self.expected_dim and len(emb) != self.expected_dim:
+            raise ValueError(f"Expected embedding dimension {self.expected_dim}, got {len(emb)}")
         self._cache[key] = emb
         return emb
