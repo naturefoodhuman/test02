@@ -66,17 +66,22 @@ class NetworkWorkflow:
         gw_res = await self.privacy_gateway.process(combined_text, ctx=ctx)
         
         # Async add to RAG (simplified sync call in loop as store is sync)
+        # RAG is now non-blocking for search workflow
         for i, doc in enumerate(extracted_docs):
             if doc.content:
-                res = await self.privacy_gateway.process(doc.content, ctx=ctx)
-                self.rag_store.add_document(
-                    DocumentInput(
-                        content=res.text,
-                        source_url=targets[i].url,
-                        title=targets[i].title,
-                        metadata={"query": sanitized}
+                try:
+                    res = await self.privacy_gateway.process(doc.content, ctx=ctx)
+                    self.rag_store.add_document(
+                        DocumentInput(
+                            content=res.text,
+                            source_url=targets[i].url,
+                            title=targets[i].title,
+                            metadata={"query": sanitized}
+                        )
                     )
-                )
+                except Exception as rag_err:
+                    logger.warning(f"RAG storage failed for {targets[i].url}: {rag_err}")
+                    # Continue workflow even if RAG fails
 
         return WorkflowResult(query=query, processed_query=sanitized, anonymized_content=gw_res.text, 
                               citations=citations, tokens_removed=len(gw_res.detections), mode=mode)

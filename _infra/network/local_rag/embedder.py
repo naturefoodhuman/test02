@@ -27,11 +27,15 @@ class BGE_M3_Embedder:
             return self.client
         try:
             import ollama
-
+            # Force non-proxy for local ollama
+            import os
+            os.environ["NO_PROXY"] = os.environ.get("NO_PROXY", "") + ",127.0.0.1,localhost"
             self.client = ollama
             return self.client
+        except ImportError:
+            raise RuntimeError("ollama python package not installed. Please run: pip install ollama")
         except Exception as exc:
-            raise RuntimeError("ollama client unavailable for embeddings") from exc
+            raise RuntimeError(f"ollama client unavailable: {exc}") from exc
 
     @staticmethod
     def _extract_embedding(response: Any) -> list[float]:
