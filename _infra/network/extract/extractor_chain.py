@@ -67,6 +67,16 @@ class ExtractorChain:
             error=f"All extractors failed. Last error: {last_error}",
         )
 
+    async def extract_batch(
+        self,
+        urls: List[str],
+        mode: ExtractMode = ExtractMode.MARKDOWN,
+    ) -> List[ExtractResult]:
+        """Parallel extraction for multiple URLs."""
+        import asyncio
+        tasks = [self.extract(url, mode=mode) for url in urls]
+        return await asyncio.gather(*tasks)
+
     def add_provider(self, provider: ExtractProvider, position: Optional[int] = None):
         """Allow runtime extension of the chain."""
         if position is None:

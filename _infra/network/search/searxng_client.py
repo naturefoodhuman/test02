@@ -142,12 +142,13 @@ class SearXNGProvider(SearchProvider):
     async def health_check(self) -> bool:
         """Quick health probe using a minimal query."""
         try:
+            # Increase timeout and allow empty results (just check connectivity)
             resp = await self.client.get(
                 "/search",
-                params={"q": "test", "format": "json", "limit": 1},
-                timeout=3.0,
+                params={"q": "ping", "format": "json", "limit": 1},
+                timeout=10.0,
             )
-            return resp.status_code == 200 and "results" in resp.json()
+            return resp.status_code == 200
         except Exception as e:
             logger.warning("SearXNG health check failed", error=str(e))
             return False
