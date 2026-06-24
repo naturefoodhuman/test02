@@ -12,6 +12,10 @@ server:
   limiter: false
 outgoing:
   request_timeout: 30.0
+  max_request_timeout: 60.0
+  proxies:
+    all:
+      - http://host.docker.internal:7890
 engines:
   - name: google
     disabled: false

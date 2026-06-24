@@ -1,4 +1,4 @@
-"""SearXNGProvider v20 - Full Async Protocol & Detailed Logging"""
+"""SearXNGProvider v21 - Force Proxy in settings.yml & Improved Logging"""
 from __future__ import annotations
 import httpx
 import logging
@@ -44,16 +44,16 @@ class SearXNGProvider(SearchProvider):
                 results.append(SearchResult(url=item.get("url", ""), title=item.get("title", ""), snippet=item.get("content", ""), score=1.0))
             return results
         except Exception as e:
-            msg = f"SearXNG Connection Error: {type(e).__name__} - {str(e)}"
+            msg = f"SearXNG Connection Error: {repr(e)}"
             logger.error(msg)
             raise RuntimeError(msg)
 
     async def health_check(self) -> bool:
         try:
-            resp = await self.client.get("/search", params={"q": "ping", "format": "json", "limit": 1}, timeout=5.0)
+            resp = await self.client.get("/search", params={"q": "ping", "format": "json", "limit": 1}, timeout=10.0)
             return resp.status_code == 200
         except Exception as e:
-            logger.warning(f"Health check failed: {e}")
+            logger.warning(f"Health check failed: {repr(e)}")
             return False
 
     async def __aenter__(self): return self
