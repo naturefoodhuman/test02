@@ -1,45 +1,27 @@
-# Arena.ai Agent Mode - Isolation Test: Google Only
 use_default_settings: true
-
 general:
   debug: false
-  instance_name: "FORGE Google Isolation Test"
-
+  instance_name: "FORGE Google Isolation"
 search:
   safe_search: 0
-  autocomplete: ""
-  default_lang: "auto"
-  formats:
-    - html
-    - json
-
+  formats: [html, json]
 server:
-  bind_address: "0.0.0.0"
   port: 8080
+  bind_address: "0.0.0.0"
   secret_key: "${SEARXNG_SECRET_KEY}"
   limiter: false
-  image_proxy: false
-
 outgoing:
-  request_timeout: 15.0
+  request_timeout: 20.0
   max_request_timeout: 30.0
-  pool_connections: 100
-  pool_maxsize: 20
-  enable_http2: true
-
 engines:
   - name: google
     disabled: false
     weight: 1.0
   - name: bing
     disabled: true
-  - name: wikipedia
-    disabled: true
-  - name: github
-    disabled: true
-  - name: stackoverflow
+  - name: baidu
     disabled: true
   - name: arxiv
     disabled: true
-  - name: baidu
+  - name: github
     disabled: true

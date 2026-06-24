@@ -5,72 +5,26 @@ search:
     timeout_seconds: 30
     max_results: 10
     fetch_top_k: 3
-    max_chars_per_page: 8000
-    engines_enabled:
-      - google
-    engines_disabled:
-      - bing
-      - github
-      - stackoverflow
-      - arxiv
-      - baidu
-  fallback_tavily:
-    enabled: false
-    api_key_env: "TAVILY_API_KEY"
+    engines_enabled: [google]
+    engines_disabled: [bing, baidu, arxiv, github, stackoverflow, wikipedia]
 extract:
   crawl4ai:
     base_url: "http://127.0.0.1:11235"
     timeout_seconds: 30
-    js_exec_allowed: false
-    screenshot_requires_approval: true
     api_token: "my_secret_token_1234"
-  trafilatura:
-    enabled: true
-    max_size_bytes: 1048576
-browser:
-  profiles:
-    ai_public:
-      user_data_dir: "${HOME}/ai-agent/profiles/ai-public"
-      blocked_origins: ["https://accounts.google.com"]
-    ai_private_github:
-      user_data_dir: "${HOME}/ai-agent/profiles/ai-private-github"
-      remote_debugging_port: 9222
-      allowed_domains: ["github.com", "gist.github.com"]
 privacy_gateway:
   qwen_model: "qwen3:14b"
   qwen_base_url: "http://127.0.0.1:11434"
   qwen_timeout_seconds: 30
   spacy_model: "zh_core_web_sm"
-  pii_map_db: "runtime/pii_map.db"
-  pii_map_encryption_key_env: "PII_MAP_ENCRYPTION_KEY"
-  canary_tokens: ["AI_CANARY_DO_NOT_LEAK_2026"]
-  output_schema_strict: true
-  placeholder_format: "<<{entity_type}_{index}>>"
 local_rag:
   rag_db: "runtime/rag.db"
   embed_model: "bge-m3:latest"
   embed_base_url: "http://127.0.0.1:11434"
   chunk_size_tokens: 300
   chunk_overlap_tokens: 30
-mcp_guard:
-  hash_store: "runtime/mcp_hashes.json"
-  audit_db: "runtime/audit.db"
-  policy_config: "config/mcp_policy.yaml"
-  scan_interval_days: 7
-mode_profiles:
-  coding:
-    allowed_servers: ["filesystem", "git"]
-  research:
-    allowed_servers: ["searxng", "crawl4ai", "playwright-public"]
-  private:
-    allowed_servers: ["chrome-devtools-private"]
 health_check:
   services:
-    searxng:
-      url: "http://127.0.0.1:8090/search?q=test&format=json"
-      timeout: 10
-    crawl4ai:
-      url: "http://127.0.0.1:11235/health"
-      timeout: 5
-    ollama:
-      command: "ollama list"
+    searxng: {url: "http://127.0.0.1:8090/search?q=test&format=json", timeout: 15}
+    crawl4ai: {url: "http://127.0.0.1:11235/health", timeout: 5}
+    google_connectivity: {url: "https://www.google.com", timeout: 10, optional: true}

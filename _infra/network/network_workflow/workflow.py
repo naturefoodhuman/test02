@@ -25,29 +25,24 @@ class NetworkWorkflow:
     def __init__(self, config=None):
         self.config = config or load_network_config()
         self.search_provider = SearXNGProvider(config=self.config.search.searxng)
-        crawl_provider = Crawl4AIProvider(config=self.config.extract.crawl4ai)
-        self.extractor = ExtractorChain(providers=[crawl_provider, TrafilaturaProvider()])
+        self.extractor = ExtractorChain(providers=[Crawl4AIProvider(config=self.config.extract.crawl4ai), TrafilaturaProvider()])
         self.privacy_gateway = build_privacy_gateway(config=self.config)
         self.sanitizer = InputSanitizer()
         self.rag_store = RAGStore(db_path=self.config.local_rag.rag_db)
 
     async def execute(self, query: str, mode: str = "research") -> WorkflowResult:
-        logger.info(f"Starting network workflow for: {query}")
         sanitized = self.sanitizer.sanitize(query, source_url="user_input").text
-        
         results = await self.search_provider.search(sanitized)
         if not results:
             return WorkflowResult(query=query, processed_query=sanitized, anonymized_content="No results found.", citations=[], tokens_removed=0, mode=mode)
 
         print(f"[INFO] SearXNG found {len(results)} results.")
-        top_k = self.config.search.searxng.fetch_top_k
-        targets = results[:top_k]
+        targets = results[:self.config.search.searxng.fetch_top_k]
         
         extracted_docs = []
         for i, t in enumerate(targets, 1):
             print(f"[INFO] ({i}/{len(targets)}) Extracting: {t.url}")
             doc = await self.extractor.extract(t.url)
-            # Fallback to snippet if extraction failed or content is empty
             if not doc.content:
                 print(f"      [Fallback to snippet]")
                 doc.content = t.snippet
@@ -56,32 +51,18 @@ class NetworkWorkflow:
         combined_text = ""
         citations = []
         for i, doc in enumerate(extracted_docs):
-            if doc.content:
-                source_meta = targets[i]
-                combined_text += f"\n--- Source: {source_meta.title} ({source_meta.url}) ---\n"
-                combined_text += doc.content
-                citations.append({"title": source_meta.title, "url": source_meta.url})
+            combined_text += f"\n--- Source: {targets[i].title} ({targets[i].url}) ---\n{doc.content}\n"
+            citations.append({"title": targets[i].title, "url": targets[i].url})
 
         ctx = PrivacyContext(mode="full" if mode=="research" else "light", source_url="network_workflow")
         gw_res = await self.privacy_gateway.process(combined_text, ctx=ctx)
         
-        # Async add to RAG (simplified sync call in loop as store is sync)
-        # RAG is now non-blocking for search workflow
         for i, doc in enumerate(extracted_docs):
             if doc.content:
                 try:
                     res = await self.privacy_gateway.process(doc.content, ctx=ctx)
-                    self.rag_store.add_document(
-                        DocumentInput(
-                            content=res.text,
-                            source_url=targets[i].url,
-                            title=targets[i].title,
-                            metadata={"query": sanitized}
-                        )
-                    )
-                except Exception as rag_err:
-                    logger.warning(f"RAG storage failed for {targets[i].url}: {rag_err}")
-                    # Continue workflow even if RAG fails
+                    self.rag_store.add_document(DocumentInput(content=res.text, source_url=targets[i].url, title=targets[i].title))
+                except Exception as e:
+                    print(f"[WARNING] RAG failed for {targets[i].url}: {e}")
 
-        return WorkflowResult(query=query, processed_query=sanitized, anonymized_content=gw_res.text, 
-                              citations=citations, tokens_removed=len(gw_res.detections), mode=mode)
+        return WorkflowResult(query=query, processed_query=sanitized, anonymized_content=gw_res.text, citations=citations, tokens_removed=len(gw_res.detections), mode=mode)

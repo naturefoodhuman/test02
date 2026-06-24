@@ -1,7 +1,6 @@
-# Arena.ai Agent Mode - Execution Lead Engineer
+# Arena.ai Agent Mode
 from __future__ import annotations
 import hashlib
-import json
 import os
 from typing import Any
 
@@ -10,32 +9,22 @@ class BGE_M3_Embedder:
         self.model = model
         self.client = client
         self.expected_dim = expected_dim
-        self._cache: dict[str, list[float]] = {}
+        self._cache = {}
 
     def _get_client(self):
-        if self.client is not None: return self.client
-        try:
-            import ollama
-            os.environ["NO_PROXY"] = os.environ.get("NO_PROXY", "") + ",127.0.0.1,localhost"
-            self.client = ollama
-            return self.client
-        except Exception as e:
-            raise RuntimeError(f"Ollama client error: {e}")
+        if self.client: return self.client
+        import ollama
+        os.environ["NO_PROXY"] = os.environ.get("NO_PROXY", "") + ",127.0.0.1,localhost"
+        self.client = ollama
+        return self.client
 
     def embed(self, text: str) -> list[float]:
-        # Truncate text to avoid context length issues (approx 2000 words)
-        truncated_text = " ".join(text.split()[:2000])
-        key = hashlib.sha256(f"{self.model}\0{truncated_text}".encode("utf-8")).hexdigest()
-        if key in self._cache: return list(self._cache[key])
-
+        # 强制截断防 500 错误
+        trunc = " ".join(text.split()[:1500])
+        key = hashlib.sha256(f"{self.model}:{trunc}".encode()).hexdigest()
+        if key in self._cache: return self._cache[key]
         client = self._get_client()
-        # Add options to handle context length
-        response = client.embeddings(model=self.model, prompt=truncated_text, options={"num_ctx": 8192})
-        
-        embedding = [float(x) for x in response.get("embedding", [])]
-        if self.expected_dim and len(embedding) != self.expected_dim:
-            # Handle dimension mismatch or empty response
-            if not embedding: raise ValueError("Empty embedding from Ollama")
-        
-        self._cache[key] = list(embedding)
-        return embedding
+        res = client.embeddings(model=self.model, prompt=trunc, options={"num_ctx": 4096})
+        emb = [float(x) for x in res.get("embedding", [])]
+        self._cache[key] = emb
+        return emb
