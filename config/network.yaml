@@ -2,18 +2,18 @@ version: "1.0"
 search:
   searxng:
     base_url: "http://127.0.0.1:8090"
-    timeout_seconds: 15
-    max_results: 20
+    timeout_seconds: 30
+    max_results: 10
     fetch_top_k: 3
     max_chars_per_page: 8000
     engines_enabled:
       - google
+    engines_disabled:
       - bing
       - github
       - stackoverflow
       - arxiv
       - baidu
-    engines_disabled: []
   fallback_tavily:
     enabled: false
     api_key_env: "TAVILY_API_KEY"
@@ -50,8 +50,8 @@ local_rag:
   rag_db: "runtime/rag.db"
   embed_model: "bge-m3:latest"
   embed_base_url: "http://127.0.0.1:11434"
-  chunk_size_tokens: 512
-  chunk_overlap_tokens: 50
+  chunk_size_tokens: 300
+  chunk_overlap_tokens: 30
 mcp_guard:
   hash_store: "runtime/mcp_hashes.json"
   audit_db: "runtime/audit.db"

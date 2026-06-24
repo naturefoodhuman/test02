@@ -1,11 +1,9 @@
-# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-23 11:58:00
-
+# Arena.ai Agent Mode - Isolation Test: Google Only
 use_default_settings: true
 
 general:
   debug: false
-  instance_name: "FORGE Local SearXNG"
+  instance_name: "FORGE Google Isolation Test"
 
 search:
   safe_search: 0
@@ -23,26 +21,25 @@ server:
   image_proxy: false
 
 outgoing:
-  request_timeout: 3.0
-  max_request_timeout: 6.0
+  request_timeout: 15.0
+  max_request_timeout: 30.0
   pool_connections: 100
   pool_maxsize: 20
   enable_http2: true
 
 engines:
-  - name: duckduckgo
-    disabled: false
-  - name: bing
-    disabled: false
-  - name: wikipedia
-    disabled: false
-  - name: github
-    disabled: false
-  - name: stackoverflow
-    disabled: false
-  - name: arxiv
-    disabled: false
-  - name: baidu
-    disabled: false
   - name: google
+    disabled: false
+    weight: 1.0
+  - name: bing
+    disabled: true
+  - name: wikipedia
+    disabled: true
+  - name: github
+    disabled: true
+  - name: stackoverflow
+    disabled: true
+  - name: arxiv
+    disabled: true
+  - name: baidu
     disabled: true
