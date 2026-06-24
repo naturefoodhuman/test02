@@ -44,41 +44,40 @@ class Crawl4AIProvider(ExtractProvider):
         return self._client
 
     async def extract(self, url: str, mode: ExtractMode = ExtractMode.MARKDOWN) -> ExtractResult:
+        # Standardize on v0.9.x list-based URLs
         payload = {"urls": [url], "crawler_params": {"bypass_cache": True}}
         try:
             resp = await self.client.post("/crawl", json=payload)
             if resp.status_code == 422:
+                # Fallback for old API versions
                 resp = await self.client.post("/crawl", json={"url": url, "mode": "markdown"})
             resp.raise_for_status()
             data = resp.json()
         except Exception as e:
-            logger.error("Crawl4AI error", error=str(e), url=url)
+            logger.error("Crawl4AI connection error", error=str(e), url=url)
             return ExtractResult(url=url, content="", mode=mode, error=str(e))
 
-        # Comprehensive extraction for Crawl4AI 0.9.x
-        results = data.get("results", [])
         content = ""
+        # 1. Check for 'results' list (0.9.x)
+        results = data.get("results")
         if isinstance(results, list) and len(results) > 0:
             res_obj = results[0]
-            # Priority list for content fields in v0.9.x
-            content = (
-                res_obj.get("markdown_v2") or 
-                res_obj.get("markdown") or 
-                res_obj.get("fit_markdown") or 
-                res_obj.get("raw_markdown") or 
-                res_obj.get("content") or 
-                ""
-            )
-            # If it's a dict (e.g. structured data), try to serialize it
-            if isinstance(content, dict):
-                content = json.dumps(content, ensure_ascii=False)
-        else:
-            # Legacy or other format
-            content = data.get("markdown") or data.get("content") or data.get("text") or ""
-            if isinstance(content, dict):
-                content = json.dumps(content, ensure_ascii=False)
-
-        return ExtractResult(url=url, content=str(content), mode=mode, extractor_used="crawl4ai", raw=data)
+            # Try specific markdown fields first
+            content = (res_obj.get("markdown_v2") or 
+                       res_obj.get("fit_markdown") or 
+                       res_obj.get("markdown") or 
+                       res_obj.get("raw_markdown") or 
+                       res_obj.get("content"))
+        
+        # 2. Fallback to direct fields (legacy)
+        if not content:
+            content = data.get("markdown") or data.get("content") or data.get("text")
+            
+        # 3. Last resort: if we got a dict instead of string, extract the text part or serialize
+        if isinstance(content, dict):
+            content = content.get("html") or content.get("raw_markdown") or json.dumps(content, ensure_ascii=False)
+        
+        return ExtractResult(url=url, content=str(content or ""), mode=mode, extractor_used="crawl4ai", raw=data)
 
     async def health_check(self) -> bool:
         try:
