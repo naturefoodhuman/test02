@@ -173,3 +173,28 @@ def test_searxng_health_check_fail():
 def test_search_result_domain_fallback():
     r = SearchResult(url="https://www.Example.COM/path?q=1", title="x")
     assert r.domain == "www.example.com"
+
+
+def test_searxng_search_auto_fallback_on_captcha():
+    async def _run():
+        resp1 = MagicMock(spec=httpx.Response)
+        resp1.status_code = 200
+        resp1.json.return_value = {"results": [], "unresponsive_engines": [["duckduckgo", "CAPTCHA"]]}
+        resp1.raise_for_status.return_value = None
+
+        resp2 = MagicMock(spec=httpx.Response)
+        resp2.status_code = 200
+        resp2.json.return_value = {"results": [{"url": "https://wikipedia.org/wiki/LangGraph", "title": "LangGraph", "content": "summary", "score": 0.95}]}
+        resp2.raise_for_status.return_value = None
+
+        mock_client = AsyncMock(spec=httpx.AsyncClient)
+        mock_client.get.side_effect = [resp1, resp2]
+
+        provider = SearXNGProvider(client=mock_client)
+        results = await provider.search("langgraph")
+
+        assert len(results) == 1
+        assert results[0].domain == "wikipedia.org"
+        assert mock_client.get.call_count == 2
+
+    asyncio.run(_run())
