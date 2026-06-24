@@ -57,10 +57,12 @@ class SearXNGProvider(SearchProvider):
     @property
     def client(self) -> httpx.AsyncClient:
         if self._client is None:
+            # Explicitly disable proxy for local connections to avoid issues with system proxies
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 timeout=httpx.Timeout(self.timeout),
                 headers={"Accept": "application/json"},
+                proxy=None, # Disable proxy for SearXNG local calls
             )
         return self._client
 

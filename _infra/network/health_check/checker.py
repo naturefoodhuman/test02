@@ -35,6 +35,12 @@ class HealthReport:
         return asdict(self)
 
 
+import httpx
+import asyncio
+import subprocess
+from ..search.searxng_client import SearXNGProvider
+from ..extract.crawl4ai_client import Crawl4AIProvider
+
 def check_config() -> Dict[str, Any]:
     """检查 network 配置是否可加载"""
     try:
@@ -55,29 +61,80 @@ def check_config() -> Dict[str, Any]:
             "error": str(e)
         }
 
+async def check_searxng(cfg) -> Dict[str, Any]:
+    try:
+        async with SearXNGProvider(config=cfg.search.searxng) as provider:
+            ok = await provider.health_check()
+            return {
+                "name": "searxng",
+                "status": "ok" if ok else "fail",
+                "details": {"url": cfg.search.searxng.base_url}
+            }
+    except Exception as e:
+        return {"name": "searxng", "status": "fail", "error": str(e)}
+
+async def check_crawl4ai(cfg) -> Dict[str, Any]:
+    try:
+        async with Crawl4AIProvider(config=cfg.extract.crawl4ai) as provider:
+            ok = await provider.health_check()
+            return {
+                "name": "crawl4ai",
+                "status": "ok" if ok else "fail",
+                "details": {"url": cfg.extract.crawl4ai.base_url}
+            }
+    except Exception as e:
+        return {"name": "crawl4ai", "status": "fail", "error": str(e)}
+
+async def check_ollama(cfg) -> Dict[str, Any]:
+    try:
+        # Check if ollama is running by calling list or ps
+        process = await asyncio.create_subprocess_exec(
+            "ollama", "list",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        if process.returncode == 0:
+            return {"name": "ollama", "status": "ok"}
+        else:
+            return {"name": "ollama", "status": "fail", "error": stderr.decode()}
+    except Exception as e:
+        return {"name": "ollama", "status": "fail", "error": str(e)}
 
 def check_health() -> HealthReport:
     """执行基础健康检查"""
     checks = []
     errors = []
 
-    # 配置检查
+    # 1. Config Check (Sync)
     config_check = check_config()
     checks.append(config_check)
     if config_check["status"] != "ok":
         errors.append(config_check.get("error", "config load failed"))
+        return HealthReport(status="unhealthy", checks={"config": config_check}, errors=errors)
 
-    # 未来可扩展：
-    # - check_searxng()
-    # - check_crawl4ai()
-    # - check_ollama()
+    cfg = load_network_config()
+
+    # 2. Async Checks
+    async def run_async_checks():
+        return await asyncio.gather(
+            check_searxng(cfg),
+            check_crawl4ai(cfg),
+            check_ollama(cfg)
+        )
+
+    async_results = asyncio.run(run_async_checks())
+    for res in async_results:
+        checks.append(res)
+        if res["status"] != "ok":
+            errors.append(f"{res['name']} check failed: {res.get('error', 'unknown error')}")
 
     if not errors:
         status = "healthy"
-    elif len(errors) == len(checks):
-        status = "unhealthy"
-    else:
+    elif any(c["status"] == "ok" for c in checks if c["name"] != "config"):
         status = "degraded"
+    else:
+        status = "unhealthy"
 
     return HealthReport(
         status=status,

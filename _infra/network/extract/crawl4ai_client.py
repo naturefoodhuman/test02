@@ -61,10 +61,12 @@ class Crawl4AIProvider(ExtractProvider):
             headers = {"Accept": "application/json"}
             if self.api_token:
                 headers["Authorization"] = f"Bearer {self.api_token}"
+            # Explicitly disable proxy for local connections
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 timeout=httpx.Timeout(self.timeout),
                 headers=headers,
+                proxy=None, # Disable proxy for local calls
             )
         return self._client
 

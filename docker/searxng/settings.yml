@@ -42,5 +42,7 @@ engines:
     disabled: false
   - name: arxiv
     disabled: false
+  - name: baidu
+    disabled: false
   - name: google
     disabled: true

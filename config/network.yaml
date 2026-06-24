@@ -12,14 +12,15 @@ search:
     fetch_top_k: 5
     max_chars_per_page: 8000
     engines_enabled:
-      - duckduckgo
       - bing
-      - wikipedia
       - github
       - stackoverflow
       - arxiv
+      - baidu
     engines_disabled:
       - google            # 频繁 CAPTCHA
+      - duckduckgo
+      - wikipedia
   fallback_tavily:
     enabled: false        # 手动启用
     api_key_env: "TAVILY_API_KEY"
