@@ -4,7 +4,7 @@
 name: forge-network
 services:
   searxng:
-    image: ${SEARXNG_IMAGE:-searxng/searxng:2026.6.24}
+    image: ${SEARXNG_IMAGE:-searxng/searxng:latest}
     container_name: forge-searxng
     restart: unless-stopped
     ports:
