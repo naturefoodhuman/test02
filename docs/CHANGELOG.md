@@ -16,6 +16,26 @@
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
+
+## [第 60 轮] 2026-06-24
+
+### 需求变动
+- **生成问题诊断包 (PDP)**：遵照老板指令不修改代码，针对各大搜索引擎反爬风控拦截问题，输出完整档案 `docs/PROBLEM_DIAGNOSTIC_PACKAGE.md`。
+
+### 文件影响
+- 新增：`docs/PROBLEM_DIAGNOSTIC_PACKAGE.md`
+- 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`
+
+
+## [第 50 轮] 2026-06-24
+
+### 需求变动
+- **生成完整问题包 (PDP)**：遵照老板指令不修改代码，针对各大搜索引擎验证码及 429 反爬风控拦截问题，输出完整信息包 `docs/PROBLEM_DIAGNOSTIC_PACKAGE.md`。
+
+### 文件影响
+- 新增：`docs/PROBLEM_DIAGNOSTIC_PACKAGE.md`
+- 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`
+
 ## [第 44 轮] 2026-06-20
 
 ### 需求变动
