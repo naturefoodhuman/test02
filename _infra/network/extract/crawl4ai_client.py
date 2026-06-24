@@ -1,4 +1,4 @@
-"""Crawl4AIProvider v16 - Strict No-Proxy for local"""
+"""Crawl4AIProvider v18 - Final No-Proxy Fix"""
 from __future__ import annotations
 import os
 import json
@@ -39,7 +39,7 @@ class Crawl4AIProvider(ExtractProvider):
         if self._client is None:
             headers = {"Accept": "application/json"}
             if self.api_token: headers["Authorization"] = f"Bearer {self.api_token}"
-            # trust_env=False 强制直连本地
+            # 彻底禁用环境变量代理读取
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 timeout=httpx.Timeout(self.timeout),
@@ -61,5 +61,5 @@ class Crawl4AIProvider(ExtractProvider):
             return ExtractResult(url=url, content="", mode=mode, error=str(e))
 
     async def health_check(self) -> bool:
-        try: return (await self.client.get("/health")).status_code == 200
+        try: return (await self.client.get("/health", timeout=5.0)).status_code == 200
         except: return False
