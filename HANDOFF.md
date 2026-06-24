@@ -126,11 +126,6 @@ JSON 文件不能写注释，使用 `_forge_trace` 字段。
 
 **模型名称**：必须写当前实际使用的模型比如 `Gpt 5.5 pro` 。
 
-在 Arena.ai 不暴露底层具体模型名的场景下，本项目当前统一使用执行身份：
-
-```text
-Arena.ai Agent Mode - Execution Lead Engineer
-```
 
 ---
 
