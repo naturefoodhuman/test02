@@ -1,7 +1,7 @@
 # FORGE Factory Makefile
 # 常用操作单命令完成
 
-.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release
+.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test
 
 # 日常开发
 start-gateway:    # 启动 LiteLLM 网关
@@ -60,3 +60,17 @@ clean:
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
+
+# 文档治理
+network-test:       # Network 单元 + 安全测试
+	@python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+
+# 生成治理报告并更新 docs/GOVERNANCE_CHECK_LATEST.md
+governance-check:
+	@python3 scripts/governance_check.py
+
+# 提交前文档/语法快速检查（严格模式）
+docs-check:
+	@python3 scripts/governance_check.py --strict
+	@python3 -m compileall -q _infra/network scripts/diagnostics
+	@git diff --check

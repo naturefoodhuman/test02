@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-25（联网功能最终收尾：本地密钥持久化与提取超时收敛完成）
+> **最近同步**: 2026-06-25（Claude Code 培训文档、高风险示例、文档治理自动化完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -3255,6 +3255,7 @@ graph TD
 | M10 | E12-C1 | E12-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M10 | E12-C1 | E12-C1-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M10 | E12-C2 | E12-C2-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
+| M10 | E12-C3 | E12-C3-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 
 ---
 
@@ -3286,6 +3287,30 @@ graph TD
   - [x] 文档更新完成
   - [x] TASK_BACKLOG.md 状态已更新
   - [x] docs/DEV_LOG.md 已记录
+
+
+##### **Task E12-C3-S1-T1: Claude Code 培训文档、高风险全功能示例与文档治理自动化**
+
+- **状态**: DONE
+- **目标**: 根据用户反馈，将工厂培训文档从“终端 CLI 为主”修正为“Claude Code for VS Code 自然语言对话为主、CLI 验证为辅”；重新设计包含高风险能力的全功能最小示例；基于 `DOCUMENT_AUDIT_REPORT.md` 输出文档治理自动化常态化方案。
+- **涉及文件**:
+  - 修改：`docs/工厂使用手册.md`
+  - 修改：`docs/全功能最小示例项目.md`
+  - 修改：`docs/工厂能力覆盖检查.md`
+  - 新增：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+  - 修改：`scripts/governance_check.py`
+  - 修改：`Makefile`
+  - 修改：`README.md`、`HANDOFF.md`、`docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、`docs/CHANGELOG.md`
+- **实现要求**:
+  - 明确 Claude Code for VS Code 是日常主使用方式。
+  - 全功能示例必须覆盖高风险能力，但必须通过 sandbox / dry-run / approval / deny-test 安全演示。
+  - 文档治理必须形成可执行自动化流程，而不是口头原则。
+- **DoD**:
+  - [x] 功能/文档实现完成
+  - [x] 治理检查通过：`python3 scripts/governance_check.py --strict`
+  - [x] 测试通过：`358 passed, 3 skipped, 44 warnings`
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/network scripts/diagnostics`
+  - [x] DEV_LOG / CHANGELOG / PROJECT_STATE 同步
 
 ---
 

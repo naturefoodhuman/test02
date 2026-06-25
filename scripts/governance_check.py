@@ -1,45 +1,29 @@
-# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-16 21:45:00
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-06-25 00:00:00
 """
-Documentation Governance Continuous Check Generator
+Documentation Governance Continuous Check Generator.
 
-定期生成的治理健康检查脚本（Documentation Governance & Audit 框架落地）。
+This script operationalizes DOCUMENT_AUDIT_REPORT.md as a repeatable check.
+It is intentionally lightweight: no external dependencies, safe to run locally,
+and suitable for Makefile / pre-commit / launchd / CI style automation.
 
-用法：
-  python scripts/governance_check.py
-  python scripts/governance_check.py --output docs/GOVERNANCE_CHECK_2026-06-16.md
+Usage:
+  python3 scripts/governance_check.py
+  python3 scripts/governance_check.py --output docs/GOVERNANCE_CHECK_YYYY-MM-DD.md
+  python3 scripts/governance_check.py --strict
 
-输出：
-- 生成带日期的 docs/GOVERNANCE_CHECK_YYYY-MM-DD.md
-- 同时更新 docs/GOVERNANCE_CHECK_LATEST.md（指向最新）
-- 打印结构化报告到 stdout
-
-扫描维度（对应用户规范的 6 大审计维度）：
-1. ADR Coverage
-2. R5 LLM File Header Compliance
-3. Stale Content (ZIP / _patches / old processes)
-4. Old Agno Legacy Footprint
-5. Cross-Reference Health (platform code -> ADRs + ARCHITECTURE)
-6. SSOT Violations / Drift (初步启发式)
-
-严格遵守：
-- 每次运行必须先更新本脚本头部时间（如果修改）
-- 输出文件必须有正确的 Markdown <!-- --> LLM header
-- 禁止删除历史 GOVERNANCE_CHECK_* 文件
-
-集成建议：
-- Makefile: governance-check:
-    python scripts/governance_check.py
-- CI / pre-commit hook 可调用
-- 每次重大变更后手动运行并提交结果
+Outputs:
+- dated docs/GOVERNANCE_CHECK_YYYY-MM-DD.md unless --output is provided
+- docs/GOVERNANCE_CHECK_LATEST.md
+- stdout summary
+- non-zero exit in --strict mode when blocking issues are found
 """
 from __future__ import annotations
 
 import argparse
 import datetime
-import os
 import re
-import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -48,52 +32,74 @@ DOCS_DIR = ROOT / "docs"
 ADR_DIR = DOCS_DIR / "adr"
 PLATFORM_DIR = ROOT / "_factory" / "patterns" / "peer-review" / "src" / "peer_review"
 
+LLM_HEADER_RE = re.compile(r"创建/修改该文件的LLM大模型：\s*[^\n]+")
+MD_LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+\.md)(?:#[^)]+)?\)")
+
+CORE_SSOT_FILES = [
+    "HANDOFF.md",
+    "README.md",
+    "docs/PROJECT_STATE.md",
+    "TASK_BACKLOG.md",
+    "NETWORK_ARCHITECTURE_FINAL.md",
+    "NETWORK_ENGINEERING_DESIGN.md",
+    "docs/DEV_LOG.md",
+    "docs/CHANGELOG.md",
+    "docs/adr/README.md",
+]
+
+EXCLUDE_MARKERS = [
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    ".tox",
+    "node_modules",
+    ".git",
+    ".arena",
+    "diagnostics/snapshots",
+]
+
+
 def beijing_time() -> str:
-    # 简单实现；生产环境可用 zoneinfo
-    now = datetime.datetime.now() + datetime.timedelta(hours=8)
-    return now.strftime("%Y-%m-%d %H:%M:%S")
+    return (datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _read_head(path: Path, limit: int = 500) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="ignore")[:limit]
+    except Exception:
+        return ""
+
 
 def has_llm_header_py(path: Path) -> bool:
-    try:
-        with open(path, encoding="utf-8", errors="ignore") as f:
-            head = "".join(f.readlines()[:3])
-        return "创建/修改该文件的LLM大模型：Claude Sonnet 4.5" in head
-    except Exception:
-        return False
+    return bool(LLM_HEADER_RE.search(_read_head(path, 300)))
+
 
 def has_llm_header_md(path: Path) -> bool:
-    try:
-        with open(path, encoding="utf-8", errors="ignore") as f:
-            head = f.read(400)
-        return "<!--" in head and "创建/修改该文件的LLM大模型：Claude Sonnet 4.5" in head
-    except Exception:
-        return False
+    head = _read_head(path, 500)
+    return "<!--" in head and bool(LLM_HEADER_RE.search(head))
+
+
+def _is_relevant(path: Path) -> bool:
+    s = str(path.relative_to(ROOT)) if path.is_absolute() else str(path)
+    return not any(marker in s for marker in EXCLUDE_MARKERS)
+
 
 def count_active_zip_refs_in_core_docs() -> int:
-    """仅统计核心治理文档中的“活跃”（非历史）ZIP/_patches 引用"""
-    core_docs = [
-        "HANDOFF.md", "README.md", "docs/PROJECT_STATE.md",
-        "docs/ARCHITECTURE.md", "docs/CHANGELOG.md",
-        "DOCUMENT_AUDIT_REPORT.md", "docs/UPGRADE_COMPLETION.md",
-    ]
     count = 0
-    for name in core_docs:
-        p = ROOT / name if not name.startswith("docs/") else ROOT / name
-        if not p.exists():
+    for name in CORE_SSOT_FILES + ["DOCUMENT_AUDIT_REPORT.md", "DOCUMENT_CHANGE_REPORT.md"]:
+        path = ROOT / name
+        if not path.exists():
             continue
-        try:
-            content = p.read_text(encoding="utf-8", errors="ignore")
-            # 排除明显历史标记
-            if "已于 2026-06-16 正式废弃" in content or "Phase 1 已彻底清理" in content:
-                continue
-            if re.search(r"\.zip|_patches|ZIP 补丁|zip 补丁", content, re.IGNORECASE):
-                count += 1
-        except Exception:
-            pass
+        content = path.read_text(encoding="utf-8", errors="ignore")
+        if "已于 2026-06-16 正式废弃" in content or "Phase 1 已彻底清理" in content:
+            continue
+        if re.search(r"\.zip|_patches|ZIP 补丁|zip 补丁", content, re.IGNORECASE):
+            count += 1
     return count
 
+
 def count_old_agno_mentions() -> dict[str, int]:
-    """统计旧 Agno 遗留文件被新路径引用的次数（应趋近 0）"""
     bad_imports = [
         "from peer_review.orchestrator",
         "import peer_review.orchestrator",
@@ -101,54 +107,104 @@ def count_old_agno_mentions() -> dict[str, int]:
         "from peer_review.agent_factory",
     ]
     results: dict[str, int] = {k: 0 for k in bad_imports}
+    if not PLATFORM_DIR.exists():
+        return results
     for py in PLATFORM_DIR.rglob("*.py"):
-        if "orchestrator.py" in str(py) or "knowledge_loader.py" in str(py) or "agent_factory.py" in str(py):
-            continue  # 自身文件不算
-        try:
-            txt = py.read_text(encoding="utf-8", errors="ignore")
-            for bad in bad_imports:
-                if bad in txt:
-                    results[bad] += 1
-        except Exception:
-            pass
+        if py.name in {"orchestrator.py", "knowledge_loader.py", "agent_factory.py"}:
+            continue
+        txt = py.read_text(encoding="utf-8", errors="ignore")
+        for bad in bad_imports:
+            if bad in txt:
+                results[bad] += 1
     return results
 
+
 def scan_adr_coverage() -> dict[str, Any]:
-    adrs = sorted(ADR_DIR.glob("ADR-*.md"))
-    total = len(adrs)
-    with_headers = sum(1 for a in adrs if has_llm_header_md(a))
+    adrs = sorted(ADR_DIR.glob("ADR-*.md")) if ADR_DIR.exists() else []
     return {
-        "total": total,
-        "with_headers": with_headers,
+        "total": len(adrs),
+        "with_headers": sum(1 for a in adrs if has_llm_header_md(a)),
         "list": [a.name for a in adrs],
     }
 
-def scan_r5_compliance() -> dict[str, Any]:
-    py_files = list(ROOT.rglob("*.py"))
-    md_files = list(ROOT.rglob("*.md"))
-    # 过滤：排除测试、venv、缓存、构建产物、node_modules、.git 等（与早期手动治理扫描保持一致）
-    # 采用与手动验证一致的宽松排除逻辑
-    exclude_markers = [".venv", "__pycache__", "build", "dist", ".tox", "node_modules", ".git", ".arena"]
-    py_relevant = [f for f in py_files if not any(m in str(f) for m in exclude_markers)]
-    md_relevant = [f for f in md_files if not any(m in str(f) for m in exclude_markers)]
 
-    py_ok = sum(1 for f in py_relevant if has_llm_header_py(f))
-    md_ok = sum(1 for f in md_relevant if has_llm_header_md(f))
+def scan_r5_compliance() -> dict[str, Any]:
+    py_relevant = [f for f in ROOT.rglob("*.py") if _is_relevant(f)]
+    md_relevant = [f for f in ROOT.rglob("*.md") if _is_relevant(f)]
     return {
-        "python": {"total": len(py_relevant), "ok": py_ok},
-        "markdown": {"total": len(md_relevant), "ok": md_ok},
+        "python": {"total": len(py_relevant), "ok": sum(1 for f in py_relevant if has_llm_header_py(f))},
+        "markdown": {"total": len(md_relevant), "ok": sum(1 for f in md_relevant if has_llm_header_md(f))},
     }
 
+
 def scan_cross_refs_to_adr() -> int:
-    """统计平台层代码中显式引用 docs/adr/ADR- 的文件数"""
+    if not PLATFORM_DIR.exists():
+        return 0
     count = 0
     for py in PLATFORM_DIR.rglob("*.py"):
-        try:
-            if "docs/adr/ADR-" in py.read_text(encoding="utf-8", errors="ignore"):
-                count += 1
-        except Exception:
-            pass
+        if "docs/adr/ADR-" in py.read_text(encoding="utf-8", errors="ignore"):
+            count += 1
     return count
+
+
+def scan_core_ssot_existence() -> list[str]:
+    return [name for name in CORE_SSOT_FILES if not (ROOT / name).exists()]
+
+
+def scan_missing_core_doc_links() -> list[str]:
+    """Find missing .md links in current core docs, ignoring historical changelog/devlog."""
+    missing: set[str] = set()
+    scan_files = [
+        ROOT / "HANDOFF.md",
+        ROOT / "README.md",
+        ROOT / "docs" / "PROJECT_STATE.md",
+        ROOT / "docs" / "工厂使用手册.md",
+        ROOT / "docs" / "全功能最小示例项目.md",
+        ROOT / "docs" / "工厂能力覆盖检查.md",
+    ]
+    for source in scan_files:
+        if not source.exists():
+            continue
+        txt = source.read_text(encoding="utf-8", errors="ignore")
+        for match in MD_LINK_RE.finditer(txt):
+            raw = match.group(1)
+            if not raw or raw.startswith(("http://", "https://")):
+                continue
+            target = (source.parent / raw).resolve() if not raw.startswith("/") else Path(raw)
+            if not target.exists():
+                # Also try repo-root relative paths for docs that mention root files.
+                root_target = (ROOT / raw).resolve()
+                if not root_target.exists():
+                    missing.add(f"{source.relative_to(ROOT)} -> {raw}")
+    return sorted(missing)
+
+
+def classify_blockers() -> dict[str, Any]:
+    adr = scan_adr_coverage()
+    r5 = scan_r5_compliance()
+    missing_ssot = scan_core_ssot_existence()
+    missing_links = scan_missing_core_doc_links()
+    zip_count = count_active_zip_refs_in_core_docs()
+    agno_total = sum(count_old_agno_mentions().values())
+    blockers = []
+    warnings = []
+    if missing_ssot:
+        blockers.append(f"Missing SSOT docs: {missing_ssot}")
+    if adr["total"] < 7:
+        blockers.append("Factory ADR count below expected baseline 7")
+    if zip_count > 0:
+        blockers.append(f"Active ZIP/_patches refs in core docs: {zip_count}")
+    if agno_total > 0:
+        warnings.append(f"Old Agno imports remain: {agno_total}")
+    if missing_links:
+        warnings.append(f"Missing links in current core docs: {len(missing_links)}")
+    for kind in ["python", "markdown"]:
+        total = r5[kind]["total"]
+        ok = r5[kind]["ok"]
+        if total and ok / total < 0.75:
+            warnings.append(f"R5 {kind} compliance below 75%: {ok}/{total}")
+    return {"blockers": blockers, "warnings": warnings, "missing_links": missing_links}
+
 
 def generate_report() -> str:
     ts = beijing_time()
@@ -157,118 +213,97 @@ def generate_report() -> str:
     zip_count = count_active_zip_refs_in_core_docs()
     agno = count_old_agno_mentions()
     cross_ref_count = scan_cross_refs_to_adr()
+    missing_ssot = scan_core_ssot_existence()
+    quality = classify_blockers()
 
-    old_agno_total = sum(agno.values())
-
-    lines = []
-    lines.append(f"<!--\n创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)\n创建时间（北京时间）：{ts}\n-->")
+    lines: list[str] = []
+    lines.append(f"<!--\n创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer\n创建时间（北京时间）：{ts}\n-->")
     lines.append("")
     lines.append(f"# Governance Health Check — {ts.split()[0]} (Automated)")
     lines.append("")
-    lines.append(f"**Generated by**: scripts/governance_check.py at {ts} (Beijing)")
-    lines.append("**Framework**: Documentation Governance & Audit (6 dimensions + SSOT + R5 + Continuous Governance)")
+    lines.append(f"**Generated by**: `scripts/governance_check.py` at {ts} (Beijing)")
+    lines.append("**Framework**: Documentation Governance & Audit + SSOT + ADR + R5 + Continuous Governance")
     lines.append("")
-    lines.append("## 1. ADR Coverage (Factory Level)")
-    lines.append(f"- Total factory ADRs in `docs/adr/`: **{adr['total']}** (ADR-001 through ADR-007 + future)")
-    lines.append(f"- With correct LLM headers: **{adr['with_headers']}/{adr['total']}**")
-    lines.append(f"- ADRs: {', '.join(adr['list'])}")
-    lines.append("- `docs/adr/README.md` acts as index.")
-    lines.append("- Status: Good. New decisions **must** create new ADR here (never edit historical).")
-    lines.append("")
-    lines.append("## 2. R5 LLM File Header Compliance")
-    lines.append(f"- Python files (relevant): **{r5['python']['ok']}/{r5['python']['total']}** have correct top header")
-    lines.append(f"- Markdown files (relevant): **{r5['markdown']['ok']}/{r5['markdown']['total']}** have correct `<!-- -->` header")
-    lines.append("- Rule is enforced in HANDOFF.md §R5 (per-file templates, checklist, prohibitions).")
-    lines.append("- All new/modified files in this session received headers before commit.")
-    lines.append("")
-    lines.append("## 3. Stale Content (ZIP / Old Processes)")
-    lines.append(f"- Active (non-historical) ZIP/_patches references in core governance docs: **{zip_count}**")
-    if zip_count == 0:
-        lines.append("- ✅ Phase 1 deep purge complete. Only historical mentions remain (explicitly marked '已正式废弃').")
+    lines.append("## 1. Blocking Status")
+    if quality["blockers"]:
+        lines.append("- Status: BLOCKED")
+        for item in quality["blockers"]:
+            lines.append(f"  - {item}")
     else:
-        lines.append("- ⚠️ Remaining active references detected — must be cleaned before next release.")
+        lines.append("- Status: PASS（无阻断级治理问题）")
+    if quality["warnings"]:
+        lines.append("- Warnings:")
+        for item in quality["warnings"]:
+            lines.append(f"  - {item}")
     lines.append("")
-    lines.append("## 4. Old Agno Legacy Footprint (C item — Deep Cleanup)")
-    lines.append(f"- Direct bad imports from old Agno layer in new platform code: **{old_agno_total}** occurrences")
-    for k, v in agno.items():
-        if v > 0:
-            lines.append(f"  - `{k}`: {v}")
-    lines.append("- Legacy files (`orchestrator.py`, `knowledge_loader.py`, `agent_factory.py`) contain **strong deprecation blocks** with:")
-    lines.append("  - Explicit '严禁' rules")
-    lines.append("  - Recommended canonical path: `peer_review.graph.execution.run_langgraph_review` + platform/*")
-    lines.append("  - Planned removal date: **2026-07-01** (2-week stability window per ADR-001)")
-    lines.append("- New code must never extend or depend on them.")
+    lines.append("## 2. ADR Coverage")
+    lines.append(f"- Factory ADRs: **{adr['total']}**")
+    lines.append(f"- With LLM headers: **{adr['with_headers']}/{adr['total']}**")
+    lines.append(f"- ADR list: {', '.join(adr['list']) if adr['list'] else '<none>'}")
     lines.append("")
-    lines.append("## 5. Cross-Reference Health (Traceability)")
-    lines.append(f"- Platform layer files explicitly referencing `docs/adr/ADR-*.md`: **{cross_ref_count}**")
-    lines.append("- Key files updated in this session:")
-    lines.append("  - routing_plan_engine.py → ADR-002")
-    lines.append("  - knowledge_hub.py → ADR-005")
-    lines.append("  - memory_store.py → ADR-007")
-    lines.append("  - data_privacy_gate.py → ADR-003")
-    lines.append("  - decision_engine.py → core layered decision principles")
-    lines.append("  - graph/execution.py + review_graph.py → ADR-001 (LangGraph migration)")
-    lines.append("- Additional cross-refs added to ARCHITECTURE.md, HANDOFF.md, CHANGELOG.md, PROJECT_STATE.md.")
-    lines.append("- Goal: every major platform module back-links to its governing ADR(s).")
+    lines.append("## 3. R5 LLM File Header Compliance")
+    lines.append(f"- Python: **{r5['python']['ok']}/{r5['python']['total']}**")
+    lines.append(f"- Markdown: **{r5['markdown']['ok']}/{r5['markdown']['total']}**")
+    lines.append("- Header rule accepts any non-empty model identity after `创建/修改该文件的LLM大模型：`.")
     lines.append("")
-    lines.append("## 6. Overall Governance Health + Continuous Governance Notes")
-    lines.append("- **Phase 1**: Complete (7 ADRs + ZIP purge + R5 reinforcement).")
-    lines.append("- **Phase 2 (B)**: `docs/ARCHITECTURE.md` is the living central SSOT.")
-    lines.append("- **C items (this run)**:")
-    lines.append("  - Stronger deprecation warnings + removal schedule in all 3 legacy Agno files.")
-    lines.append("  - 7+ platform files now carry explicit ADR cross-references.")
-    lines.append("  - This check is now **automated** via `scripts/governance_check.py` (定期生成机制).")
-    lines.append("- Recommended cadence: run after every significant code/doc change; commit the dated output.")
-    lines.append("- Next full health check: after 2026-07-01 legacy removal or major new ADR.")
+    lines.append("## 4. Stale / Legacy Signals")
+    lines.append(f"- Active ZIP/_patches refs in core docs: **{zip_count}**")
+    lines.append(f"- Old Agno bad imports in new platform code: **{sum(agno.values())}**")
+    lines.append(f"- Platform files referencing ADRs: **{cross_ref_count}**")
     lines.append("")
-    lines.append("## How to Run (for future Agents / humans)")
-    lines.append("```bash")
-    lines.append("cd /home/user/test02   # or boss Mac path")
-    lines.append("python scripts/governance_check.py")
-    lines.append("# or with explicit output:")
-    lines.append("python scripts/governance_check.py --output docs/GOVERNANCE_CHECK_2026-06-17.md")
-    lines.append("```")
-    lines.append("The script always produces a dated file and updates `docs/GOVERNANCE_CHECK_LATEST.md`.")
+    lines.append("## 5. SSOT Existence")
+    if missing_ssot:
+        lines.append(f"- Missing: {', '.join(missing_ssot)}")
+    else:
+        lines.append("- All required SSOT docs exist.")
     lines.append("")
-    lines.append("**Conclusion**: Governance posture continues to strengthen. The system is becoming measurably more Agent-Ready, Auditable, Traceable, and Self-Documenting.")
+    lines.append("## 6. Missing Links in Current Core Docs")
+    if quality["missing_links"]:
+        for item in quality["missing_links"][:50]:
+            lines.append(f"- {item}")
+    else:
+        lines.append("- None detected in current onboarding/core docs.")
+    lines.append("")
+    lines.append("## 7. Recommended Automation Cadence")
+    lines.append("- Every development turn: run `make docs-check` before commit.")
+    lines.append("- Every significant architecture/workflow change: add ADR, then run `make governance-check` and commit dated report.")
+    lines.append("- Weekly or every 5 turns: run full documentation audit and review `DOCUMENT_AUDIT_REPORT.md` deltas.")
+    lines.append("- Before handoff: verify `HANDOFF.md`, `PROJECT_STATE.md`, `TASK_BACKLOG.md`, `DEV_LOG.md`, `CHANGELOG.md` are current.")
     lines.append("")
     lines.append("---")
-    lines.append("*This report was auto-generated. Do not edit manually — re-run the script after changes.*")
+    lines.append("*Auto-generated. Do not edit manually; re-run the script after changes.*")
+    return "\n".join(lines) + "\n"
 
-    return "\n".join(lines)
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default=None, help="Explicit output path (otherwise auto-dated)")
+    parser.add_argument("--strict", action="store_true", help="Exit non-zero on blocking governance issues")
     args = parser.parse_args()
 
     report = generate_report()
-
-    # Determine output paths
-    today = (datetime.datetime.now() + datetime.timedelta(hours=8)).strftime("%Y-%m-%d")
+    today = (datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=8)).strftime("%Y-%m-%d")
     dated_path = DOCS_DIR / f"GOVERNANCE_CHECK_{today}.md"
     latest_path = DOCS_DIR / "GOVERNANCE_CHECK_LATEST.md"
-
     target = Path(args.output) if args.output else dated_path
 
-    # Write dated / explicit
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(report, encoding="utf-8")
-    print(f"✅ Wrote governance check: {target}")
-
-    # Always update LATEST (symlink-like behavior via copy for git friendliness)
     latest_path.write_text(report, encoding="utf-8")
-    print(f"✅ Updated LATEST: {latest_path}")
 
-    # Also print summary to stdout
-    print("\n=== Governance Check Summary (see full file) ===")
-    print(f"ADRs: {scan_adr_coverage()['total']}")
+    quality = classify_blockers()
+    print(f"✅ Wrote governance check: {target}")
+    print(f"✅ Updated LATEST: {latest_path}")
+    print("\n=== Governance Check Summary ===")
+    print(f"Blockers: {len(quality['blockers'])}")
+    print(f"Warnings: {len(quality['warnings'])}")
     r5 = scan_r5_compliance()
     print(f"R5 Python: {r5['python']['ok']}/{r5['python']['total']}")
-    print(f"Active ZIP refs in core: {count_active_zip_refs_in_core_docs()}")
-    print(f"Old Agno bad imports in platform: {sum(count_old_agno_mentions().values())}")
-    print(f"Platform files referencing ADRs: {scan_cross_refs_to_adr()}")
-    print("Run complete. Commit the generated file(s).")
+    print(f"R5 Markdown: {r5['markdown']['ok']}/{r5['markdown']['total']}")
+    print(f"Missing links: {len(quality['missing_links'])}")
+    if args.strict and quality["blockers"]:
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

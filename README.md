@@ -173,5 +173,22 @@ python3 -m _infra.network.cli search "python langgraph state machine" --mode res
 ## 8. 新用户培训入口
 
 - 完整使用手册：`docs/工厂使用手册.md`
-- 全功能最小示例：`docs/全功能最小示例项目.md`
+- 全功能最小示例（含高风险能力安全演示）：`docs/全功能最小示例项目.md`
 - 能力覆盖矩阵：`docs/工厂能力覆盖检查.md`
+
+
+## 9. Claude Code for VS Code 主入口
+
+日常开发推荐在 VS Code 中通过 Claude Code 自然语言对话驱动工厂；终端 CLI 用于验证、测试、健康检查和自动化。
+
+启动建议：
+
+```bash
+code .
+```
+
+Claude Code 首句建议：
+
+```text
+你现在是 FORGE Factory Orchestrator。请先读取 HANDOFF.md、docs/PROJECT_STATE.md、TASK_BACKLOG.md §10、docs/工厂使用手册.md，然后告诉我当前状态和下一步计划。不要先改文件。
+```

@@ -144,6 +144,38 @@ python3 -m _infra.network.cli config
 
 ---
 
+## [第 81 轮] 2026-06-25
+
+### 需求变动
+- **Claude Code for VS Code 主工作流补充**：培训文档必须反映用户日常通过 VS Code Claude Code 自然语言对话使用工厂，而不是仅通过终端 CLI。
+- **全功能最小示例升级**：示例项目必须包含所有功能，包括高风险功能；高风险能力采用 sandbox / dry-run / approval / deny-test 方式安全覆盖。
+- **文档治理自动化常态化方案**：基于 `DOCUMENT_AUDIT_REPORT.md` 与相关治理文档，形成可执行自动化方案并升级治理脚本。
+
+### 文件影响
+- 修改：`docs/工厂使用手册.md`
+- 修改：`docs/全功能最小示例项目.md`
+- 修改：`docs/工厂能力覆盖检查.md`
+- 新增：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+- 修改：`scripts/governance_check.py`
+- 修改：`Makefile`
+- 修改：`README.md`
+- 修改：`HANDOFF.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 scripts/governance_check.py --strict
+# Blockers: 0; Warnings: 0
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

@@ -10,8 +10,8 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：联网功能最终收尾与培训文档重写（本地 .env、提取超时收敛、使用手册、全功能最小示例、覆盖矩阵）
-- **建议下一步**：以 `docs/工厂使用手册.md` + `docs/全功能最小示例项目.md` 培训新用户；后续仅剩真机长期稳定性观察。
+- **最近完成**：Claude Code for VS Code 培训文档、高风险全功能示例、文档治理自动化方案
+- **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
 
@@ -2673,4 +2673,27 @@ python3 -m compileall -q _infra/network scripts/diagnostics
 # pass
 python3 -m _infra.network.cli config
 # Network Config loaded successfully
+```
+
+
+## 第 81 轮 · 2026-06-25（Claude Code 主工作流、高风险示例、文档治理自动化方案）
+
+**触发**：用户指出日常使用工厂的主方式不是终端 CLI，而是 Claude Code for VS Code 的自然语言对话；同时要求全功能最小示例必须包含高风险功能，并要求研究 `DOCUMENT_AUDIT_REPORT.md` 形成文档治理自动化常态化方案。
+
+**完成内容**：
+- `docs/工厂使用手册.md` 新增 Claude Code for VS Code 主工作流章节，说明全局 `CLAUDE.md`、项目 `AGENTS.md`、模式切换、自然语言阶段提示词、高风险动作审批和 CLI 验证如何配合。
+- `docs/全功能最小示例项目.md` 重新设计为 `mini-gratitude-control-tower`：普通感恩日记 CLI + Safety Control Tower 高风险演示层，覆盖删除、私密导出、MCP Guard、Playwright、private Chrome、screenshot、Prompt Injection、Canary、Cookie 泄露、搜索风控诊断等。
+- `docs/工厂能力覆盖检查.md` 更新为 76 项能力覆盖矩阵，覆盖率 100%。
+- 新增 `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`：基于 `DOCUMENT_AUDIT_REPORT.md` 总结当前治理资产、已落地自动化、每轮/每周常态化流程、阻断级规则和下一步路线。
+- 升级 `scripts/governance_check.py`：通用 R5 头识别、`--strict`、核心 SSOT 存在检查、核心文档链接检查、阻断/警告分类。
+- `Makefile` 新增 `governance-check`、`docs-check`、`network-test`。
+
+**验证**：
+```bash
+python3 scripts/governance_check.py --strict
+# Blockers: 0; Warnings: 0
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
 ```

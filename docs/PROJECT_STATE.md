@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-06-25 00:00 CST
-**当前版本**：v1.4.3-dossier + Network Finalized + Training Docs
+**当前版本**：v1.4.4-dossier + Claude Code Training + Governance Automation
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -54,9 +54,10 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 
 
 ### Training / Onboarding Documentation
-- `docs/工厂使用手册.md` 已重写为零基础完整可操作版，覆盖环境准备、目录结构、Agents/Skills、五阶段、forge CLI、Network CLI、最佳实践、排障、项目接手与交接。
-- `docs/全功能最小示例项目.md` 已重新生成，以 `mini-gratitude` 极简 CLI 覆盖需求分析、架构设计、任务拆解、TDD、测试、文档、Bug 修复、功能迭代、安全审查、RETRO 与交接。
-- `docs/工厂能力覆盖检查.md` 已重建矩阵，当前覆盖率 64/64 = 100%。
+- `docs/工厂使用手册.md` 已升级为 Claude Code for VS Code 日常主工作流版：强调自然语言对话驱动，终端 CLI 作为验证/自动化辅助。
+- `docs/全功能最小示例项目.md` 已重新设计为 `mini-gratitude-control-tower`，覆盖普通功能与高风险能力安全演示。
+- `docs/工厂能力覆盖检查.md` 已重建矩阵，当前覆盖率 76/76 = 100%。
+- 新增 `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`，并升级 `scripts/governance_check.py` + `make docs-check`，推动文档治理自动化常态化。
 
 ---
 

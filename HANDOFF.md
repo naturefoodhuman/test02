@@ -69,8 +69,13 @@ FORGE Factory 是 AI 项目孵化工厂。
 - 用户真机已验证 `.env` 自动加载、SearXNG healthy、Tavily/Serper fallback loaded、端到端 search 成功。
 
 ### ✅ 培训文档收尾 (2026-06-25)
-- 已重写 `docs/工厂使用手册.md`、`docs/全功能最小示例项目.md`、`docs/工厂能力覆盖检查.md`。
-- 新用户培训入口已收敛为：使用手册 → mini-gratitude 示例 → 能力覆盖矩阵。
+- 已重写 `docs/工厂使用手册.md`、`docs/全功能最小示例项目.md`、`docs/工厂能力覆盖检查.md`，并补充 Claude Code for VS Code 主工作流与高风险能力安全演示。
+- 新用户培训入口已收敛为：使用手册 → mini-gratitude-control-tower 示例 → 能力覆盖矩阵。
+
+### ✅ 文档治理自动化 (2026-06-25)
+- 已新增 `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`。
+- 已升级 `scripts/governance_check.py --strict`，并在 Makefile 增加 `make docs-check` / `make governance-check`。
+- 每轮提交前应运行 `make docs-check`，重大变更后运行 `make governance-check` 并提交报告。
 
 ## 3. 当前下一步候选
 
