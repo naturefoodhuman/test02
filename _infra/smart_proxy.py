@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-21 16:00:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 import sys
 import os
@@ -10,6 +10,7 @@ import subprocess
 import socket
 import logging
 import uuid
+import re
 import httpx
 import asyncio
 from fastapi import FastAPI, Request, HTTPException
@@ -40,10 +41,30 @@ MODEL_TO_PORT = {
     "mtplx-gemma4": 8082,
     "qwopus-35b": 8084,
     "local-deepseek-r1": 11434,
+    # Claude Code for VS Code model aliases: all route to the local MTPLX main brain.
     "claude-3-5-sonnet-20241022": 8080,
+    "claude-3-5-sonnet-latest": 8080,
+    "claude-3-7-sonnet-20250219": 8080,
+    "claude-3-5-haiku-20241022": 8080,
     "claude-opus-4-8": 8080,
-    "claude-3-5-sonnet-latest": 8080
+    "claude-opus-4-1": 8080,
+    "claude-opus-4-1-20250805": 8080,
+    "claude-opus-4-20250514": 8080,
+    "claude-opus-4-0": 8080,
+    "claude-sonnet-4-20250514": 8080,
+    "claude-sonnet-4-5": 8080,
+    "claude-sonnet-4-5-20250929": 8080,
 }
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m|\[[0-9;]*m")
+
+
+def normalize_model_name(model_name: str) -> str:
+    """Strip terminal ANSI fragments and normalize Claude Code aliases."""
+    cleaned = ANSI_RE.sub("", str(model_name or "")).strip()
+    # If Claude Code introduces a new Claude alias, default it to the local main brain
+    # rather than failing with a remote model access error.
+    return cleaned
 
 # 显存管理
 VRAM_LIMIT = 48
@@ -103,8 +124,8 @@ async def smart_gateway(request: Request, path: str):
     try: data = json.loads(body) if body else {}
     except: data = {}
     
-    model_name = data.get("model", "")
-    target_port = MODEL_TO_PORT.get(model_name, 8080)
+    model_name = normalize_model_name(data.get("model", ""))
+    target_port = MODEL_TO_PORT.get(model_name, 8080 if model_name.startswith("claude-") else 8080)
     is_anthropic = "messages" in path
 
     if not ensure_server(target_port): raise HTTPException(status_code=504, detail="Backend Timeout")

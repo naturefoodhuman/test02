@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：文档治理 P2 自动化落地（pre-commit、GitHub Actions、launchd、DOCUMENT_INDEX、AGENT_HANDOFF_SUMMARY）
+- **最近完成**：Claude Code for VS Code 本地模型 alias 兼容修复
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -2742,4 +2742,27 @@ python3 -m compileall -q _infra/network scripts/diagnostics
 make docs-check
 python3 scripts/governance_check.py --strict
 python3 -m compileall -q scripts/governance_check.py
+```
+
+## 第 84 轮 · 2026-06-25（Claude Code for VS Code 本地模型 alias 兼容修复）
+
+**触发**：用户提供 VS Code `settings.json`，Claude Code for VS Code 仅连接本地开源模型但报 `selected model (claude-opus-...) may not exist or you may not have access`。
+
+**判断**：近期联网/文档治理改动未修改 Claude Code 模型路由核心文件；问题更可能来自 Claude Code 插件选中的新模型 alias 未被本地代理 / LiteLLM 配置显式映射。
+
+**完成内容**：
+- `_infra/litellm-config.yaml` 增加常见 Claude Code alias：`claude-opus-4-1`、`claude-opus-4-1-20250805`、`claude-opus-4-20250514`、`claude-sonnet-4-20250514`、`claude-sonnet-4-5`、`claude-3-7-sonnet-20250219` 等，全部映射到本地主大脑 MTPLX Qwen。
+- `_infra/smart_proxy.py` 增加相同 alias 映射，并增加模型名 ANSI 片段清理，避免终端格式片段污染模型名。
+- `_infra/litellm_gatekeeper.py` 同步 alias 表。
+- `docs/工厂使用手册.md` 增加 VS Code `settings.json` 推荐配置与 `selected model may not exist` 排障说明。
+
+**验证**：
+```bash
+python3 -m compileall -q _infra/smart_proxy.py _infra/litellm_gatekeeper.py
+python3 - <<'PY'
+import yaml
+from pathlib import Path
+cfg = yaml.safe_load(Path('_infra/litellm-config.yaml').read_text())
+assert any(m['model_name'] == 'claude-opus-4-1' for m in cfg['model_list'])
+PY
 ```

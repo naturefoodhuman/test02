@@ -237,6 +237,28 @@ python3 -m compileall -q scripts/governance_check.py
 
 ---
 
+## [第 84 轮] 2026-06-25
+
+### 需求变动
+- **Claude Code for VS Code 本地模型 alias 兼容修复**：用户当前 VS Code Claude Code 只连接本地开源模型，但插件报选中模型不存在或无权限；补充常见 Claude alias 到本地 MTPLX 主模型映射。
+
+### 文件影响
+- 修改：`_infra/litellm-config.yaml`
+- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/litellm_gatekeeper.py`
+- 修改：`docs/工厂使用手册.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+
+### 验证
+```bash
+python3 -m compileall -q _infra/smart_proxy.py _infra/litellm_gatekeeper.py
+python3 -c "import yaml; from pathlib import Path; cfg=yaml.safe_load(Path('_infra/litellm-config.yaml').read_text()); assert any(m['model_name'] == 'claude-opus-4-1' for m in cfg['model_list'])"
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

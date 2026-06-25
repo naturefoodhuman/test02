@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-20 17:30:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 import os
 import sys
@@ -24,6 +24,15 @@ PORT_MAPPING = {
     "qwopus-35b": 8084,
     "claude-3-5-sonnet-20241022": 8080, # 映射到主大脑
     "claude-opus-4-8": 8080,
+    "claude-opus-4-1": 8080,
+    "claude-opus-4-1-20250805": 8080,
+    "claude-opus-4-20250514": 8080,
+    "claude-opus-4-0": 8080,
+    "claude-sonnet-4-20250514": 8080,
+    "claude-sonnet-4-5": 8080,
+    "claude-sonnet-4-5-20250929": 8080,
+    "claude-3-7-sonnet-20250219": 8080,
+    "claude-3-5-haiku-20241022": 8080,
     "claude-3-5-sonnet-latest": 8080
 }
 

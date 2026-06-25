@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-25 20:16:34
+创建时间（北京时间）：2026-06-25 22:32:08
 -->
 
 # Agent Handoff Summary（自动生成）
@@ -21,22 +21,22 @@
 ## 2. 当前状态摘要
 
 - 更新日期**：2026-06-25 00:00 CST
-- 当前版本**：v1.4.6-dossier + Governance Automation P2
+- 当前版本**：v1.4.7-dossier + Claude Code Alias Compatibility
 - 状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ## 3. 最新提交
 
+- `bc72ba5 chore(governance): add P2 automation hooks and scheduled checks`
 - `1588dd0 docs(governance): refresh generated governance outputs`
 - `7c91b25 docs(adr): record documentation governance automation decision`
 - `92e4ca9 docs(governance): record document index cache exclusion`
 - `b180a0d fix(governance): exclude test caches from document index`
-- `a74428d chore(governance): enforce P1 documentation checks`
 
 ## 4. 治理健康
 
 - Blockers: 0
 - Warnings: 1
-- Changed files: 13
+- Changed files: 11
 - 最新完整报告：`docs/GOVERNANCE_CHECK_LATEST.md`
 
 ## 5. 当前自动化命令

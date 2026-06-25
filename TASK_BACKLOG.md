@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-25（文档治理 P2 自动化落地完成）
+> **最近同步**: 2026-06-25（Claude Code for VS Code 本地模型 alias 兼容修复完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -3258,6 +3258,7 @@ graph TD
 | M10 | E12-C3 | E12-C3-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 | M10 | E12-C4 | E12-C4-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 | M10 | E12-C5 | E12-C5-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
+| M10 | E12-C6 | E12-C6-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 
 ---
 
@@ -3352,6 +3353,23 @@ graph TD
   - [x] launchd plist 完成
   - [x] Agent handoff summary 自动生成完成
   - [x] no-write strict docs-check 完成
+
+
+##### **Task E12-C6-S1-T1: Claude Code for VS Code 本地模型 alias 兼容修复**
+
+- **状态**: DONE
+- **目标**: 修复 Claude Code for VS Code 只连接本地开源模型时，因插件选中新的 `claude-opus-*` / `claude-sonnet-*` alias 而提示模型不存在或无权限的问题。
+- **涉及文件**:
+  - 修改：`_infra/litellm-config.yaml`
+  - 修改：`_infra/smart_proxy.py`
+  - 修改：`_infra/litellm_gatekeeper.py`
+  - 修改：`docs/工厂使用手册.md`
+  - 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`
+- **DoD**:
+  - [x] 常见 Claude Code alias 已映射到本地 MTPLX 主模型
+  - [x] smart_proxy 模型名 ANSI 片段清理完成
+  - [x] VS Code settings 排障说明已写入手册
+  - [x] 静态检查通过
 
 ---
 

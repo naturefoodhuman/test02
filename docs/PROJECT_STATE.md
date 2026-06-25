@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-06-25 00:00 CST
-**当前版本**：v1.4.6-dossier + Governance Automation P2
+**当前版本**：v1.4.7-dossier + Claude Code Alias Compatibility
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -60,6 +60,10 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 新增 `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`，并升级 `scripts/governance_check.py` + `make docs-check`，推动文档治理自动化常态化。
 - 文档治理 P1 已落地：changed-files R5 阻断、Backlog/DEV_LOG 同步阻断、代码变更必须更新 CHANGELOG、架构触发词提示 ADR、自动生成 `docs/DOCUMENT_INDEX.md`；决策记录见 ADR-008。
 - 文档治理 P2 已落地：pre-commit / GitHub Actions / launchd 自动化、no-write strict 检查、自动生成 `docs/AGENT_HANDOFF_SUMMARY.md`。
+
+### Claude Code for VS Code alias compatibility
+- 已补充常见 Claude Code 选中模型 alias 到本地 MTPLX 主模型映射，避免 VS Code 插件因 `claude-opus-*` / `claude-sonnet-*` alias 未注册而报模型不存在。
+- VS Code 推荐使用 `ANTHROPIC_BASE_URL=http://localhost:4000` 与 `ANTHROPIC_API_KEY=sk-forge-local-anytoken`。
 
 ---
 
