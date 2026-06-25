@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-25（E3-C5 搜索风控系统性加固完成）
+> **最近同步**: 2026-06-25（联网功能最终收尾：本地密钥持久化与提取超时收敛完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -3254,6 +3254,38 @@ graph TD
 | M9 | E9-C4 | E9-C4-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M10 | E12-C1 | E12-C1-S1-T1 | [x] | 2026-06-23 | Arena Agent |
 | M10 | E12-C1 | E12-C1-S1-T2 | [x] | 2026-06-23 | Arena Agent |
+| M10 | E12-C2 | E12-C2-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
+
+---
+
+## 10.1 Finalization Addendum（2026-06-25）
+
+##### **Task E12-C2-S1-T1: 联网功能最终收尾：本地密钥持久化与运行体验收敛**
+
+- **状态**: DONE
+- **目标**: 对照 `NETWORK_ARCHITECTURE_FINAL.md` 与 `NETWORK_ENGINEERING_DESIGN.md`，完成联网功能最终收尾，解决 API key 重启终端后需重复 export、提取 fallback 长时间阻塞等运行体验问题。
+- **涉及文件**:
+  - 新增：`.env.example`
+  - 新增：`_infra/network/tests/unit/test_env_loader.py`
+  - 新增：`_infra/network/tests/unit/test_trafilatura_timeout.py`
+  - 修改：`_infra/network/core/secrets.py`
+  - 修改：`_infra/network/config_loader/loader.py`
+  - 修改：`_infra/network/search/orchestrator.py`
+  - 修改：`_infra/network/extract/trafilatura_fallback.py`
+  - 修改：`_infra/.env.example`
+  - 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`_infra/network/README.md`
+- **实现要求**:
+  - 自动加载本地 `.env` / `_infra/.env`，且不覆盖已 export 环境变量。
+  - 真实密钥文件必须保持 gitignored。
+  - `TrafilaturaProvider` fallback 必须有 bounded timeout，失败后让 workflow 使用 snippet fallback。
+  - 不改变 Search → Extract → Privacy → RAG 主调用链。
+- **DoD**:
+  - [x] 功能实现完成
+  - [x] 相关测试通过：`358 passed, 3 skipped, 44 warnings`
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/network scripts/diagnostics`
+  - [x] 文档更新完成
+  - [x] TASK_BACKLOG.md 状态已更新
+  - [x] docs/DEV_LOG.md 已记录
 
 ---
 

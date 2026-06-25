@@ -15,6 +15,7 @@ import os
 import re
 from typing import List, Optional
 
+from _infra.network.core.secrets import load_local_env_files
 from _infra.network.exceptions import SearchResultEmpty
 from _infra.network.utils.logger import get_logger
 
@@ -86,6 +87,7 @@ class MultiSourceSearchOrchestrator(SearchProvider):
         self.min_results_threshold = min_results_threshold
 
     def _auto_load_api_providers(self) -> List[SearchProvider]:
+        load_local_env_files()
         providers: List[SearchProvider] = []
         if os.getenv("BRAVE_API_KEY"):
             try:

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间，精确到秒）：2026-06-21 15:15:00 CST
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 """Network 配置加载器（FORGE Factory 增量）
 
@@ -18,6 +18,7 @@ from typing import Any
 import yaml
 
 from .schemas import NetworkConfig
+from _infra.network.core.secrets import load_local_env_files
 
 
 class NetworkConfigError(Exception):
@@ -64,6 +65,8 @@ def load_network_config(
                 break
         else:
             project_root = current
+
+    load_local_env_files(project_root)
 
     full_path = project_root / config_path
     data = load_yaml_file(full_path)

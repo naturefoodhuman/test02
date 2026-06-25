@@ -12,7 +12,7 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **最新完成模块**：搜索风控系统性加固（Engine Matrix + Circuit Breaker + Orchestrator + API fallback + Diagnostics v2）
-- **当前 Network 测试基线**：357 passed, 2 skipped, 44 warnings。
+- **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
@@ -45,7 +45,7 @@
 ### 验证
 ```bash
 python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 357 passed, 2 skipped, 44 warnings
+# 358 passed, 3 skipped, 44 warnings
 python3 -m compileall -q _infra/network scripts/diagnostics
 # pass
 python3 -m _infra.network.cli config
@@ -81,6 +81,36 @@ python3 -m _infra.network.cli config
 - 修改：`config/network.yaml`
 - 修改：`docker/searxng/settings.yml`
 - 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`
+
+---
+
+## [第 79 轮] 2026-06-25
+
+### 需求变动
+- **本地 API Key 持久化**：新增 `.env.example` 与本地 `.env` 自动加载能力，用户不再需要每次打开终端手动 `export TAVILY_API_KEY` / `SERPER_API_KEY`。
+- **联网功能最终收尾**：对照架构/工程设计，收敛密钥管理与提取 fallback 超时问题；保持既有 Search → Extract → Privacy → RAG 架构边界不变。
+- **提取体验优化**：`TrafilaturaProvider` 增加 8s bounded timeout，避免无法直连 GitHub/HackerNews 时长时间阻塞。
+
+### 文件影响
+- 新增：`.env.example`
+- 新增：`_infra/network/tests/unit/test_env_loader.py`
+- 新增：`_infra/network/tests/unit/test_trafilatura_timeout.py`
+- 修改：`_infra/network/core/secrets.py`
+- 修改：`_infra/network/config_loader/loader.py`
+- 修改：`_infra/network/search/orchestrator.py`
+- 修改：`_infra/network/extract/trafilatura_fallback.py`
+- 修改：`_infra/.env.example`
+- 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`_infra/network/README.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+python3 -m _infra.network.cli config
+# Network Config loaded successfully
+```
 
 ---
 

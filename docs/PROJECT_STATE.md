@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-06-25 00:00 CST
-**当前版本**：v1.4.1-dossier + Network Resilient Search
+**当前版本**：v1.4.2-dossier + Network Finalization
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -47,12 +47,17 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 7层隐私管线（Unicode -> Regex -> NER -> Qwen -> Replace -> Schema -> Canary）。
 - SQLite RAGStore，支持超长文本分段与向量缓存一致性校验。
 
+### Finalization / Local Secrets / Runtime UX
+- 本地 `.env` 与 `_infra/.env` 会被自动加载，解决 Tavily/Serper 等 API key 每次重启终端需手动 export 的问题；真实 `.env` 文件保持 gitignored。
+- `TrafilaturaProvider` 已增加 bounded timeout，网络不可达时快速降级到 snippet fallback，避免端到端搜索被单页提取卡住。
+- 当前联网功能已完成 Search / Extract / Privacy / RAG / MCP Guard / Browser / Ops / Diagnostics 的文档与测试闭环，剩余为真机长期稳定性观察。
+
 ---
 
 ## 4. 最新测试基线
 
 **运行命令**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q`
-**结果**：`357 passed, 2 skipped, 44 warnings`
+**结果**：`358 passed, 3 skipped, 44 warnings`
 **说明**：2 skipped 为沙盒缺少 Presidio 环境；warnings 均为 datetime.utcnow 弃用警告，不影响业务。全量单元与安全测试全部绿色通过。
 
 ---

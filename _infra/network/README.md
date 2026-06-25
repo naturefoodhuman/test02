@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 16:55:00
+创建时间（北京时间）：2026-06-25 00:00:00
 -->
 
 # FORGE Network（联网功能增量子模块）
@@ -85,3 +85,24 @@ python -m pytest _infra/network/tests/unit/ -q
 - E9-C1~C4（Local RAG 基础；SQLite schema + bge-m3 embedder + RAGStore CRUD + KNN fallback）
 
 当前下一候选任务：NetworkWorkflow/CLI 集成，或按用户优先级做文档治理/真实服务验证。
+
+
+## 本地 API Key 持久化
+
+联网搜索 API fallback 支持从项目根目录 `.env` 自动加载本地密钥。`.env` 已被 `.gitignore` 忽略，真实 key 不应提交。
+
+推荐：
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入：
+# TAVILY_API_KEY="tvly-..."
+# SERPER_API_KEY="..."
+```
+
+加载顺序：
+1. 已经 export 的环境变量优先；
+2. `<project_root>/.env`；
+3. `<project_root>/_infra/.env`。
+
+本地 `.env` 不会覆盖已 export 的变量。

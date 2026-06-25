@@ -9,9 +9,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
-- **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `357 passed, 2 skipped, 44 warnings`
+- **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
 - **最近完成**：联网功能开发5搜索风控系统性加固（Engine Matrix、Circuit Breaker、MultiSource Orchestrator、API fallback、诊断 v2）
-- **建议下一步**：用户申请并配置 Brave/Tavily/Serper API Key 后，执行真机 SearXNG 重启、诊断 v2 与端到端搜索验收。
+- **建议下一步**：用户将 Tavily/Serper 写入本地 `.env` 后，执行端到端搜索回归；后续仅剩真机长期稳定性观察。
 
 ---
 
@@ -2527,7 +2527,7 @@ python3 -m pytest _infra/network/tests/unit/test_workflow.py -v
 
 ```bash
 python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 357 passed, 2 skipped, 44 warnings
+# 358 passed, 3 skipped, 44 warnings
 
 python3 -m compileall -q _infra/network scripts/diagnostics
 # pass
@@ -2574,7 +2574,7 @@ The "engine" field is missing for the engine named "startpage"
 **验证**：
 ```bash
 python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 357 passed, 2 skipped, 44 warnings
+# 358 passed, 3 skipped, 44 warnings
 python3 -m compileall -q _infra/network scripts/diagnostics
 # pass
 ```
@@ -2600,7 +2600,55 @@ Avoid / circuit-break (10): ['bing', 'duckduckgo', 'google', 'brave', 'startpage
 **验证**：
 ```bash
 python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
-# 357 passed, 2 skipped, 44 warnings
+# 358 passed, 3 skipped, 44 warnings
 python3 -m compileall -q _infra/network scripts/diagnostics
 # pass
 ```
+
+
+## 第 79 轮 · 2026-06-25（联网功能最终收尾：本地密钥持久化与提取超时收敛）
+
+**目标**：按用户要求完成联网功能最终收尾：
+1. 解决 `TAVILY_API_KEY` / `SERPER_API_KEY` 每次重启终端都要手动 export 的问题；
+2. 对照 `NETWORK_ARCHITECTURE_FINAL.md` 与 `NETWORK_ENGINEERING_DESIGN.md` 收敛最后一批工程体验问题。
+
+**完成内容**：
+
+1. **本地 .env 自动加载**
+   - 新增根目录 `.env.example`。
+   - `_infra/network/core/secrets.py` 新增 `load_local_env_files()`，自动读取：
+     - `<project_root>/.env`
+     - `<project_root>/_infra/.env`
+   - 加载规则：不会覆盖已经 export 的环境变量。
+   - `load_network_config()` 和 `MultiSourceSearchOrchestrator` 均会触发本地 .env 加载。
+   - `.env` 与 `_infra/.env` 已在 `.gitignore` 中，真实密钥不会提交。
+
+2. **Search API fallback 密钥收尾**
+   - `OPTIONAL_SECRETS` 补充：`TAVILY_API_KEY`、`SERPER_API_KEY`、`BRAVE_API_KEY`、`NETWORK_SEARCH_API_PROXY`。
+   - 新增 `has_serper_key()` / `has_brave_key()`。
+   - `_infra/.env.example` 补充 Network Search API fallback 模板。
+
+3. **提取层超时收敛**
+   - `TrafilaturaProvider` 从直接同步 `trafilatura.fetch_url()` 改为 `asyncio.to_thread + asyncio.wait_for`。
+   - 默认超时 8s，避免 GitHub/HackerNews 等站点连接异常时阻塞 30s × 多页面。
+   - 超时后立即返回空内容，让 `NetworkWorkflow` 使用 search snippet fallback。
+
+4. **测试补强**
+   - 新增 `test_env_loader.py`：验证 .env 加载且不覆盖已 export 变量。
+   - 新增 `test_trafilatura_timeout.py`：验证 trafilatura fallback 超时边界。
+
+**验证**：
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+python3 -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**架构对齐说明**：
+- 不引入新基础设施；`.env` 属本地密钥配置文件，符合 Engineering Design §8.2/§8.3 环境变量与密钥管理。
+- 不改变 Search → Extract → Privacy → RAG 调用链。
+- 提取层仍然保持 Crawl4AI primary、trafilatura fallback，仅收紧 fallback 超时。
+- 主模型仍不接触原始私域数据，Privacy Gateway 边界未改变。
