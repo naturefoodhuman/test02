@@ -156,6 +156,8 @@ python3 -m _infra.network.cli config
 - 修改：`docs/全功能最小示例项目.md`
 - 修改：`docs/工厂能力覆盖检查.md`
 - 新增：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+- 新增：`docs/adr/ADR-008-documentation-governance-automation.md`
+- 修改：`docs/adr/README.md`
 - 修改：`scripts/governance_check.py`
 - 修改：`Makefile`
 - 修改：`README.md`

@@ -2711,6 +2711,7 @@ python3 -m compileall -q _infra/network scripts/diagnostics
 - 新增 `docs/DOCUMENT_INDEX.md` 自动生成，标记 SSOT / training / governance / reference / runtime-artifact。
 - `DOCUMENT_INDEX.md` 生成规则已排除 `.pytest_cache` / `.mypy_cache` / `.ruff_cache` 等测试缓存，避免 runtime cache 污染文档索引。
 - `make docs-check` 现在具备提交前阻断能力。
+- 新增 `docs/adr/ADR-008-documentation-governance-automation.md`，将文档治理自动化确认为工厂级决策。
 
 **验证**：
 ```bash

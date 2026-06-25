@@ -1,3 +1,8 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-06-25 00:00:00
+-->
+
 # Factory-Level Architecture Decision Records (ADRs)
 
 This directory is the **Single Source of Truth** for all major architectural and governance decisions in the FORGE Factory (root level, not per-project).
@@ -22,6 +27,7 @@ Per the Documentation Governance framework (see `DOCUMENT_AUDIT_REPORT.md`):
 | [ADR-005](ADR-005-knowledgehub-pure-llamaindex-chromadb.md) | Pure LlamaIndex + ChromaDB for KnowledgeHub | 已接受 | 2026-06-16 | De-dupe, version control, local embedding (post-Agono) |
 | [ADR-006](ADR-006-forge-eval-as-ab-testing-capability.md) | forge eval as Core Factory A/B Testing Tool | 已接受 | 2026-06-16 | Real plan comparison, gold dataset, MemoryStore integration |
 | [ADR-007](ADR-007-memorystore-as-plan-comparison-ssot.md) | MemoryStore + ModelRunRecord as SSOT for Plan Comparison & RETRO | 已接受 | 2026-06-16 | Historical execution data for compare-plans and retro |
+| [ADR-008](ADR-008-documentation-governance-automation.md) | Documentation Governance Automation as a Blocking Quality Gate | 已接受 | 2026-06-25 | `make docs-check`, governance automation, document index |
 
 ## How to Read
 
@@ -40,4 +46,4 @@ See `DOCUMENT_AUDIT_REPORT.md` → "ADR Rules" and "Continuous Governance" for e
 
 ---
 
-**Last updated**: 2026-06-16 (Phase 1 of Documentation Governance)
+**Last updated**: 2026-06-25 (ADR-008 Documentation Governance Automation)

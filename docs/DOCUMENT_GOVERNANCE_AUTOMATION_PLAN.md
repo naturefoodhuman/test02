@@ -7,7 +7,7 @@
 
 ## 1. 背景
 
-根目录 `DOCUMENT_AUDIT_REPORT.md` 已经指出：项目最大长期风险之一不是代码不可用，而是文档漂移、SSOT 冲突、历史文档误导和 ADR 缺失。
+`docs/adr/ADR-008-documentation-governance-automation.md` 已将文档治理自动化确认为工厂级决策。根目录 `DOCUMENT_AUDIT_REPORT.md` 已经指出：项目最大长期风险之一不是代码不可用，而是文档漂移、SSOT 冲突、历史文档误导和 ADR 缺失。
 
 用户本轮反馈也验证了这个问题：虽然联网功能已经打通，但培训文档中仍缺少 Claude Code for VS Code 的主使用方式，全功能示例未覆盖高风险能力，部分历史文档仍杂乱。
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-25 20:11:15
+创建时间（北京时间）：2026-06-25 20:11:55
 -->
 
 # Document Index（自动生成）
@@ -86,6 +86,7 @@
 | `docs/adr/ADR-005-knowledgehub-pure-llamaindex-chromadb.md` | governance | current |
 | `docs/adr/ADR-006-forge-eval-as-ab-testing-capability.md` | governance | current |
 | `docs/adr/ADR-007-memorystore-as-plan-comparison-ssot.md` | governance | current |
+| `docs/adr/ADR-008-documentation-governance-automation.md` | governance | current |
 | `docs/adr/README.md` | SSOT | current |
 | `docs/benchmark.md` | supporting-doc | reference |
 | `docs/research/README.md` | research | reference |
