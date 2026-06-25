@@ -1,0 +1,51 @@
+# HELP searxng_engine_success_rate Success rate per engine
+# TYPE searxng_engine_success_rate gauge
+searxng_engine_success_rate{engine="bing"} 0.000
+searxng_engine_success_rate{engine="duckduckgo"} 0.000
+searxng_engine_success_rate{engine="google"} 0.000
+searxng_engine_success_rate{engine="brave"} 0.000
+searxng_engine_success_rate{engine="startpage"} 0.000
+searxng_engine_success_rate{engine="qwant"} 0.000
+searxng_engine_success_rate{engine="mojeek"} 0.000
+searxng_engine_success_rate{engine="yahoo"} 0.000
+searxng_engine_success_rate{engine="wikipedia"} 0.000
+searxng_engine_success_rate{engine="github"} 1.000
+searxng_engine_success_rate{engine="arxiv"} 1.000
+searxng_engine_success_rate{engine="stackoverflow"} 0.667
+searxng_engine_success_rate{engine="hackernews"} 1.000
+searxng_engine_success_rate{engine="lobste.rs"} 1.000
+searxng_engine_success_rate{engine="reddit"} 0.000
+# HELP searxng_engine_latency_p95_ms Engine P95 latency
+# TYPE searxng_engine_latency_p95_ms gauge
+searxng_engine_latency_p95_ms{engine="bing"} 2350.8
+searxng_engine_latency_p95_ms{engine="duckduckgo"} 1343.9
+searxng_engine_latency_p95_ms{engine="google"} 11497.5
+searxng_engine_latency_p95_ms{engine="brave"} 2388.0
+searxng_engine_latency_p95_ms{engine="startpage"} 3000.5
+searxng_engine_latency_p95_ms{engine="qwant"} 1647.3
+searxng_engine_latency_p95_ms{engine="mojeek"} 1500.7
+searxng_engine_latency_p95_ms{engine="yahoo"} 2208.9
+searxng_engine_latency_p95_ms{engine="wikipedia"} 1761.4
+searxng_engine_latency_p95_ms{engine="github"} 3679.3
+searxng_engine_latency_p95_ms{engine="arxiv"} 2058.5
+searxng_engine_latency_p95_ms{engine="stackoverflow"} 2933.4
+searxng_engine_latency_p95_ms{engine="hackernews"} 4746.0
+searxng_engine_latency_p95_ms{engine="lobste.rs"} 3356.7
+searxng_engine_latency_p95_ms{engine="reddit"} 3842.8
+# HELP searxng_engine_captcha_count Captcha hits
+# TYPE searxng_engine_captcha_count counter
+searxng_engine_captcha_count{engine="bing"} 0
+searxng_engine_captcha_count{engine="duckduckgo"} 3
+searxng_engine_captcha_count{engine="google"} 0
+searxng_engine_captcha_count{engine="brave"} 0
+searxng_engine_captcha_count{engine="startpage"} 0
+searxng_engine_captcha_count{engine="qwant"} 0
+searxng_engine_captcha_count{engine="mojeek"} 0
+searxng_engine_captcha_count{engine="yahoo"} 0
+searxng_engine_captcha_count{engine="wikipedia"} 0
+searxng_engine_captcha_count{engine="github"} 0
+searxng_engine_captcha_count{engine="arxiv"} 0
+searxng_engine_captcha_count{engine="stackoverflow"} 0
+searxng_engine_captcha_count{engine="hackernews"} 0
+searxng_engine_captcha_count{engine="lobste.rs"} 0
+searxng_engine_captcha_count{engine="reddit"} 0
