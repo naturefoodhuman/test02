@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-25 20:10:10
+创建时间（北京时间）：2026-06-25 20:10:55
 -->
 
 # Document Index（自动生成）
@@ -19,7 +19,6 @@
 
 | 文档 | 分类 | 状态 |
 |---|---|---|
-| `.pytest_cache/README.md` | root-doc | reference |
 | `DOCUMENT_AUDIT_REPORT.md` | governance | current |
 | `DOCUMENT_CHANGE_REPORT.md` | governance | current |
 | `HANDOFF.md` | SSOT | current |
