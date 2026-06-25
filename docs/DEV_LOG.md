@@ -2785,3 +2785,19 @@ PY
 ```bash
 python3 -m compileall -q _infra/smart_proxy.py
 ```
+
+### 第 84 轮补丁 2 · 2026-06-25（修复 Claude Code 空流式响应）
+
+**触发**：用户验证 `curl -N /v1/messages` 能收到 Anthropic SSE 事件，但没有 `content_block_delta` 文本，只有 start/stop；VS Code 中简单问题仍需 1 分钟以上。
+
+**根因**：MTPLX 后端当前即使收到 `stream=true` 也返回完整 OpenAI JSON，而不是 OpenAI SSE `data:` 行。上一版代理按 SSE 行解析，导致忽略完整 JSON 内容，输出空 Anthropic stream。
+
+**处理**：
+- `_infra/smart_proxy.py` 在 Claude Code 请求 `stream=true` 时，对后端改用非流式 OpenAI JSON 请求。
+- 将完整 OpenAI JSON 的 `choices[].message.content` 包装成 Anthropic SSE：`message_start` → `content_block_delta` → `message_stop`。
+- 保留 `FORGE_CLAUDE_CODE_MAX_TOKENS` 上限，避免本地模型长时间生成。
+
+**验证**：
+```bash
+python3 -m compileall -q _infra/smart_proxy.py
+```

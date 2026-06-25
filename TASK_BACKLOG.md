@@ -3372,6 +3372,7 @@ graph TD
   - [x] VS Code settings 排障说明已写入手册
   - [x] 4000/4001 端口旧进程清理已加固
   - [x] Anthropic streaming SSE 转换与 max_tokens 收敛已完成
+  - [x] Claude Code 空流式响应修复已完成
   - [x] 静态检查通过
 
 ---

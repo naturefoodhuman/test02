@@ -257,6 +257,11 @@ python3 -m compileall -q scripts/governance_check.py
 - 修复 VS Code Claude Code `stream=true` 时本地代理按非流式读取导致 UI 长时间等待的问题。
 - `_infra/smart_proxy.py` 增加 Anthropic SSE 事件转换，并默认限制本地输出 `FORGE_CLAUDE_CODE_MAX_TOKENS=1024`。
 
+### 补丁 2：修复 Claude Code 空流式响应
+- 用户验证 `curl -N /v1/messages` 只有 start/stop 没有文本 delta。
+- 根因：MTPLX 对 `stream=true` 返回完整 OpenAI JSON，不返回 SSE `data:` 行。
+- 修复：Claude Code streaming 路径对后端改用非流式 JSON，再包装成 Anthropic SSE `content_block_delta`。
+
 ### 验证
 ```bash
 python3 -m compileall -q _infra/smart_proxy.py _infra/litellm_gatekeeper.py

@@ -236,34 +236,42 @@ async def smart_gateway(request: Request, path: str):
                 "index": 0,
                 "content_block": {"type": "text", "text": ""},
             })
+
+            emitted = False
             try:
-                async with http_client.stream("POST", target_url, json=forward_payload) as resp:
-                    if resp.status_code != 200:
-                        err = (await resp.aread()).decode("utf-8", errors="ignore")
-                        yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": err}})
-                        return
-                    async for line in resp.aiter_lines():
-                        if not line or not line.startswith("data:"):
-                            continue
-                        raw = line[5:].strip()
-                        if raw == "[DONE]":
-                            break
-                        try:
-                            chunk = json.loads(raw)
-                        except Exception:
-                            continue
-                        for choice in chunk.get("choices", []):
-                            delta = choice.get("delta", {}) or {}
-                            text = delta.get("content")
-                            if text:
-                                yield _anthropic_sse("content_block_delta", {
-                                    "type": "content_block_delta",
-                                    "index": 0,
-                                    "delta": {"type": "text_delta", "text": text},
-                                })
+                # MTPLX currently returns a complete OpenAI JSON response even
+                # when `stream=true` is requested. For Claude Code UI stability,
+                # call the backend non-streaming, then wrap the final text in
+                # Anthropic SSE events. This prevents empty streams such as:
+                # message_start -> content_block_stop -> message_stop.
+                backend_payload = forward_payload.copy()
+                backend_payload["stream"] = False
+                resp = await http_client.post(target_url, json=backend_payload)
+                if resp.status_code != 200:
+                    yield _anthropic_sse("error", {
+                        "type": "error",
+                        "error": {"type": "api_error", "message": resp.text},
+                    })
+                    return
+                data_json = resp.json()
+                text = ""
+                for choice in data_json.get("choices", []):
+                    msg = choice.get("message", {}) or {}
+                    delta = choice.get("delta", {}) or {}
+                    text += str(msg.get("content") or delta.get("content") or "")
+                if text:
+                    emitted = True
+                    yield _anthropic_sse("content_block_delta", {
+                        "type": "content_block_delta",
+                        "index": 0,
+                        "delta": {"type": "text_delta", "text": text},
+                    })
             except Exception as exc:
                 yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": str(exc)}})
                 return
+
+            if not emitted:
+                logger.warning("Anthropic stream wrapper emitted no text", model=model_name, target=real_model_id)
             yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
             yield _anthropic_sse("message_delta", {
                 "type": "message_delta",
