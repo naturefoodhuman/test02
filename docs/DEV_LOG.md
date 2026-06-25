@@ -2768,3 +2768,20 @@ cfg = yaml.safe_load(Path('_infra/litellm-config.yaml').read_text())
 assert any(m['model_name'] == 'claude-opus-4-1' for m in cfg['model_list'])
 PY
 ```
+
+### 第 84 轮补丁 · 2026-06-25（Claude Code Streaming 响应与 max_tokens 收敛）
+
+**触发**：用户 curl 非流式请求可成功，但 VS Code Claude Code 简单提问等待 3 分钟无结果，GPU 高负载。
+
+**判断**：Claude Code for VS Code 通常使用 Anthropic Messages streaming。旧 `smart_proxy.py` 将 `stream` 原样转发给 OpenAI-compatible backend，但仍按非流式 `resp.json()` 读取，容易导致 VS Code UI 长时间等待或无法正确消费流式响应。
+
+**处理**：
+- `_infra/smart_proxy.py` 增加 Anthropic Messages SSE → OpenAI SSE 转换逻辑。
+- 当 Claude Code 请求 `stream=true` 时，代理将 OpenAI stream chunk 转换为 Anthropic `message_start / content_block_delta / message_stop` 事件。
+- 增加 `_bounded_max_tokens()`，默认将 Claude Code 本地模型输出限制到 `FORGE_CLAUDE_CODE_MAX_TOKENS`（默认 1024），避免本地模型长时间生成。
+- 增强 Anthropic content block 文本提取，兼容 list/dict/string content。
+
+**验证**：
+```bash
+python3 -m compileall -q _infra/smart_proxy.py
+```

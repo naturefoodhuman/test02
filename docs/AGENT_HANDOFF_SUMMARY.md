@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-25 23:07:56
+创建时间（北京时间）：2026-06-25 23:38:03
 -->
 
 # Agent Handoff Summary（自动生成）
@@ -26,17 +26,17 @@
 
 ## 3. 最新提交
 
+- `2a4c5a7 fix(vscode): support current Claude Code model labels`
 - `cb82e8d fix(vscode): map Claude Code model aliases to local gateway`
 - `bc72ba5 chore(governance): add P2 automation hooks and scheduled checks`
 - `1588dd0 docs(governance): refresh generated governance outputs`
 - `7c91b25 docs(adr): record documentation governance automation decision`
-- `92e4ca9 docs(governance): record document index cache exclusion`
 
 ## 4. 治理健康
 
 - Blockers: 0
 - Warnings: 1
-- Changed files: 12
+- Changed files: 9
 - 最新完整报告：`docs/GOVERNANCE_CHECK_LATEST.md`
 
 ## 5. 当前自动化命令

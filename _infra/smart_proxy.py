@@ -79,6 +79,38 @@ def normalize_model_name(model_name: str) -> str:
     # rather than failing with a remote model access error.
     return cleaned
 
+
+def _extract_anthropic_text(content) -> str:
+    """Convert Anthropic content blocks to plain text for OpenAI-compatible backends."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict):
+                if block.get("type") == "text":
+                    parts.append(str(block.get("text", "")))
+                elif "text" in block:
+                    parts.append(str(block.get("text", "")))
+            else:
+                parts.append(str(block))
+        return "".join(parts)
+    return str(content or "")
+
+
+def _bounded_max_tokens(value, default: int = 1024, cap: int | None = None) -> int:
+    """Bound Claude Code max_tokens so local models do not generate forever."""
+    cap = cap or int(os.getenv("FORGE_CLAUDE_CODE_MAX_TOKENS", "1024"))
+    try:
+        parsed = int(value)
+    except Exception:
+        parsed = default
+    return max(1, min(parsed, cap))
+
+
+def _anthropic_sse(event: str, payload: dict) -> bytes:
+    return f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
+
 # 显存管理
 VRAM_LIMIT = 48
 MODEL_VRAM = {8080: 20, 8082: 16, 8084: 36, 11434: 20}
@@ -155,15 +187,16 @@ async def smart_gateway(request: Request, path: str):
         if "system" in data:
             msgs.append({"role": "system", "content": data["system"]})
         for m in data.get("messages", []):
-            content = m["content"][0]["text"] if isinstance(m["content"], list) else m["content"]
-            msgs.append({"role": m["role"], "content": content})
+            content = _extract_anthropic_text(m.get("content", ""))
+            msgs.append({"role": m.get("role", "user"), "content": content})
+        wants_stream = bool(data.get("stream", False))
         forward_payload = {
             "model": real_model_id,
             "messages": msgs,
-            "temperature": data.get("temperature", 0.6),
-            "top_p": data.get("top_p", 0.95),
-            "stream": data.get("stream", False),
-            "max_tokens": data.get("max_tokens", 2048)
+            "temperature": data.get("temperature", 0.3),
+            "top_p": data.get("top_p", 0.9),
+            "stream": wants_stream,
+            "max_tokens": _bounded_max_tokens(data.get("max_tokens", 1024)),
         }
     else:
         # OpenAI 格式：直接使用客户端传来的 model（或映射后的真实 ID）
@@ -173,9 +206,78 @@ async def smart_gateway(request: Request, path: str):
         forward_payload.setdefault("temperature", 0.6)
         forward_payload.setdefault("top_p", 0.95)
         forward_payload.setdefault("stream", False)
+        forward_payload["max_tokens"] = _bounded_max_tokens(forward_payload.get("max_tokens", 1024))
 
     # 执行转发（带重试）
     target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
+
+    # Claude Code for VS Code typically requests Anthropic streaming. Convert
+    # OpenAI-compatible backend SSE chunks into Anthropic Messages SSE events so
+    # the VS Code UI receives incremental tokens instead of waiting for a full
+    # local-model completion.
+    if is_anthropic and forward_payload.get("stream"):
+        async def anthropic_event_stream():
+            msg_id = f"msg_{uuid.uuid4().hex}"
+            yield _anthropic_sse("message_start", {
+                "type": "message_start",
+                "message": {
+                    "id": msg_id,
+                    "type": "message",
+                    "role": "assistant",
+                    "model": model_name,
+                    "content": [],
+                    "stop_reason": None,
+                    "stop_sequence": None,
+                    "usage": {"input_tokens": 0, "output_tokens": 0},
+                },
+            })
+            yield _anthropic_sse("content_block_start", {
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "text", "text": ""},
+            })
+            try:
+                async with http_client.stream("POST", target_url, json=forward_payload) as resp:
+                    if resp.status_code != 200:
+                        err = (await resp.aread()).decode("utf-8", errors="ignore")
+                        yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": err}})
+                        return
+                    async for line in resp.aiter_lines():
+                        if not line or not line.startswith("data:"):
+                            continue
+                        raw = line[5:].strip()
+                        if raw == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(raw)
+                        except Exception:
+                            continue
+                        for choice in chunk.get("choices", []):
+                            delta = choice.get("delta", {}) or {}
+                            text = delta.get("content")
+                            if text:
+                                yield _anthropic_sse("content_block_delta", {
+                                    "type": "content_block_delta",
+                                    "index": 0,
+                                    "delta": {"type": "text_delta", "text": text},
+                                })
+            except Exception as exc:
+                yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": str(exc)}})
+                return
+            yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
+            yield _anthropic_sse("message_delta", {
+                "type": "message_delta",
+                "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+                "usage": {"output_tokens": 0},
+            })
+            yield _anthropic_sse("message_stop", {"type": "message_stop"})
+
+        return StreamingResponse(
+            anthropic_event_stream(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
+        )
+
     last_exception = None
     
     for attempt in range(3):  # 最多重试 3 次

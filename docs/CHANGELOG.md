@@ -253,6 +253,10 @@ python3 -m compileall -q scripts/governance_check.py
 - 修改：`docs/CHANGELOG.md`
 - 修改：`docs/PROJECT_STATE.md`
 
+### 补丁：Claude Code Streaming 响应与 max_tokens 收敛
+- 修复 VS Code Claude Code `stream=true` 时本地代理按非流式读取导致 UI 长时间等待的问题。
+- `_infra/smart_proxy.py` 增加 Anthropic SSE 事件转换，并默认限制本地输出 `FORGE_CLAUDE_CODE_MAX_TOKENS=1024`。
+
 ### 验证
 ```bash
 python3 -m compileall -q _infra/smart_proxy.py _infra/litellm_gatekeeper.py
