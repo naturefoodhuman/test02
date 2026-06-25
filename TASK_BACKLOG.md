@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-23（E9 Local RAG 基础完成）
+> **最近同步**: 2026-06-25（E3-C5 搜索风控系统性加固完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -946,6 +946,57 @@ P3 = 可选增强
 - **DoD**:
   - [x] cache.py 实现
   - [x] 单元测试通过
+
+---
+
+#### **E3-C5-S1: 搜索 Fallback 与风控熔断**
+
+##### **Task E3-C5-S1-T1: 搜索引擎反爬风控系统性加固**
+
+- **状态**: DONE
+- **目标**: 按当前用户 P0 指令“附录 1”处理搜索引擎连续 CAPTCHA / 429 / challenge 风控问题，在不替换 SearXNG Primary Search 的前提下实现 Engine Matrix、熔断、自愈降级与 API 兜底。
+- **前置依赖**: E3-C1-S1-T2, E3-C2-S1-T2, E3-C3-S1-T1, E3-C4-S1-T1
+- **输入**: 当前对话附录 1、NETWORK_ARCHITECTURE_FINAL.md §6.3、NETWORK_ENGINEERING_DESIGN.md §9.4/§9.5
+- **输出**: circuit-broken multi-source search fallback layer
+- **涉及文件**:
+  - 新增：`_infra/network/search/circuit_breaker.py`
+  - 新增：`_infra/network/search/api_providers.py`
+  - 新增：`_infra/network/search/orchestrator.py`
+  - 新增：`_infra/network/extract/curl_cffi_fallback.py`
+  - 修改：`_infra/network/search/searxng_client.py`
+  - 修改：`_infra/network/network_workflow/workflow.py`
+  - 修改：`_infra/network/extract/extractor_chain.py`
+  - 修改：`docker/searxng/settings.yml`
+  - 修改：`config/network.yaml`
+  - 修改：`scripts/diagnostics/test_engine_risk_control.py`
+  - 修改：`requirements.txt`
+- **实现要求**:
+  - SearXNG settings.yml 使用 anti-risk-control engine matrix，禁用 Google/Brave/Startpage/DDG scraping 主路径。
+  - `SearXNGProvider` 支持 tiered engine pools 与 `unresponsive_engines` 反馈解析。
+  - 每个上游 engine 有独立熔断状态、冷却与 half-open 探测。
+  - `MultiSourceSearchOrchestrator` 保持 `SearchProvider` 接口兼容，支持 intent route、SearXNG tier fallback、可选 API fallback。
+  - Brave/Tavily/Serper 仅在对应环境变量存在时自动加载，不保存密钥。
+  - `CurlCffiProvider` 仅作为特定 TLS guarded public domain 的可选提取 fallback，不替换 Crawl4AI。
+  - 诊断脚本输出 CAPTCHA 指纹、快照、Prometheus metrics 与 JSON report。
+- **测试要求**:
+  - 单元测试：熔断器 open/half-open/recovery。
+  - 单元测试：orchestrator intent detection 与 API fallback。
+  - 单元测试：curl_cffi optional provider 不破坏无依赖环境。
+  - 全量 network unit/security tests 通过。
+  - 静态检查：compileall 通过。
+- **验收标准**:
+  - 无 API key 环境下仍可通过 SearXNG tier fallback 工作。
+  - 有 API key 环境下可自动加载对应 fallback provider。
+  - 搜索链路不再反复调用已 CAPTCHA / 429 的引擎。
+  - 真机 SearXNG 可按新 settings.yml 重启验证。
+- **DoD**:
+  - [x] 功能实现完成
+  - [x] 相关测试通过：`357 passed, 2 skipped, 44 warnings`
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/network scripts/diagnostics`
+  - [x] 所有相关文档更新完成
+  - [x] TASK_BACKLOG.md 状态已更新
+  - [x] docs/DEV_LOG.md 已记录
+  - [x] 验收标准全部满足（真机 API / Docker 验证待用户本地执行）
 
 ---
 
@@ -3144,6 +3195,7 @@ graph TD
 | M2 | E3-C3 | E3-C3-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C3 | E3-C3-S1-T2 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E3-C4 | E3-C4-S1-T1 | [x] | 2026-06-21 | Arena Agent |
+| M2 | E3-C5 | E3-C5-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 | M2 | E4-C1 | E4-C1-S1-T1 | [x] | 2026-06-24 | Arena.ai Agent Mode - Execution Lead Engineer |
 | M2 | E4-C2 | E4-C2-S1-T1 | [x] | 2026-06-21 | Arena Agent |
 | M2 | E4-C2 | E4-C2-S1-T2 | [x] | 2026-06-21 | Arena Agent |

@@ -1,189 +1,311 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-24 23:45:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 """
-大规模搜索引擎风控压测与反爬特征诊断工具 (Risk Control Diagnostic Suite)
+Risk-Control Diagnostic Suite v2 for SearXNG engines.
 
-用途：
-在本地 Mac 真实网络环境（直连或宿主机 Clash 分流代理）下，并发/逐一测试 SearXNG 支持的
-核心搜索引擎的风控响应特征（如 CAPTCHA、429 限流、IP 封禁、空结果等），为反爬策略与
-容错降级路由提供数据决策支持。
+Enhancements:
+1. CAPTCHA / WAF fingerprint detection from returned HTML.
+2. Failure HTML snapshots under diagnostics/snapshots/.
+3. Prometheus-compatible metrics export.
+4. JSON report and SLO-oriented latency / success-rate summary.
 
-运行方式（需在开启 SearXNG 容器的 Mac 真机执行）：
-python3 scripts/diagnostics/test_engine_risk_control.py --base-url http://127.0.0.1:8090
+Run on the user's Mac with SearXNG running:
+python3 scripts/diagnostics/test_engine_risk_control.py --base-url http://127.0.0.1:8090 --export-prom
 """
+
+from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import logging
-import sys
 import time
-from typing import Dict, List, Any
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List
+
 import httpx
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("engine_risk_test")
 
+SNAPSHOT_DIR = Path("diagnostics/snapshots")
+SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+
+CAPTCHA_FINGERPRINTS = {
+    "cloudflare_turnstile": ["challenges.cloudflare.com/turnstile", "cf-turnstile", "__cf_chl_"],
+    "cloudflare_managed": ["cf-mitigated", "cf-ray", "checking your browser", "ddos protection by cloudflare"],
+    "google_recaptcha_v2": ["g-recaptcha", "recaptcha/api.js"],
+    "google_recaptcha_v3": ["grecaptcha.execute", "recaptcha/enterprise.js"],
+    "hcaptcha": ["hcaptcha.com", "h-captcha"],
+    "google_sorry": ["/sorry/index", "unusual traffic from your computer"],
+    "ddos_guard": ["ddos-guard.net", "ddg_"],
+    "akamai_bot_manager": ["_abck", "ak_bmsc", "akam"],
+    "perimeterx": ["_pxhd", "px-captcha", "perimeterx.net"],
+    "datadome": ["datadome", "dd-captcha"],
+    "imperva_incapsula": ["incap_ses", "incapsula"],
+}
+
 ENGINES_TO_TEST = [
-    "google",
+    "bing",
     "duckduckgo",
+    "google",
     "brave",
     "startpage",
-    "bing",
-    "yahoo",
     "qwant",
+    "mojeek",
+    "yahoo",
     "wikipedia",
     "github",
     "arxiv",
-    "stackoverflow"
+    "stackoverflow",
+    "hackernews",
+    "lobste.rs",
+    "reddit",
 ]
 
-TEST_QUERIES = [
-    "python langgraph",
-    "macos m1 max artificial intelligence",
-    "deep learning mcp protocol"
-]
+TEST_QUERIES = ["python langgraph", "rust async programming", "openai benchmark arxiv"]
 
-class EngineTestResult:
+
+def fingerprint_html(html: str) -> List[str]:
+    lower = html.lower()
+    matches: List[str] = []
+    for fp_name, keywords in CAPTCHA_FINGERPRINTS.items():
+        if any(kw.lower() in lower for kw in keywords):
+            matches.append(fp_name)
+    return matches
+
+
+def save_snapshot(engine: str, query: str, content: str, suffix: str = "html") -> str:
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_q = "".join(c if c.isalnum() else "_" for c in query)[:30]
+    h = hashlib.md5(content.encode("utf-8", errors="ignore")).hexdigest()[:8]
+    fp = SNAPSHOT_DIR / f"{engine}_{safe_q}_{ts}_{h}.{suffix}"
+    fp.write_text(content[:200000], encoding="utf-8", errors="ignore")
+    return str(fp)
+
+
+class EngineMetric:
     def __init__(self, engine: str):
         self.engine = engine
-        self.total_queries = 0
-        self.success_count = 0
-        self.captcha_count = 0
-        self.rate_limit_count = 0
-        self.empty_count = 0
-        self.error_count = 0
-        self.avg_latency_ms = 0.0
-        self.raw_errors: List[str] = []
+        self.attempts = 0
+        self.successes = 0
+        self.captchas = 0
+        self.rate_limited = 0
+        self.timeouts = 0
+        self.errors = 0
+        self.empty = 0
+        self.latencies: List[float] = []
+        self.detected_protections: Dict[str, int] = {}
+        self.snapshots: List[str] = []
+        self.errors_raw: List[str] = []
 
-    def status_summary(self) -> str:
-        if self.captcha_count > 0:
-            return "🔴 CRITICAL (CAPTCHA Blocked)"
-        if self.rate_limit_count > 0:
-            return "🟡 WARNING (429 Rate Limited)"
-        if self.error_count > 0:
-            return f"❌ ERROR ({self.raw_errors[0] if self.raw_errors else 'Unknown'})"
-        if self.success_count == 0 or self.empty_count == self.total_queries:
-            return "⚪ EMPTY (No results returned)"
-        return "🟢 PASS (Stable & Healthy)"
+    @property
+    def success_rate(self) -> float:
+        return self.successes / self.attempts if self.attempts else 0.0
 
-async def test_single_engine(client: httpx.AsyncClient, engine: str, queries: List[str]) -> EngineTestResult:
-    result = EngineTestResult(engine)
-    latencies = []
-    
-    for q in queries:
-        result.total_queries += 1
-        start_time = time.perf_counter()
-        params = {"q": q, "format": "json", "engines": engine, "limit": 5}
-        
+    @property
+    def p50_ms(self) -> float:
+        if not self.latencies:
+            return 0.0
+        s = sorted(self.latencies)
+        return s[len(s) // 2]
+
+    @property
+    def p95_ms(self) -> float:
+        if not self.latencies:
+            return 0.0
+        s = sorted(self.latencies)
+        idx = min(len(s) - 1, int(len(s) * 0.95))
+        return s[idx]
+
+    def verdict(self) -> str:
+        if self.captchas >= self.attempts and self.attempts:
+            return "BLOCKED_ALWAYS_CAPTCHA"
+        if self.captchas > 0:
+            return f"PARTIAL_CAPTCHA_{self.captchas}_OF_{self.attempts}"
+        if self.rate_limited > 0:
+            return f"RATE_LIMITED_{self.rate_limited}"
+        if self.timeouts > 0:
+            return f"TIMEOUT_PRONE_{self.timeouts}"
+        if self.success_rate >= 0.8:
+            return "HEALTHY"
+        if self.success_rate >= 0.3:
+            return "UNSTABLE"
+        return "BROKEN"
+
+
+async def probe_engine(client: httpx.AsyncClient, engine: str, queries: List[str]) -> EngineMetric:
+    m = EngineMetric(engine)
+    for query in queries:
+        m.attempts += 1
+        t0 = time.perf_counter()
         try:
-            resp = await client.get("/search", params=params, timeout=12.0)
-            elapsed = (time.perf_counter() - start_time) * 1000
-            latencies.append(elapsed)
-            
-            if resp.status_code == 429:
-                result.rate_limit_count += 1
-                result.raw_errors.append("HTTP 429 Too Many Requests")
+            resp = await client.get(
+                "/search",
+                params={"q": query, "format": "json", "engines": engine, "limit": 5},
+                timeout=15.0,
+            )
+            m.latencies.append((time.perf_counter() - t0) * 1000)
+
+            if resp.status_code >= 400:
+                body = resp.text
+                fps = fingerprint_html(body)
+                if fps:
+                    m.captchas += 1
+                    for fp in fps:
+                        m.detected_protections[fp] = m.detected_protections.get(fp, 0) + 1
+                    m.snapshots.append(save_snapshot(engine, query, body))
+                elif resp.status_code == 429:
+                    m.rate_limited += 1
+                else:
+                    m.errors += 1
+                m.errors_raw.append(f"HTTP {resp.status_code}")
+                await asyncio.sleep(1.0)
                 continue
-            elif resp.status_code in (403, 503):
-                result.captcha_count += 1
-                result.raw_errors.append(f"HTTP {resp.status_code} Forbidden/Service Unavailable")
-                continue
-                
+
             data = resp.json()
             unresponsive = data.get("unresponsive_engines", [])
-            
-            # 检测 SearXNG 结构化报错
             engine_err = None
             for item in unresponsive:
-                if isinstance(item, list) and len(item) >= 2 and item[0].lower() == engine.lower():
+                if isinstance(item, list) and len(item) >= 2 and str(item[0]).lower() == engine.lower():
                     engine_err = str(item[1])
                     break
-                elif engine.lower() in str(item).lower():
-                    engine_err = str(item)
-                    break
-                    
+
             if engine_err:
-                err_lower = engine_err.lower()
-                if "captcha" in err_lower or "challenge" in err_lower or "bot" in err_lower:
-                    result.captcha_count += 1
-                    result.raw_errors.append(f"Upstream CAPTCHA: {engine_err}")
-                elif "too many requests" in err_lower or "limit" in err_lower or "suspended" in err_lower:
-                    result.rate_limit_count += 1
-                    result.raw_errors.append(f"Upstream Suspended/Limit: {engine_err}")
+                err_l = engine_err.lower()
+                m.errors_raw.append(engine_err)
+                if any(k in err_l for k in ("captcha", "challenge", "bot", "turnstile")):
+                    m.captchas += 1
+                    try:
+                        html_resp = await client.get("/search", params={"q": query, "engines": engine}, timeout=15.0)
+                        fps = fingerprint_html(html_resp.text)
+                        for fp in fps:
+                            m.detected_protections[fp] = m.detected_protections.get(fp, 0) + 1
+                        m.snapshots.append(save_snapshot(engine, query, html_resp.text))
+                    except Exception:
+                        pass
+                elif any(k in err_l for k in ("too many", "limit", "suspended", "429", "rate")):
+                    m.rate_limited += 1
+                elif "timeout" in err_l:
+                    m.timeouts += 1
                 else:
-                    result.error_count += 1
-                    result.raw_errors.append(engine_err)
+                    m.errors += 1
+            elif data.get("results"):
+                m.successes += 1
             else:
-                res_list = data.get("results", [])
-                if len(res_list) > 0:
-                    result.success_count += 1
-                else:
-                    result.empty_count += 1
-                    
+                m.empty += 1
         except httpx.TimeoutException:
-            result.error_count += 1
-            result.raw_errors.append("Request Timeout (>12s)")
-        except Exception as e:
-            result.error_count += 1
-            result.raw_errors.append(f"Client Exception: {repr(e)}")
-            
-        await asyncio.sleep(0.5) # 请求间隔防连发限制
+            m.timeouts += 1
+            m.errors_raw.append("client timeout")
+        except Exception as exc:
+            m.errors += 1
+            m.errors_raw.append(f"{type(exc).__name__}: {exc}")
+        await asyncio.sleep(1.0)
+    return m
 
-    if latencies:
-        result.avg_latency_ms = sum(latencies) / len(latencies)
-    return result
 
-async def run_diagnostic(base_url: str):
-    logger.info(f"🚀 开始搜索引擎风控大规模压测诊断，目标节点: {base_url}")
-    logger.info(f"本次压测引擎池 ({len(ENGINES_TO_TEST)} 个): {ENGINES_TO_TEST}")
-    
-    async with httpx.AsyncClient(base_url=base_url, headers={"User-Agent": "Mozilla/5.0"}, trust_env=False) as client:
-        # 先做一次 ping 测试
+def render_prometheus(metrics: List[EngineMetric]) -> str:
+    lines = [
+        "# HELP searxng_engine_success_rate Success rate per engine",
+        "# TYPE searxng_engine_success_rate gauge",
+    ]
+    for m in metrics:
+        lines.append(f'searxng_engine_success_rate{{engine="{m.engine}"}} {m.success_rate:.3f}')
+    lines += [
+        "# HELP searxng_engine_latency_p95_ms Engine P95 latency",
+        "# TYPE searxng_engine_latency_p95_ms gauge",
+    ]
+    for m in metrics:
+        lines.append(f'searxng_engine_latency_p95_ms{{engine="{m.engine}"}} {m.p95_ms:.1f}')
+    lines += [
+        "# HELP searxng_engine_captcha_count Captcha hits",
+        "# TYPE searxng_engine_captcha_count counter",
+    ]
+    for m in metrics:
+        lines.append(f'searxng_engine_captcha_count{{engine="{m.engine}"}} {m.captchas}')
+    return "\n".join(lines)
+
+
+async def main(base_url: str, export_prom: bool) -> None:
+    logger.info("Risk-Control Diagnostic Suite v2 -> %s", base_url)
+    async with httpx.AsyncClient(
+        base_url=base_url,
+        headers={"User-Agent": "Mozilla/5.0 (FORGE-Diag)"},
+        trust_env=False,
+    ) as client:
         try:
-            ping_res = await client.get("/search", params={"q": "ping", "format": "json"}, timeout=5.0)
-            if ping_res.status_code != 200:
-                logger.error(f"❌ SearXNG 节点未响应正常状态码: {ping_res.status_code}")
+            ping = await client.get("/search", params={"q": "ping", "format": "json", "limit": 1}, timeout=8.0)
+            if ping.status_code != 200:
+                logger.error("SearXNG ping returned HTTP %s", ping.status_code)
                 return
-        except Exception as e:
-            logger.error(f"❌ 无法连接至 SearXNG 服务 ({base_url})。请确认容器已启动: {e}")
+        except Exception as exc:
+            logger.error("Cannot connect to SearXNG at %s: %s", base_url, exc)
             return
+        metrics = await asyncio.gather(*[probe_engine(client, engine, TEST_QUERIES) for engine in ENGINES_TO_TEST])
 
-        tasks = [test_single_engine(client, eng, TEST_QUERIES) for eng in ENGINES_TO_TEST]
-        results: List[EngineTestResult] = await asyncio.gather(*tasks)
-
-    print("\n" + "="*85)
-    print(f"{'搜索引擎 (Engine)':<18} | {'状态评估 (Risk Assessment)':<30} | {'成功率':<10} | {'平均耗时':<10}")
-    print("="*85)
-    
-    stable_engines = []
-    risky_engines = []
-    
-    for r in results:
-        rate_str = f"{r.success_count}/{r.total_queries}"
-        lat_str = f"{r.avg_latency_ms:.1f}ms" if r.avg_latency_ms > 0 else "-"
-        print(f"{r.engine:<18} | {r.status_summary():<30} | {rate_str:<10} | {lat_str:<10}")
-        if r.raw_errors:
-            print(f"   ↳ 异常明细: {r.raw_errors[0]}")
-            
-        if r.success_count > 0 and r.captcha_count == 0 and r.rate_limit_count == 0:
-            stable_engines.append(r.engine)
+    print("\n" + "=" * 110)
+    print(f"{'Engine':<18}{'Verdict':<28}{'SR':<8}{'P50':<10}{'P95':<10}{'Protection':<30}")
+    print("=" * 110)
+    healthy, broken = [], []
+    for m in metrics:
+        protection = ",".join(m.detected_protections.keys()) or "-"
+        print(
+            f"{m.engine:<18}{m.verdict():<28}"
+            f"{m.success_rate * 100:5.1f}%  {m.p50_ms:8.0f}ms{m.p95_ms:8.0f}ms  {protection[:28]:<30}"
+        )
+        if m.snapshots:
+            print(f"   snapshots: {m.snapshots[0]}")
+        if m.success_rate >= 0.5:
+            healthy.append(m.engine)
         else:
-            risky_engines.append((r.engine, r.status_summary()))
+            broken.append(m.engine)
 
-    print("="*85)
-    print("\n📊 【诊断决策与反爬建议总结】")
-    print(f"1. 当前环境推荐白名单稳定引擎池 ({len(stable_engines)} 个): {stable_engines}")
-    print(f"2. 高风险/已被封禁引擎 ({len(risky_engines)} 个): {[e[0] for e in risky_engines]}")
-    print("3. 反爬策略落地优化指南：")
-    print("   - 针对 CAPTCHA/429 引擎，建议在 settings.yml 中显式设置 disabled: true 或增大请求回避周期。")
-    print("   - SearXNGProvider 查询链路已开启智能退避路由：若通用引擎报 CAPTCHA 导致空结果，自动重定向至稳定白名单池。")
+    print("\n" + "=" * 110)
+    print(f"Recommended healthy pool ({len(healthy)}): {healthy}")
+    print(f"Avoid / circuit-break ({len(broken)}): {broken}")
+    print("\nSuggested settings.yml engine config:")
+    print("engines:")
+    for m in metrics:
+        disabled = "false" if m.success_rate >= 0.5 else "true"
+        print(f"  - name: {m.engine}\n    disabled: {disabled}")
+
+    Path("diagnostics").mkdir(exist_ok=True)
+    if export_prom:
+        Path("diagnostics/metrics.prom").write_text(render_prometheus(metrics), encoding="utf-8")
+        print("\nPrometheus metrics -> diagnostics/metrics.prom")
+
+    report = {
+        "ts": datetime.now().isoformat(),
+        "base_url": base_url,
+        "engines": [
+            {
+                "name": m.engine,
+                "verdict": m.verdict(),
+                "success_rate": m.success_rate,
+                "p50_ms": m.p50_ms,
+                "p95_ms": m.p95_ms,
+                "captchas": m.captchas,
+                "rate_limited": m.rate_limited,
+                "timeouts": m.timeouts,
+                "errors": m.errors,
+                "protections": m.detected_protections,
+                "snapshots": m.snapshots,
+                "errors_raw": m.errors_raw[:3],
+            }
+            for m in metrics
+        ],
+    }
+    Path("diagnostics/report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    print("JSON report -> diagnostics/report.json")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="搜索引擎风控诊断工具")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8090", help="SearXNG 服务地址")
+    parser = argparse.ArgumentParser(description="SearXNG engine risk-control diagnostic suite v2")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8090")
+    parser.add_argument("--export-prom", action="store_true")
     args = parser.parse_args()
-    
-    asyncio.run(run_diagnostic(args.base_url))
+    asyncio.run(main(args.base_url, args.export_prom))

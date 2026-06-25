@@ -1,36 +1,163 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-24 14:48:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
-use_default_settings: true
+# FORGE SearXNG Settings v3.0 - Anti-Risk-Control Hardened
+# Strategy: keep SearXNG as local primary metasearch, but remove high-risk
+# scraping engines from the main pool and prefer stable / API-backed / open-data
+# engines under data-center/VPN proxy environments.
+
+use_default_settings:
+  engines:
+    keep_only:
+      - bing
+      - mojeek
+      - qwant
+      - wikipedia
+      - wikidata
+      - duckduckgo
+      - github
+      - gitlab
+      - stackoverflow
+      - arxiv
+      - crossref
+      - pubmed
+      - semantic scholar
+      - reddit
+      - hackernews
+      - lobste.rs
+      - npm
+      - pypi
+      - docker hub
+      - mdn
+      - wolframalpha noapi
+
 general:
   debug: false
-  instance_name: "FORGE Google Isolation"
+  instance_name: "FORGE Resilient Search"
+  enable_metrics: true
+
 search:
   safe_search: 0
+  autocomplete: ""
+  default_lang: ""
   formats: [html, json]
+  max_page: 1
+
 server:
   port: 8080
   bind_address: "0.0.0.0"
   secret_key: "${SEARXNG_SECRET_KEY}"
   limiter: false
+  image_proxy: false
+  http_protocol_version: "1.1"
+
 outgoing:
-  request_timeout: 3.0
-  max_request_timeout: 6.0
+  request_timeout: 10.0
+  max_request_timeout: 20.0
+  pool_connections: 100
+  pool_maxsize: 20
+  enable_http2: false
+  useragent_suffix: ""
   proxies:
-    "all://":  
+    "all://":
       - http://host.docker.internal:7890
+
 engines:
-  - name: google
-    disabled: true
-  - name: duckduckgo
-    disabled: false
+  # ---- General search: lower-risk scraping engines ----
   - name: bing
     disabled: false
+    timeout: 8.0
+    weight: 1
+
+  - name: mojeek
+    disabled: false
+    timeout: 8.0
+    weight: 2
+
+  - name: qwant
+    disabled: false
+    timeout: 8.0
+    weight: 1
+
+  # ---- Knowledge / open APIs ----
   - name: wikipedia
     disabled: false
-  - name: github
+    timeout: 10.0
+    weight: 3
+
+  - name: wikidata
     disabled: false
-  - name: stackoverflow
-    disabled: false
+    timeout: 10.0
+
+  # ---- Academic / research ----
   - name: arxiv
     disabled: false
+    timeout: 15.0
+    categories: [science, scientific publications]
+
+  - name: crossref
+    disabled: false
+    timeout: 10.0
+
+  - name: pubmed
+    disabled: false
+    timeout: 10.0
+
+  - name: semantic scholar
+    disabled: false
+    timeout: 10.0
+
+  # ---- Code / engineering ----
+  - name: github
+    disabled: false
+    timeout: 10.0
+    categories: [it]
+
+  - name: stackoverflow
+    disabled: false
+    timeout: 10.0
+    categories: [it]
+
+  - name: hackernews
+    disabled: false
+    timeout: 8.0
+    categories: [it, news]
+
+  - name: lobste.rs
+    disabled: false
+    timeout: 8.0
+
+  - name: mdn
+    disabled: false
+    timeout: 10.0
+
+  # ---- Package repositories ----
+  - name: npm
+    disabled: false
+
+  - name: pypi
+    disabled: false
+
+  - name: docker hub
+    disabled: false
+
+  # ---- Risky scraping engines: disabled by default ----
+  - name: duckduckgo
+    disabled: true
+    timeout: 8.0
+
+  - name: google
+    disabled: true
+
+  - name: brave
+    disabled: true
+
+  - name: startpage
+    disabled: true
+
+categories_as_tabs:
+  general:
+  it:
+  science:
+  files:
+  news:

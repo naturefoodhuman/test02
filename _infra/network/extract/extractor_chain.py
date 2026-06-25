@@ -1,7 +1,7 @@
 """
 ExtractorChain (FORGE Network incremental)
 
-降级提取链：Crawl4AI → trafilatura → (Playwright future)
+降级提取链：curl_cffi(仅 TLS guarded) → Crawl4AI → trafilatura → (Playwright future)
 """
 
 from __future__ import annotations
@@ -12,11 +12,13 @@ from .base import ExtractProvider
 from .models import ExtractMode, ExtractResult
 from .crawl4ai_client import Crawl4AIProvider
 from .trafilatura_fallback import TrafilaturaProvider
+from .curl_cffi_fallback import CurlCffiProvider
 
 class ExtractorChain:
     def __init__(self, providers: Optional[List[ExtractProvider]] = None):
         if providers is None:
             self.providers: List[ExtractProvider] = [
+                CurlCffiProvider(),
                 Crawl4AIProvider(),
                 TrafilaturaProvider(),
             ]

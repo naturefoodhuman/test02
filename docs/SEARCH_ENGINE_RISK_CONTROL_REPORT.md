@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间）：2026-06-24 23:50:00
+创建时间（北京时间）：2026-06-25 00:00:00
 -->
 
 # 主流搜索引擎及特殊站点反爬风控机制与对策白皮书
 **(Search Engine Risk Control Analysis & Anti-Bot Strategy Whitepaper)**
 
-**文档状态**：已发布 (Released)  
-**生成依据**：06-24 真机全链路压测现象 + 大规模搜索引擎风控特征诊断 (`test_engine_risk_control.py`)  
+**文档状态**：已更新 (Released + v2 implementation update)
+**生成依据**：06-24 真机全链路压测现象 + 06-25 附录 1 系统性加固落地 (`test_engine_risk_control.py` v2)
 
 ---
 
@@ -74,3 +74,82 @@ python3 scripts/diagnostics/test_engine_risk_control.py --base-url http://127.0.
 ```
 
 该工具将自动在本地沙箱/真机容器网络下对 11 大搜索引擎逐一执行连发压测，并生成结构化的健康绿指标（🟢 PASS）、限流黄指标（🟡 WARNING）与封锁红指标（🔴 CRITICAL），供后续调优 `settings.yml` 引擎池参考。
+
+---
+
+## 五、2026-06-25 落地更新：系统性风控加固 v2
+
+本轮按用户最新 P0 指令“附录 1”完成系统性升级。关键判断是：共享机场 / 数据中心 IP 上的 Google、Startpage、DuckDuckGo、Brave scraping 不应继续作为主路径反复尝试；客户端层 UA / TLS 指纹优化无法突破 ASN / IP reputation 级拦截，工程重点应转为 **引擎选型重构 → 配置层硬化 → 应用层熔断 → API 层兜底**。
+
+### 5.1 Engine Matrix 与 settings.yml 硬化
+
+`docker/searxng/settings.yml` 已切换为 anti-risk-control hardened 配置：
+
+- 使用 `use_default_settings.engines.keep_only` 白名单模式。
+- 禁用高风险 scraping 主路径：Google / Brave scraping / Startpage / DuckDuckGo。
+- 启用稳定 / 开放数据源：Wikipedia、Mojeek、Bing、Qwant、GitHub、arXiv、StackOverflow、HackerNews、Crossref、PubMed 等。
+- `request_timeout` 提升到 10s，`max_request_timeout` 提升到 20s。
+- `enable_http2: false`，降低代理 HTTP/2 协商风险。
+
+### 5.2 应用层 Circuit Breaker
+
+新增 `_infra/network/search/circuit_breaker.py`，`SearXNGProvider v24` 已接入：
+
+- 每个 engine 独立统计健康状态。
+- 连续失败后进入 OPEN，冷却期内自动跳过。
+- 冷却结束后进入 HALF_OPEN 做探测。
+- 成功恢复 CLOSED，失败使用指数退避。
+- `snapshot()` 可用于诊断与日志。
+
+### 5.3 MultiSourceSearchOrchestrator
+
+新增 `_infra/network/search/orchestrator.py`，当前搜索链路为：
+
+1. L1：按 query intent 路由到 SearXNG 指定引擎池。
+2. L2：SearXNG tiered fallback。
+3. L3：可选 API fallback（Brave / Tavily / Serper）。
+
+API fallback 仅在环境变量存在时启用：
+
+```bash
+export BRAVE_API_KEY="..."
+export TAVILY_API_KEY="..."
+export SERPER_API_KEY="..."
+```
+
+### 5.4 诊断工具 v2
+
+`scripts/diagnostics/test_engine_risk_control.py` 已升级：
+
+- CAPTCHA / WAF 指纹识别：Cloudflare Turnstile、reCAPTCHA、hCaptcha、Akamai、PerimeterX、DataDome 等。
+- 失败 HTML 快照：`diagnostics/snapshots/`。
+- Prometheus metrics：`diagnostics/metrics.prom`。
+- JSON report：`diagnostics/report.json`。
+- 输出 success rate、P50、P95、recommended healthy pool、avoid/circuit-break list。
+
+推荐真机运行：
+
+```bash
+python3 scripts/diagnostics/test_engine_risk_control.py \
+  --base-url http://127.0.0.1:8090 --export-prom
+```
+
+### 5.5 TLS 特殊站点提取 fallback
+
+新增 `_infra/network/extract/curl_cffi_fallback.py`：
+
+- 仅当安装 `curl_cffi` 且目标域名命中 known TLS guarded domains 时启用。
+- 不替换 Crawl4AI primary。
+- 不用于突破登录、付费墙或访问控制。
+
+---
+
+## 六、当前验证基线
+
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 357 passed, 2 skipped, 44 warnings
+
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+```

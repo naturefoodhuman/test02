@@ -1,10 +1,10 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-24 14:48:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 import asyncio
 import logging
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
-from ..search.searxng_client import SearXNGProvider
+from ..search.orchestrator import MultiSourceSearchOrchestrator
 from ..extract import ExtractorChain, Crawl4AIProvider, TrafilaturaProvider
 from ..privacy_gateway import build_privacy_gateway, PrivacyContext
 from ..local_rag.store import RAGStore
@@ -25,7 +25,7 @@ class WorkflowResult(BaseModel):
 class NetworkWorkflow:
     def __init__(self, config=None):
         self.config = config or load_network_config()
-        self.search_provider = SearXNGProvider(config=self.config.search.searxng)
+        self.search_provider = MultiSourceSearchOrchestrator()
         self.extractor = ExtractorChain(providers=[Crawl4AIProvider(config=self.config.extract.crawl4ai), TrafilaturaProvider()])
         self.privacy_gateway = build_privacy_gateway(config=self.config)
         self.sanitizer = InputSanitizer()

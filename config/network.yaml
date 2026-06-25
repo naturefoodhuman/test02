@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-24 14:48:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 version: "1.0"
 search:
@@ -9,10 +9,10 @@ search:
     max_results: 10
     fetch_top_k: 3
     max_chars_per_page: 8000
-    engines_enabled: [duckduckgo, github, arxiv, wikipedia, stackoverflow, bing]
-    engines_disabled: [google, baidu]
+    engines_enabled: [wikipedia, mojeek, hackernews, bing, qwant, github, arxiv, stackoverflow]
+    engines_disabled: [google, brave, startpage, baidu]
   fallback_tavily:
-    enabled: false
+    enabled: true
     api_key_env: "TAVILY_API_KEY"
 extract:
   crawl4ai:

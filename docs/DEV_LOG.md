@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间）：2026-06-24 23:55:00
+创建时间（北京时间）：2026-06-25 00:00:00
 -->
 
 # DEV LOG —— 逐轮开发日志 (续)
@@ -9,9 +9,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
-- **最新测试基线**：`python -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `350 passed, 2 skipped, 44 warnings`
-- **最近完成**：联网功能开发4大规模测试与智能备用路由（容错自愈路由、风控诊断脚本与白皮书）
-- **建议下一步**：NetworkWorkflow / CLI 集成，或真实服务验证。
+- **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `357 passed, 2 skipped, 44 warnings`
+- **最近完成**：联网功能开发5搜索风控系统性加固（Engine Matrix、Circuit Breaker、MultiSource Orchestrator、API fallback、诊断 v2）
+- **建议下一步**：用户申请并配置 Brave/Tavily/Serper API Key 后，执行真机 SearXNG 重启、诊断 v2 与端到端搜索验收。
 
 ---
 
@@ -2458,3 +2458,98 @@ python3 -m pytest _infra/network/tests/unit/test_workflow.py -v
   - 由老板发给外部顶尖 AI（Claude/GPT/Gemini）展开独立远程诊断。
 
 ---
+
+## 第 78 轮 · 2026-06-25（联网功能开发5：搜索风控系统性加固）
+
+**目标**：按用户最新 P0 指令“附录 1”处理搜索引擎连续 CAPTCHA / 429 / challenge 风控问题。执行范围限定为既有 Network Increment 架构内的搜索 fallback、熔断、诊断与可选 API 兜底；不替换 SearXNG Primary Search，不改变 Search → Extract → Privacy → RAG 调用链职责。
+
+**完成内容**：
+
+1. **SearXNG Engine Matrix 硬化**
+   - 重写 `docker/searxng/settings.yml` 为 anti-risk-control hardened 配置。
+   - 使用 `use_default_settings.engines.keep_only` 白名单模式。
+   - 禁用 Google / Brave scraping / Startpage / DuckDuckGo scraping 主路径。
+   - 提升 request timeout，关闭 HTTP/2，保留本地代理出口。
+   - 优先稳定 / 开放数据源：Wikipedia、Mojeek、Bing、Qwant、GitHub、arXiv、StackOverflow、HackerNews 等。
+
+2. **引擎级 Circuit Breaker**
+   - 新增 `_infra/network/search/circuit_breaker.py`。
+   - 支持 CLOSED / OPEN / HALF_OPEN 状态。
+   - 支持连续失败阈值、冷却期、指数退避、snapshot。
+   - `SearXNGProvider` 根据 `unresponsive_engines` 记录每个 engine 的成功 / 失败。
+
+3. **SearXNGProvider v24**
+   - `_infra/network/search/searxng_client.py` 升级为 tiered routing：
+     - tier1 stable：wikipedia / mojeek / hackernews
+     - tier2 general：bing / qwant / mojeek
+     - tier3 tech：github / stackoverflow / lobste.rs / mdn
+     - tier4 academic：arxiv / crossref / pubmed / semantic scholar
+     - tier5 risky：duckduckgo
+   - 支持 CAPTCHA / rate_limit / timeout / forbidden 分类。
+   - 对熔断 engine 自动跳过，避免重复触发风控。
+   - 保持 SearchProvider 接口兼容。
+
+4. **MultiSourceSearchOrchestrator**
+   - 新增 `_infra/network/search/orchestrator.py`。
+   - 支持 deterministic intent detection：general / coding / academic / news。
+   - L1：意图路由 SearXNG。
+   - L2：SearXNG tier fallback。
+   - L3：可选 API fallback。
+   - `NetworkWorkflow` 已从直接注入 `SearXNGProvider` 改为注入 `MultiSourceSearchOrchestrator`，外部调用接口不变。
+
+5. **API fallback providers**
+   - 新增 `_infra/network/search/api_providers.py`。
+   - 支持 Brave Search API、Tavily、Serper.dev。
+   - 仅当环境变量存在时自动加载：`BRAVE_API_KEY` / `TAVILY_API_KEY` / `SERPER_API_KEY`。
+   - 不在仓库保存任何密钥。
+   - `NETWORK_SEARCH_API_PROXY` 可覆盖默认 API 代理；空字符串可显式禁用代理。
+
+6. **TLS impersonation extractor fallback**
+   - 新增 `_infra/network/extract/curl_cffi_fallback.py`。
+   - `ExtractorChain` 增加 `CurlCffiProvider`，但只对 known TLS guarded domains 且安装 `curl_cffi` 时启用。
+   - Crawl4AI 仍然是通用公开网页提取 Primary，不改变原提取层架构职责。
+
+7. **诊断工具 v2**
+   - 升级 `scripts/diagnostics/test_engine_risk_control.py`。
+   - 新增 CAPTCHA / WAF 指纹识别：Cloudflare Turnstile、reCAPTCHA、hCaptcha、Akamai、DataDome、PerimeterX 等。
+   - 新增失败 HTML snapshot：`diagnostics/snapshots/`。
+   - 新增 Prometheus metrics：`diagnostics/metrics.prom`。
+   - 新增 JSON report：`diagnostics/report.json`。
+   - 输出 success rate、P50/P95、推荐白名单池和禁用建议。
+
+8. **测试补强**
+   - 新增：`test_circuit_breaker.py`
+   - 新增：`test_search_orchestrator.py`
+   - 新增：`test_curl_cffi_fallback.py`
+   - 更新：`test_search.py`、`test_workflow.py`、`test_docker_services.py`
+
+**验证结果**：
+
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 357 passed, 2 skipped, 44 warnings
+
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+
+python3 -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+**静态检查说明**：
+
+```bash
+ruff check _infra/network scripts/diagnostics
+# 当前环境 ruff not installed，未执行；已用 compileall 进行 Python 静态语法检查。
+```
+
+**状态同步**：
+- `TASK_BACKLOG.md`：新增并标记 `E3-C5-S1-T1` 为 DONE。
+- `docs/PROJECT_STATE.md`：更新为 v1.4.1 Network Resilient Search。
+- `docs/CHANGELOG.md`：记录本轮需求变动和文件影响。
+
+**仍需用户真机执行**：
+- 配置 API key 环境变量。
+- 重启 SearXNG Docker 服务。
+- 运行诊断脚本 v2。
+- 执行端到端 CLI search 验证。

@@ -24,6 +24,14 @@ from _infra.network.search.models import SearchQuery, SearchResult
 from _infra.network.search.searxng_client import SearXNGProvider
 
 
+@pytest.fixture(autouse=True)
+def reset_search_breaker():
+    from _infra.network.search.circuit_breaker import get_global_breaker
+
+    get_global_breaker().reset()
+
+
+
 def test_search_query_model():
     q = SearchQuery(query="python async", max_results=10)
     assert q.query == "python async"

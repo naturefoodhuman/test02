@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-24 14:48:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 import asyncio
 from unittest.mock import MagicMock, AsyncMock, patch
@@ -13,7 +13,7 @@ def test_workflow_execution_basic():
         mock_config = MagicMock()
         mock_config.search.searxng.fetch_top_k = 2
         
-        with patch("_infra.network.network_workflow.workflow.SearXNGProvider") as MockSearch,              patch("_infra.network.network_workflow.workflow.ExtractorChain") as MockExtract,              patch("_infra.network.network_workflow.workflow.build_privacy_gateway") as MockGatewayFactory,              patch("_infra.network.network_workflow.workflow.RAGStore") as MockRAG,              patch("_infra.network.network_workflow.workflow.load_network_config", return_value=mock_config):
+        with patch("_infra.network.network_workflow.workflow.MultiSourceSearchOrchestrator") as MockSearch,              patch("_infra.network.network_workflow.workflow.ExtractorChain") as MockExtract,              patch("_infra.network.network_workflow.workflow.build_privacy_gateway") as MockGatewayFactory,              patch("_infra.network.network_workflow.workflow.RAGStore") as MockRAG,              patch("_infra.network.network_workflow.workflow.load_network_config", return_value=mock_config):
             
             mock_search_inst = MockSearch.return_value
             mock_search_inst.search = AsyncMock(return_value=[
@@ -52,7 +52,7 @@ def test_workflow_execution_basic():
 def test_workflow_no_results():
     async def run_test():
         mock_config = MagicMock()
-        with patch("_infra.network.network_workflow.workflow.SearXNGProvider") as MockSearch,              patch("_infra.network.network_workflow.workflow.load_network_config", return_value=mock_config):
+        with patch("_infra.network.network_workflow.workflow.MultiSourceSearchOrchestrator") as MockSearch,              patch("_infra.network.network_workflow.workflow.load_network_config", return_value=mock_config):
             
             mock_search_inst = MockSearch.return_value
             mock_search_inst.search = AsyncMock(return_value=[])

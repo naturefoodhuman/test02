@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：
-创建时间（北京时间）：2026-06-23 17:20:00
+创建时间（北京时间）：2026-06-25 00:00:00
 -->
 
 # HANDOFF —— Agent 接手入口
@@ -63,14 +63,19 @@ FORGE Factory 是 AI 项目孵化工厂。
 - 已打通 Mac 真机全链路：Search -> Extract -> Privacy -> RAG。
 - 攻克了 0.9.0 解析黑洞和 500 上下文溢出问题。
 
+### ⚠️ 搜索风控加固 (2026-06-25)
+- 已按用户“附录 1”完成 Engine Matrix、per-engine Circuit Breaker、MultiSourceSearchOrchestrator、可选 Brave/Tavily/Serper API fallback 与诊断工具 v2。
+- 当前 API fallback 仅在 `BRAVE_API_KEY` / `TAVILY_API_KEY` / `SERPER_API_KEY` 存在时加载；密钥不得提交。
+- `docker/searxng/settings.yml` 已改为 anti-risk-control hardened 配置，真机需重启 SearXNG 后验证。
+
 ## 3. 当前下一步候选
 
 当前大部分 Network MVP 能力已完成。下一步建议在以下方向中选择：
 
-1. **NetworkWorkflow / CLI 集成**：把 Search → Extract → Sanitizer → PrivacyGateway → RAG 串成用户可调用命令。
+1. **API Key 配置与真机验收**：申请 Brave/Tavily/Serper API key，配置环境变量，重启 SearXNG，运行诊断 v2 与端到端 CLI search。
 2. **真实服务验证**：在用户 Mac 上验证 Docker / Ollama / MCP / Chrome / Playwright。
-3. **文档治理 / 接手体验强化**：继续修正文档漂移。
-4. **RAG 真机增强**：接入真实 Ollama bge-m3 与 sqlite-vec。
+3. **RAG 真机增强**：接入真实 Ollama bge-m3 与 sqlite-vec。
+4. **文档治理 / 接手体验强化**：继续修正文档漂移。
 
 继续开发前先检查 `TASK_BACKLOG.md` §10。
 

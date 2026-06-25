@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-24 23:35:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 """Static tests for Docker deployment configs (E3-C1 / E4-C1)."""
 
@@ -37,10 +37,18 @@ def test_searxng_settings_enable_json_and_disable_google():
     assert settings["server"]["bind_address"] == "0.0.0.0"
     assert settings["server"]["port"] == 8080
     assert settings["server"]["secret_key"] == "${SEARXNG_SECRET_KEY}"
-    assert settings["outgoing"]["request_timeout"] == 3.0
-    assert settings["outgoing"]["max_request_timeout"] == 6.0
+    assert settings["outgoing"]["request_timeout"] == 10.0
+    assert settings["outgoing"]["max_request_timeout"] == 20.0
+    assert settings["outgoing"]["enable_http2"] is False
+    keep_only = settings["use_default_settings"]["engines"]["keep_only"]
+    assert "wikipedia" in keep_only
+    assert "mojeek" in keep_only
     google = [engine for engine in settings["engines"] if engine["name"] == "google"]
+    startpage = [engine for engine in settings["engines"] if engine["name"] == "startpage"]
+    duckduckgo = [engine for engine in settings["engines"] if engine["name"] == "duckduckgo"]
     assert google and google[0]["disabled"] is True
+    assert startpage and startpage[0]["disabled"] is True
+    assert duckduckgo and duckduckgo[0]["disabled"] is True
 
 
 def test_docker_compose_has_local_only_crawl4ai():

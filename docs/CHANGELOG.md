@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间）：2026-06-24 23:55:00
+创建时间（北京时间）：2026-06-25 00:00:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,9 +11,46 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：大规模风控诊断套件与 SearXNG 智能备用路由
-- **当前 Network 测试基线**：350 passed, 2 skipped, 44 warnings。
+- **最新完成模块**：搜索风控系统性加固（Engine Matrix + Circuit Breaker + Orchestrator + API fallback + Diagnostics v2）
+- **当前 Network 测试基线**：357 passed, 2 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 78 轮] 2026-06-25
+
+### 需求变动
+- **联网功能开发5：搜索风控系统性加固**：按用户最新 P0 指令“附录 1”处理搜索引擎连续 CAPTCHA / 429 / challenge 问题。
+- **架构约束说明**：保留 SearXNG 作为 Primary Search，不替换 Crawl4AI Primary Extract；新增 API fallback 仅在 API key 环境变量存在时自动启用，密钥不进入仓库。
+- **新增能力**：Engine Matrix 白名单配置、per-engine Circuit Breaker、MultiSourceSearchOrchestrator、Brave/Tavily/Serper optional fallback、curl_cffi optional TLS fallback、诊断工具 v2。
+
+### 文件影响
+- 新增：`_infra/network/search/circuit_breaker.py`
+- 新增：`_infra/network/search/api_providers.py`
+- 新增：`_infra/network/search/orchestrator.py`
+- 新增：`_infra/network/extract/curl_cffi_fallback.py`
+- 新增：`_infra/network/tests/unit/test_circuit_breaker.py`
+- 新增：`_infra/network/tests/unit/test_search_orchestrator.py`
+- 新增：`_infra/network/tests/unit/test_curl_cffi_fallback.py`
+- 修改：`_infra/network/search/searxng_client.py`
+- 修改：`_infra/network/network_workflow/workflow.py`
+- 修改：`_infra/network/extract/extractor_chain.py`
+- 修改：`docker/searxng/settings.yml`
+- 修改：`config/network.yaml`
+- 修改：`scripts/diagnostics/test_engine_risk_control.py`
+- 修改：`requirements.txt`
+- 修改测试：`test_search.py`、`test_workflow.py`、`test_docker_services.py`
+- 文档：`TASK_BACKLOG.md`、`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`docs/SEARCH_ENGINE_RISK_CONTROL_REPORT.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 357 passed, 2 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+python3 -m _infra.network.cli config
+# Network Config loaded successfully
+```
 
 ---
 

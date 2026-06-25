@@ -1,12 +1,12 @@
 <!--
 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间）：2026-06-24 23:55:00
+创建时间（北京时间）：2026-06-25 00:00:00
 -->
 
 # PROJECT_STATE —— 当前状态 SSOT
 
-**更新日期**：2026-06-24 23:55 CST
-**当前版本**：v1.4.0-dossier + Network Workflow MVP + Anti-Bot Risk Control
+**更新日期**：2026-06-25 00:00 CST
+**当前版本**：v1.4.1-dossier + Network Resilient Search
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -32,9 +32,12 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 
 ### E12 Network Workflow & Multi-Source Engines
 - **端到端搜索流**：已实现 `NetworkWorkflow` 类，串联 搜 -> 爬 -> 脱敏 -> 入库 全流程，支持批量并发抓取（`extract_batch`）。
-- **多源数据扩充与退避路由**：SearXNG 容器与 `config/network.yaml` 已启用 `duckduckgo`、`bing`、`wikipedia`、`github`、`stackoverflow`、`arxiv` 引擎。`SearXNGProvider` 具备白名单备用池自愈能力：若通用引擎报 CAPTCHA 导致首次查询为空，静默重定向至备用引擎池。
-- **大规模风控特征诊断**：已物化专项压测套件 `scripts/diagnostics/test_engine_risk_control.py` 与《主流搜索引擎及特殊站点反爬风控机制与对策白皮书》（`docs/SEARCH_ENGINE_RISK_CONTROL_REPORT.md`）。
-- **维基百科反爬突围**：`Crawl4AIProvider` 爬取 Wikipedia 等特殊结构页面时，自动注入拟真 User-Agent 头部特征与 Magic 模式，攻克了 HTTP 400 拦截与 JSON 剥壳异常。
+- **多源调度升级**：`NetworkWorkflow` 已接入 `MultiSourceSearchOrchestrator`，保持 SearchProvider 接口兼容，并提供 intent route、SearXNG tier fallback 与可选 API fallback。
+- **搜索风控系统性加固**：`SearXNGProvider v24` 已实现 per-engine Circuit Breaker、engine tier pool、CAPTCHA/rate-limit/timeout/forbidden 分类与 `unresponsive_engines` 反馈更新。
+- **Engine Matrix 硬化**：`docker/searxng/settings.yml` 已切换为 anti-risk-control hardened 白名单配置，禁用 Google/Brave/Startpage/DDG scraping 主路径，优先 Wikipedia/Mojeek/Bing/Qwant/GitHub/arXiv/StackOverflow/HackerNews 等稳定源。
+- **API 兜底层**：新增 Brave Search API、Tavily、Serper.dev providers；仅当 `BRAVE_API_KEY` / `TAVILY_API_KEY` / `SERPER_API_KEY` 环境变量存在时自动加载，密钥不进入仓库。
+- **大规模风控特征诊断 v2**：`scripts/diagnostics/test_engine_risk_control.py` 支持 CAPTCHA/WAF 指纹识别、HTML snapshot、Prometheus metrics、JSON report 与 SLO 指标。
+- **维基百科 / TLS 特殊站点处理**：`Crawl4AIProvider` 保留 UA/Magic payload；新增 optional `CurlCffiProvider`，仅对 known TLS guarded public domains 且安装 `curl_cffi` 时启用，不替换 Crawl4AI。
 
 ### E3 / E4 Search + Extract
 - SearXNG provider（适配 8090 端口）、Crawl4AI provider（适配 v0.9.x API）。
@@ -49,12 +52,12 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 ## 4. 最新测试基线
 
 **运行命令**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q`
-**结果**：`350 passed, 2 skipped, 44 warnings`
+**结果**：`357 passed, 2 skipped, 44 warnings`
 **说明**：2 skipped 为沙盒缺少 Presidio 环境；warnings 均为 datetime.utcnow 弃用警告，不影响业务。全量单元与安全测试全部绿色通过。
 
 ---
 
 ## 5. 已知重大挑战
 
-1. **上游元搜索引擎对 VPN/代理的无差别拦截**：SearXNG 通用默认引擎（Brave、DuckDuckGo、Startpage）在节点代理 IP 下频繁触发 CAPTCHA。已通过客户端自愈退避机制路由至非风控专业站点引擎矩阵。
+1. **上游元搜索引擎对 VPN/代理的无差别拦截**：SearXNG 通用默认引擎（Brave、DuckDuckGo、Startpage、Google）在节点代理 IP 下频繁触发 CAPTCHA。已通过 Engine Matrix 白名单、per-engine Circuit Breaker、tier fallback 与可选 API fallback 降低重复触发；根因仍需住宅代理或 API 搜索服务解决。
 2. **上游 API 结构漂移**：Crawl4AI 与 Ollama SDK 参数持续迭代，已通过层级递归清洗（`deep_clean_content`）与强约束类型校验保持调用链稳定。

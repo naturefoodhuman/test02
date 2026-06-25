@@ -1,1 +1,3 @@
 ollama>=0.2.1
+curl_cffi>=0.7.0
+trafilatura>=1.8.0
