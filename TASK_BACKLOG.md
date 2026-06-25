@@ -3363,12 +3363,14 @@ graph TD
   - 修改：`_infra/litellm-config.yaml`
   - 修改：`_infra/smart_proxy.py`
   - 修改：`_infra/litellm_gatekeeper.py`
+  - 修改：`scripts/forge-start.sh`
   - 修改：`docs/工厂使用手册.md`
   - 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`
 - **DoD**:
   - [x] 常见 Claude Code alias 已映射到本地 MTPLX 主模型
   - [x] smart_proxy 模型名 ANSI 片段清理完成
   - [x] VS Code settings 排障说明已写入手册
+  - [x] 4000/4001 端口旧进程清理已加固
   - [x] 静态检查通过
 
 ---

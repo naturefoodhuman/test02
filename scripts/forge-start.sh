@@ -1,6 +1,6 @@
 #!/bin/bash
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-20 16:45:00
+# 创建时间（北京时间）：2026-06-25 00:00:00
 
 # FORGE 智能启动脚本 v3.0 (自检并释放显存版)
 # 职责：冷启动各端口模型进行可用性校验，成功后立即释放显存，实现“按需动态加载”基础。
@@ -18,6 +18,29 @@ echo -e "${BLUE}🚀 正在执行 FORGE 全量环境自检 (全端口冷启动�
 # 精准检查函数
 is_listening() {
     lsof -nP -iTCP:"$1" -sTCP:LISTEN > /dev/null 2>&1
+}
+
+# 按端口停止监听进程：比 pkill pattern 更可靠，避免旧 smart_proxy_streaming.py 占住 4000。
+stop_listening_port() {
+    local port=$1
+    local pids
+    pids=$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
+    if [ -z "$pids" ]; then
+        return 0
+    fi
+    echo -e "${BLUE}🧹 停止占用端口 $port 的进程: $pids${NC}"
+    kill $pids 2>/dev/null || true
+    for i in {1..20}; do
+        if ! is_listening "$port"; then
+            return 0
+        fi
+        sleep 0.2
+    done
+    pids=$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
+    if [ -n "$pids" ]; then
+        echo -e "${BLUE}🧹 强制停止端口 $port 的残留进程: $pids${NC}"
+        kill -9 $pids 2>/dev/null || true
+    fi
 }
 
 # 校验并释放函数
@@ -81,8 +104,8 @@ check_and_unload 8082 "评审模型 (Gemma4-MTPLX)" "cd $SERVER_DIR && nohup uv 
 check_and_unload 8084 "深度评审 (Qwopus-GGUF)" "nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &" "llama-server.*8084"
 
 # 5. 启动智能网关中继器 (4000) 与 核心网关 (4001)
-if is_listening 4000; then pkill -f "uvicorn.*4000"; fi
-if is_listening 4001; then pkill -f "litellm.*4001"; fi
+stop_listening_port 4000
+stop_listening_port 4001
 
 echo -e "${BLUE}📥 启动核心网关 (4001)...${NC}"
 cd "$FORGE_ROOT" && source .venv/bin/activate && nohup bash _infra/start-litellm.sh 4001 > /tmp/forge_litellm_4001.log 2>&1 &

@@ -240,12 +240,14 @@ python3 -m compileall -q scripts/governance_check.py
 ## [第 84 轮] 2026-06-25
 
 ### 需求变动
-- **Claude Code for VS Code 本地模型 alias 兼容修复**：用户当前 VS Code Claude Code 只连接本地开源模型，但插件报选中模型不存在或无权限；补充常见 Claude alias 到本地 MTPLX 主模型映射。
+- **Claude Code for VS Code 本地模型 alias 兼容修复**：用户当前 VS Code Claude Code 只连接本地开源模型，但插件报选中模型不存在或无权限；补充当前 UI 中 Opus 4.8 / Sonnet 4.6 / Haiku 4.5 对应 alias 到本地 MTPLX 主模型映射。
+- **4000 端口旧进程占用修复**：用户 curl `/v1/messages` 返回 Not Found，原因是 4000 被旧代理进程占用；`scripts/forge-start.sh` 改为按端口清理 4000/4001。
 
 ### 文件影响
 - 修改：`_infra/litellm-config.yaml`
 - 修改：`_infra/smart_proxy.py`
 - 修改：`_infra/litellm_gatekeeper.py`
+- 修改：`scripts/forge-start.sh`
 - 修改：`docs/工厂使用手册.md`
 - 修改：`docs/DEV_LOG.md`
 - 修改：`docs/CHANGELOG.md`

@@ -2754,7 +2754,9 @@ python3 -m compileall -q scripts/governance_check.py
 - `_infra/litellm-config.yaml` 增加常见 Claude Code alias：`claude-opus-4-1`、`claude-opus-4-1-20250805`、`claude-opus-4-20250514`、`claude-sonnet-4-20250514`、`claude-sonnet-4-5`、`claude-3-7-sonnet-20250219` 等，全部映射到本地主大脑 MTPLX Qwen。
 - `_infra/smart_proxy.py` 增加相同 alias 映射，并增加模型名 ANSI 片段清理，避免终端格式片段污染模型名。
 - `_infra/litellm_gatekeeper.py` 同步 alias 表。
-- `docs/工厂使用手册.md` 增加 VS Code `settings.json` 推荐配置与 `selected model may not exist` 排障说明。
+- 补充 Claude Code for VS Code 当前 UI 模型：Opus 4.8 / Sonnet 4.6 / Sonnet 4.6 1M / Haiku 4.5 对应 alias。
+- `scripts/forge-start.sh` 改为按端口清理 4000/4001，避免旧 `smart_proxy_streaming.py` 占用 4000 导致 `/v1/messages` 返回 Not Found。
+- `docs/工厂使用手册.md` 增加 VS Code `settings.json` 推荐配置与 `selected model may not exist` / `/v1/messages Not Found` 排障说明。
 
 **验证**：
 ```bash

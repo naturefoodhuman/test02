@@ -33,6 +33,15 @@ PORT_MAPPING = {
     "claude-sonnet-4-5-20250929": 8080,
     "claude-3-7-sonnet-20250219": 8080,
     "claude-3-5-haiku-20241022": 8080,
+    "claude-opus-4-8-1m": 8080,
+    "claude-opus-4-8-1m-20260101": 8080,
+    "claude-opus-4-8-20260101": 8080,
+    "claude-sonnet-4-6": 8080,
+    "claude-sonnet-4-6-1m": 8080,
+    "claude-sonnet-4-6-20260101": 8080,
+    "claude-sonnet-4-6-1m-20260101": 8080,
+    "claude-haiku-4-5": 8080,
+    "claude-haiku-4-5-20260101": 8080,
     "claude-3-5-sonnet-latest": 8080
 }
 

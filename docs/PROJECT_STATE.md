@@ -62,8 +62,9 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 文档治理 P2 已落地：pre-commit / GitHub Actions / launchd 自动化、no-write strict 检查、自动生成 `docs/AGENT_HANDOFF_SUMMARY.md`。
 
 ### Claude Code for VS Code alias compatibility
-- 已补充常见 Claude Code 选中模型 alias 到本地 MTPLX 主模型映射，避免 VS Code 插件因 `claude-opus-*` / `claude-sonnet-*` alias 未注册而报模型不存在。
+- 已补充当前 Claude Code for VS Code UI 中 Opus 4.8 / Sonnet 4.6 / Haiku 4.5 相关 alias 到本地 MTPLX 主模型映射，避免 VS Code 插件因 `claude-opus-*` / `claude-sonnet-*` alias 未注册而报模型不存在。
 - VS Code 推荐使用 `ANTHROPIC_BASE_URL=http://localhost:4000` 与 `ANTHROPIC_API_KEY=sk-forge-local-anytoken`。
+- `scripts/forge-start.sh` 已改为按端口清理 4000/4001，避免旧代理占用 4000 导致 `/v1/messages` 返回 Not Found。
 
 ---
 

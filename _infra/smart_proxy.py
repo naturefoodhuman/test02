@@ -54,6 +54,19 @@ MODEL_TO_PORT = {
     "claude-sonnet-4-20250514": 8080,
     "claude-sonnet-4-5": 8080,
     "claude-sonnet-4-5-20250929": 8080,
+    # Claude Code for VS Code 2026 UI labels:
+    # Default/Opus: Opus 4.8 (1M context)
+    # Sonnet: Sonnet 4.6 / Sonnet 4.6 (1M context)
+    # Haiku: Haiku 4.5
+    "claude-opus-4-8-1m": 8080,
+    "claude-opus-4-8-1m-20260101": 8080,
+    "claude-opus-4-8-20260101": 8080,
+    "claude-sonnet-4-6": 8080,
+    "claude-sonnet-4-6-1m": 8080,
+    "claude-sonnet-4-6-20260101": 8080,
+    "claude-sonnet-4-6-1m-20260101": 8080,
+    "claude-haiku-4-5": 8080,
+    "claude-haiku-4-5-20260101": 8080,
 }
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m|\[[0-9;]*m")
