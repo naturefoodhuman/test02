@@ -65,17 +65,17 @@ outgoing:
 engines:
   # ---- General search: lower-risk scraping engines ----
   - name: bing
-    disabled: false
+    disabled: true
     timeout: 8.0
     weight: 1
 
   - name: mojeek
-    disabled: false
+    disabled: true
     timeout: 8.0
     weight: 2
 
   - name: qwant
-    disabled: false
+    disabled: true
     timeout: 8.0
     weight: 1
 
@@ -130,6 +130,10 @@ engines:
   - name: mdn
     disabled: false
     timeout: 10.0
+
+  - name: reddit
+    disabled: true
+    timeout: 8.0
 
   # ---- Package repositories ----
   - name: npm

@@ -9,8 +9,8 @@ search:
     max_results: 10
     fetch_top_k: 3
     max_chars_per_page: 8000
-    engines_enabled: [wikipedia, mojeek, hackernews, bing, qwant, github, arxiv, stackoverflow]
-    engines_disabled: [google, brave, startpage, baidu]
+    engines_enabled: [github, arxiv, stackoverflow, hackernews, lobste.rs, wikipedia]
+    engines_disabled: [google, brave, startpage, duckduckgo, bing, qwant, mojeek, yahoo, reddit, baidu]
   fallback_tavily:
     enabled: true
     api_key_env: "TAVILY_API_KEY"

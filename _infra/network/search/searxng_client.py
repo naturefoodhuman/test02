@@ -19,15 +19,19 @@ from .models import SearchResult
 
 logger = get_logger("network.search.searxng")
 
+# Tuned from 2026-06-25 user real-machine diagnostics:
+# healthy: github / arxiv / stackoverflow / hackernews / lobste.rs
+# avoid for default routing on current proxy: bing / qwant / mojeek / reddit / DDG / Google / Brave / Startpage.
+# Wikipedia is kept as a knowledge/health engine but not treated as broad web search.
 ENGINE_TIERS: dict[str, list[str]] = {
-    "tier1_stable": ["wikipedia", "mojeek", "hackernews"],
-    "tier2_general": ["bing", "qwant", "mojeek"],
-    "tier3_tech": ["github", "stackoverflow", "lobste.rs", "mdn"],
-    "tier4_academic": ["arxiv", "crossref", "pubmed", "semantic scholar"],
-    "tier5_risky": ["duckduckgo"],
+    "tier1_stable": ["github", "arxiv", "hackernews", "lobste.rs", "stackoverflow"],
+    "tier2_knowledge": ["wikipedia", "wikidata"],
+    "tier3_academic": ["crossref", "pubmed", "semantic scholar"],
+    "tier4_general_api_trigger": [],
+    "tier5_risky": [],
 }
 
-FALLBACK_ENGINE_POOL = ["bing", "wikipedia", "github", "arxiv", "stackoverflow"]
+FALLBACK_ENGINE_POOL = ["github", "arxiv", "stackoverflow", "hackernews", "lobste.rs", "wikipedia"]
 
 
 def _clamp_score(value: float) -> float:
@@ -201,7 +205,7 @@ class SearXNGProvider(SearchProvider):
         all_results: List[SearchResult] = []
         seen_urls: set[str] = set()
         self._last_transport_error = None
-        for tier_name in ["tier1_stable", "tier2_general", "tier3_tech", "tier4_academic", "tier5_risky"]:
+        for tier_name in ["tier1_stable", "tier2_knowledge", "tier3_academic", "tier4_general_api_trigger", "tier5_risky"]:
             tier_results = await self._try_tier(query, max_results, ENGINE_TIERS[tier_name], tier_name)
             for result in tier_results:
                 key = result.url.split("#", 1)[0].rstrip("/").lower()

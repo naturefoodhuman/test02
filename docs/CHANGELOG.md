@@ -68,6 +68,22 @@ python3 -m _infra.network.cli config
 
 ---
 
+### 第 78 轮补丁 2（2026-06-25）
+
+#### 需求变动
+- **按真机诊断结果收敛默认引擎池**：根据用户诊断输出，默认路由避开 bing/qwant/mojeek/reddit/yahoo/duckduckgo 等当前代理出口高风险或低成功率引擎。
+- **保留 API fallback**：Tavily / Serper 已在用户本地 export 并被 Orchestrator 成功加载，默认 web coverage 不足时交给 API fallback。
+- **保留 Wikipedia 特殊角色**：Wikipedia 虽在泛 query 诊断中被判 BROKEN，但 ping 与知识查询可用，因此保留为知识/healthcheck 引擎，不再作为 broad web search 主池。
+
+#### 文件影响
+- 修改：`_infra/network/search/searxng_client.py`
+- 修改：`_infra/network/search/orchestrator.py`
+- 修改：`config/network.yaml`
+- 修改：`docker/searxng/settings.yml`
+- 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

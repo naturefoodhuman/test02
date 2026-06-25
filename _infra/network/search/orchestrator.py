@@ -46,9 +46,9 @@ INTENT_PATTERNS = {
 }
 
 INTENT_TO_ENGINES = {
-    "coding": ["github", "stackoverflow", "lobste.rs", "mdn", "hackernews", "bing"],
+    "coding": ["github", "stackoverflow", "lobste.rs", "mdn", "hackernews"],
     "academic": ["arxiv", "crossref", "pubmed", "semantic scholar", "wikipedia"],
-    "news": ["bing", "qwant", "hackernews", "reddit"],
+    "news": ["hackernews", "lobste.rs"],
     "general": None,
 }
 

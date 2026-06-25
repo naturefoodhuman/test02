@@ -2578,3 +2578,29 @@ python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
 python3 -m compileall -q _infra/network scripts/diagnostics
 # pass
 ```
+
+### 第 78 轮补丁 2 · 2026-06-25（按真机诊断结果收敛默认引擎池）
+
+**触发依据**：用户真机诊断 v2 输出：
+
+```text
+Recommended healthy pool (5): ['github', 'arxiv', 'stackoverflow', 'hackernews', 'lobste.rs']
+Avoid / circuit-break (10): ['bing', 'duckduckgo', 'google', 'brave', 'startpage', 'qwant', 'mojeek', 'yahoo', 'wikipedia', 'reddit']
+```
+
+同时端到端 CLI 已成功：`SearXNG found 10 results`，Tavily / Serper fallback 已加载。
+
+**处理**：
+- 默认 coding intent 路由移除 `bing`，保留 `github / stackoverflow / lobste.rs / mdn / hackernews`。
+- news intent 路由移除 `bing / qwant / reddit`，保留 `hackernews / lobste.rs`，不足时交给 API fallback。
+- SearXNG tier 默认池改为真机健康源优先：`github / arxiv / hackernews / lobste.rs / stackoverflow`。
+- `config/network.yaml` 将 `bing / qwant / mojeek / reddit / yahoo / duckduckgo` 加入 disabled 默认列表。
+- `docker/searxng/settings.yml` 将 `bing / qwant / mojeek / reddit` 默认禁用。`wikipedia` 保留启用，用于知识查询与 healthcheck，但不再作为 broad web search 主池。
+
+**验证**：
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 357 passed, 2 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+```
