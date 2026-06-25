@@ -182,7 +182,7 @@ python3 -m compileall -q _infra/network scripts/diagnostics
 - **文档治理 P1 自动化落地**：实现 changed-files R5 检查、Backlog/DEV_LOG 同步检查、代码变更必须更新 CHANGELOG、架构触发词提示 ADR、自动生成 `docs/DOCUMENT_INDEX.md`。
 
 ### 文件影响
-- 修改：`scripts/governance_check.py`
+- 修改：`scripts/governance_check.py`（P1 自动化；后续补丁排除 `.pytest_cache` 等测试缓存）
 - 新增/自动生成：`docs/DOCUMENT_INDEX.md`
 - 修改：`docs/GOVERNANCE_CHECK_2026-06-25.md`
 - 修改：`docs/GOVERNANCE_CHECK_LATEST.md`

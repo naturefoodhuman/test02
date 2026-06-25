@@ -2709,6 +2709,7 @@ python3 -m compileall -q _infra/network scripts/diagnostics
 - 新增代码/配置/脚本变化但 `docs/CHANGELOG.md` 未更新时阻断。
 - 新增架构触发词检测：命中 architecture / orchestrator / workflow / provider / boundary / routing / privacy / security / model 等词但未改 ADR 时输出 warning，提示人工判断是否需要 ADR。
 - 新增 `docs/DOCUMENT_INDEX.md` 自动生成，标记 SSOT / training / governance / reference / runtime-artifact。
+- `DOCUMENT_INDEX.md` 生成规则已排除 `.pytest_cache` / `.mypy_cache` / `.ruff_cache` 等测试缓存，避免 runtime cache 污染文档索引。
 - `make docs-check` 现在具备提交前阻断能力。
 
 **验证**：
