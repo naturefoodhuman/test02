@@ -2553,3 +2553,28 @@ ruff check _infra/network scripts/diagnostics
 - 重启 SearXNG Docker 服务。
 - 运行诊断脚本 v2。
 - 执行端到端 CLI search 验证。
+
+### 第 78 轮补丁 · 2026-06-25（SearXNG 真机日志兼容修正）
+
+**触发原因**：用户真机 SearXNG 已 healthy，但日志出现：
+
+```text
+The "engine" field is missing for the engine named "google"
+The "engine" field is missing for the engine named "brave"
+The "engine" field is missing for the engine named "startpage"
+```
+
+同时 Docker healthcheck 默认查询触发 Mojeek / Qwant 403 suspended 噪声。
+
+**处理**：
+- 从 `docker/searxng/settings.yml` 移除 google / brave / startpage 的 partial engine override；这些 engine 已由 `keep_only` 排除，不应重复声明。
+- 将 `docker/docker-compose.yml` 中 SearXNG healthcheck 改为 `engines=wikipedia`，避免 healthcheck 每 30s 触发全引擎查询与风控噪声。
+- 更新 `test_docker_services.py` 断言。
+
+**验证**：
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 357 passed, 2 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+```

@@ -54,6 +54,20 @@ python3 -m _infra.network.cli config
 
 ---
 
+### 第 78 轮补丁（2026-06-25）
+
+#### 需求变动
+- **真机日志兼容修正**：根据用户 SearXNG 2026.6.22 运行日志，移除 google/brave/startpage partial engine override，避免 SearXNG 报 “engine field is missing”。
+- **健康检查降噪**：Docker healthcheck 改为只查询 `engines=wikipedia`，避免每次健康检查触发 Mojeek/Qwant 403 suspended 日志。
+
+#### 文件影响
+- 修改：`docker/searxng/settings.yml`
+- 修改：`docker/docker-compose.yml`
+- 修改：`_infra/network/tests/unit/test_docker_services.py`
+- 文档：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

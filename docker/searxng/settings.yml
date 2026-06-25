@@ -146,14 +146,8 @@ engines:
     disabled: true
     timeout: 8.0
 
-  - name: google
-    disabled: true
 
-  - name: brave
-    disabled: true
 
-  - name: startpage
-    disabled: true
 
 categories_as_tabs:
   general:

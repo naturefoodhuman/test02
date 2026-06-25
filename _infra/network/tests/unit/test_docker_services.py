@@ -26,6 +26,7 @@ def test_docker_compose_has_local_only_searxng():
 
     assert searxng["ports"] in (["127.0.0.1:8080:8080"], ["127.0.0.1:8090:8080"])
     assert searxng["restart"] == "unless-stopped"
+    assert "engines=wikipedia" in " ".join(searxng["healthcheck"]["test"])
     assert "searxng/searxng" in searxng["image"]
     assert any("./searxng/settings.yml:/etc/searxng/settings.yml:ro" == volume for volume in searxng["volumes"])
 
@@ -43,11 +44,13 @@ def test_searxng_settings_enable_json_and_disable_google():
     keep_only = settings["use_default_settings"]["engines"]["keep_only"]
     assert "wikipedia" in keep_only
     assert "mojeek" in keep_only
-    google = [engine for engine in settings["engines"] if engine["name"] == "google"]
-    startpage = [engine for engine in settings["engines"] if engine["name"] == "startpage"]
+    # google/brave/startpage are excluded by keep_only, not re-declared as partial
+    # engine blocks, because SearXNG 2026.x logs "engine field is missing" for
+    # such non-kept overrides. DuckDuckGo is kept but disabled as a risky probe.
+    assert "google" not in keep_only
+    assert "brave" not in keep_only
+    assert "startpage" not in keep_only
     duckduckgo = [engine for engine in settings["engines"] if engine["name"] == "duckduckgo"]
-    assert google and google[0]["disabled"] is True
-    assert startpage and startpage[0]["disabled"] is True
     assert duckduckgo and duckduckgo[0]["disabled"] is True
 
 
