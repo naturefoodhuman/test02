@@ -1,0 +1,26 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-06-25 00:00:00
+
+name: Governance Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run governance check in no-write strict mode
+        run: python3 scripts/governance_check.py --strict --no-write
+      - name: Compile governance script
+        run: python3 -m compileall -q scripts/governance_check.py
+      - name: Whitespace check
+        run: git diff --check

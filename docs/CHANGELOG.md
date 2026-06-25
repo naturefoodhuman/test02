@@ -206,6 +206,37 @@ python3 -m compileall -q _infra/network scripts/diagnostics
 
 ---
 
+## [第 83 轮] 2026-06-25
+
+### 需求变动
+- **文档治理 P2 自动化落地**：实现本地 pre-commit 集成、GitHub Actions 治理检查、每周 launchd 治理检查、自动生成新 Agent 接手摘要，并将提交前 docs-check 改为 no-write strict 模式。
+
+### 文件影响
+- 新增：`scripts/hooks/pre_commit_governance.sh`
+- 新增：`scripts/install_governance_hooks.sh`
+- 新增：`scripts/launchd/com.forge.governance-check.plist`
+- 新增：`.github/workflows/governance.yml`
+- 新增/自动生成：`docs/AGENT_HANDOFF_SUMMARY.md`
+- 修改：`scripts/governance_check.py`
+- 修改：`Makefile`
+- 修改：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+- 修改：`docs/DOCUMENT_INDEX.md`
+- 修改：`docs/GOVERNANCE_CHECK_2026-06-25.md`
+- 修改：`docs/GOVERNANCE_CHECK_LATEST.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`TASK_BACKLOG.md`
+
+### 验证
+```bash
+make docs-check
+python3 scripts/governance_check.py --strict
+python3 -m compileall -q scripts/governance_check.py
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

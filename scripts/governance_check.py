@@ -33,6 +33,7 @@ DOCS_DIR = ROOT / "docs"
 ADR_DIR = DOCS_DIR / "adr"
 PLATFORM_DIR = ROOT / "_factory" / "patterns" / "peer-review" / "src" / "peer_review"
 DOCUMENT_INDEX = DOCS_DIR / "DOCUMENT_INDEX.md"
+AGENT_HANDOFF_SUMMARY = DOCS_DIR / "AGENT_HANDOFF_SUMMARY.md"
 
 LLM_HEADER_RE = re.compile(r"创建/修改该文件的LLM大模型：\s*[^\n]+")
 MD_LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+\.md)(?:#[^)]+)?\)")
@@ -345,6 +346,82 @@ def generate_document_index(ts: str) -> str:
     return "\n".join(lines)
 
 
+
+def _extract_project_state_summary() -> list[str]:
+    path = ROOT / "docs" / "PROJECT_STATE.md"
+    if not path.exists():
+        return ["- docs/PROJECT_STATE.md not found"]
+    lines = []
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        if line.startswith("**当前版本**") or line.startswith("**更新日期**") or line.startswith("**状态说明**"):
+            lines.append(f"- {line.strip('*')}")
+        if len(lines) >= 6:
+            break
+    return lines or ["- See docs/PROJECT_STATE.md"]
+
+
+def _latest_git_log(limit: int = 5) -> list[str]:
+    out = _run_git(["log", "--oneline", f"-{limit}"])
+    return [f"- `{line}`" for line in out.splitlines() if line.strip()]
+
+
+def generate_agent_handoff_summary(ts: str) -> str:
+    quality = classify_blockers(get_changed_files())
+    lines = [
+        "<!--",
+        "创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer",
+        f"创建时间（北京时间）：{ts}",
+        "-->",
+        "",
+        "# Agent Handoff Summary（自动生成）",
+        "",
+        "本文件由 `scripts/governance_check.py` 自动生成，用于新 Agent 快速建立当前上下文。不要手工编辑；需要刷新时运行 `make governance-check`。",
+        "",
+        "## 1. 必读入口",
+        "",
+        "1. `HANDOFF.md`",
+        "2. `docs/PROJECT_STATE.md`",
+        "3. `TASK_BACKLOG.md` §10",
+        "4. `NETWORK_ARCHITECTURE_FINAL.md`",
+        "5. `NETWORK_ENGINEERING_DESIGN.md`",
+        "6. `docs/DEV_LOG.md` 最新轮",
+        "7. `docs/CHANGELOG.md` 最新轮",
+        "8. `docs/DOCUMENT_INDEX.md`",
+        "",
+        "## 2. 当前状态摘要",
+        "",
+        *_extract_project_state_summary(),
+        "",
+        "## 3. 最新提交",
+        "",
+        *_latest_git_log(),
+        "",
+        "## 4. 治理健康",
+        "",
+        f"- Blockers: {len(quality['blockers'])}",
+        f"- Warnings: {len(quality['warnings'])}",
+        f"- Changed files: {len(get_changed_files())}",
+        "- 最新完整报告：`docs/GOVERNANCE_CHECK_LATEST.md`",
+        "",
+        "## 5. 当前自动化命令",
+        "",
+        "```bash",
+        "make docs-check",
+        "make governance-check",
+        "make network-test",
+        "python3 -m _infra.network.cli search \"python langgraph state machine\" --mode research",
+        "```",
+        "",
+        "## 6. 注意事项",
+        "",
+        "- 真实 API key 只允许放在 `.env` / `_infra/.env`，不得提交。",
+        "- Claude Code for VS Code 是日常主入口，CLI 是验证/自动化辅助。",
+        "- 高风险能力只能 sandbox / dry-run / approval / deny-test 演示。",
+        "- 架构、边界、调用链、provider、routing、privacy、安全策略变化需要考虑新增 ADR。",
+        "",
+    ]
+    return "\n".join(lines)
+
 def classify_blockers(changed_files: list[str]) -> dict[str, Any]:
     adr = scan_adr_coverage()
     r5 = scan_r5_compliance()
@@ -484,6 +561,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default=None, help="Explicit output path (otherwise auto-dated)")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero on blocking governance issues")
+    parser.add_argument("--no-write", action="store_true", help="Run checks without writing generated docs")
     args = parser.parse_args()
 
     ts = beijing_time()
@@ -494,15 +572,21 @@ def main() -> None:
     latest_path = DOCS_DIR / "GOVERNANCE_CHECK_LATEST.md"
     target = Path(args.output) if args.output else dated_path
 
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(report, encoding="utf-8")
-    latest_path.write_text(report, encoding="utf-8")
-    DOCUMENT_INDEX.write_text(generate_document_index(ts), encoding="utf-8")
+    if not args.no_write:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(report, encoding="utf-8")
+        latest_path.write_text(report, encoding="utf-8")
+        DOCUMENT_INDEX.write_text(generate_document_index(ts), encoding="utf-8")
+        AGENT_HANDOFF_SUMMARY.write_text(generate_agent_handoff_summary(ts), encoding="utf-8")
 
     quality = classify_blockers(changed_files)
-    print(f"✅ Wrote governance check: {target}")
-    print(f"✅ Updated LATEST: {latest_path}")
-    print(f"✅ Updated document index: {DOCUMENT_INDEX}")
+    if args.no_write:
+        print("✅ Governance check completed in no-write mode")
+    else:
+        print(f"✅ Wrote governance check: {target}")
+        print(f"✅ Updated LATEST: {latest_path}")
+        print(f"✅ Updated document index: {DOCUMENT_INDEX}")
+        print(f"✅ Updated agent handoff summary: {AGENT_HANDOFF_SUMMARY}")
     print("\n=== Governance Check Summary ===")
     print(f"Blockers: {len(quality['blockers'])}")
     print(f"Warnings: {len(quality['warnings'])}")

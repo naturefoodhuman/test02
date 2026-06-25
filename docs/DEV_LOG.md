@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：文档治理 P1 自动化落地（changed-files R5、Backlog/DEV_LOG、CHANGELOG、ADR trigger、DOCUMENT_INDEX）
+- **最近完成**：文档治理 P2 自动化落地（pre-commit、GitHub Actions、launchd、DOCUMENT_INDEX、AGENT_HANDOFF_SUMMARY）
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -2721,4 +2721,25 @@ python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
 # 358 passed, 3 skipped, 44 warnings
 python3 -m compileall -q _infra/network scripts/diagnostics
 # pass
+```
+
+
+## 第 83 轮 · 2026-06-25（文档治理 P2 自动化落地）
+
+**触发**：用户要求进入 P2，继续文档治理自动化。
+
+**完成内容**：
+- 新增 `scripts/hooks/pre_commit_governance.sh`：本地 pre-commit 使用的治理检查脚本，运行 `governance_check.py --strict --no-write` 与 `git diff --check`。
+- 新增 `scripts/install_governance_hooks.sh`：安装 `.git/hooks/pre-commit` 的标准脚本。
+- `Makefile` 新增 `install-governance-hooks`，并将 `docs-check` 改为 no-write strict 模式，避免提交前检查污染工作区。
+- 新增 `.github/workflows/governance.yml`：push / pull_request 时运行 no-write strict governance check。
+- 新增 `scripts/launchd/com.forge.governance-check.plist`：每周一 09:00 自动运行治理检查。
+- `scripts/governance_check.py` 新增 `--no-write`，并在写模式下自动生成 `docs/AGENT_HANDOFF_SUMMARY.md`。
+- `docs/DOCUMENT_INDEX.md` 与 `docs/AGENT_HANDOFF_SUMMARY.md` 均由治理脚本生成。
+
+**验证**：
+```bash
+make docs-check
+python3 scripts/governance_check.py --strict
+python3 -m compileall -q scripts/governance_check.py
 ```

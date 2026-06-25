@@ -183,12 +183,24 @@ make governance-check
 5. **`docs/DOCUMENT_INDEX.md` 自动生成**
    - 每次运行 governance check 都会刷新文档索引，标记 SSOT / training / governance / reference / runtime-artifact。
 
-### P2：长期增强
+### P2：已于 2026-06-25 落地
 
-1. GitHub Actions / 本地 pre-commit 集成。
-2. 每周 launchd 自动运行 governance check。
-3. 自动生成 `docs/DOCUMENT_INDEX.md`：列出当前文档分类、SSOT、历史、废弃、培训。
-4. 自动生成 “新 Agent 接手摘要”。
+1. **本地 pre-commit 集成**
+   - `scripts/hooks/pre_commit_governance.sh` 运行 no-write strict governance check 与 whitespace check。
+   - `scripts/install_governance_hooks.sh` 可安装 `.git/hooks/pre-commit`。
+   - `make install-governance-hooks` 是标准入口。
+
+2. **GitHub Actions 集成**
+   - `.github/workflows/governance.yml` 在 push / pull_request 时运行 no-write strict governance check。
+
+3. **每周 launchd 自动运行 governance check**
+   - `scripts/launchd/com.forge.governance-check.plist` 每周一 09:00 执行治理检查，并写入 `runtime/logs/launchd-governance-check.log`。
+
+4. **自动生成文档索引**
+   - `docs/DOCUMENT_INDEX.md` 已由 `governance_check.py` 自动生成，标记 SSOT / training / governance / reference / runtime-artifact。
+
+5. **自动生成新 Agent 接手摘要**
+   - `docs/AGENT_HANDOFF_SUMMARY.md` 已由 `governance_check.py` 自动生成，提供新 Agent 快速接手入口、状态摘要、最近提交、治理健康与常用命令。
 
 ---
 
