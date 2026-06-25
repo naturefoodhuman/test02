@@ -1,5 +1,5 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建/修改该文件的LLM大模型：
 创建时间（北京时间）：2026-06-23 17:20:00
 -->
 
@@ -76,29 +76,11 @@ FORGE Factory 是 AI 项目孵化工厂。
 
 ---
 
-## 4. 多任务推进节奏
-
-用户已批准以下节奏：
-
-- 小型且强相关 Task：一次 2–4 个。
-- 中等复杂 Task：一次 2 个。
-- 安全边界 / 架构关键 / 会影响调用链的 Task：一次 1 个或最多 2 个。
-- 必须保证前一个 Task 测试通过后，再进入下一个 Task。
-
-任何时刻仍应保持：逻辑上只有一个当前推进批次，避免多个无关任务并行。
+## 4. 
 
 ---
 
-## 5. Git 工作流
-
-- 当前已可使用 Deploy Key push。
-- 每轮完成：Code → Tests → Docs → Commit → Push。
-- Push 后提示用户 Mac 执行：
-
-```bash
-cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory
-git pull origin main
-```
+## 5. 
 
 ---
 
