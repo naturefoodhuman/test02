@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-06-25 00:00 CST
-**当前版本**：v1.4.2-dossier + Network Finalization
+**当前版本**：v1.4.3-dossier + Network Finalized + Training Docs
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -51,6 +51,12 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 本地 `.env` 与 `_infra/.env` 会被自动加载，解决 Tavily/Serper 等 API key 每次重启终端需手动 export 的问题；真实 `.env` 文件保持 gitignored。
 - `TrafilaturaProvider` 已增加 bounded timeout，网络不可达时快速降级到 snippet fallback，避免端到端搜索被单页提取卡住。
 - 当前联网功能已完成 Search / Extract / Privacy / RAG / MCP Guard / Browser / Ops / Diagnostics 的文档与测试闭环，剩余为真机长期稳定性观察。
+
+
+### Training / Onboarding Documentation
+- `docs/工厂使用手册.md` 已重写为零基础完整可操作版，覆盖环境准备、目录结构、Agents/Skills、五阶段、forge CLI、Network CLI、最佳实践、排障、项目接手与交接。
+- `docs/全功能最小示例项目.md` 已重新生成，以 `mini-gratitude` 极简 CLI 覆盖需求分析、架构设计、任务拆解、TDD、测试、文档、Bug 修复、功能迭代、安全审查、RETRO 与交接。
+- `docs/工厂能力覆盖检查.md` 已重建矩阵，当前覆盖率 64/64 = 100%。
 
 ---
 

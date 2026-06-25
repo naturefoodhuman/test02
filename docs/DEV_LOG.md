@@ -10,8 +10,8 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：联网功能开发5搜索风控系统性加固（Engine Matrix、Circuit Breaker、MultiSource Orchestrator、API fallback、诊断 v2）
-- **建议下一步**：用户将 Tavily/Serper 写入本地 `.env` 后，执行端到端搜索回归；后续仅剩真机长期稳定性观察。
+- **最近完成**：联网功能最终收尾与培训文档重写（本地 .env、提取超时收敛、使用手册、全功能最小示例、覆盖矩阵）
+- **建议下一步**：以 `docs/工厂使用手册.md` + `docs/全功能最小示例项目.md` 培训新用户；后续仅剩真机长期稳定性观察。
 
 ---
 
@@ -2652,3 +2652,25 @@ python3 -m _infra.network.cli config
 - 不改变 Search → Extract → Privacy → RAG 调用链。
 - 提取层仍然保持 Crawl4AI primary、trafilatura fallback，仅收紧 fallback 超时。
 - 主模型仍不接触原始私域数据，Privacy Gateway 边界未改变。
+
+
+## 第 80 轮 · 2026-06-25（全功能示例项目与培训文档重写）
+
+**触发**：用户确认 `.env` 写入成功，联网功能端到端验证通过；要求在全工厂能力确认打通后，更新/追加项目文档并生成面向零基础用户的完整培训资料。
+
+**完成内容**：
+- 重写 `docs/工厂使用手册.md`：从环境准备、设计思想、目录结构、Agents/Skills、五阶段、forge CLI、Network CLI、标准工作流、最佳实践、排障、创建新项目、接手已有项目、需求/架构/开发/测试/文档/交接全流程进行零基础说明。
+- 重写 `docs/全功能最小示例项目.md`：以 `mini-gratitude` 极简 CLI 覆盖需求分析、联网研究、架构设计、任务拆解、TDD、测试、Bug 修复、功能迭代、多专家评审、安全审查、RETRO、交接与治理检查。
+- 重写 `docs/工厂能力覆盖检查.md`：建立 64 项能力覆盖矩阵，当前覆盖率 100%。
+- 更新 `README.md`、`HANDOFF.md`、`docs/PROJECT_STATE.md`，将新用户培训入口与当前 Network finalized 状态对齐。
+- 修正 `TrafilaturaProvider`：从 `wait_for(to_thread(fetch_url))` 改为 bounded async HTTP fetch + trafilatura extraction，避免超时线程在 CLI 输出后继续打印底层下载错误。
+
+**验证**：
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+python3 -m _infra.network.cli config
+# Network Config loaded successfully
+```

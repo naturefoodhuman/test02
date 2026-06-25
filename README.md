@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-23 17:20:00
+创建时间（北京时间）：2026-06-25 00:00:00
 -->
 
 # FORGE Factory（AI 项目孵化工厂）
@@ -35,7 +35,7 @@ FORGE Factory 是在 macOS / 本地优先环境中，把“模糊想法”通过
 - E10 Ops：health-check、backup、launchd plist。
 - E11 Security：prompt injection、PII bypass、cookie leak、canary E2E tests。
 
-最新测试基线见 `docs/PROJECT_STATE.md` 与 `docs/DEV_LOG.md` 顶部索引。
+最新测试基线：`358 passed, 3 skipped, 44 warnings`；详见 `docs/PROJECT_STATE.md` 与 `docs/DEV_LOG.md` 顶部索引。
 
 ---
 
@@ -156,3 +156,22 @@ scripts/backup.sh
 历史诊断脚本统一放入 `scripts/diagnostics/`，不作为主流程入口。
 
 当前不删除历史文档；被标为历史参考的文档不得作为 Current State SSOT。
+
+
+## 7. Network 搜索示例
+
+本地 `.env` 会自动加载 Tavily / Serper 等 fallback key：
+
+```bash
+cp .env.example .env
+# 编辑 .env 后执行：
+python3 -m _infra.network.cli search "python langgraph state machine" --mode research
+```
+
+当前联网功能已完成真机验收：SearXNG healthy，Tavily/Serper fallback 自动加载，提取超时会快速 fallback 到 snippet。
+
+## 8. 新用户培训入口
+
+- 完整使用手册：`docs/工厂使用手册.md`
+- 全功能最小示例：`docs/全功能最小示例项目.md`
+- 能力覆盖矩阵：`docs/工厂能力覆盖检查.md`

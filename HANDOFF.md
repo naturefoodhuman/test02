@@ -66,7 +66,11 @@ FORGE Factory 是 AI 项目孵化工厂。
 ### ⚠️ 搜索风控加固 (2026-06-25)
 - 已按用户“附录 1”完成 Engine Matrix、per-engine Circuit Breaker、MultiSourceSearchOrchestrator、可选 Brave/Tavily/Serper API fallback 与诊断工具 v2。
 - 当前 API fallback 仅在 `BRAVE_API_KEY` / `TAVILY_API_KEY` / `SERPER_API_KEY` 存在时加载；密钥不得提交。
-- `docker/searxng/settings.yml` 已改为 anti-risk-control hardened 配置，真机需重启 SearXNG 后验证。
+- 用户真机已验证 `.env` 自动加载、SearXNG healthy、Tavily/Serper fallback loaded、端到端 search 成功。
+
+### ✅ 培训文档收尾 (2026-06-25)
+- 已重写 `docs/工厂使用手册.md`、`docs/全功能最小示例项目.md`、`docs/工厂能力覆盖检查.md`。
+- 新用户培训入口已收敛为：使用手册 → mini-gratitude 示例 → 能力覆盖矩阵。
 
 ## 3. 当前下一步候选
 

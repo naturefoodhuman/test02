@@ -1,8 +1,8 @@
 """Unit tests for bounded trafilatura fallback."""
 
 import asyncio
-import time
 
+import httpx
 import pytest
 
 import _infra.network.extract.trafilatura_fallback as tf
@@ -13,11 +13,10 @@ def test_trafilatura_provider_timeout(monkeypatch):
     if tf.trafilatura is None:
         pytest.skip("trafilatura not installed")
 
-    def slow_fetch(url):
-        time.sleep(0.2)
-        return "<html><body>slow</body></html>"
+    async def raise_timeout(url):
+        raise httpx.TimeoutException("timeout")
 
-    monkeypatch.setattr(tf.trafilatura, "fetch_url", slow_fetch)
+    monkeypatch.setattr(TrafilaturaProvider, "_download", raise_timeout)
 
     async def run_test():
         provider = TrafilaturaProvider(timeout_seconds=0.01)

@@ -114,6 +114,36 @@ python3 -m _infra.network.cli config
 
 ---
 
+## [第 80 轮] 2026-06-25
+
+### 需求变动
+- **全功能示例项目与培训文档重写**：用户要求在联网功能确认打通后，面向零基础用户更新完整工厂使用手册、重新生成全功能最小示例项目，并建立能力覆盖矩阵。
+- **提取 fallback 收尾修正**：根据用户端到端日志，避免 trafilatura 超时后后台线程继续输出底层下载错误，改为 bounded async HTTP fetch + trafilatura extraction。
+
+### 文件影响
+- 重写：`docs/工厂使用手册.md`
+- 重写：`docs/全功能最小示例项目.md`
+- 重写：`docs/工厂能力覆盖检查.md`
+- 修改：`README.md`
+- 修改：`HANDOFF.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`_infra/network/extract/trafilatura_fallback.py`
+- 修改：`_infra/network/tests/unit/test_trafilatura_timeout.py`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+python3 -m _infra.network.cli config
+# Network Config loaded successfully
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动
