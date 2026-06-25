@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-25（Claude Code 培训文档、高风险示例、文档治理自动化完成）
+> **最近同步**: 2026-06-25（文档治理 P1 自动化落地完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -3256,6 +3256,7 @@ graph TD
 | M10 | E12-C1 | E12-C1-S1-T2 | [x] | 2026-06-23 | Arena Agent |
 | M10 | E12-C2 | E12-C2-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 | M10 | E12-C3 | E12-C3-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
+| M10 | E12-C4 | E12-C4-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 
 ---
 
@@ -3311,6 +3312,25 @@ graph TD
   - [x] 测试通过：`358 passed, 3 skipped, 44 warnings`
   - [x] 静态检查通过：`python3 -m compileall -q _infra/network scripts/diagnostics`
   - [x] DEV_LOG / CHANGELOG / PROJECT_STATE 同步
+
+
+##### **Task E12-C4-S1-T1: 文档治理 P1 自动化落地**
+
+- **状态**: DONE
+- **目标**: 实现 changed-files R5、TASK_BACKLOG ↔ DEV_LOG、代码变化 ↔ CHANGELOG、架构触发词 ADR 提示、`docs/DOCUMENT_INDEX.md` 自动生成。
+- **涉及文件**:
+  - 修改：`scripts/governance_check.py`
+  - 新增/自动生成：`docs/DOCUMENT_INDEX.md`
+  - 修改：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+  - 修改：`docs/GOVERNANCE_CHECK_2026-06-25.md`、`docs/GOVERNANCE_CHECK_LATEST.md`
+  - 修改：`TASK_BACKLOG.md`、`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`
+- **DoD**:
+  - [x] changed-files R5 检查完成
+  - [x] Backlog/DEV_LOG 同步检查完成
+  - [x] 代码变更要求 CHANGELOG 完成
+  - [x] 架构触发词 ADR 提示完成
+  - [x] DOCUMENT_INDEX 自动生成完成
+  - [x] `python3 scripts/governance_check.py --strict` 通过
 
 ---
 

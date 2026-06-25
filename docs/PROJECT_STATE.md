@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-06-25 00:00 CST
-**当前版本**：v1.4.4-dossier + Claude Code Training + Governance Automation
+**当前版本**：v1.4.5-dossier + Governance Automation P1
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -58,6 +58,7 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - `docs/全功能最小示例项目.md` 已重新设计为 `mini-gratitude-control-tower`，覆盖普通功能与高风险能力安全演示。
 - `docs/工厂能力覆盖检查.md` 已重建矩阵，当前覆盖率 76/76 = 100%。
 - 新增 `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`，并升级 `scripts/governance_check.py` + `make docs-check`，推动文档治理自动化常态化。
+- 文档治理 P1 已落地：changed-files R5 阻断、Backlog/DEV_LOG 同步阻断、代码变更必须更新 CHANGELOG、架构触发词提示 ADR、自动生成 `docs/DOCUMENT_INDEX.md`。
 
 ---
 

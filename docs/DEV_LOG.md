@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：Claude Code for VS Code 培训文档、高风险全功能示例、文档治理自动化方案
+- **最近完成**：文档治理 P1 自动化落地（changed-files R5、Backlog/DEV_LOG、CHANGELOG、ADR trigger、DOCUMENT_INDEX）
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -2692,6 +2692,29 @@ python3 -m _infra.network.cli config
 ```bash
 python3 scripts/governance_check.py --strict
 # Blockers: 0; Warnings: 0
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+```
+
+
+## 第 82 轮 · 2026-06-25（文档治理 P1 自动化落地）
+
+**触发**：用户要求继续实现文档治理自动化 P1 建议。
+
+**完成内容**：
+- `scripts/governance_check.py` 新增 changed-files R5 检查：新增/修改的 `.py/.md/.yml/.yaml/.sh` 缺 LLM 文件头时阻断。
+- 新增 `TASK_BACKLOG.md` ↔ `docs/DEV_LOG.md` 同步检查：Backlog 改动但 DEV_LOG 未改时阻断。
+- 新增代码/配置/脚本变化但 `docs/CHANGELOG.md` 未更新时阻断。
+- 新增架构触发词检测：命中 architecture / orchestrator / workflow / provider / boundary / routing / privacy / security / model 等词但未改 ADR 时输出 warning，提示人工判断是否需要 ADR。
+- 新增 `docs/DOCUMENT_INDEX.md` 自动生成，标记 SSOT / training / governance / reference / runtime-artifact。
+- `make docs-check` 现在具备提交前阻断能力。
+
+**验证**：
+```bash
+python3 scripts/governance_check.py --strict
+# Blockers: 0（warnings 仅提示是否需要 ADR）
 python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
 # 358 passed, 3 skipped, 44 warnings
 python3 -m compileall -q _infra/network scripts/diagnostics

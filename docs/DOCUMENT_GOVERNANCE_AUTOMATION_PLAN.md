@@ -165,23 +165,23 @@ make governance-check
 - 重写培训文档。
 - 重建能力覆盖矩阵。
 
-### P1：建议下一轮实现
+### P1：已于 2026-06-25 落地
 
-1. **新增 changed-files R5 检查**
-   - 只检查 `git diff --name-only HEAD~1..HEAD` 或工作区变更文件。
-   - 新增/修改文件缺头即阻断。
+1. **changed-files R5 检查**
+   - `scripts/governance_check.py --strict` 会检查当前工作区新增/修改的 `.py/.md/.yml/.yaml/.sh` 文件是否包含 LLM 文件头。
+   - 缺失即阻断。
 
 2. **TASK_BACKLOG ↔ DEV_LOG 同步检查**
-   - 检测 `TASK_BACKLOG.md` 中新增 DONE / IN_PROGRESS / BLOCKED 是否在 `DEV_LOG.md` 最新轮出现。
+   - `TASK_BACKLOG.md` 发生变化但 `docs/DEV_LOG.md` 未变化时阻断。
 
-3. **CHANGELOG 最新索引检查**
-   - 若代码文件变化但 `docs/CHANGELOG.md` 未变化，则阻断。
+3. **代码变化但 CHANGELOG 未更新则阻断**
+   - 代码/配置/脚本类文件变化时，若 `docs/CHANGELOG.md` 未同步更新，则阻断。
 
-4. **ADR 触发词检查**
-   - diff 中出现 `architecture`、`orchestrator`、`workflow`、`provider`、`boundary`、`routing`、`privacy` 等高风险词时，提示是否需要 ADR。
+4. **架构触发词提示 ADR**
+   - diff 中出现 `architecture`、`orchestrator`、`workflow`、`provider`、`boundary`、`routing`、`privacy` 等高风险词时，输出 warning，提示人工判断是否需要 ADR。
 
-5. **历史文档引用标注检查**
-   - CHANGELOG/DEV_LOG 可保留已删除文件历史引用，但必须处于历史章节；当前核心文档不能指向已删除文件。
+5. **`docs/DOCUMENT_INDEX.md` 自动生成**
+   - 每次运行 governance check 都会刷新文档索引，标记 SSOT / training / governance / reference / runtime-artifact。
 
 ### P2：长期增强
 
@@ -206,7 +206,7 @@ python3 scripts/governance_check.py --strict
 Blockers: 0
 Warnings: 0
 R5 Python: 191/231
-R5 Markdown: 145/168
+R5 Markdown: 147/171
 Missing links: 0
 ```
 

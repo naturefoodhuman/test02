@@ -176,6 +176,34 @@ python3 -m compileall -q _infra/network scripts/diagnostics
 
 ---
 
+## [第 82 轮] 2026-06-25
+
+### 需求变动
+- **文档治理 P1 自动化落地**：实现 changed-files R5 检查、Backlog/DEV_LOG 同步检查、代码变更必须更新 CHANGELOG、架构触发词提示 ADR、自动生成 `docs/DOCUMENT_INDEX.md`。
+
+### 文件影响
+- 修改：`scripts/governance_check.py`
+- 新增/自动生成：`docs/DOCUMENT_INDEX.md`
+- 修改：`docs/GOVERNANCE_CHECK_2026-06-25.md`
+- 修改：`docs/GOVERNANCE_CHECK_LATEST.md`
+- 修改：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`TASK_BACKLOG.md`
+
+### 验证
+```bash
+python3 scripts/governance_check.py --strict
+# Blockers: 0
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+python3 -m compileall -q _infra/network scripts/diagnostics
+# pass
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动
