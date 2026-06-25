@@ -262,6 +262,11 @@ python3 -m compileall -q scripts/governance_check.py
 - 根因：MTPLX 对 `stream=true` 返回完整 OpenAI JSON，不返回 SSE `data:` 行。
 - 修复：Claude Code streaming 路径对后端改用非流式 JSON，再包装成 Anthropic SSE `content_block_delta`。
 
+### 补丁 3：Claude Code for VS Code 操作说明修正
+- 明确 `Developer: Reload Window` 是 VS Code 命令面板命令，不是终端命令。
+- 明确 `code .` 需要安装 Shell Command，不是必需步骤。
+- 手册与示例项目改为优先使用 `@文件` 附加上下文，避免本地模型一次性自行读取多个长文档导致卡顿。
+
 ### 验证
 ```bash
 python3 -m compileall -q _infra/smart_proxy.py _infra/litellm_gatekeeper.py

@@ -2801,3 +2801,19 @@ python3 -m compileall -q _infra/smart_proxy.py
 ```bash
 python3 -m compileall -q _infra/smart_proxy.py
 ```
+
+### 第 84 轮补丁 3 · 2026-06-26（Claude Code for VS Code 操作说明修正）
+
+**触发**：用户在 VS Code 内置终端执行 `Developer: Reload Window` 和 `code .` 出现 `zsh: command not found`，并按手册第一句话让 Claude Code 读取多个长文档后卡住。
+
+**处理**：
+- 修正手册说明：`Developer: Reload Window` 是 VS Code 命令面板命令（`Cmd + Shift + P`），不是终端命令。
+- 明确 `code .` 只有安装 VS Code Shell Command 后才可用，不是必需步骤。
+- 将 Claude Code 首句改为优先使用 `@文件` 附加上下文，而不是让本地模型一次性自行读取多个长文件。
+- 新增本地模型 + Claude Code 工具调用排障：先 `只回复 pong`，再 `@HANDOFF.md`，最后再分步读取长文档。
+- 更新全功能示例项目步骤 0，避免新用户一开始就触发长工具链卡顿。
+
+**验证**：
+```bash
+make docs-check
+```

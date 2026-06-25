@@ -66,6 +66,7 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - VS Code 推荐使用 `ANTHROPIC_BASE_URL=http://localhost:4000` 与 `ANTHROPIC_API_KEY=sk-forge-local-anytoken`。
 - `scripts/forge-start.sh` 已改为按端口清理 4000/4001，避免旧代理占用 4000 导致 `/v1/messages` 返回 Not Found。
 - `_infra/smart_proxy.py` 已支持 Anthropic streaming SSE 转换，并默认限制本地模型输出 token，改善 VS Code Claude Code 面板长时间等待问题。
+- 培训文档已修正 Claude Code for VS Code 操作方式：命令面板命令不在终端执行，首句优先用 `@HANDOFF.md` 等上下文附加，避免本地模型长工具链卡顿。
 
 ---
 
