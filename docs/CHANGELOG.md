@@ -392,6 +392,10 @@ make docs-check
 - 修改：`docs/LOCAL_MODEL_RUNTIME_TUNING.md`
 - 修改：`TASK_BACKLOG.md`
 
+### 补丁：Benchmark 超时修复与 proxy-only 启动模式
+- 修复 `TimeoutExpired.stdout` bytes/str 拼接导致的 TypeError。
+- 新增 `--startup-mode proxy-only` 默认模式，只启动 4001/4000，由 Smart Proxy 按需加载 8080，避免每个 profile 完整自检 8080/8082/8084。
+
 ### 验证
 ```bash
 python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py

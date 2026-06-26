@@ -439,6 +439,14 @@ no-MTP:  prompt=22, completion=260, elapsed=26.24s, tok_s=10.15, e2e=9.91
 python3 scripts/diagnostics/benchmark_local_runtime.py
 ```
 
+默认 `--startup-mode proxy-only`：只启动 4001 LiteLLM 和 4000 Smart Proxy，让 Smart Proxy 按需加载 8080。这样避免每个 profile 都完整自检 8080/8082/8084，速度更快，也不容易在 Qwopus/Gemma 自检处卡住。
+
+如确实要完整跑 `scripts/forge-start.sh`，可加：
+
+```bash
+python3 scripts/diagnostics/benchmark_local_runtime.py --startup-mode full
+```
+
 默认会测试：
 
 ```text
@@ -471,6 +479,8 @@ diagnostics/local_runtime_benchmark/<timestamp>/
 ```bash
 python3 scripts/diagnostics/benchmark_local_runtime.py --profiles mtp_depth3,no_mtp --prompts medium_state_machine --skip-stream
 ```
+
+如果之前版本报 `TimeoutExpired` 后又出现 `TypeError: can't concat str to bytes`，请拉取最新代码；当前脚本已修复 timeout 输出解码，并默认改为 proxy-only 启动模式。
 
 运行完成后，将整个目录或至少 `report.md`、`report.json`、各 profile 的 `mtplx_8080.log` 发给分析者。
 

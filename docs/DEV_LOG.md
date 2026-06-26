@@ -2955,3 +2955,16 @@ python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_ef
 ```bash
 python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 ```
+
+
+### 第 89 轮补丁 · 2026-06-26（一键 Benchmark 超时修复与 proxy-only 启动模式）
+
+**触发**：用户运行快速版 benchmark 时，`scripts/forge-start.sh` 在子进程中 900s 超时，且 timeout handler 出现 `TypeError: can't concat str to bytes`。
+
+**根因**：完整 `forge-start.sh` 会在每个 profile 中自检 8080/8082/8084，Benchmark 只需要测试 8080，重复完整自检慢且容易在某个模型启动处卡住；同时 `TimeoutExpired.stdout` 在某些 Python 版本下是 bytes，原脚本直接拼接 str 导致 TypeError。
+
+**处理**：
+- `benchmark_local_runtime.py` 修复 `TimeoutExpired` stdout bytes 解码。
+- 新增 `--startup-mode {proxy-only,full}`，默认 `proxy-only`。
+- proxy-only 模式只启动 4001 LiteLLM 和 4000 Smart Proxy，让 Smart Proxy 按需拉起 8080，避免每个 profile 重复自检 8082/8084。
+- 文档更新快速版测试说明。

@@ -12,7 +12,7 @@ What it does by default:
 - Copies /tmp/mtplx_8080.log for each profile.
 - Parses mtplx_openai_generation metrics.
 - Runs local streaming diagnostics per profile.
-- Restores the original config/model_runtime.yaml at the end.
+- Restores the original config/model_runtime.yaml at the end. By default it starts only 4000/4001 and lets Smart Proxy load 8080 on demand; use --startup-mode full to run full forge-start checks.
 - Writes all artifacts under diagnostics/local_runtime_benchmark/<timestamp>/.
 
 Designed for the user to run once and send the generated directory/report back
@@ -25,6 +25,7 @@ import argparse
 import json
 import os
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -98,6 +99,58 @@ def run_cmd(cmd: list[str], cwd: Path = ROOT, timeout: int | None = None) -> dic
             "output": (exc.stdout or "") + f"\nTIMEOUT after {timeout}s",
         }
 
+
+
+def is_listening(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(0.5)
+        return sock.connect_ex(("127.0.0.1", port)) == 0
+
+
+def wait_port(port: int, timeout_s: float) -> bool:
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        if is_listening(port):
+            return True
+        time.sleep(1)
+    return False
+
+
+def start_gateway_only(profile_dir: Path, timeout_s: int = 180) -> dict[str, Any]:
+    """Start only LiteLLM 4001 + Smart Proxy 4000.
+
+    This benchmark only targets 8080. Running full forge-start would cold-check
+    8080/8082/8084 for every profile and is slow/error-prone. The Smart Proxy
+    will start 8080 on demand using config/model_runtime.yaml.
+    """
+    result: dict[str, Any] = {"mode": "proxy-only", "steps": []}
+    litellm_log = Path("/tmp/forge_litellm_4001.log")
+    smart_log = Path("/tmp/forge_smart_proxy.log")
+    litellm_log.write_text("", encoding="utf-8")
+    smart_log.write_text("", encoding="utf-8")
+
+    litellm_cmd = "bash _infra/start-litellm.sh 4001 > /tmp/forge_litellm_4001.log 2>&1 &"
+    smart_cmd = f"{shlex_quote(sys.executable)} _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &"
+
+    subprocess.Popen(litellm_cmd, cwd=str(ROOT), shell=True, executable="/bin/bash")
+    ok_4001 = wait_port(4001, timeout_s)
+    result["steps"].append({"service": "litellm", "port": 4001, "ready": ok_4001})
+    if not ok_4001:
+        result["error"] = "LiteLLM 4001 did not become ready"
+        (profile_dir / "forge_litellm_4001.startup.log").write_text(litellm_log.read_text(encoding="utf-8", errors="ignore"), encoding="utf-8")
+        return result
+
+    subprocess.Popen(smart_cmd, cwd=str(ROOT), shell=True, executable="/bin/bash")
+    ok_4000 = wait_port(4000, 60)
+    result["steps"].append({"service": "smart_proxy", "port": 4000, "ready": ok_4000})
+    if not ok_4000:
+        result["error"] = "Smart Proxy 4000 did not become ready"
+    return result
+
+
+def shlex_quote(value: str) -> str:
+    import shlex
+    return shlex.quote(value)
 
 def load_config() -> dict[str, Any]:
     return yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8")) or {}
@@ -269,6 +322,7 @@ def main() -> None:
     parser.add_argument("--model", default="claude-opus-4-8-1m")
     parser.add_argument("--max-tokens", type=int, default=512)
     parser.add_argument("--timeout", type=float, default=420.0)
+    parser.add_argument("--startup-mode", choices=["proxy-only", "full"], default="proxy-only", help="proxy-only starts only 4000/4001; full runs scripts/forge-start.sh")
     parser.add_argument("--skip-stream", action="store_true", help="Skip stream=true requests")
     parser.add_argument("--keep-running", action="store_true", help="Do not stop local models at the end")
     args = parser.parse_args()
@@ -305,13 +359,18 @@ def main() -> None:
 
             stop_res = run_cmd(["bash", "scripts/stop_local_models.sh"], timeout=120)
             (profile_dir / "stop.log").write_text(stop_res["output"], encoding="utf-8")
-            start_res = run_cmd(["bash", "scripts/forge-start.sh"], timeout=900)
-            (profile_dir / "forge_start.log").write_text(start_res["output"], encoding="utf-8")
+            if args.startup_mode == "full":
+                start_res = run_cmd(["bash", "scripts/forge-start.sh"], timeout=900)
+                (profile_dir / "forge_start.log").write_text(start_res["output"], encoding="utf-8")
+                startup_info = {"mode": "full", "returncode": start_res["returncode"], "elapsed_s": start_res["elapsed_s"]}
+            else:
+                startup_info = start_gateway_only(profile_dir)
+                (profile_dir / "gateway_start.json").write_text(json.dumps(startup_info, indent=2, ensure_ascii=False), encoding="utf-8")
 
             profile_result: dict[str, Any] = {
                 "name": profile_name,
                 "extra_args": PROFILE_ARGS[profile_name],
-                "start_returncode": start_res["returncode"],
+                "startup": startup_info,
                 "runs": [],
             }
 
