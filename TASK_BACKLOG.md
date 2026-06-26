@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-26（Claude Code 本地模型操作体验与自助排障完善完成）
+> **最近同步**: 2026-06-26（Claude Code 长文档恢复经验与流式诊断工具完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -3260,6 +3260,7 @@ graph TD
 | M10 | E12-C5 | E12-C5-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 | M10 | E12-C6 | E12-C6-S1-T1 | DONE | 2026-06-25 | Arena.ai Agent Mode |
 | M10 | E12-C7 | E12-C7-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
+| M10 | E12-C8 | E12-C8-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
 
 ---
 
@@ -3394,6 +3395,22 @@ graph TD
   - [x] 本地模型停止/卸载脚本完成
   - [x] 手册补充等待时间、max token、流式和卡死排障
   - [x] 全功能示例补充自包含启动命令
+  - [x] 静态检查通过
+
+
+##### **Task E12-C8-S1-T1: Claude Code 长文档恢复经验与流式诊断工具**
+
+- **状态**: DONE
+- **目标**: 记录 `@HANDOFF.md` 从 20 分钟无输出恢复到约 2 分钟输出的重要经验，分析代理/streaming/alias/端口清理修复的影响，并新增本地流式诊断工具。
+- **涉及文件**:
+  - 新增：`scripts/diagnostics/test_local_streaming.py`
+  - 修改：`docs/DEV_LOG.md`
+  - 修改：`docs/CHANGELOG.md`
+  - 修改：`docs/工厂使用手册.md`
+- **DoD**:
+  - [x] 经验记录完成
+  - [x] 流式诊断工具完成
+  - [x] 文档说明完成
   - [x] 静态检查通过
 
 ---

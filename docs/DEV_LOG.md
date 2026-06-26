@@ -2834,3 +2834,26 @@ make docs-check
 python3 -m compileall -q _infra/smart_proxy.py
 make docs-check
 ```
+
+
+## 第 86 轮 · 2026-06-26（记录 Claude Code 长文档恢复经验与流式诊断工具）
+
+**触发**：用户确认在最新修复后，同样提示词“基于 @HANDOFF.md 总结当前接手规则”已从 20 分钟无输出改善为约 2 分钟输出，说明问题不只是上下文过大。
+
+**经验分析**：
+- 关键改善来自 `_infra/smart_proxy.py` 的 Anthropic SSE 修复：之前 Claude Code streaming 请求只收到 start/stop 或空 delta，VS Code UI 没有正文可显示；修复后代理能稳定输出 `content_block_delta`。
+- `scripts/forge-start.sh` 的端口级清理也排除了旧代理占用 4000 导致 `/v1/messages` Not Found 或路由不一致的问题。
+- alias 映射补齐避免 Claude Code 当前 UI 中 Opus 4.8 / Sonnet 4.6 / Haiku 4.5 请求落到未注册模型。
+- 因此 @HANDOFF.md 约 2 分钟输出是合理的本地 27B 长上下文表现；不再是协议/代理层卡死。
+
+**新增工具**：
+- `scripts/diagnostics/test_local_streaming.py`：检测 MTPLX 后端是否真 OpenAI SSE 流式、Claude Code Smart Proxy 是否输出 Anthropic `content_block_delta`，并测量 first_delta 和 total time。
+
+**关于 MTPLX 模型来源信息**：
+- Hugging Face 页面 `Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality` 说明该 artifact 是 Qwen3.6 27B 的 MTPLX Optimized Quality 版本，包含 `mtplx_runtime.json` 和 `mtp/weights.safetensors`，用于 MTPLX native Qwen MTP backend。
+- 页面给出的本地 bakeoff 数据包括 Decode TPS 33.63、Peak memory 27.62 GiB；页面没有明确说明 OpenAI API streaming 行为。因此真流式能力应通过本地 runtime 诊断脚本验证，而不是从模型卡片推断。
+
+**验证**：
+```bash
+python3 -m compileall -q scripts/diagnostics/test_local_streaming.py
+```

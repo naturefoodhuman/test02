@@ -299,6 +299,25 @@ make docs-check
 
 ---
 
+## [第 86 轮] 2026-06-26
+
+### 需求变动
+- **记录 Claude Code 长文档恢复经验**：用户确认 `@HANDOFF.md` 同样提示词已从 20 分钟无输出改善为约 2 分钟输出，需记录经验并分析原因。
+- **新增本地流式诊断工具**：用于验证 MTPLX 后端是否真 OpenAI SSE 流式，以及 Smart Proxy 是否输出 Anthropic `content_block_delta`。
+
+### 文件影响
+- 新增：`scripts/diagnostics/test_local_streaming.py`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/工厂使用手册.md`
+
+### 验证
+```bash
+python3 -m compileall -q scripts/diagnostics/test_local_streaming.py
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动
