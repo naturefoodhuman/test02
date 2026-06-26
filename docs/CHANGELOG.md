@@ -361,6 +361,25 @@ python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_ef
 
 ---
 
+## [第 88 轮] 2026-06-26
+
+### 需求变动
+- **记录 MTP A/B 真机结果**：用户提供短 prompt 下 MTP on / no-MTP 对比结果，以及 `test_local_streaming.py` direct backend refused / proxy ok 的解释需求。
+- **操作指令输出风格要求**：用户要求今后操作指令集中放在回复最后，不要穿插在解释过程中。
+
+### 文件影响
+- 修改：`HANDOFF.md`
+- 修改：`docs/LOCAL_MODEL_RUNTIME_TUNING.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+make docs-check
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

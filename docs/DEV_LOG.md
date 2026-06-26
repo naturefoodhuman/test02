@@ -2919,3 +2919,17 @@ python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_ef
 
 **工具更新**：
 - `scripts/diagnostics/test_mtp_effectiveness.py` 现在会解析最近的 `mtplx_openai_generation` JSON metrics，输出 prompt/completion/elapsed/tok_s/e2e/preview，便于后续 A/B 记录。
+
+
+### 第 87 轮补丁 3 · 2026-06-26（记录 MTP A/B 真机结果与操作指令风格要求）
+
+**触发**：用户反馈 `test_local_streaming.py` 在 `forge-start.sh` 后 direct backend 连接拒绝、anthropic proxy 可用；并提供短 prompt 下 MTP on / no-MTP 对比结果。同时要求今后操作指令集中放在回复最后，不要边解释边穿插命令。
+
+**真机结果**：
+- `openai-backend: Connection refused` 是预期：`forge-start.sh` 自检后会卸载 8080 释放显存。
+- `anthropic-proxy: ok` 且 `first_delta=21.01s`：4000 Smart Proxy 可按需拉起 8080 并输出 Claude Code 所需 `content_block_delta`，其中 21 秒包含冷启动/加载时间。
+- 短 prompt A/B：MTP on 为 `elapsed=34.30s, tok_s=8.86, e2e=8.72`；no-MTP 为 `elapsed=26.24s, tok_s=10.15, e2e=9.91`。该单样本说明短 prompt 下 no-MTP 可能更快，但不构成长期默认策略结论。
+
+**处理**：
+- `docs/LOCAL_MODEL_RUNTIME_TUNING.md` 增加真机诊断结果记录和解释。
+- `HANDOFF.md` §12 增加“操作指令必须集中放在回复最后的操作区”。

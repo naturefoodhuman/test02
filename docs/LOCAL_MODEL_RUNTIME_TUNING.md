@@ -350,3 +350,80 @@ elapsed_s
 tok_s
 end_to_end_tok_s
 ```
+
+
+---
+
+## 11. 2026-06-26 真机诊断结果记录
+
+用户真机执行后得到以下关键结论：
+
+### 11.1 `forge-start.sh` 自检后 direct backend refused 是预期行为
+
+`forge-start.sh` 会冷启动 8080/8082/8084 做可用性校验，然后立即卸载模型释放显存。因此紧接着运行：
+
+```bash
+python3 scripts/diagnostics/test_local_streaming.py
+```
+
+可能出现：
+
+```text
+openai-backend: status=exception ... Connection refused
+anthropic-proxy: status=ok ... content_block_delta
+```
+
+这表示 8080 direct backend 被卸载，但 4000 Smart Proxy 可按需拉起 8080 并返回 Claude Code 所需的 Anthropic SSE。不是故障。
+
+### 11.2 MTP runtime 已确认进入工作路径
+
+用户日志确认：
+
+```text
+8080 Qwen: Mode Sustained MTP / Installing native-MTP draft head
+8082 Gemma: Gemma 4 assistant MTP drafter is active
+8084 Qwopus: [spec] estimated memory usage of MTP context
+```
+
+因此当前结论是：
+
+```text
+MTP/speculative runtime 已启用。
+```
+
+### 11.3 短 prompt A/B 中 no-MTP 更快，不代表 MTP 无效
+
+用户短 prompt A/B：
+
+```text
+MTP on:  prompt=22, completion=299, elapsed=34.30s, tok_s=8.86, e2e=8.72
+no-MTP:  prompt=22, completion=260, elapsed=26.24s, tok_s=10.15, e2e=9.91
+```
+
+解释：
+
+- 该样本中 no-MTP 更快。
+- 但 completion tokens 不同，输出内容不同，且 prompt 很短。
+- MTP/speculative decoding 在极短 prompt、短输出、小样本中可能因为 draft/verify 开销不占优。
+- MTP 的收益更应在长输出、稳定 prompt、固定 seed、同等 completion length、重复多次时评估。
+
+因此当前不能得出“MTP 比 no-MTP 慢”的全局结论，只能记录：
+
+```text
+短 prompt 单样本下 no-MTP 表现更快；需要标准化 benchmark 后再决定默认策略。
+```
+
+### 11.4 当前默认参数的合理性
+
+当前默认仍保留：
+
+```bash
+--profile sustained --mtp --depth 3 --stream-interval 1 --reasoning off --max-tokens 2048
+```
+
+原因：
+
+- 这是模型卡和 MTPLX runtime 推荐方向；
+- 长上下文 Agent / Claude Code 用例更接近 MTP 目标场景；
+- 单次短 prompt 结果不足以推翻默认；
+- 若用户日常大量短问答，可后续增加 `fast-interactive` profile，使用 `--no-mtp` 或更小模型。
