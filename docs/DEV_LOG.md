@@ -2933,3 +2933,25 @@ python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_ef
 **处理**：
 - `docs/LOCAL_MODEL_RUNTIME_TUNING.md` 增加真机诊断结果记录和解释。
 - `HANDOFF.md` §12 增加“操作指令必须集中放在回复最后的操作区”。
+
+## 第 89 轮 · 2026-06-26（一键本地运行时综合 Benchmark）
+
+**触发**：用户反馈手工 MTP / no-MTP / KV cache / streaming 测试步骤繁琐且容易出错，要求提供“一键全面测试”，由用户运行后发送产物进行分析。
+
+**完成内容**：
+- 新增 `scripts/diagnostics/benchmark_local_runtime.py`。
+- 脚本会自动：
+  1. 备份 `config/model_runtime.yaml`；
+  2. 针对 8080 Qwen 主模型依次测试 `mtp_depth3`、`no_mtp`、`mtp_depth3_kv_q8`、`mtp_depth3_kv_q4`；
+  3. 每个 profile 自动停止本地模型、写入临时配置、运行 `scripts/forge-start.sh`；
+  4. 对固定 prompts 发送 non-stream 与 stream 请求；
+  5. 收集 `/tmp/mtplx_8080.log`、Smart Proxy 日志、LiteLLM 日志；
+  6. 解析 `mtplx_openai_generation` 指标；
+  7. 运行 `test_mtp_effectiveness.py` 与 `test_local_streaming.py`；
+  8. 恢复原始 `config/model_runtime.yaml`；
+  9. 输出 `report.json` 与 `report.md` 到 `diagnostics/local_runtime_benchmark/<timestamp>/`。
+
+**验证**：
+```bash
+python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
+```

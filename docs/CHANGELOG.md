@@ -380,6 +380,25 @@ make docs-check
 
 ---
 
+## [第 89 轮] 2026-06-26
+
+### 需求变动
+- **一键本地运行时综合 Benchmark**：用户反馈手工 MTP/no-MTP/KV cache/streaming 测试繁琐且容易出错，要求提供一键全面测试并生成可发送的测试产物。
+
+### 文件影响
+- 新增：`scripts/diagnostics/benchmark_local_runtime.py`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/LOCAL_MODEL_RUNTIME_TUNING.md`
+- 修改：`TASK_BACKLOG.md`
+
+### 验证
+```bash
+python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-06-26（本地模型运行参数 SSOT 与 MTP/流式诊断完成）
+> **最近同步**: 2026-06-26（一键本地运行时综合 Benchmark 完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -3262,6 +3262,7 @@ graph TD
 | M10 | E12-C7 | E12-C7-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
 | M10 | E12-C8 | E12-C8-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
 | M10 | E12-C9 | E12-C9-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
+| M10 | E12-C10 | E12-C10-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
 
 ---
 
@@ -3434,6 +3435,25 @@ graph TD
   - [x] llama.cpp Qwopus MTP flags 配置化
   - [x] MTP 生效诊断脚本完成
   - [x] 文档说明完成
+
+
+##### **Task E12-C10-S1-T1: 一键本地运行时综合 Benchmark**
+
+- **状态**: DONE
+- **目标**: 提供一键脚本，自动完成 MTP/no-MTP/KV cache/streaming 组合测试并生成可发送分析的产物。
+- **涉及文件**:
+  - 新增：`scripts/diagnostics/benchmark_local_runtime.py`
+  - 修改：`docs/DEV_LOG.md`
+  - 修改：`docs/CHANGELOG.md`
+  - 修改：`docs/LOCAL_MODEL_RUNTIME_TUNING.md`
+  - 修改：`TASK_BACKLOG.md`
+- **DoD**:
+  - [x] 自动切换 profile
+  - [x] 自动重启服务
+  - [x] 自动发送固定 prompts
+  - [x] 自动收集日志与 metrics
+  - [x] 自动恢复原始配置
+  - [x] 输出 `report.json` / `report.md`
 
 ---
 

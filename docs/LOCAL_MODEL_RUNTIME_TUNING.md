@@ -427,3 +427,51 @@ no-MTP:  prompt=22, completion=260, elapsed=26.24s, tok_s=10.15, e2e=9.91
 - 长上下文 Agent / Claude Code 用例更接近 MTP 目标场景；
 - 单次短 prompt 结果不足以推翻默认；
 - 若用户日常大量短问答，可后续增加 `fast-interactive` profile，使用 `--no-mtp` 或更小模型。
+
+
+---
+
+## 12. 一键综合 Benchmark
+
+如果不想手工切换 `--mtp` / `--no-mtp` / KV cache 参数，可以运行：
+
+```bash
+python3 scripts/diagnostics/benchmark_local_runtime.py
+```
+
+默认会测试：
+
+```text
+mtp_depth3
+no_mtp
+mtp_depth3_kv_q8
+mtp_depth3_kv_q4
+```
+
+每个 profile 会运行固定 prompt，并收集：
+
+```text
+report.json
+report.md
+/tmp/mtplx_8080.log
+/tmp/forge_smart_proxy.log
+/tmp/forge_litellm_4001.log
+test_mtp_effectiveness.txt
+test_local_streaming.txt
+```
+
+输出目录：
+
+```text
+diagnostics/local_runtime_benchmark/<timestamp>/
+```
+
+快速版只测 MTP 与 no-MTP：
+
+```bash
+python3 scripts/diagnostics/benchmark_local_runtime.py --profiles mtp_depth3,no_mtp --prompts medium_state_machine --skip-stream
+```
+
+运行完成后，将整个目录或至少 `report.md`、`report.json`、各 profile 的 `mtplx_8080.log` 发给分析者。
+
+注意：完整测试会多次启动/卸载本地模型，可能耗时 20～60 分钟。期间不要同时在 Claude Code 中发起其它本地模型请求。
