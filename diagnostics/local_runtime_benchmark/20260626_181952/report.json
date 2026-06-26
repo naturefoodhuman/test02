@@ -1,0 +1,679 @@
+{
+  "generated_at": "20260626_181952",
+  "profiles": [
+    {
+      "name": "mtp_depth3",
+      "extra_args": [
+        "--profile",
+        "sustained",
+        "--mtp",
+        "--depth",
+        "3",
+        "--stream-interval",
+        "1",
+        "--reasoning",
+        "off",
+        "--max-tokens",
+        "512"
+      ],
+      "startup": {
+        "mode": "proxy-only",
+        "steps": [
+          {
+            "service": "litellm",
+            "port": 4001,
+            "ready": true
+          },
+          {
+            "service": "smart_proxy",
+            "port": 4000,
+            "ready": true
+          }
+        ]
+      },
+      "runs": [
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 1,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 43.66418524999608,
+            "raw_text": "{\"id\":\"msg_fd46e85828194b78956be6125dfcded1\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01状态机是抽象计算模型，由状态和转换组成。\\n02它通过当前状态决定对输入事件的响应行为。\\n03核心要素包括有限状态集、输入事件及转换规则。\\n04状态迁移指系统从当前状态跳转至下一目标状态。\\n05工作流本质是一系列有序任务的状态流转过程。\\n06状态机能精确建模工作流中各环节的先后依赖。\\n07它确保流程仅在合法状态下执行，防止逻辑错误。\\n08可视化状态图让复杂业务流程逻辑清晰易理解。\\n09状态机支持条件分支，适应工作流的多路径需求。\\n10通过定义终态，状态机明确工作流的完成标准。\\n11它将业务规则固化，降低人工干预导致的混乱。\\n12因此状态机是描述和管理动态工作流的理想工具。\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01状态机是抽象计算模型，由状态和转换组成。\n02它通过当前状态决定对输入事件的响应行为。\n03核心要素包括有限状态集、输入事件及转换规则。\n04状态迁移指系统从当前状态跳转至下一目标状态。\n05工作流本质是一系列有序任务的状态流转过程。\n06状态机能精确建模工作流中各环节的先后依赖。\n07它确保流程仅在合法状态下执行，防止逻辑错误。\n08可视化状态图让复杂业务流程逻辑清晰易理解。\n09状态机支持条件分支，适应工作流的多路径需求。\n10通过定义终态，状态机明确工作流的完成标准。\n11它将业务规则固化，降低人工干预导致的混乱。\n12因此状态机是描述和管理动态工作流的理想工具。",
+            "text_len": 290
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 181,
+            "elapsed_s": 23.303878,
+            "tok_s": 8.351961,
+            "end_to_end_tok_s": 7.766948,
+            "seed": 54413155,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01状态机是抽象计算模型，由状态和转换组成。\n02它通过当前状态决定对输入事件的响应行为。\n03核心要素包括有限状态集、输入事件及转换规则。\n04状态迁移指系统从当前状态跳转至下一目标状态。\n05工作流本质是一系列有序任务的状态流转过程。\n"
+          }
+        },
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 2,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 15.504360958999314,
+            "raw_text": "{\"id\":\"msg_887a9606b31e4ff3a57d527e397271b9\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01状态机由有限状态集合组成\\n02每个状态代表系统特定情形\\n03状态间通过事件触发进行转换\\n04转换规则定义了行为逻辑路径\\n05初始状态明确系统启动起点\\n06终止状态标识流程最终结果\\n07工作流本质是状态变迁过程\\n08节点对应状态机中的具体状态\\n09连线映射状态间的转换关系\\n10条件判断决定下一步去向\\n11可视化模型便于理解复杂流程\\n12形式化定义确保执行无歧义\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01状态机由有限状态集合组成\n02每个状态代表系统特定情形\n03状态间通过事件触发进行转换\n04转换规则定义了行为逻辑路径\n05初始状态明确系统启动起点\n06终止状态标识流程最终结果\n07工作流本质是状态变迁过程\n08节点对应状态机中的具体状态\n09连线映射状态间的转换关系\n10条件判断决定下一步去向\n11可视化模型便于理解复杂流程\n12形式化定义确保执行无歧义",
+            "text_len": 182
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 113,
+            "elapsed_s": 15.429984,
+            "tok_s": 8.355002,
+            "end_to_end_tok_s": 7.323404,
+            "seed": 970702271,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01状态机由有限状态集合组成\n02每个状态代表系统特定情形\n03状态间通过事件触发进行转换\n04转换规则定义了行为逻辑路径\n05初始状态明确系统启动起点\n06终止状态标识流程最终结果\n07工作流本质是状态变迁过程\n08节点对应状态机中的具体"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 1,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 58.0115911249959,
+            "raw_text": "{\"id\":\"msg_9c8c2bd09e0d4710b63c1ff2109f06cd\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1: 项目覆盖发现、规范、构建等全阶段\\nA2: 核心能力含隐私网关、文档治理等\\nA3: 多数观察风险等级为低，整体可控\\nA4: 部分阶段与能力组合存在中高风险\\nA5: 所有记录处理建议保持一致\\nA6: 强调保持任务小步推进原则\\nA7: 要求记录证据并运行测试验证\\nA8: 需同步更新DEV_LOG与CHANGELOG\\nR1: 规范阶段本地模型风险高需关注\\nR2: 构建阶段联网搜索风险高需警惕\\nR3: 加固阶段文档治理风险高需重视\\nN1: 严格执行小步迭代与测试验证\\nN2: 及时同步日志与变更文档记录\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1: 项目覆盖发现、规范、构建等全阶段\nA2: 核心能力含隐私网关、文档治理等\nA3: 多数观察风险等级为低，整体可控\nA4: 部分阶段与能力组合存在中高风险\nA5: 所有记录处理建议保持一致\nA6: 强调保持任务小步推进原则\nA7: 要求记录证据并运行测试验证\nA8: 需同步更新DEV_LOG与CHANGELOG\nR1: 规范阶段本地模型风险高需关注\nR2: 构建阶段联网搜索风险高需警惕\nR3: 加固阶段文档治理风险高需重视\nN1: 严格执行小步迭代与测试验证\nN2: 及时同步日志与变更文档记录",
+            "text_len": 252
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 166,
+            "elapsed_s": 57.927591,
+            "tok_s": 9.277503,
+            "end_to_end_tok_s": 2.865647,
+            "seed": 992179299,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1: 项目覆盖发现、规范、构建等全阶段\nA2: 核心能力含隐私网关、文档治理等\nA3: 多数观察风险等级为低，整体可控\nA4: 部分阶段与能力组合存在中高风险\nA5: 所有记录处理建议保持一致\nA6: 强调保持任务小步推进原则\nA7: 要"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 2,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 15.763043833001575,
+            "raw_text": "{\"id\":\"msg_a1cda64f23dd42cb96a247241fdaa7d0\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1: 覆盖DISCOVERY等5阶段\\nA2: 涉及隐私网关等4能力\\nA3: 风险含低中高三等级\\nA4: 多数观察风险为低\\nA5: 建议保持任务小步\\nA6: 需记录证据并运行测试\\nA7: 同步DEV_LOG日志\\nA8: 同步CHANGELOG变更\\nR1: 本地模型在SPEC阶段风险高\\nR2: 文档治理在HARDEN阶段风险高\\nR3: 隐私网关在DISCOVERY阶段风险高\\nN1: 持续小步迭代并记录证据\\nN2: 严格同步日志与变更清单\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1: 覆盖DISCOVERY等5阶段\nA2: 涉及隐私网关等4能力\nA3: 风险含低中高三等级\nA4: 多数观察风险为低\nA5: 建议保持任务小步\nA6: 需记录证据并运行测试\nA7: 同步DEV_LOG日志\nA8: 同步CHANGELOG变更\nR1: 本地模型在SPEC阶段风险高\nR2: 文档治理在HARDEN阶段风险高\nR3: 隐私网关在DISCOVERY阶段风险高\nN1: 持续小步迭代并记录证据\nN2: 严格同步日志与变更清单",
+            "text_len": 219
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 144,
+            "elapsed_s": 15.680071,
+            "tok_s": 9.939359,
+            "end_to_end_tok_s": 9.183632,
+            "seed": 755925000,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1: 覆盖DISCOVERY等5阶段\nA2: 涉及隐私网关等4能力\nA3: 风险含低中高三等级\nA4: 多数观察风险为低\nA5: 建议保持任务小步\nA6: 需记录证据并运行测试\nA7: 同步DEV_LOG日志\nA8: 同步CHANGELO"
+          }
+        }
+      ]
+    },
+    {
+      "name": "no_mtp",
+      "extra_args": [
+        "--profile",
+        "sustained",
+        "--no-mtp",
+        "--reasoning",
+        "off",
+        "--max-tokens",
+        "512"
+      ],
+      "startup": {
+        "mode": "proxy-only",
+        "steps": [
+          {
+            "service": "litellm",
+            "port": 4001,
+            "ready": true
+          },
+          {
+            "service": "smart_proxy",
+            "port": 4000,
+            "ready": true
+          }
+        ]
+      },
+      "runs": [
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 1,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 36.107221083002514,
+            "raw_text": "{\"id\":\"msg_5004f04d229f4785a312abc5181dfbd2\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01状态机是离散事件动态系统模型\\n02它由有限状态集合组成核心\\n03状态转移依赖输入事件触发\\n04每个状态有明确的行为定义\\n05工作流具有清晰的阶段划分\\n06状态机完美映射流程各节点\\n07它能有效防止非法状态跳转\\n08可视化图表便于业务理解\\n09逻辑严密减少流程执行错误\\n10支持复杂分支与并行处理\\n11易于维护且扩展性强灵活\\n12因此成为工作流引擎基石\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01状态机是离散事件动态系统模型\n02它由有限状态集合组成核心\n03状态转移依赖输入事件触发\n04每个状态有明确的行为定义\n05工作流具有清晰的阶段划分\n06状态机完美映射流程各节点\n07它能有效防止非法状态跳转\n08可视化图表便于业务理解\n09逻辑严密减少流程执行错误\n10支持复杂分支与并行处理\n11易于维护且扩展性强灵活\n12因此成为工作流引擎基石",
+            "text_len": 177
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 111,
+            "elapsed_s": 12.198689,
+            "tok_s": 10.531105,
+            "end_to_end_tok_s": 9.099338,
+            "seed": 1997846432,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01状态机是离散事件动态系统模型\n02它由有限状态集合组成核心\n03状态转移依赖输入事件触发\n04每个状态有明确的行为定义\n05工作流具有清晰的阶段划分\n06状态机完美映射流程各节点\n07它能有效防止非法状态跳转\n08可视化图表便于业务理解"
+          }
+        },
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 2,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 23.35496783399867,
+            "raw_text": "{\"id\":\"msg_871a28df7cd942c88eeebf9b5b2c8139\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01 状态机是数学模型，用于描述系统行为。\\n02 它由有限状态集合和转换规则构成。\\n03 系统在任意时刻仅处于单一特定状态。\\n04 状态变迁由输入事件或条件触发驱动。\\n05 每个状态都有明确定义的行为和输出。\\n06 工作流本质是任务在不同阶段流转。\\n07 状态机能精准映射工作流的每个节点。\\n08 它确保流程按预定逻辑顺序严格执行。\\n09 防止非法状态跳转，保障业务逻辑正确。\\n10 可视化状态图让复杂流程变得清晰易懂。\\n11 易于维护和扩展，适应业务规则变化。\\n12 因此它是描述工作流逻辑的理想工具。\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01 状态机是数学模型，用于描述系统行为。\n02 它由有限状态集合和转换规则构成。\n03 系统在任意时刻仅处于单一特定状态。\n04 状态变迁由输入事件或条件触发驱动。\n05 每个状态都有明确定义的行为和输出。\n06 工作流本质是任务在不同阶段流转。\n07 状态机能精准映射工作流的每个节点。\n08 它确保流程按预定逻辑顺序严格执行。\n09 防止非法状态跳转，保障业务逻辑正确。\n10 可视化状态图让复杂流程变得清晰易懂。\n11 易于维护和扩展，适应业务规则变化。\n12 因此它是描述工作流逻辑的理想工具。",
+            "text_len": 252
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 164,
+            "elapsed_s": 18.627094,
+            "tok_s": 9.811249,
+            "end_to_end_tok_s": 8.804379,
+            "seed": 334498795,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01 状态机是数学模型，用于描述系统行为。\n02 它由有限状态集合和转换规则构成。\n03 系统在任意时刻仅处于单一特定状态。\n04 状态变迁由输入事件或条件触发驱动。\n05 每个状态都有明确定义的行为和输出。\n06 工作流本质是任务在不同阶"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 1,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 101.13225758300541,
+            "raw_text": "{\"id\":\"msg_8dc824fc7b6a45dc94ef82035bd8e7f4\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1: FORGE工厂覆盖5个阶段与4项核心能力\\nA2: 涉及隐私网关、文档治理、本地模型\\nA3: 联网搜索能力贯穿全生命周期观察\\nA4: 所有记录均建议小步任务与记录证据\\nA5: 需运行测试并同步DEV_LOG与CHANGELOG\\nA6: 多数观察风险等级为低，整体可控\\nA7: 中风险主要出现在BUILD与HARDEN阶段\\nA8: 高风险集中在SPEC与RETRO阶段能力\\nR1: 本地模型在SPEC阶段存在高风险隐患\\nR2: 文档治理在HARDEN阶段面临高风险挑战\\nR3: 隐私网关在DISCOVERY阶段有高风险点\\nN1: 针对高风险项加强测试与证据记录审查\\nN2: 严格执行小步迭代以控制中高风险\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1: FORGE工厂覆盖5个阶段与4项核心能力\nA2: 涉及隐私网关、文档治理、本地模型\nA3: 联网搜索能力贯穿全生命周期观察\nA4: 所有记录均建议小步任务与记录证据\nA5: 需运行测试并同步DEV_LOG与CHANGELOG\nA6: 多数观察风险等级为低，整体可控\nA7: 中风险主要出现在BUILD与HARDEN阶段\nA8: 高风险集中在SPEC与RETRO阶段能力\nR1: 本地模型在SPEC阶段存在高风险隐患\nR2: 文档治理在HARDEN阶段面临高风险挑战\nR3: 隐私网关在DISCOVERY阶段有高风险点\nN1: 针对高风险项加强测试与证据记录审查\nN2: 严格执行小步迭代以控制中高风险",
+            "text_len": 304
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 183,
+            "elapsed_s": 58.596103,
+            "tok_s": 9.432364,
+            "end_to_end_tok_s": 3.123075,
+            "seed": 826399854,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1: FORGE工厂覆盖5个阶段与4项核心能力\nA2: 涉及隐私网关、文档治理、本地模型\nA3: 联网搜索能力贯穿全生命周期观察\nA4: 所有记录均建议小步任务与记录证据\nA5: 需运行测试并同步DEV_LOG与CHANGELOG\nA6:"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 2,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 64.73243608300254,
+            "raw_text": "{\"id\":\"msg_d5f8f188764c4ed7b360f43ed3a20b63\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1 FORGE工厂覆盖发现、规范、构建、加固、回顾五阶段\\nA2 核心能力包括隐私网关、文档治理、本地模型、联网搜索\\nA3 多数观察项风险等级为低，整体运行状态平稳可控\\nA4 部分观察项风险升至中或高，需关注特定阶段能力\\nA5 所有记录建议保持一致：小步任务、记录证据、运行测试\\nA6 强调同步DEV_LOG与CHANGELOG，确保文档与代码一致\\nA7 隐私网关在发现阶段出现高风险，需重点排查\\nA8 本地模型在规范阶段出现高风险，需加强验证\\n\\nR1 隐私网关在发现阶段存在高风险隐患\\nR2 本地模型在规范阶段存在高风险隐患\\nR3 文档治理在加固阶段存在高风险隐患\\n\\nN1 针对高风险项立即执行小步迭代与充分测试\\nN2 严格同步开发日志与变更日志以留存证据\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1 FORGE工厂覆盖发现、规范、构建、加固、回顾五阶段\nA2 核心能力包括隐私网关、文档治理、本地模型、联网搜索\nA3 多数观察项风险等级为低，整体运行状态平稳可控\nA4 部分观察项风险升至中或高，需关注特定阶段能力\nA5 所有记录建议保持一致：小步任务、记录证据、运行测试\nA6 强调同步DEV_LOG与CHANGELOG，确保文档与代码一致\nA7 隐私网关在发现阶段出现高风险，需重点排查\nA8 本地模型在规范阶段出现高风险，需加强验证\n\nR1 隐私网关在发现阶段存在高风险隐患\nR2 本地模型在规范阶段存在高风险隐患\nR3 文档治理在加固阶段存在高风险隐患\n\nN1 针对高风险项立即执行小步迭代与充分测试\nN2 严格同步开发日志与变更日志以留存证据",
+            "text_len": 329
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 201,
+            "elapsed_s": 59.613396,
+            "tok_s": 9.374304,
+            "end_to_end_tok_s": 3.371725,
+            "seed": 937762607,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1 FORGE工厂覆盖发现、规范、构建、加固、回顾五阶段\nA2 核心能力包括隐私网关、文档治理、本地模型、联网搜索\nA3 多数观察项风险等级为低，整体运行状态平稳可控\nA4 部分观察项风险升至中或高，需关注特定阶段能力\nA5 所有记录建议"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mtp_depth3_kv_q8",
+      "extra_args": [
+        "--profile",
+        "sustained",
+        "--mtp",
+        "--depth",
+        "3",
+        "--stream-interval",
+        "1",
+        "--reasoning",
+        "off",
+        "--max-tokens",
+        "512",
+        "--paged-kv-quantization",
+        "q8"
+      ],
+      "startup": {
+        "mode": "proxy-only",
+        "steps": [
+          {
+            "service": "litellm",
+            "port": 4001,
+            "ready": true
+          },
+          {
+            "service": "smart_proxy",
+            "port": 4000,
+            "ready": true
+          }
+        ]
+      },
+      "runs": [
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 1,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 40.02140445900295,
+            "raw_text": "{\"id\":\"msg_1288c67f300e4549bec782d7d1bd05ca\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01 状态机是数学模型，用于抽象系统行为。\\n02 它由有限个状态及状态间转换组成。\\n03 系统在任何时刻仅处于一种特定状态。\\n04 外部事件触发状态之间的切换动作。\\n05 工作流本质是任务状态的有序流转。\\n06 状态机能精确建模流程的每一步骤。\\n07 它清晰定义了允许的状态迁移路径。\\n08 防止非法操作导致流程进入死胡同。\\n09 可视化图表让复杂业务逻辑更直观。\\n10 代码实现时逻辑分支变得清晰可控。\\n11 易于扩展新状态或修改现有转换规则。\\n12 因此状态机是描述工作流的理想工具。\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01 状态机是数学模型，用于抽象系统行为。\n02 它由有限个状态及状态间转换组成。\n03 系统在任何时刻仅处于一种特定状态。\n04 外部事件触发状态之间的切换动作。\n05 工作流本质是任务状态的有序流转。\n06 状态机能精确建模流程的每一步骤。\n07 它清晰定义了允许的状态迁移路径。\n08 防止非法操作导致流程进入死胡同。\n09 可视化图表让复杂业务逻辑更直观。\n10 代码实现时逻辑分支变得清晰可控。\n11 易于扩展新状态或修改现有转换规则。\n12 因此状态机是描述工作流的理想工具。",
+            "text_len": 244
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 161,
+            "elapsed_s": 19.537425,
+            "tok_s": 9.040739,
+            "end_to_end_tok_s": 8.240594,
+            "seed": 1420651686,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01 状态机是数学模型，用于抽象系统行为。\n02 它由有限个状态及状态间转换组成。\n03 系统在任何时刻仅处于一种特定状态。\n04 外部事件触发状态之间的切换动作。\n05 工作流本质是任务状态的有序流转。\n06 状态机能精确建模流程的每一步"
+          }
+        },
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 2,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 20.568567208996683,
+            "raw_text": "{\"id\":\"msg_1054dcdd63b2492b822d1122920745f0\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01 状态机由有限状态集合构成\\n02 每个状态代表特定执行阶段\\n03 状态间通过明确事件触发转换\\n04 转换规则定义了系统行为逻辑\\n05 初始状态标记流程的起始点\\n06 终止状态标识任务最终完成\\n07 状态互斥确保同一时刻唯一\\n08 避免并发冲突提升系统稳定\\n09 工作流本质是状态变迁过程\\n10 清晰建模复杂业务处理路径\\n11 可视化图表便于团队沟通理解\\n12 简化逻辑降低代码维护成本\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01 状态机由有限状态集合构成\n02 每个状态代表特定执行阶段\n03 状态间通过明确事件触发转换\n04 转换规则定义了系统行为逻辑\n05 初始状态标记流程的起始点\n06 终止状态标识任务最终完成\n07 状态互斥确保同一时刻唯一\n08 避免并发冲突提升系统稳定\n09 工作流本质是状态变迁过程\n10 清晰建模复杂业务处理路径\n11 可视化图表便于团队沟通理解\n12 简化逻辑降低代码维护成本",
+            "text_len": 194
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 125,
+            "elapsed_s": 16.272674,
+            "tok_s": 8.758381,
+            "end_to_end_tok_s": 7.68159,
+            "seed": 390616713,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01 状态机由有限状态集合构成\n02 每个状态代表特定执行阶段\n03 状态间通过明确事件触发转换\n04 转换规则定义了系统行为逻辑\n05 初始状态标记流程的起始点\n06 终止状态标识任务最终完成\n07 状态互斥确保同一时刻唯一\n08 避免并"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 1,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 55.98471512499964,
+            "raw_text": "{\"id\":\"msg_e2eb4bd4284846edb53f19c0f142bf44\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1 覆盖DISCOVERY至RETRO全阶段\\nA2 监控隐私网关等四项核心能力\\nA3 多数观察风险等级为低或中\\nA4 统一建议小步迭代记录证据\\nA5 需运行测试确保交付质量\\nA6 同步维护DEV_LOG与CHANGELOG\\nA7 共48条观察记录分布均匀\\nA8 流程规范执行一致性较高\\nR1 本地模型在SPEC阶段风险高\\nR2 文档治理在HARDEN阶段风险高\\nR3 隐私网关在DISCOVERY阶段风险高\\nN1 针对高风险项加强测试验证\\nN2 严格同步日志以追溯变更\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1 覆盖DISCOVERY至RETRO全阶段\nA2 监控隐私网关等四项核心能力\nA3 多数观察风险等级为低或中\nA4 统一建议小步迭代记录证据\nA5 需运行测试确保交付质量\nA6 同步维护DEV_LOG与CHANGELOG\nA7 共48条观察记录分布均匀\nA8 流程规范执行一致性较高\nR1 本地模型在SPEC阶段风险高\nR2 文档治理在HARDEN阶段风险高\nR3 隐私网关在DISCOVERY阶段风险高\nN1 针对高风险项加强测试验证\nN2 严格同步日志以追溯变更",
+            "text_len": 235
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 144,
+            "elapsed_s": 55.899761,
+            "tok_s": 9.339258,
+            "end_to_end_tok_s": 2.57604,
+            "seed": 2133721306,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1 覆盖DISCOVERY至RETRO全阶段\nA2 监控隐私网关等四项核心能力\nA3 多数观察风险等级为低或中\nA4 统一建议小步迭代记录证据\nA5 需运行测试确保交付质量\nA6 同步维护DEV_LOG与CHANGELOG\nA7 共48条"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 2,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 18.548233708002954,
+            "raw_text": "{\"id\":\"msg_0ef6a8f990ac4707897f7e3c7689d08a\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1: 覆盖隐私网关、文档治理等四项核心能力\\nA2: 贯穿DISCOVERY至RETRO全生命周期阶段\\nA3: 多数观察风险等级为低，整体可控\\nA4: 存在少量中高风险项，需重点关注\\nA5: 建议保持小步迭代，确保证据完整\\nA6: 严格执行测试，保障交付质量\\nA7: 同步维护DEV_LOG与CHANGELOG日志\\nA8: 标准化处理流程，提升协作效率\\nR1: 本地模型在SPEC阶段存在高风险\\nR2: 文档治理在HARDEN阶段存在高风险\\nR3: 联网搜索在BUILD阶段存在高风险\\nN1: 针对高风险项立即执行测试与验证\\nN2: 持续同步日志，确保变更可追溯\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1: 覆盖隐私网关、文档治理等四项核心能力\nA2: 贯穿DISCOVERY至RETRO全生命周期阶段\nA3: 多数观察风险等级为低，整体可控\nA4: 存在少量中高风险项，需重点关注\nA5: 建议保持小步迭代，确保证据完整\nA6: 严格执行测试，保障交付质量\nA7: 同步维护DEV_LOG与CHANGELOG日志\nA8: 标准化处理流程，提升协作效率\nR1: 本地模型在SPEC阶段存在高风险\nR2: 文档治理在HARDEN阶段存在高风险\nR3: 联网搜索在BUILD阶段存在高风险\nN1: 针对高风险项立即执行测试与验证\nN2: 持续同步日志，确保变更可追溯",
+            "text_len": 281
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 171,
+            "elapsed_s": 18.462586,
+            "tok_s": 9.971426,
+            "end_to_end_tok_s": 9.261974,
+            "seed": 171819327,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1: 覆盖隐私网关、文档治理等四项核心能力\nA2: 贯穿DISCOVERY至RETRO全生命周期阶段\nA3: 多数观察风险等级为低，整体可控\nA4: 存在少量中高风险项，需重点关注\nA5: 建议保持小步迭代，确保证据完整\nA6: 严格执行"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mtp_depth3_kv_q4",
+      "extra_args": [
+        "--profile",
+        "sustained",
+        "--mtp",
+        "--depth",
+        "3",
+        "--stream-interval",
+        "1",
+        "--reasoning",
+        "off",
+        "--max-tokens",
+        "512",
+        "--paged-kv-quantization",
+        "q4"
+      ],
+      "startup": {
+        "mode": "proxy-only",
+        "steps": [
+          {
+            "service": "litellm",
+            "port": 4001,
+            "ready": true
+          },
+          {
+            "service": "smart_proxy",
+            "port": 4000,
+            "ready": true
+          }
+        ]
+      },
+      "runs": [
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 1,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 40.22611304200109,
+            "raw_text": "{\"id\":\"msg_7af6a5f0a24a4f398787752d48bc2c76\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01状态机是数学模型，用于模拟系统行为。\\n02它由有限个状态和转换规则组成结构。\\n03每个状态代表系统当前所处的特定情形。\\n04转换指在不同状态间切换的逻辑路径。\\n05事件触发状态间的迁移，推动流程前进。\\n06工作流具有明确的阶段和顺序执行特性。\\n07状态机能清晰界定任务所处的当前环节。\\n08它防止非法操作，确保流程合规性执行。\\n09复杂业务逻辑可拆解为简单的状态转换。\\n10可视化状态图便于团队理解整体业务流程。\\n11代码实现状态机可降低系统维护的复杂度。\\n12因此状态机是描述工作流的理想数学工具。\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01状态机是数学模型，用于模拟系统行为。\n02它由有限个状态和转换规则组成结构。\n03每个状态代表系统当前所处的特定情形。\n04转换指在不同状态间切换的逻辑路径。\n05事件触发状态间的迁移，推动流程前进。\n06工作流具有明确的阶段和顺序执行特性。\n07状态机能清晰界定任务所处的当前环节。\n08它防止非法操作，确保流程合规性执行。\n09复杂业务逻辑可拆解为简单的状态转换。\n10可视化状态图便于团队理解整体业务流程。\n11代码实现状态机可降低系统维护的复杂度。\n12因此状态机是描述工作流的理想数学工具。",
+            "text_len": 252
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 156,
+            "elapsed_s": 19.903671,
+            "tok_s": 8.559942,
+            "end_to_end_tok_s": 7.83775,
+            "seed": 2036194397,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01状态机是数学模型，用于模拟系统行为。\n02它由有限个状态和转换规则组成结构。\n03每个状态代表系统当前所处的特定情形。\n04转换指在不同状态间切换的逻辑路径。\n05事件触发状态间的迁移，推动流程前进。\n06工作流具有明确的阶段和顺序执行"
+          }
+        },
+        {
+          "prompt_name": "controlled_medium",
+          "repeat": 2,
+          "request": {
+            "prompt": "请严格按以下格式输出，不要添加标题、前言或结尾：\n- 共 12 行。\n- 每行以 01 到 12 的两位编号开头。\n- 每行解释一个状态机概念。\n- 每行 18 到 30 个中文字符。\n主题：什么是状态机，以及它为什么适合描述工作流。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 16.015348167005868,
+            "raw_text": "{\"id\":\"msg_453e0795f16f4e60895303e5cf765fef\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"01 状态机是抽象计算模型\\n02 它包含有限个离散状态\\n03 状态间通过事件触发转移\\n04 转移规则定义了系统行为\\n05 当前状态决定可执行动作\\n06 工作流本质是状态流转过程\\n07 任务节点对应状态机的状态\\n08 审批流程即状态间的转移路径\\n09 状态机确保流程逻辑严谨性\\n10 避免非法状态跳转的发生\\n11 可视化模型便于业务理解\\n12 因此它非常适合描述工作流\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "01 状态机是抽象计算模型\n02 它包含有限个离散状态\n03 状态间通过事件触发转移\n04 转移规则定义了系统行为\n05 当前状态决定可执行动作\n06 工作流本质是状态流转过程\n07 任务节点对应状态机的状态\n08 审批流程即状态间的转移路径\n09 状态机确保流程逻辑严谨性\n10 避免非法状态跳转的发生\n11 可视化模型便于业务理解\n12 因此它非常适合描述工作流",
+            "text_len": 183
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 101,
+            "completion_tokens": 120,
+            "elapsed_s": 15.938794,
+            "tok_s": 8.566192,
+            "end_to_end_tok_s": 7.5288,
+            "seed": 329534417,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "01 状态机是抽象计算模型\n02 它包含有限个离散状态\n03 状态间通过事件触发转移\n04 转移规则定义了系统行为\n05 当前状态决定可执行动作\n06 工作流本质是状态流转过程\n07 任务节点对应状态机的状态\n08 审批流程即状态间的转移路"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 1,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424243,
+            "http_status": 200,
+            "elapsed_s": 55.41396387500572,
+            "raw_text": "{\"id\":\"msg_3fcc71dc78af495c8de4d643a70e5952\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1 项目覆盖发现至复盘全阶段\\nA2 涉及隐私网关等四项核心能力\\nA3 多数观察记录风险等级为低\\nA4 部分阶段能力组合存在中风险\\nA5 少数特定组合被标记为高风险\\nA6 所有记录处理建议完全一致\\nA7 建议保持任务小步迭代推进\\nA8 需同步开发日志与变更日志\\nR1 本地模型在规格阶段风险高\\nR2 文档治理在加固阶段风险高\\nR3 隐私网关在发现阶段风险高\\nN1 严格执行小步快跑开发策略\\nN2 确保测试运行与日志同步\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1 项目覆盖发现至复盘全阶段\nA2 涉及隐私网关等四项核心能力\nA3 多数观察记录风险等级为低\nA4 部分阶段能力组合存在中风险\nA5 少数特定组合被标记为高风险\nA6 所有记录处理建议完全一致\nA7 建议保持任务小步迭代推进\nA8 需同步开发日志与变更日志\nR1 本地模型在规格阶段风险高\nR2 文档治理在加固阶段风险高\nR3 隐私网关在发现阶段风险高\nN1 严格执行小步快跑开发策略\nN2 确保测试运行与日志同步",
+            "text_len": 209
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 141,
+            "elapsed_s": 55.329635,
+            "tok_s": 8.725997,
+            "end_to_end_tok_s": 2.548363,
+            "seed": 1479556714,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1 项目覆盖发现至复盘全阶段\nA2 涉及隐私网关等四项核心能力\nA3 多数观察记录风险等级为低\nA4 部分阶段能力组合存在中风险\nA5 少数特定组合被标记为高风险\nA6 所有记录处理建议完全一致\nA7 建议保持任务小步迭代推进\nA8 需同"
+          }
+        },
+        {
+          "prompt_name": "controlled_long_context",
+          "repeat": 2,
+          "request": {
+            "prompt": "下面是一个项目运行观察清单。请只基于这些记录做摘要。\n\n[记录01] FORGE 工厂第01项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录02] FORGE 工厂第02项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录03] FORGE 工厂第03项观察：阶段=BUILD；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录04] FORGE 工厂第04项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录05] FORGE 工厂第05项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录06] FORGE 工厂第06项观察：阶段=DISCOVERY；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录07] FORGE 工厂第07项观察：阶段=SPEC；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录08] FORGE 工厂第08项观察：阶段=BUILD；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录09] FORGE 工厂第09项观察：阶段=HARDEN；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录10] FORGE 工厂第10项观察：阶段=RETRO；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录11] FORGE 工厂第11项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录12] FORGE 工厂第12项观察：阶段=SPEC；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录13] FORGE 工厂第13项观察：阶段=BUILD；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录14] FORGE 工厂第14项观察：阶段=HARDEN；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录15] FORGE 工厂第15项观察：阶段=RETRO；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录16] FORGE 工厂第16项观察：阶段=DISCOVERY；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录17] FORGE 工厂第17项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录18] FORGE 工厂第18项观察：阶段=BUILD；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录19] FORGE 工厂第19项观察：阶段=HARDEN；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录20] FORGE 工厂第20项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录21] FORGE 工厂第21项观察：阶段=DISCOVERY；能力=隐私网关；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录22] FORGE 工厂第22项观察：阶段=SPEC；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录23] FORGE 工厂第23项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录24] FORGE 工厂第24项观察：阶段=HARDEN；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录25] FORGE 工厂第25项观察：阶段=RETRO；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录26] FORGE 工厂第26项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录27] FORGE 工厂第27项观察：阶段=SPEC；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录28] FORGE 工厂第28项观察：阶段=BUILD；能力=联网搜索；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录29] FORGE 工厂第29项观察：阶段=HARDEN；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录30] FORGE 工厂第30项观察：阶段=RETRO；能力=文档治理；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录31] FORGE 工厂第31项观察：阶段=DISCOVERY；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录32] FORGE 工厂第32项观察：阶段=SPEC；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录33] FORGE 工厂第33项观察：阶段=BUILD；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录34] FORGE 工厂第34项观察：阶段=HARDEN；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录35] FORGE 工厂第35项观察：阶段=RETRO；能力=本地模型；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录36] FORGE 工厂第36项观察：阶段=DISCOVERY；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录37] FORGE 工厂第37项观察：阶段=SPEC；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录38] FORGE 工厂第38项观察：阶段=BUILD；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录39] FORGE 工厂第39项观察：阶段=HARDEN；能力=本地模型；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录40] FORGE 工厂第40项观察：阶段=RETRO；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录41] FORGE 工厂第41项观察：阶段=DISCOVERY；能力=隐私网关；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录42] FORGE 工厂第42项观察：阶段=SPEC；能力=文档治理；风险=高；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录43] FORGE 工厂第43项观察：阶段=BUILD；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录44] FORGE 工厂第44项观察：阶段=HARDEN；能力=联网搜索；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录45] FORGE 工厂第45项观察：阶段=RETRO；能力=隐私网关；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录46] FORGE 工厂第46项观察：阶段=DISCOVERY；能力=文档治理；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录47] FORGE 工厂第47项观察：阶段=SPEC；能力=本地模型；风险=低；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n[记录48] FORGE 工厂第48项观察：阶段=BUILD；能力=联网搜索；风险=中；处理建议：保持任务小步、记录证据、运行测试、同步 DEV_LOG 与 CHANGELOG。\n\n输出要求：\n1. 先输出 8 条编号摘要，编号 A1 到 A8，每条不超过 35 个中文字符。\n2. 再输出 3 条风险，编号 R1 到 R3，每条不超过 35 个中文字符。\n3. 最后输出 2 条行动建议，编号 N1 到 N2，每条不超过 35 个中文字符。\n4. 不要输出记录原文，不要输出额外解释。",
+            "model": "claude-opus-4-8-1m",
+            "max_tokens": 512,
+            "stream": false,
+            "seed": 424244,
+            "http_status": 200,
+            "elapsed_s": 17.774981375005154,
+            "raw_text": "{\"id\":\"msg_9dc4f732404f4c7fbd9d6336c7f81b14\",\"type\":\"message\",\"role\":\"assistant\",\"model\":\"claude-opus-4-8-1m\",\"content\":[{\"type\":\"text\",\"text\":\"A1 FORGE工厂覆盖五大阶段与四项核心能力\\nA2 观察记录总数达48条，分布均匀\\nA3 风险等级包含低、中、高三级\\nA4 低风险记录占比最高，整体可控\\nA5 中风险记录分布在各阶段与能力\\nA6 高风险记录集中在特定能力组合\\nA7 所有记录处理建议完全一致\\nA8 强调小步迭代、测试与日志同步\\n\\nR1 本地模型在SPEC阶段存在高风险\\nR2 隐私网关在DISCOVERY阶段高风险\\nR3 文档治理在HARDEN阶段存在高风险\\n\\nN1 严格执行小步迭代与测试流程\\nN2 保持DEV_LOG与CHANGELOG同步\"}],\"stop_reason\":\"end_turn\",\"usage\":{\"input_tokens\":0,\"output_tokens\":0}}",
+            "text_preview": "A1 FORGE工厂覆盖五大阶段与四项核心能力\nA2 观察记录总数达48条，分布均匀\nA3 风险等级包含低、中、高三级\nA4 低风险记录占比最高，整体可控\nA5 中风险记录分布在各阶段与能力\nA6 高风险记录集中在特定能力组合\nA7 所有记录处理建议完全一致\nA8 强调小步迭代、测试与日志同步\n\nR1 本地模型在SPEC阶段存在高风险\nR2 隐私网关在DISCOVERY阶段高风险\nR3 文档治理在HARDEN阶段存在高风险\n\nN1 严格执行小步迭代与测试流程\nN2 保持DEV_LOG与CHANGELOG同步",
+            "text_len": 256
+          },
+          "mtplx_metric": {
+            "event": "mtplx_openai_generation",
+            "prompt_tokens": 2625,
+            "completion_tokens": 153,
+            "elapsed_s": 17.688371,
+            "tok_s": 9.333677,
+            "end_to_end_tok_s": 8.649751,
+            "seed": 1167711677,
+            "attempts": 1,
+            "blank_retries": 0,
+            "text_preview": "A1 FORGE工厂覆盖五大阶段与四项核心能力\nA2 观察记录总数达48条，分布均匀\nA3 风险等级包含低、中、高三级\nA4 低风险记录占比最高，整体可控\nA5 中风险记录分布在各阶段与能力\nA6 高风险记录集中在特定能力组合\nA7 所有记"
+          }
+        }
+      ]
+    }
+  ],
+  "args": {
+    "profiles": "mtp_depth3,no_mtp,mtp_depth3_kv_q8,mtp_depth3_kv_q4",
+    "prompts": "controlled_medium,controlled_long_context",
+    "repeat": 2,
+    "seed": 424242,
+    "model": "claude-opus-4-8-1m",
+    "max_tokens": 512,
+    "timeout": 600.0,
+    "startup_mode": "proxy-only",
+    "skip_stream": true,
+    "keep_running": false
+  },
+  "aggregates": {
+    "mtp_depth3": {
+      "controlled_medium": {
+        "n": 2,
+        "client_s_mean": 29.584273104497697,
+        "client_s_std": 19.912002713185476,
+        "completion_tokens_mean": 147.0,
+        "mtplx_elapsed_s_mean": 19.366931,
+        "tok_s_mean": 8.353481500000001,
+        "e2e_tok_s_mean": 7.545176
+      },
+      "controlled_long_context": {
+        "n": 2,
+        "client_s_mean": 36.88731747899874,
+        "client_s_std": 29.874234285449738,
+        "completion_tokens_mean": 155.0,
+        "mtplx_elapsed_s_mean": 36.803831,
+        "tok_s_mean": 9.608431,
+        "e2e_tok_s_mean": 6.024639499999999
+      }
+    },
+    "no_mtp": {
+      "controlled_medium": {
+        "n": 2,
+        "client_s_mean": 29.731094458500593,
+        "client_s_std": 9.0172047477788,
+        "completion_tokens_mean": 137.5,
+        "mtplx_elapsed_s_mean": 15.4128915,
+        "tok_s_mean": 10.171177,
+        "e2e_tok_s_mean": 8.9518585
+      },
+      "controlled_long_context": {
+        "n": 2,
+        "client_s_mean": 82.93234683300398,
+        "client_s_std": 25.73856061663192,
+        "completion_tokens_mean": 192.0,
+        "mtplx_elapsed_s_mean": 59.1047495,
+        "tok_s_mean": 9.403334000000001,
+        "e2e_tok_s_mean": 3.2474
+      }
+    },
+    "mtp_depth3_kv_q8": {
+      "controlled_medium": {
+        "n": 2,
+        "client_s_mean": 30.294985833999817,
+        "client_s_std": 13.755233132797704,
+        "completion_tokens_mean": 143.0,
+        "mtplx_elapsed_s_mean": 17.905049499999997,
+        "tok_s_mean": 8.899560000000001,
+        "e2e_tok_s_mean": 7.961092
+      },
+      "controlled_long_context": {
+        "n": 2,
+        "client_s_mean": 37.266474416501296,
+        "client_s_std": 26.47158987372253,
+        "completion_tokens_mean": 157.5,
+        "mtplx_elapsed_s_mean": 37.1811735,
+        "tok_s_mean": 9.655342,
+        "e2e_tok_s_mean": 5.919007000000001
+      }
+    },
+    "mtp_depth3_kv_q4": {
+      "controlled_medium": {
+        "n": 2,
+        "client_s_mean": 28.12073060450348,
+        "client_s_std": 17.119596020822197,
+        "completion_tokens_mean": 138.0,
+        "mtplx_elapsed_s_mean": 17.9212325,
+        "tok_s_mean": 8.563067,
+        "e2e_tok_s_mean": 7.683275
+      },
+      "controlled_long_context": {
+        "n": 2,
+        "client_s_mean": 36.59447262500544,
+        "client_s_std": 26.614779762712192,
+        "completion_tokens_mean": 147.0,
+        "mtplx_elapsed_s_mean": 36.509003,
+        "tok_s_mean": 9.029837,
+        "e2e_tok_s_mean": 5.599057
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# Local Streaming Diagnostics
+openai-backend: status=single_delta, http=200, first_delta=0.85s, total=0.86s, deltas=1, preview='pong'
+  notes: Backend emitted one text delta; may be pseudo-streaming.
+anthropic-proxy: status=ok, http=200, first_delta=0.95s, total=0.95s, deltas=1, preview='pong'
+  notes: Proxy emitted Anthropic content_block_delta.

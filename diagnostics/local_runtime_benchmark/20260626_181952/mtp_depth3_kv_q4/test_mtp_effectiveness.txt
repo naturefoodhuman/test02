@@ -1,0 +1,88 @@
+# MTP / Speculative Decoding Effectiveness Inspection
+
+## 8080 mtplx-qwen36-27b (mtplx)
+role: primary_brain
+source: https://huggingface.co/Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality
+command:
+cd /Users/naturist/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality --port 8080 --profile sustained --mtp --depth 3 --stream-interval 1 --reasoning off --max-tokens 512 --paged-kv-quantization q4 > /tmp/mtplx_8080.log 2>&1 &
+signals:
+- MTP/speculative flag present in command
+- MTPLX model cards may expose MTP via artifact metadata; verify logs/benchmarks
+recent log evidence:
+-   Native MTP speculative decoding · Apple Silicon
+- ╭─ MTPLX 1.0.4 ────────────────────────────────────────────────────────────────╮
+- │      Model  mtplx-qwen36-27b-optimized-quality                               │
+- │    Profile  sustained (Sustained: long-context native-MTP path with bounded  │
+- │       Mode  Sustained MTP                                                    │
+- │    Loading  Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality                    │
+- WARNING: running a family-compatible MTPLX model without a recorded mtplx_runtime.json exactness baseline; stats will be marked unverified until this artifact is smoke-verified.
+- [2/6] Model resolved: /Users/naturist/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality
+- [4/6] Preparing Sustained MTP runtime
+- [5/6] Loading model weights: /Users/naturist/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality
+-       This is the long step; MTPLX is mapping the model into MLX.
+- [5/6] Installing native-MTP draft head
+- [6/6] Warmup complete in 2.7s (13.84 tok/s)
+- MTPLX is ready.
+- Model: mtplx-qwen36-27b-optimized-quality
+- Keep this terminal open. Press Ctrl-C to stop MTPLX.
+- : 8.559942, "end_to_end_tok_s": 7.83775, "seed": 2036194397, "attempts": 1, "blank_retries": 0, "text_preview": "01状态机是数学模型，用于模拟系统行为。\n02它由有限个状态和转换规则组成结构。\n03每个状态代表系统当前所处的特定情形。\n04转换指在不同状态间切换的逻辑路径。\n05事件触发状态间的迁移，推动流程前进。\n06工作流具有明确的阶段和顺序执行"}
+- : 8.566192, "end_to_end_tok_s": 7.5288, "seed": 329534417, "attempts": 1, "blank_retries": 0, "text_preview": "01 状态机是抽象计算模型\n02 它包含有限个离散状态\n03 状态间通过事件触发转移\n04 转移规则定义了系统行为\n05 当前状态决定可执行动作\n06 工作流本质是状态流转过程\n07 任务节点对应状态机的状态\n08 审批流程即状态间的转移路"}
+- .725997, "end_to_end_tok_s": 2.548363, "seed": 1479556714, "attempts": 1, "blank_retries": 0, "text_preview": "A1 项目覆盖发现至复盘全阶段\nA2 涉及隐私网关等四项核心能力\nA3 多数观察记录风险等级为低\nA4 部分阶段能力组合存在中风险\nA5 少数特定组合被标记为高风险\nA6 所有记录处理建议完全一致\nA7 建议保持任务小步迭代推进\nA8 需同"}
+- 9.333677, "end_to_end_tok_s": 8.649751, "seed": 1167711677, "attempts": 1, "blank_retries": 0, "text_preview": "A1 FORGE工厂覆盖五大阶段与四项核心能力\nA2 观察记录总数达48条，分布均匀\nA3 风险等级包含低、中、高三级\nA4 低风险记录占比最高，整体可控\nA5 中风险记录分布在各阶段与能力\nA6 高风险记录集中在特定能力组合\nA7 所有记"}
+recent generation metrics:
+- prompt=101 completion=156 elapsed=19.90s tok_s=8.56 e2e=7.84 preview='01状态机是数学模型，用于模拟系统行为。\n02它由有限个状态和转换规则组成结构。\n03每个状态代表系统当前所处的特定情形。\n04转换指在不同状态间切换的逻辑路径'
+- prompt=101 completion=120 elapsed=15.94s tok_s=8.57 e2e=7.53 preview='01 状态机是抽象计算模型\n02 它包含有限个离散状态\n03 状态间通过事件触发转移\n04 转移规则定义了系统行为\n05 当前状态决定可执行动作\n06 工作流本'
+- prompt=2625 completion=141 elapsed=55.33s tok_s=8.73 e2e=2.55 preview='A1 项目覆盖发现至复盘全阶段\nA2 涉及隐私网关等四项核心能力\nA3 多数观察记录风险等级为低\nA4 部分阶段能力组合存在中风险\nA5 少数特定组合被标记为高'
+- prompt=2625 completion=153 elapsed=17.69s tok_s=9.33 e2e=8.65 preview='A1 FORGE工厂覆盖五大阶段与四项核心能力\nA2 观察记录总数达48条，分布均匀\nA3 风险等级包含低、中、高三级\nA4 低风险记录占比最高，整体可控\nA5'
+
+## 8082 mtplx-gemma4 (mtplx)
+role: independent_reviewer
+source: https://huggingface.co/Youssofal/Gemma4-MTPLX-Optimized-Quality
+command:
+cd /Users/naturist/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Gemma4-MTPLX-Optimized-Quality --port 8082 --profile sustained --mtp --depth 6 --stream-interval 1 --reasoning off --max-tokens 2048 > /tmp/mtplx_8082.log 2>&1 &
+signals:
+- MTP/speculative flag present in command
+- MTPLX model cards may expose MTP via artifact metadata; verify logs/benchmarks
+recent log evidence:
+-   Native MTP speculative decoding · Apple Silicon
+- ╭─ MTPLX 1.0.4 ────────────────────────────────────────────────────────────────╮
+- │      Model  gemma4-mtplx-optimized-quality                                   │
+- │    Profile  sustained (Sustained: long-context native-MTP path with bounded  │
+- │       Mode  Sustained MTP                                                    │
+- │    Loading  Youssofal/Gemma4-MTPLX-Optimized-Quality                         │
+- WARNING: running a family-compatible MTPLX model without a recorded mtplx_runtime.json exactness baseline; stats will be marked unverified until this artifact is smoke-verified.
+- [2/6] Model resolved: /Users/naturist/.mtplx/models/Youssofal--Gemma4-MTPLX-Optimized-Quality
+- [4/6] Preparing Sustained MTP runtime
+- [5/6] Loading model weights: /Users/naturist/.mtplx/models/Youssofal--Gemma4-MTPLX-Optimized-Quality
+-       This is the long step; MTPLX is mapping the model into MLX.
+- [5/6] Gemma 4 assistant MTP drafter is active
+- [6/6] Warmup complete in 7.5s (9.60 tok/s)
+- MTPLX is ready.
+- Model: gemma4-mtplx-optimized-quality
+- Keep this terminal open. Press Ctrl-C to stop MTPLX.
+recent generation metrics:
+- no mtplx_openai_generation JSON metrics found
+
+## 8084 qwopus-35b-mtp-gguf (llama_cpp)
+role: deep_reviewer
+source: https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF
+command:
+nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &
+signals:
+- MTP/speculative flag present in command
+- llama.cpp path should include --spec-type draft-mtp and --spec-draft-n-max
+recent log evidence:
+- 0.00.093.769 I srv    load_model: loading model '/Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf'
+- 0.00.502.834 I srv    load_model: [spec] estimated memory usage of MTP context is 250.52 MiB
+recent generation metrics:
+- no mtplx_openai_generation JSON metrics found
+
+## Ollama runtime env
+- OLLAMA_FLASH_ATTENTION=1
+- OLLAMA_KV_CACHE_TYPE=q4_0
+
+## How to prove MTP speedup
+1. Run a fixed prompt with MTP/spec flags enabled; capture tok/s and acceptance/draft log lines.
+2. Run the same prompt with MTP/spec flags disabled; capture tok/s.
+3. Compare time-to-first-token, decode tok/s, total tokens/sec, and acceptance rate.
+4. For llama.cpp MTP, verify --spec-type draft-mtp and --spec-draft-n-max are present.
