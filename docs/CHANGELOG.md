@@ -396,6 +396,12 @@ make docs-check
 - 修复 `TimeoutExpired.stdout` bytes/str 拼接导致的 TypeError。
 - 新增 `--startup-mode proxy-only` 默认模式，只启动 4001/4000，由 Smart Proxy 按需加载 8080，避免每个 profile 完整自检 8080/8082/8084。
 
+### 补丁 2：最终版 Benchmark
+- 默认补齐 `controlled_medium` 与 `controlled_long_context`，覆盖长上下文 + 中长输出。
+- 默认 profile 覆盖 `mtp_depth3`、`no_mtp`、`mtp_depth3_kv_q8`、`mtp_depth3_kv_q4`。
+- 新增 `--repeat`、`--seed`、aggregate mean/std 汇总。
+- 默认跳过主流程 stream 请求，每个 profile 仍保留独立 streaming diagnostics。
+
 ### 验证
 ```bash
 python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py

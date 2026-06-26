@@ -431,57 +431,59 @@ no-MTP:  prompt=22, completion=260, elapsed=26.24s, tok_s=10.15, e2e=9.91
 
 ---
 
-## 12. 一键综合 Benchmark
+## 12. 一键综合 Benchmark（最终版）
 
-如果不想手工切换 `--mtp` / `--no-mtp` / KV cache 参数，可以运行：
+如果不想手工切换 `--mtp` / `--no-mtp` / KV cache 参数，可以运行最终版一键 benchmark：
 
 ```bash
 python3 scripts/diagnostics/benchmark_local_runtime.py
 ```
 
-默认 `--startup-mode proxy-only`：只启动 4001 LiteLLM 和 4000 Smart Proxy，让 Smart Proxy 按需加载 8080。这样避免每个 profile 都完整自检 8080/8082/8084，速度更快，也不容易在 Qwopus/Gemma 自检处卡住。
+默认会一次性覆盖：
 
-如确实要完整跑 `scripts/forge-start.sh`，可加：
+```text
+profiles: mtp_depth3, no_mtp, mtp_depth3_kv_q8, mtp_depth3_kv_q4
+prompts: controlled_medium, controlled_long_context
+repeat: 2
+startup-mode: proxy-only
+stream benchmark: skipped by default, 每个 profile 仍会运行 test_local_streaming.py
+```
+
+设计原则：
+
+- 每个 profile 只改变 8080 `extra_args`，控制单一变量；
+- prompt 是固定格式，减少 completion 长度漂移；
+- long context prompt 内置 48 条固定记录，用于测试长上下文 + 中长输出；
+- 每个 profile/prompt 重复 2 次，生成 mean/std；
+- 脚本自动恢复原始 `config/model_runtime.yaml`。
+
+快速烟测：
 
 ```bash
-python3 scripts/diagnostics/benchmark_local_runtime.py --startup-mode full
+python3 scripts/diagnostics/benchmark_local_runtime.py --profiles mtp_depth3,no_mtp --prompts controlled_medium --repeat 1
 ```
 
-默认会测试：
-
-```text
-mtp_depth3
-no_mtp
-mtp_depth3_kv_q8
-mtp_depth3_kv_q4
-```
-
-每个 profile 会运行固定 prompt，并收集：
-
-```text
-report.json
-report.md
-/tmp/mtplx_8080.log
-/tmp/forge_smart_proxy.log
-/tmp/forge_litellm_4001.log
-test_mtp_effectiveness.txt
-test_local_streaming.txt
-```
-
-输出目录：
+最终测试产物目录：
 
 ```text
 diagnostics/local_runtime_benchmark/<timestamp>/
 ```
 
-快速版只测 MTP 与 no-MTP：
+请发送：
 
-```bash
-python3 scripts/diagnostics/benchmark_local_runtime.py --profiles mtp_depth3,no_mtp --prompts medium_state_machine --skip-stream
+```text
+report.md
+report.json
+各 profile 的 mtplx_8080.log
+test_local_streaming.txt
+test_mtp_effectiveness.txt
 ```
 
-如果之前版本报 `TimeoutExpired` 后又出现 `TypeError: can't concat str to bytes`，请拉取最新代码；当前脚本已修复 timeout 输出解码，并默认改为 proxy-only 启动模式。
+或直接打包：
 
-运行完成后，将整个目录或至少 `report.md`、`report.json`、各 profile 的 `mtplx_8080.log` 发给分析者。
+```bash
+LATEST_DIR="$(ls -td diagnostics/local_runtime_benchmark/* | head -1)"
+tar -czf /tmp/local_runtime_benchmark_latest.tar.gz "$LATEST_DIR"
+```
 
-注意：完整测试会多次启动/卸载本地模型，可能耗时 20～60 分钟。期间不要同时在 Claude Code 中发起其它本地模型请求。
+注意：完整默认测试可能耗时 40～120 分钟。期间不要在 Claude Code 中发起其它本地模型请求。

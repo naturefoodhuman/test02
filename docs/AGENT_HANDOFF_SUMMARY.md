@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-26 16:45:59
+创建时间（北京时间）：2026-06-26 18:14:34
 -->
 
 # Agent Handoff Summary（自动生成）
@@ -26,11 +26,11 @@
 
 ## 3. 最新提交
 
+- `a1a31d4 mtp测试文件20260626_164855`
+- `7bebcc0 fix(runtime): make benchmark use proxy-only startup`
 - `2897359 feat(runtime): add one-click local benchmark`
 - `7a285b5 docs(runtime): record MTP benchmark interpretation`
 - `72ecb1a docs(runtime): record MTPLX MTP runtime evidence`
-- `aecbbb5 fix(scripts): preserve executable bits for diagnostics and hooks`
-- `f953c23 chore(runtime): tune MTPLX MTP startup flags`
 
 ## 4. 治理健康
 

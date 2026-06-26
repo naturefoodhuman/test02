@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-26 16:45:59
+创建时间（北京时间）：2026-06-26 18:14:34
 -->
 
 # Document Index（自动生成）
@@ -64,6 +64,7 @@
 | `_infra/model-routing-rules.md` | root-doc | reference |
 | `_infra/network/README.md` | root-doc | reference |
 | `_infra/network/config_loader/README.md` | root-doc | reference |
+| `diagnostics/local_runtime_benchmark/20260626_164855/report.md` | diagnostic-output | runtime-artifact |
 | `docker/README.md` | root-doc | reference |
 | `docs/AGENT_HANDOFF_SUMMARY.md` | supporting-doc | reference |
 | `docs/CHANGELOG.md` | SSOT | current |

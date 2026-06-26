@@ -2968,3 +2968,21 @@ python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 - 新增 `--startup-mode {proxy-only,full}`，默认 `proxy-only`。
 - proxy-only 模式只启动 4001 LiteLLM 和 4000 Smart Proxy，让 Smart Proxy 按需拉起 8080，避免每个 profile 重复自检 8082/8084。
 - 文档更新快速版测试说明。
+
+### 第 89 轮补丁 2 · 2026-06-26（最终版 Benchmark：repeat / long context / aggregate）
+
+**触发**：用户要求 benchmark 脚本一次性补齐长上下文 + 中长输出测试，提示词要精准，对照严格、控制单一变量，最后只再测试一次。
+
+**处理**：
+- `benchmark_local_runtime.py` 默认 prompt 改为 `controlled_medium` 与 `controlled_long_context`。
+- `controlled_long_context` 内置 48 条固定项目观察记录，测试长上下文 + 中长输出。
+- 默认 profile 覆盖 `mtp_depth3`、`no_mtp`、`mtp_depth3_kv_q8`、`mtp_depth3_kv_q4`。
+- 新增 `--repeat`，默认 2 次。
+- 新增 `--seed` 并把 seed 写入请求；用于后续若后端支持 seed 时提高可比性。
+- 默认跳过 benchmark 主流程里的 stream 请求，避免重复扩大耗时；每个 profile 仍运行 `test_local_streaming.py` 做流式诊断。
+- `report.md` 新增 Raw Runs 与 Aggregates 两张表，自动计算 mean/std。
+
+**验证**：
+```bash
+python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
+```
