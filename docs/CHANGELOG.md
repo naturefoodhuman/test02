@@ -341,6 +341,11 @@ python3 -m compileall -q scripts/diagnostics/test_local_streaming.py
 - 修改：`docs/PROJECT_STATE.md`
 - 修改：`TASK_BACKLOG.md`
 
+### 补丁：显式写入 MTPLX 加速参数与日志说明
+- 8080 Qwen：`--profile sustained --mtp --depth 3 --stream-interval 1 --reasoning off --max-tokens 2048`。
+- 8082 Gemma：`--profile sustained --mtp --depth 6 --stream-interval 1 --reasoning off --max-tokens 2048`。
+- `docs/LOCAL_MODEL_RUNTIME_TUNING.md` 增加 `/tmp/mtplx_8080.log`、`/private/tmp/mtplx_8080.log` 等日志位置说明。
+
 ### 验证
 ```bash
 python3 _infra/model_runtime.py command 8084

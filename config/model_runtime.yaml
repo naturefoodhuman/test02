@@ -39,7 +39,18 @@ servers:
     log_file: "/tmp/mtplx_8080.log"
     # MTPLX model card documents native Qwen MTP backend via mtp/weights.safetensors.
     # Streaming behavior is runtime-dependent; verify with scripts/diagnostics/test_local_streaming.py.
-    extra_args: []
+    extra_args:
+      - "--profile"
+      - "sustained"
+      - "--mtp"
+      - "--depth"
+      - "3"
+      - "--stream-interval"
+      - "1"
+      - "--reasoning"
+      - "off"
+      - "--max-tokens"
+      - "2048"
     command_template: "cd {workdir} && nohup uv run mtplx quickstart --model {model} --port {port} {extra_args} > {log_file} 2>&1 &"
     kill_pattern: "mtplx.*8080"
     memory_required_gb: 28
@@ -53,7 +64,18 @@ servers:
     workdir: "${server_dir}"
     log_file: "/tmp/mtplx_8082.log"
     # Gemma4 Quality card reports speculative decoding pair bundle and block_size=6.
-    extra_args: []
+    extra_args:
+      - "--profile"
+      - "sustained"
+      - "--mtp"
+      - "--depth"
+      - "6"
+      - "--stream-interval"
+      - "1"
+      - "--reasoning"
+      - "off"
+      - "--max-tokens"
+      - "2048"
     command_template: "cd {workdir} && nohup uv run mtplx quickstart --model {model} --port {port} {extra_args} > {log_file} 2>&1 &"
     kill_pattern: "mtplx.*8082"
     memory_required_gb: 34

@@ -2886,3 +2886,15 @@ python3 _infra/model_runtime.py env-shell ollama
 python3 scripts/diagnostics/test_mtp_effectiveness.py
 python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_effectiveness.py
 ```
+
+
+### 第 87 轮补丁 · 2026-06-26（显式写入 MTPLX 加速参数与日志说明）
+
+**触发**：用户运行 `mtplx quickstart --help`，确认 MTPLX 1.0.4 支持 `--profile`、`--mtp/--no-mtp`、`--depth`、`--stream-interval`、`--paged-kv-quantization`、`--reasoning`、`--max-tokens` 等参数；同时询问 `/tmp/mtplx_8080.log` 位置。
+
+**处理**：
+- `config/model_runtime.yaml` 为 8080 Qwen 显式加入：`--profile sustained --mtp --depth 3 --stream-interval 1 --reasoning off --max-tokens 2048`。
+- `config/model_runtime.yaml` 为 8082 Gemma 显式加入：`--profile sustained --mtp --depth 6 --stream-interval 1 --reasoning off --max-tokens 2048`。
+- `docs/LOCAL_MODEL_RUNTIME_TUNING.md` 增加 `/tmp` / `/private/tmp` 日志位置说明，以及当前显式 MTPLX 加速参数。
+
+**说明**：`--paged-kv-quantization q4/q8` 已在 MTPLX help 中可见，但未默认启用；建议先在 A/B 测试中验证质量与稳定性后再写入默认配置。

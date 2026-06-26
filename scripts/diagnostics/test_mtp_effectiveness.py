@@ -53,7 +53,7 @@ def main() -> None:
         command = build_command(port)
         flags = []
         command_l = command.lower()
-        explicit_spec = "--spec-type" in command_l or "--draft" in command_l or "--draft-mtp" in command_l
+        explicit_spec = "--spec-type" in command_l or "--draft" in command_l or "--draft-mtp" in command_l or "--mtp" in command_l
         if explicit_spec:
             flags.append("MTP/speculative flag present in command")
         else:

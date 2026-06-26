@@ -237,3 +237,65 @@ python3 scripts/diagnostics/test_mtp_effectiveness.py
 - Qwopus llama.cpp 路径已显式使用 MTP speculative flags。
 - MTPLX Qwen / Gemma 的 MTP 能力更多由 artifact metadata + MTPLX runtime 决定，是否需要额外 flag 需看本地 `mtplx quickstart --help`。
 - Hugging Face 模型卡提供了 MTP / acceptance / speedup 线索，但本地是否生效必须看启动命令和 runtime 日志。
+
+
+---
+
+## 8. 日志位置
+
+本地模型日志写入 macOS 临时目录 `/tmp`，这是绝对路径，不在项目目录中。
+
+常用日志：
+
+```bash
+ls -lh /tmp/mtplx_8080.log /tmp/mtplx_8082.log /tmp/llama_8084.log /tmp/forge_smart_proxy.log /tmp/forge_litellm_4001.log 2>/dev/null
+
+tail -120 /tmp/mtplx_8080.log
+
+tail -120 /tmp/mtplx_8082.log
+
+tail -120 /tmp/llama_8084.log
+```
+
+如果找不到 `/tmp/mtplx_8080.log`，通常是：
+
+1. 模型尚未被启动；
+2. `scripts/forge-start.sh` 只做冷启动自检后立即卸载，但正常情况下日志仍应保留；
+3. macOS 的 `/tmp` 实际映射到 `/private/tmp`，也可以试：
+
+```bash
+ls -lh /private/tmp/mtplx_8080.log
+```
+
+查看当前哪些端口/进程在运行：
+
+```bash
+scripts/model_status.sh
+```
+
+---
+
+## 9. 当前 MTPLX 显式加速参数
+
+根据本机 `uv run mtplx quickstart --help`，当前已把显式参数写入 `config/model_runtime.yaml`：
+
+8080 Qwen 主模型：
+
+```bash
+--profile sustained --mtp --depth 3 --stream-interval 1 --reasoning off --max-tokens 2048
+```
+
+8082 Gemma 评审模型：
+
+```bash
+--profile sustained --mtp --depth 6 --stream-interval 1 --reasoning off --max-tokens 2048
+```
+
+依据：
+
+- Qwen3.6 MTPLX Quality 模型卡给出 depth-3 bakeoff 指标；
+- Gemma4 MTPLX Quality 模型卡给出 block_size/depth 6、acceptance 99.76%、speedup_vs_ar 2.49x；
+- `--stream-interval 1` 让服务端尽可能频繁提交 token chunk；
+- `--reasoning off` 用于 Claude Code 日常交互，减少“thinking process”拖慢和污染输出。
+
+如需做严谨 A/B，请复制一个端口配置，分别用 `--mtp` 与 `--no-mtp`、不同 `--depth` 对比。
