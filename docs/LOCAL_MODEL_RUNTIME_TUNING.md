@@ -299,3 +299,54 @@ scripts/model_status.sh
 - `--reasoning off` 用于 Claude Code 日常交互，减少“thinking process”拖慢和污染输出。
 
 如需做严谨 A/B，请复制一个端口配置，分别用 `--mtp` 与 `--no-mtp`、不同 `--depth` 对比。
+
+
+---
+
+## 10. A/B 对比注意事项
+
+用户真机日志已经证明：
+
+- 8080 Qwen：`Mode Sustained MTP`、`Installing native-MTP draft head`；
+- 8082 Gemma：`Gemma 4 assistant MTP drafter is active`；
+- 8084 Qwopus：`[spec] estimated memory usage of MTP context`。
+
+这证明 MTP/spec runtime 已经进入工作路径。但如果要证明“加速多少”，不能用不同 prompt 或不同 completion token 数的日志直接比较。
+
+严格 A/B 必须固定：
+
+```text
+prompt
+max_tokens
+temperature
+top_p
+top_k
+seed
+context/history
+```
+
+并且每次对照前：
+
+```bash
+scripts/stop_local_models.sh
+: > /tmp/mtplx_8080.log
+bash scripts/forge-start.sh
+```
+
+注意：`--no-mtp` 在 MTPLX sustained profile 下可能仍显示加载 MTP runtime；这不一定表示对照失败，因为 runtime 可加载 MTP 但 generation path 使用 target-only AR。最终应以 `mtplx_openai_generation` 指标和 MTPLX 更详细日志为准。
+
+`test_mtp_effectiveness.py` 会解析最近 `mtplx_openai_generation` 指标：
+
+```bash
+python3 scripts/diagnostics/test_mtp_effectiveness.py
+```
+
+重点比较：
+
+```text
+prompt_tokens
+completion_tokens
+elapsed_s
+tok_s
+end_to_end_tok_s
+```

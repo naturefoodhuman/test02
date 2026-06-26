@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-26 12:37:09
+创建时间（北京时间）：2026-06-26 14:24:38
 -->
 
 # Agent Handoff Summary（自动生成）
@@ -26,17 +26,17 @@
 
 ## 3. 最新提交
 
+- `aecbbb5 fix(scripts): preserve executable bits for diagnostics and hooks`
+- `f953c23 chore(runtime): tune MTPLX MTP startup flags`
 - `95d31dc feat(runtime): centralize local model startup configuration`
 - `fa58ad9 chore(vscode): add local streaming diagnostics`
 - `35c7021 docs(vscode): document local model operating limits`
-- `42101f8 docs(vscode): clarify Claude Code panel workflow`
-- `8cc9b6e docs(governance): add 2026-06-26 generated check`
 
 ## 4. 治理健康
 
 - Blockers: 0
 - Warnings: 1
-- Changed files: 13
+- Changed files: 7
 - 最新完整报告：`docs/GOVERNANCE_CHECK_LATEST.md`
 
 ## 5. 当前自动化命令

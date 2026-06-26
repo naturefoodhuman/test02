@@ -2898,3 +2898,24 @@ python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_ef
 - `docs/LOCAL_MODEL_RUNTIME_TUNING.md` 增加 `/tmp` / `/private/tmp` 日志位置说明，以及当前显式 MTPLX 加速参数。
 
 **说明**：`--paged-kv-quantization q4/q8` 已在 MTPLX help 中可见，但未默认启用；建议先在 A/B 测试中验证质量与稳定性后再写入默认配置。
+
+### 第 87 轮补丁 2 · 2026-06-26（真机 MTP 证据与 A/B 注意事项）
+
+**用户真机证据**：
+
+- 8080 Qwen 日志显示：`Native MTP speculative decoding`、`Profile sustained`、`Mode Sustained MTP`、`Preparing Sustained MTP runtime`、`Installing native-MTP draft head`。
+- 8082 Gemma 日志显示：`Native MTP speculative decoding`、`Mode Sustained MTP`、`Gemma 4 assistant MTP drafter is active`。
+- 8084 Qwopus llama.cpp 日志显示：`[spec] estimated memory usage of MTP context is 250.52 MiB`，且启动命令显式包含 `--spec-type draft-mtp --spec-draft-n-max 2`。
+- `mtplx quickstart --help` 已确认支持 `--mtp`、`--no-mtp`、`--depth`、`--stream-interval`、`--paged-kv-quantization`、`--reasoning` 等参数。
+
+**A/B 注意事项**：
+用户临时改 `--no-mtp` 后的日志仍显示 `Mode Sustained MTP` / `Installing native-MTP draft head`。这可能是 MTPLX sustained profile 仍加载 MTP runtime，而 `--no-mtp` 只影响 generation 路径；也可能是未完全重启/日志混有旧 run。因此不能仅凭这段日志判定 no-MTP 对照有效。严谨对比必须：
+
+1. 清空或分离日志；
+2. 停止 8080；
+3. 分别以 `--mtp` 与 `--no-mtp` 启动；
+4. 使用完全相同 prompt、max_tokens、temperature、top_p、seed；
+5. 比较 `mtplx_openai_generation` 中的 `prompt_tokens`、`completion_tokens`、`elapsed_s`、`tok_s`、`end_to_end_tok_s`。
+
+**工具更新**：
+- `scripts/diagnostics/test_mtp_effectiveness.py` 现在会解析最近的 `mtplx_openai_generation` JSON metrics，输出 prompt/completion/elapsed/tok_s/e2e/preview，便于后续 A/B 记录。

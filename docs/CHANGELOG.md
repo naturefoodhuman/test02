@@ -346,6 +346,11 @@ python3 -m compileall -q scripts/diagnostics/test_local_streaming.py
 - 8082 Gemma：`--profile sustained --mtp --depth 6 --stream-interval 1 --reasoning off --max-tokens 2048`。
 - `docs/LOCAL_MODEL_RUNTIME_TUNING.md` 增加 `/tmp/mtplx_8080.log`、`/private/tmp/mtplx_8080.log` 等日志位置说明。
 
+### 补丁 2：真机 MTP 证据与 A/B 注意事项
+- 记录用户真机日志：Qwen/Gemma 均显示 Sustained MTP；Gemma assistant MTP drafter active；Qwopus llama.cpp 显示 MTP context。
+- `test_mtp_effectiveness.py` 增加 `mtplx_openai_generation` JSON metrics 解析，便于比较 `elapsed_s`、`tok_s`、`end_to_end_tok_s`。
+- 明确 `--no-mtp` 对照必须清日志、重启、固定 prompt/max_tokens/temperature/top_p/seed，否则不能严谨比较。
+
 ### 验证
 ```bash
 python3 _infra/model_runtime.py command 8084
