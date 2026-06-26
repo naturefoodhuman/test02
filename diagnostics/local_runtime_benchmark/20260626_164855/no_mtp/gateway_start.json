@@ -1,0 +1,15 @@
+{
+  "mode": "proxy-only",
+  "steps": [
+    {
+      "service": "litellm",
+      "port": 4001,
+      "ready": true
+    },
+    {
+      "service": "smart_proxy",
+      "port": 4000,
+      "ready": true
+    }
+  ]
+}

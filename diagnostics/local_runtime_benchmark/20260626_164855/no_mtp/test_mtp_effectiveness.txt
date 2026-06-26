@@ -1,0 +1,80 @@
+# MTP / Speculative Decoding Effectiveness Inspection
+
+## 8080 mtplx-qwen36-27b (mtplx)
+role: primary_brain
+source: https://huggingface.co/Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality
+command:
+cd /Users/naturist/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality --port 8080 --profile sustained --no-mtp --reasoning off --max-tokens 512 > /tmp/mtplx_8080.log 2>&1 &
+signals:
+- No explicit MTP/speculative flag in command; runtime may infer from model artifact
+- MTPLX model cards may expose MTP via artifact metadata; verify logs/benchmarks
+recent log evidence:
+-   Native MTP speculative decoding · Apple Silicon
+- ╭─ MTPLX 1.0.4 ────────────────────────────────────────────────────────────────╮
+- │      Model  mtplx-qwen36-27b-optimized-quality                               │
+- │    Profile  sustained (Sustained: long-context native-MTP path with bounded  │
+- │    Loading  Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality                    │
+- WARNING: running a family-compatible MTPLX model without a recorded mtplx_runtime.json exactness baseline; stats will be marked unverified until this artifact is smoke-verified.
+- [2/6] Model resolved: /Users/naturist/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality
+- [5/6] Loading model weights: /Users/naturist/.mtplx/models/Youssofal--Qwen3.6-27B-MTPLX-Optimized-Quality
+-       This is the long step; MTPLX is mapping the model into MLX.
+- [5/6] Installing native-MTP draft head
+- [6/6] Warmup complete in 2.9s (11.45 tok/s)
+- MTPLX is ready.
+- Model: mtplx-qwen36-27b-optimized-quality
+- Keep this terminal open. Press Ctrl-C to stop MTPLX.
+- k_s": 10.008622, "end_to_end_tok_s": 9.794145, "seed": 778876820, "attempts": 1, "blank_retries": 0, "text_preview": "状态机（State Machine）是一种用于建模系统行为的数学模型，其核心思想是将系统的运行过程分解为若干个离散的“状态”。在任何给定时刻，系统只能处于其中一个特定的状态，而系统的整体行为完全由当前所处的状态以及接收到的外部输入或事件来决"}
+recent generation metrics:
+- prompt=22 completion=285 elapsed=29.10s tok_s=10.01 e2e=9.79 preview='状态机（State Machine）是一种用于建模系统行为的数学模型，其核心思想是将系统的运行过程分解为若干个离散的“状态”。在任何给定时刻，系统只能处于其中一'
+
+## 8082 mtplx-gemma4 (mtplx)
+role: independent_reviewer
+source: https://huggingface.co/Youssofal/Gemma4-MTPLX-Optimized-Quality
+command:
+cd /Users/naturist/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Gemma4-MTPLX-Optimized-Quality --port 8082 --profile sustained --mtp --depth 6 --stream-interval 1 --reasoning off --max-tokens 2048 > /tmp/mtplx_8082.log 2>&1 &
+signals:
+- MTP/speculative flag present in command
+- MTPLX model cards may expose MTP via artifact metadata; verify logs/benchmarks
+recent log evidence:
+-   Native MTP speculative decoding · Apple Silicon
+- ╭─ MTPLX 1.0.4 ────────────────────────────────────────────────────────────────╮
+- │      Model  gemma4-mtplx-optimized-quality                                   │
+- │    Profile  sustained (Sustained: long-context native-MTP path with bounded  │
+- │       Mode  Sustained MTP                                                    │
+- │    Loading  Youssofal/Gemma4-MTPLX-Optimized-Quality                         │
+- WARNING: running a family-compatible MTPLX model without a recorded mtplx_runtime.json exactness baseline; stats will be marked unverified until this artifact is smoke-verified.
+- [2/6] Model resolved: /Users/naturist/.mtplx/models/Youssofal--Gemma4-MTPLX-Optimized-Quality
+- [4/6] Preparing Sustained MTP runtime
+- [5/6] Loading model weights: /Users/naturist/.mtplx/models/Youssofal--Gemma4-MTPLX-Optimized-Quality
+-       This is the long step; MTPLX is mapping the model into MLX.
+- [5/6] Gemma 4 assistant MTP drafter is active
+- [6/6] Warmup complete in 7.5s (9.60 tok/s)
+- MTPLX is ready.
+- Model: gemma4-mtplx-optimized-quality
+- Keep this terminal open. Press Ctrl-C to stop MTPLX.
+recent generation metrics:
+- no mtplx_openai_generation JSON metrics found
+
+## 8084 qwopus-35b-mtp-gguf (llama_cpp)
+role: deep_reviewer
+source: https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF
+command:
+nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &
+signals:
+- MTP/speculative flag present in command
+- llama.cpp path should include --spec-type draft-mtp and --spec-draft-n-max
+recent log evidence:
+- 0.00.093.769 I srv    load_model: loading model '/Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf'
+- 0.00.502.834 I srv    load_model: [spec] estimated memory usage of MTP context is 250.52 MiB
+recent generation metrics:
+- no mtplx_openai_generation JSON metrics found
+
+## Ollama runtime env
+- OLLAMA_FLASH_ATTENTION=1
+- OLLAMA_KV_CACHE_TYPE=q4_0
+
+## How to prove MTP speedup
+1. Run a fixed prompt with MTP/spec flags enabled; capture tok/s and acceptance/draft log lines.
+2. Run the same prompt with MTP/spec flags disabled; capture tok/s.
+3. Compare time-to-first-token, decode tok/s, total tokens/sec, and acceptance rate.
+4. For llama.cpp MTP, verify --spec-type draft-mtp and --spec-draft-n-max are present.
