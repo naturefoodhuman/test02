@@ -238,34 +238,72 @@ async def smart_gateway(request: Request, path: str):
             })
 
             emitted = False
+            raw_parts: list[str] = []
             try:
-                # MTPLX currently returns a complete OpenAI JSON response even
-                # when `stream=true` is requested. For Claude Code UI stability,
-                # call the backend non-streaming, then wrap the final text in
-                # Anthropic SSE events. This prevents empty streams such as:
-                # message_start -> content_block_stop -> message_stop.
-                backend_payload = forward_payload.copy()
-                backend_payload["stream"] = False
-                resp = await http_client.post(target_url, json=backend_payload)
-                if resp.status_code != 200:
-                    yield _anthropic_sse("error", {
-                        "type": "error",
-                        "error": {"type": "api_error", "message": resp.text},
-                    })
-                    return
-                data_json = resp.json()
-                text = ""
-                for choice in data_json.get("choices", []):
-                    msg = choice.get("message", {}) or {}
-                    delta = choice.get("delta", {}) or {}
-                    text += str(msg.get("content") or delta.get("content") or "")
-                if text:
-                    emitted = True
-                    yield _anthropic_sse("content_block_delta", {
-                        "type": "content_block_delta",
-                        "index": 0,
-                        "delta": {"type": "text_delta", "text": text},
-                    })
+                # Prefer true backend streaming. Some MTPLX builds return OpenAI
+                # SSE chunks; others ignore stream=true and return a full JSON
+                # response. We support both: emit content_block_delta for SSE
+                # chunks as they arrive, or parse the final JSON fallback.
+                async with http_client.stream("POST", target_url, json=forward_payload) as resp:
+                    if resp.status_code != 200:
+                        err = (await resp.aread()).decode("utf-8", errors="ignore")
+                        yield _anthropic_sse("error", {
+                            "type": "error",
+                            "error": {"type": "api_error", "message": err},
+                        })
+                        return
+                    async for line in resp.aiter_lines():
+                        if line:
+                            raw_parts.append(line)
+                        if not line or not line.startswith("data:"):
+                            continue
+                        raw = line[5:].strip()
+                        if raw == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(raw)
+                        except Exception:
+                            continue
+                        for choice in chunk.get("choices", []):
+                            delta = choice.get("delta", {}) or {}
+                            msg = choice.get("message", {}) or {}
+                            text = delta.get("content") or msg.get("content")
+                            if text:
+                                emitted = True
+                                yield _anthropic_sse("content_block_delta", {
+                                    "type": "content_block_delta",
+                                    "index": 0,
+                                    "delta": {"type": "text_delta", "text": str(text)},
+                                })
+
+                if not emitted:
+                    raw_text = "\n".join(raw_parts).strip()
+                    # Fallback: backend returned complete OpenAI JSON even though
+                    # stream=true was requested.
+                    if raw_text.startswith("data:"):
+                        raw_text = "\n".join(
+                            line[5:].strip() for line in raw_text.splitlines()
+                            if line.startswith("data:") and line[5:].strip() != "[DONE]"
+                        )
+                    try:
+                        data_json = json.loads(raw_text) if raw_text else {}
+                    except Exception:
+                        data_json = {}
+                    text = ""
+                    for choice in data_json.get("choices", []):
+                        msg = choice.get("message", {}) or {}
+                        delta = choice.get("delta", {}) or {}
+                        text += str(msg.get("content") or delta.get("content") or "")
+                    if text:
+                        emitted = True
+                        yield _anthropic_sse("content_block_delta", {
+                            "type": "content_block_delta",
+                            "index": 0,
+                            "delta": {"type": "text_delta", "text": text},
+                        })
+            except asyncio.CancelledError:
+                logger.warning("Claude Code client cancelled request", model=model_name, target=real_model_id)
+                raise
             except Exception as exc:
                 yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": str(exc)}})
                 return

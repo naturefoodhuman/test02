@@ -2817,3 +2817,20 @@ python3 -m compileall -q _infra/smart_proxy.py
 ```bash
 make docs-check
 ```
+
+## 第 85 轮 · 2026-06-26（Claude Code 本地模型操作体验与自助排障完善）
+
+**触发**：用户确认 curl streaming 与 VS Code 简单问答已通，但反馈：手册中 `Developer: Reload Window` / `code .` 容易被误当终端命令；长文档 `@HANDOFF.md` 总结仍可能卡住；Stop 后 GPU 不降；需要明确流式状态、卡死判断、卸载/重载方式；全功能示例缺少自包含服务启动命令。
+
+**完成内容**：
+- 新增 `scripts/model_status.sh`：查看 4000/4001/8080/8082/8084/11434 监听状态、AI 进程、smart proxy 最新日志。
+- 新增 `scripts/stop_local_models.sh`：停止 Smart Proxy / LiteLLM / MTPLX / llama-server；`--all` 可连 Ollama 一起停。
+- `_infra/smart_proxy.py` 的 Claude Code streaming 路径改为“优先后端真流式，若后端返回完整 JSON 则 fallback 包装成 Anthropic SSE”，并处理客户端取消日志。
+- `docs/工厂使用手册.md` 增加本地模型能力边界、等待时间预期、max token 建议、判断正常/卡死、卸载/重载、流式输出检测说明。
+- `docs/全功能最小示例项目.md` 增加自包含本地服务启动、SearXNG 启动、Claude Code 代理 curl 验证、联网验证和卡死恢复命令；各阶段补充等待时间预期。
+
+**验证**：
+```bash
+python3 -m compileall -q _infra/smart_proxy.py
+make docs-check
+```

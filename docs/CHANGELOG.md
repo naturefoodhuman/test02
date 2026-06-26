@@ -275,6 +275,30 @@ python3 -c "import yaml; from pathlib import Path; cfg=yaml.safe_load(Path('_inf
 
 ---
 
+## [第 85 轮] 2026-06-26
+
+### 需求变动
+- **Claude Code 本地模型操作体验与自助排障完善**：补充 VS Code 命令面板与终端命令区别、等待时间预期、max token 建议、流式输出状态、卡死判断、模型卸载/重载方式。
+- **全功能示例项目自包含启动命令**：示例文档新增本地模型网关、SearXNG、curl streaming、联网搜索验证和故障恢复命令，减少对使用手册的依赖。
+
+### 文件影响
+- 新增：`scripts/model_status.sh`
+- 新增：`scripts/stop_local_models.sh`
+- 修改：`_infra/smart_proxy.py`
+- 修改：`docs/工厂使用手册.md`
+- 修改：`docs/全功能最小示例项目.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`TASK_BACKLOG.md`
+
+### 验证
+```bash
+python3 -m compileall -q _infra/smart_proxy.py
+make docs-check
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动
