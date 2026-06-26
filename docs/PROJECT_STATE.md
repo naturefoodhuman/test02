@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-06-25 00:00 CST
-**当前版本**：v1.4.8-dossier + Claude Code Local UX Stabilization
+**当前版本**：v1.4.9-dossier + Local Model Runtime SSOT
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -60,6 +60,12 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 新增 `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`，并升级 `scripts/governance_check.py` + `make docs-check`，推动文档治理自动化常态化。
 - 文档治理 P1 已落地：changed-files R5 阻断、Backlog/DEV_LOG 同步阻断、代码变更必须更新 CHANGELOG、架构触发词提示 ADR、自动生成 `docs/DOCUMENT_INDEX.md`；决策记录见 ADR-008。
 - 文档治理 P2 已落地：pre-commit / GitHub Actions / launchd 自动化、no-write strict 检查、自动生成 `docs/AGENT_HANDOFF_SUMMARY.md`。
+
+### Local Model Runtime / MTP Diagnostics
+- `config/model_runtime.yaml` 已成为本地模型启动参数 SSOT（ADR-009），集中管理 MTPLX/Ollama/llama.cpp 的命令、env、MTP/spec flags、日志和显存估算。
+- `scripts/forge-start.sh`、`peer_review.llm_client.SERVER_COMMANDS`、`_infra/smart_proxy.py` 已接入该配置。
+- Ollama 默认启动 env 已纳入项目配置：`OLLAMA_FLASH_ATTENTION=1`、`OLLAMA_KV_CACHE_TYPE=q4_0`。
+- 新增 `scripts/diagnostics/test_mtp_effectiveness.py` 与 `docs/LOCAL_MODEL_RUNTIME_TUNING.md`，用于验证 MTP/speculative decoding 与真流式状态。
 
 ### Claude Code for VS Code alias compatibility
 - 已补充当前 Claude Code for VS Code UI 中 Opus 4.8 / Sonnet 4.6 / Haiku 4.5 相关 alias 到本地 MTPLX 主模型映射，避免 VS Code 插件因 `claude-opus-*` / `claude-sonnet-*` alias 未注册而报模型不存在。

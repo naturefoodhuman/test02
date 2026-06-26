@@ -318,6 +318,39 @@ python3 -m compileall -q scripts/diagnostics/test_local_streaming.py
 
 ---
 
+## [第 87 轮] 2026-06-26
+
+### 需求变动
+- **本地模型运行参数 SSOT**：用户要求 MTPLX / Ollama / llama.cpp 等本地模型启动参数可自定义，不再散落硬编码。
+- **推理加速与 MTP 验证**：纳入 Ollama `OLLAMA_FLASH_ATTENTION=1`、`OLLAMA_KV_CACHE_TYPE=q4_0`，并新增 MTP / speculative decoding 生效诊断。
+- **真流式诊断说明**：补充如何判断后端是真 OpenAI SSE streaming、单 delta、完整 JSON fallback，还是仅 Smart Proxy 包装。
+
+### 文件影响
+- 新增：`docs/adr/ADR-009-local-model-runtime-configuration.md`
+- 修改：`docs/adr/README.md`
+- 新增：`config/model_runtime.yaml`
+- 新增：`_infra/model_runtime.py`
+- 新增：`scripts/diagnostics/test_mtp_effectiveness.py`
+- 新增：`docs/LOCAL_MODEL_RUNTIME_TUNING.md`
+- 修改：`scripts/forge-start.sh`
+- 修改：`_factory/patterns/peer-review/src/peer_review/llm_client.py`
+- 修改：`_infra/smart_proxy.py`
+- 修改：`config/models.yaml`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`TASK_BACKLOG.md`
+
+### 验证
+```bash
+python3 _infra/model_runtime.py command 8084
+python3 _infra/model_runtime.py env-shell ollama
+python3 scripts/diagnostics/test_mtp_effectiveness.py
+python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_effectiveness.py
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

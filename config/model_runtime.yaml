@@ -1,0 +1,77 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-06-26 00:00:00
+
+version: "1.0"
+
+# Local model runtime SSOT.
+# Goal: keep startup commands and performance flags configurable instead of
+# hardcoding them in scripts/forge-start.sh or peer_review.llm_client.
+
+server_dir: "${HOME}/LocalAI/servers"
+
+ollama:
+  port: 11434
+  env:
+    OLLAMA_FLASH_ATTENTION: "1"
+    OLLAMA_KV_CACHE_TYPE: "q4_0"
+    # Optional future knobs. Keep empty unless validated locally.
+    # OLLAMA_NUM_PARALLEL: "1"
+    # OLLAMA_MAX_LOADED_MODELS: "1"
+  command: "ollama serve"
+  models:
+    qwen3-coder-next:
+      model_id: "qwen3-coder-next:q4_K_M"
+      role: "coding-test"
+      source: "https://ollama.com/library/qwen3-coder-next:q4_K_M"
+    deepseek-r1-32b:
+      model_id: "deepseek-r1:32b"
+      role: "reviewer"
+      source: "https://ollama.com/library/deepseek-r1:32b"
+
+servers:
+  8080:
+    name: "mtplx-qwen36-27b"
+    role: "primary_brain"
+    kind: "mtplx"
+    model: "Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality"
+    source: "https://huggingface.co/Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality"
+    workdir: "${server_dir}"
+    log_file: "/tmp/mtplx_8080.log"
+    # MTPLX model card documents native Qwen MTP backend via mtp/weights.safetensors.
+    # Streaming behavior is runtime-dependent; verify with scripts/diagnostics/test_local_streaming.py.
+    extra_args: []
+    command_template: "cd {workdir} && nohup uv run mtplx quickstart --model {model} --port {port} {extra_args} > {log_file} 2>&1 &"
+    kill_pattern: "mtplx.*8080"
+    memory_required_gb: 28
+
+  8082:
+    name: "mtplx-gemma4"
+    role: "independent_reviewer"
+    kind: "mtplx"
+    model: "Youssofal/Gemma4-MTPLX-Optimized-Quality"
+    source: "https://huggingface.co/Youssofal/Gemma4-MTPLX-Optimized-Quality"
+    workdir: "${server_dir}"
+    log_file: "/tmp/mtplx_8082.log"
+    # Gemma4 Quality card reports speculative decoding pair bundle and block_size=6.
+    extra_args: []
+    command_template: "cd {workdir} && nohup uv run mtplx quickstart --model {model} --port {port} {extra_args} > {log_file} 2>&1 &"
+    kill_pattern: "mtplx.*8082"
+    memory_required_gb: 34
+
+  8084:
+    name: "qwopus-35b-mtp-gguf"
+    role: "deep_reviewer"
+    kind: "llama_cpp"
+    model_path: "/Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf"
+    source: "https://huggingface.co/Jackrong/Qwopus3.6-35B-A3B-v1-MTP-GGUF"
+    log_file: "/tmp/llama_8084.log"
+    context_size: 65536
+    gpu_layers: 99
+    flash_attention: true
+    # Qwen MTP GGUF needs llama.cpp speculative flags. Current validated baseline:
+    spec_type: "draft-mtp"
+    spec_draft_n_max: 2
+    extra_args: []
+    command_template: "nohup llama-server -m {model_path} --host 127.0.0.1 --port {port} -c {context_size} -ngl {gpu_layers} {flash_attention_flag} --spec-type {spec_type} --spec-draft-n-max {spec_draft_n_max} {extra_args} > {log_file} 2>&1 &"
+    kill_pattern: "llama-server.*8084"
+    memory_required_gb: 38

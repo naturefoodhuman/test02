@@ -20,6 +20,7 @@ from threading import Lock
 FORGE_ROOT = "/Users/naturist/MusicProject/AI-Project-Incubation-Factory"
 sys.path.append(os.path.join(FORGE_ROOT, "_factory/patterns/peer-review/src"))
 from peer_review.llm_client import SERVER_COMMANDS
+from _infra.model_runtime import get_memory_required_gb
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]: %(message)s')
 logger = logging.getLogger("SmartProxy")
@@ -113,7 +114,7 @@ def _anthropic_sse(event: str, payload: dict) -> bytes:
 
 # 显存管理
 VRAM_LIMIT = 48
-MODEL_VRAM = {8080: 20, 8082: 16, 8084: 36, 11434: 20}
+MODEL_VRAM = {8080: get_memory_required_gb(8080), 8082: get_memory_required_gb(8082), 8084: get_memory_required_gb(8084), 11434: 20}
 active_servers = {}
 vram_lock = Lock()
 http_client = httpx.AsyncClient(

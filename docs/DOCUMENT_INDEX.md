@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-26 09:11:32
+创建时间（北京时间）：2026-06-26 10:41:53
 -->
 
 # Document Index（自动生成）
@@ -77,6 +77,7 @@
 | `docs/GOVERNANCE_CHECK_2026-06-25.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-06-26.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_LATEST.md` | governance | current |
+| `docs/LOCAL_MODEL_RUNTIME_TUNING.md` | supporting-doc | reference |
 | `docs/PROJECT_STATE.md` | SSOT | current |
 | `docs/RETRO.md` | supporting-doc | reference |
 | `docs/SEARCH_ENGINE_RISK_CONTROL_REPORT.md` | supporting-doc | reference |
@@ -89,6 +90,7 @@
 | `docs/adr/ADR-006-forge-eval-as-ab-testing-capability.md` | governance | current |
 | `docs/adr/ADR-007-memorystore-as-plan-comparison-ssot.md` | governance | current |
 | `docs/adr/ADR-008-documentation-governance-automation.md` | governance | current |
+| `docs/adr/ADR-009-local-model-runtime-configuration.md` | governance | current |
 | `docs/adr/README.md` | SSOT | current |
 | `docs/benchmark.md` | supporting-doc | reference |
 | `docs/research/README.md` | research | reference |

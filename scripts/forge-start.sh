@@ -43,6 +43,18 @@ stop_listening_port() {
     fi
 }
 
+model_command() {
+    python3 "$FORGE_ROOT/_infra/model_runtime.py" command "$1"
+}
+
+model_kill_pattern() {
+    python3 "$FORGE_ROOT/_infra/model_runtime.py" kill-pattern "$1"
+}
+
+load_ollama_runtime_env() {
+    eval "$(python3 "$FORGE_ROOT/_infra/model_runtime.py" env-shell ollama)"
+}
+
 # 校验并释放函数
 check_and_unload() {
     local port=$1
@@ -90,18 +102,20 @@ check_and_unload() {
 # 1. Ollama (11434) - 这个作为基础守护进程，不卸载，但可以 unload 具体模型
 if ! is_listening 11434; then
     echo -e "${BLUE}📡 启动 Ollama 守护进程...${NC}"
+    load_ollama_runtime_env
+    echo -e "${BLUE}   OLLAMA_FLASH_ATTENTION=${OLLAMA_FLASH_ATTENTION:-} OLLAMA_KV_CACHE_TYPE=${OLLAMA_KV_CACHE_TYPE:-}${NC}"
     ollama serve > /tmp/forge_ollama.log 2>&1 &
     sleep 3
 fi
 
 # 2. 主大脑 (8080) - MTPLX
-check_and_unload 8080 "主大脑 (Qwen-MTPLX)" "cd $SERVER_DIR && nohup uv run mtplx quickstart --model Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality --port 8080 > /tmp/mtplx_8080.log 2>&1 &" "mtplx.*8080"
+check_and_unload 8080 "主大脑 (Qwen-MTPLX)" "$(model_command 8080)" "$(model_kill_pattern 8080)"
 
 # 3. 评审模型 (8082) - MTPLX
-check_and_unload 8082 "评审模型 (Gemma4-MTPLX)" "cd $SERVER_DIR && nohup uv run mtplx quickstart --model Youssofal/Gemma4-MTPLX-Optimized-Quality --port 8082 > /tmp/mtplx_8082.log 2>&1 &" "mtplx.*8082"
+check_and_unload 8082 "评审模型 (Gemma4-MTPLX)" "$(model_command 8082)" "$(model_kill_pattern 8082)"
 
 # 4. 深度评审 (8084) - Llama-server
-check_and_unload 8084 "深度评审 (Qwopus-GGUF)" "nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &" "llama-server.*8084"
+check_and_unload 8084 "深度评审 (Qwopus-GGUF)" "$(model_command 8084)" "$(model_kill_pattern 8084)"
 
 # 5. 启动智能网关中继器 (4000) 与 核心网关 (4001)
 stop_listening_port 4000

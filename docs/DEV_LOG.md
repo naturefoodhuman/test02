@@ -2857,3 +2857,32 @@ make docs-check
 ```bash
 python3 -m compileall -q scripts/diagnostics/test_local_streaming.py
 ```
+
+## 第 87 轮 · 2026-06-26（本地模型运行参数 SSOT 与 MTP/流式诊断）
+
+**触发**：用户要求所有本地开源模型启动参数支持自定义，关注 Ollama KV Cache / Flash Attention、MTPLX / Qwopus MTP 推测性解码是否真正生效，以及如何检验真流式。
+
+**完成内容**：
+- 新增 `config/model_runtime.yaml` 作为本地模型运行参数 SSOT，集中管理 MTPLX、Ollama、llama.cpp 的模型、端口、启动命令、日志、MTP/spec flags、Ollama env。
+- 新增 `_infra/model_runtime.py`，用于从 YAML 生成启动命令、kill pattern、memory、Ollama env。
+- `scripts/forge-start.sh` 改为从 `config/model_runtime.yaml` 读取 8080/8082/8084 启动命令，并在启动 Ollama 前加载 `OLLAMA_FLASH_ATTENTION=1`、`OLLAMA_KV_CACHE_TYPE=q4_0`。
+- `peer_review.llm_client.SERVER_COMMANDS` 改为从 `config/model_runtime.yaml` 加载，保留历史 fallback。
+- `_infra/smart_proxy.py` 的显存估算改为读取 `model_runtime.yaml` 中 memory 配置。
+- `config/models.yaml` 新增 `qwen3-coder-next` 作为 Ollama coding-test 模型。
+- 新增 `scripts/diagnostics/test_mtp_effectiveness.py`，检查启动命令是否启用 MTP/spec flags，并扫描 MTPLX/llama.cpp 日志中的 acceptance/speedup/tok/s 等证据。
+- 新增 `docs/LOCAL_MODEL_RUNTIME_TUNING.md`，说明如何自定义启动参数、如何验证 Ollama env、如何判断 MTP 与真流式。
+- 新增 `docs/adr/ADR-009-local-model-runtime-configuration.md`，将本地模型运行参数配置化确认为工厂级决策。
+
+**外部资料结论**：
+- Qwen3.6 MTPLX Quality 模型卡说明包含 `mtplx_runtime.json` 与 `mtp/weights.safetensors`，并给出 Decode TPS / Acceptance D1-D3 / Peak memory 指标。
+- Gemma4 MTPLX Quality 模型卡说明为 target + assistant pair bundle，给出 block_size=6、acceptance 99.76%、speedup_vs_ar 2.49x。
+- Qwopus MTP GGUF 模型卡说明保留 MTP heads，并兼容 llama.cpp MTP speculative decoding。
+- 以上均是静态证据；本地是否启用需看启动命令和 runtime 日志。
+
+**验证**：
+```bash
+python3 _infra/model_runtime.py command 8084
+python3 _infra/model_runtime.py env-shell ollama
+python3 scripts/diagnostics/test_mtp_effectiveness.py
+python3 -m compileall -q _infra/model_runtime.py scripts/diagnostics/test_mtp_effectiveness.py
+```

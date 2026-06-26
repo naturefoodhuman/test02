@@ -28,6 +28,7 @@ Per the Documentation Governance framework (see `DOCUMENT_AUDIT_REPORT.md`):
 | [ADR-006](ADR-006-forge-eval-as-ab-testing-capability.md) | forge eval as Core Factory A/B Testing Tool | 已接受 | 2026-06-16 | Real plan comparison, gold dataset, MemoryStore integration |
 | [ADR-007](ADR-007-memorystore-as-plan-comparison-ssot.md) | MemoryStore + ModelRunRecord as SSOT for Plan Comparison & RETRO | 已接受 | 2026-06-16 | Historical execution data for compare-plans and retro |
 | [ADR-008](ADR-008-documentation-governance-automation.md) | Documentation Governance Automation as a Blocking Quality Gate | 已接受 | 2026-06-25 | `make docs-check`, governance automation, document index |
+| [ADR-009](ADR-009-local-model-runtime-configuration.md) | Local Model Runtime Configuration as SSOT | 已接受 | 2026-06-26 | `config/model_runtime.yaml`, runtime tuning, MTP flags |
 
 ## How to Read
 
@@ -46,4 +47,4 @@ See `DOCUMENT_AUDIT_REPORT.md` → "ADR Rules" and "Continuous Governance" for e
 
 ---
 
-**Last updated**: 2026-06-25 (ADR-008 Documentation Governance Automation)
+**Last updated**: 2026-06-26 (ADR-009 Local Model Runtime Configuration)

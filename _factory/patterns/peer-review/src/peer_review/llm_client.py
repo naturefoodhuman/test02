@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-15 12:00:00 CST
+# 创建时间（北京时间）：2026-06-26 00:00:00
 """Peer-Review LLM 客户端：多后端适配架构 (BackendAdapter Pattern)
 
 支持多种推理框架：
@@ -30,11 +30,25 @@ from peer_review.config.schemas import ModelConfig
 from peer_review.platform.data_privacy_gate import DataPrivacyGate, GateDecisionType
 
 # ── 服务器启动指令注册表 (需求 1, 8, 11) ──────────────────────────
-SERVER_COMMANDS = {
-    8080: "cd ~/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality --port 8080 > /tmp/mtplx_8080.log 2>&1 &",
-    8082: "cd ~/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Gemma4-MTPLX-Optimized-Quality --port 8082 > /tmp/mtplx_8082.log 2>&1 &",
-    8084: "nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &",
-}
+# SSOT: config/model_runtime.yaml. Do not hardcode local model flags here.
+def _load_server_commands() -> dict[int, str]:
+    try:
+        import sys
+        root = Path(__file__).resolve().parents[5]
+        if str(root) not in sys.path:
+            sys.path.insert(0, str(root))
+        from _infra.model_runtime import get_server_commands
+        return get_server_commands()
+    except Exception:
+        # Safe fallback matching the historical baseline.
+        return {
+            8080: "cd ~/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Qwen3.6-27B-MTPLX-Optimized-Quality --port 8080 > /tmp/mtplx_8080.log 2>&1 &",
+            8082: "cd ~/LocalAI/servers && nohup uv run mtplx quickstart --model Youssofal/Gemma4-MTPLX-Optimized-Quality --port 8082 > /tmp/mtplx_8082.log 2>&1 &",
+            8084: "nohup llama-server -m /Users/naturist/LocalAI/gguf-models/Qwopus3.6-35B-A3B-v1-MTP-Q8_0.gguf --host 127.0.0.1 --port 8084 -c 65536 -ngl 99 -fa on --spec-type draft-mtp --spec-draft-n-max 2 > /tmp/llama_8084.log 2>&1 &",
+        }
+
+
+SERVER_COMMANDS = _load_server_commands()
 
 def _ensure_server_running(base_url: str):
     """按需加载：如果端口没响应，尝试拉起服务器 (R11)"""
