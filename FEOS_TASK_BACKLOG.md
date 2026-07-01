@@ -259,6 +259,9 @@ FEOS 任务拆解遵循：
 
 ## FEOS-003 — 实现 ID、枚举、错误类型与 ServiceResult
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-003
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.2 领域模型
@@ -306,10 +309,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - ID / enum / error 基础设施可供后续模型复用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-004 — 实现 Case、Timeline 与 Audit 模型
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-004
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.2 领域模型
@@ -353,10 +365,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Case / Timeline / Audit 模型可供 Repository 使用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-005 — 实现 Evidence、Graph 与 Hypothesis 模型
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-005
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.2 领域模型
@@ -400,10 +421,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Evidence / Graph / Hypothesis 模型可供后续服务复用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-006 — 实现 Context、Package、Gateway 与 Response 模型
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-006
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.2 领域模型
@@ -447,10 +477,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Context / Package / Gateway / Response 模型可供 Compiler、Gateway、Ingestion 使用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-007 — 实现 Verification、Execution 与 Knowledge 模型
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-007
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.2 领域模型
@@ -495,10 +534,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Response → Verification → Execution → Knowledge 模型链路具备基础数据结构。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-008 — 实现 Workspace、PathGuard 与目录初始化
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-008
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.3 本地存储与 Repository
@@ -542,10 +590,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Workspace 可被 Repository 复用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-009 — 实现 AtomicWriter、FileLock、Hashing 与 JSON/YAML 工具
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-009
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.3 本地存储与 Repository
@@ -591,10 +648,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - 后续 Repository 可直接依赖 storage primitives。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-010 — 实现 CaseRepository 与 TimelineRepository
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-010
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.3 本地存储与 Repository
@@ -637,10 +703,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Case 持久化基础可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-011 — 实现 Artifact 相关 Repository
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-011
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.3 本地存储与 Repository
@@ -692,10 +767,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - FEOS 文件持久化层完整可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-012 — 实现 Case 状态机与 Transition Guard
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-012
 - **所属 Epic**：E2 Case Lifecycle, Detector & Workflow
 - **所属 Capability**：C2.1 Case 状态机
@@ -736,10 +820,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - 状态机可供 CaseService 和 Workflow 调用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-013 — 实现 CaseService 与 Timeline 写入
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-013
 - **所属 Epic**：E2 Case Lifecycle, Detector & Workflow
 - **所属 Capability**：C2.1 Case 状态机
@@ -782,10 +875,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Case 生命周期基础服务可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-014 — 实现基础 CLI：create / status / list / archive
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-014
 - **所属 Epic**：E2 Case Lifecycle, Detector & Workflow
 - **所属 Capability**：C2.2 CLI 与 Facade
@@ -828,10 +930,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - 本地用户可通过 CLI 创建和查看 Case。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-015 — 实现 FEOSFacade 与 Bootstrap Wiring
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-015
 - **所属 Epic**：E2 Case Lifecycle, Detector & Workflow
 - **所属 Capability**：C2.2 CLI 与 Facade
@@ -876,10 +987,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - 后续 Workflow 可基于 Facade 组织调用链。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-016 — 实现 Workflow Guards 基础
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-016
 - **所属 Epic**：E2 Case Lifecycle, Detector & Workflow
 - **所属 Capability**：C2.2 CLI 与 Facade
@@ -915,6 +1035,12 @@ FEOS 任务拆解遵循：
 - **Definition of Done**：
   - 满足 G-DoD；
   - 后续 E2E Workflow 有统一 Guard 基础。
+
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
 
 ---
 

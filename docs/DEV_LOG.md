@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：FEOS-002 配置加载与 Bootstrap 基础
+- **最近完成**：FEOS-003~FEOS-016 Foundation 与 Case Lifecycle 基础
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3062,6 +3062,71 @@ python3 -m compileall -q _infra/feos
 ```bash
 python3 -m pytest _infra/feos/tests/unit/test_package_import.py _infra/feos/tests/unit/test_config_loader.py -q
 # 12 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+## 第 94 轮 · 2026-07-01（FEOS-003~FEOS-009：领域模型与存储基础）
+
+**目标**：在一次独立开发会话中尽可能推进 Foundation 任务，完成 FEOS 领域模型基础和本地存储基础。
+
+**完成内容**：
+- FEOS-003：ID 生成、全局枚举、错误类型、`ServiceResult`。
+- FEOS-004：`EscalationCase`、`TimelineEvent`、`AuditRecord`。
+- FEOS-005：`Evidence`、`CaseGraph`、`GraphNode`、`GraphEdge`、`Hypothesis`。
+- FEOS-006：`ContextPackage`、`EscalationPackage`、`GatewayCapabilities`、`ExternalSession`、`ExternalResponse`、`ParsedResponse`。
+- FEOS-007：`VerificationResult`、`ExecutionPlan`、`Outcome`、`KnowledgeCandidate`。
+- FEOS-008：`FEOSWorkspace`、`PathGuard`、workspace 初始化与 path traversal 防护。
+- FEOS-009：`AtomicWriter`、`FileLock`、`BlobStore`、`sha256`、JSON/YAML helper。
+- 更新 `_infra/feos/models/__init__.py` 与 `_infra/feos/storage/__init__.py` 统一导出。
+- FEOS 包版本更新为 `0.4.0-feos-storage`。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit -q
+# 38 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+### 第 94 轮补充 · 2026-07-01（FEOS-010~FEOS-011：Repository 基础）
+
+**完成内容**：
+- FEOS-010：新增 `CaseRepository` 与 `TimelineRepository`。
+  - `case.yaml` 使用 atomic YAML 写入；
+  - Case 目录名必须等于 case id；
+  - `timeline.jsonl` append-only，并使用 `FileLock`。
+- FEOS-011：新增通用 `ArtifactRepository` 与 Evidence/Graph/Context/Package/Session/Response/Verification/Execution/Knowledge/Index Repository wrapper。
+  - 支持 YAML / JSON / Markdown text / raw bytes；
+  - raw artifact 计算 `sha256:<hex>`；
+  - 保存路径通过 workspace / PathGuard 约束。
+- 新增测试：`test_case_timeline_repository.py`、`test_artifact_repositories.py`。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit -q
+# 44 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+### 第 94 轮补充 2 · 2026-07-01（FEOS-012~FEOS-016：Case Lifecycle / CLI / Facade / Guards）
+
+**完成内容**：
+- FEOS-012：新增 `CaseStateMachine`、架构主路径 transition 表、Transition Guard。
+- FEOS-013：新增 `CaseService` 与 `CreateCaseInput`，创建 Case 时写 `case.yaml` 与首条 timeline event；状态转换经过状态机。
+- FEOS-014：新增基础 CLI：`python3 -m _infra.feos.cli create/status/list/archive`，支持 `--json`。
+- FEOS-015：新增 `FEOSFacade` 与 bootstrap wiring，集中暴露 create/get/list 基础 API。
+- FEOS-016：新增 `WorkflowGuard` 与 `FEOSWorkflow` shell，阻止跳过 PackageGenerated / approved plan / archived 状态。
+- 新增相关单元测试：`test_case_state_machine.py`、`test_case_service.py`、`test_cli_basic.py`、`test_facade_bootstrap.py`、`test_workflow_guards.py`。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit -q
+# 57 passed
 python3 -m compileall -q _infra/feos
 # pass
 ```

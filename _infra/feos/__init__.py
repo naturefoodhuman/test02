@@ -12,7 +12,7 @@ from __future__ import annotations
 
 __all__ = ["__version__", "load_config", "bootstrap_feos"]
 
-__version__ = "0.2.0-feos-config"
+__version__ = "0.4.0-feos-storage"
 
 from .config_loader import load_config
 from .bootstrap import bootstrap_feos

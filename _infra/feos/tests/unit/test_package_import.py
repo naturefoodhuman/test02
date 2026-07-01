@@ -24,7 +24,7 @@ def load_yaml(path: Path) -> dict:
 def test_feos_package_importable():
     import _infra.feos as feos
 
-    assert feos.__version__ == "0.2.0-feos-config"
+    assert feos.__version__ == "0.4.0-feos-storage"
 
 
 def test_default_and_project_config_parse():
