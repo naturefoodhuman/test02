@@ -3235,3 +3235,18 @@ python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
 make docs-check
 # Blockers: 0
 ```
+
+
+### 第 94 轮补充 8 · 2026-07-01（Clipboard E2E 默认证据采集安全收敛）
+
+**触发**：CLI export smoke test 发现默认 workflow 使用全量 collectors 会把 `config/canary_tokens.yaml` 等本地安全配置纳入 context，导致 Policy canary block，阻断基础 Clipboard export。
+
+**处理**：
+- `ClipboardEscalationWorkflow.collect()` 默认只启用 `user_input` collector，保证基础 export smoke 是最小、安全、可解释的。
+- 全量 evidence collectors 保留给后续显式 collect/evidence workflow，不在基础 export smoke 中自动执行。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/integration/test_clipboard_escalation_workflow.py _infra/feos/tests/unit/test_clipboard_export.py -q
+# 3 passed
+```

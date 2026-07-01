@@ -80,6 +80,7 @@
 - 新增：`_infra/feos/tests/unit/test_feos_diagnostics.py`
 - 修改：`Makefile`
 - 修改：`FEOS_TASK_BACKLOG.md`
+- 补丁：`ClipboardEscalationWorkflow.collect()` 默认只启用 `user_input` collector，避免基础 export smoke 自动采集 canary/security config 导致 policy block。
 - 修改：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`
 
 ### 验证

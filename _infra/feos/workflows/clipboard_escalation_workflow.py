@@ -21,10 +21,13 @@ class ClipboardEscalationWorkflow:
         self.workspace = workspace
         self.registry = create_default_registry(root)
 
-    def collect(self, case) -> list:
+    def collect(self, case, enabled_collectors: list[str] | None = None) -> list:
         service = EvidenceService(self.workspace, self.registry, TimelineRepository(self.workspace))
         request = EvidenceCollectionRequest(case_id=case.id, user_input=case.problem.user_goal)
-        result = service.collect(request)
+        # Default Clipboard E2E export must be safe and minimal. Full collectors
+        # can include canary config or sensitive local context and are invoked
+        # explicitly by later evidence workflows, not by the basic export smoke.
+        result = service.collect(request, enabled_collectors=enabled_collectors or ["user_input"])
         return result.evidence
 
     def build_graph(self, case_id: str, evidence: list):
