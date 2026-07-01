@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-07-01 00:00 CST
-**当前版本**：v1.4.19-feos-response-closure-foundation
+**当前版本**：v1.4.20-feos-mvp-foundation
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -84,8 +84,8 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - FEOS 已进入实现阶段。
 - FEOS-001 已完成：`_infra/feos` 包结构、默认 `feos.yaml`、默认 policies、renderer profiles、`config/feos.yaml`、`.forge/feos` gitignore 规则和基础单元测试。
 - FEOS-002 已完成：`_infra/feos/config_loader.py`、`_infra/feos/bootstrap.py`、`FEOSConfig`、`load_config()`、`bootstrap_feos()` 与配置加载单元测试。
-- FEOS-003~FEOS-047 已完成：核心领域模型、存储基础、Repository、Case 状态机、CaseService、基础 CLI、Facade、Workflow Guard、Detector、Evidence/Graph、Retrieval、Hypothesis、Privacy/Policy、Context、Package、Renderer、Gateway/Clipboard Export、Response Ingestion、Verification、Execution 与 Knowledge Distillation 基础。
-- 当前 FEOS 已具备 Clipboard-first MVP 主流程的大部分基础能力；后续应继续执行 FEOS-048 Observability 与 FEOS-050/051 E2E workflows。
+- FEOS-001~FEOS-056 已完成：FEOS MVP 基础闭环已具备，包括 Foundation、配置、领域模型、存储、Repository、Case Lifecycle、CLI、Detector、Evidence、Graph、Retrieval、Hypothesis、Policy、Context、Package、Renderer、Gateway、Clipboard Export、Response、Verification、Execution、Knowledge、Observability、Diagnostics、E2E/Governance/Test 基础。
+- 当前 FEOS 已具备 Clipboard-first MVP 基础能力；后续应以真实场景 fixture 做强化测试与细化实现。
 
 ---
 

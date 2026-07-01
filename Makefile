@@ -1,7 +1,7 @@
 # FORGE Factory Makefile
 # 常用操作单命令完成
 
-.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test install-governance-hooks
+.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks
 
 # 日常开发
 start-gateway:    # 启动 LiteLLM 网关
@@ -79,3 +79,9 @@ docs-check:
 # 安装本地 Git 治理 hook（写入 .git/hooks/pre-commit，不提交真实 hook 文件）
 install-governance-hooks:
 	@bash scripts/install_governance_hooks.sh
+
+
+# FEOS 测试入口
+feos-test:
+	@python3 -m pytest _infra/feos/tests/unit _infra/feos/tests/security _infra/feos/tests/golden _infra/feos/tests/integration -q
+	@python3 -m compileall -q _infra/feos
