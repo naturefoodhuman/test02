@@ -409,6 +409,30 @@ python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 
 ---
 
+## [第 90 轮] 2026-07-01
+
+### 需求变动
+- **Project Dossier V4**：用户要求在 MTP 测试收尾后，全面更新维护文档，并新增 `PROJECT_DOSSIER_V4.md`，为 Case Intelligence Operating System 升级做准备。
+- **Case Intelligence OS Readiness**：明确下一阶段应先做 SPEC Sprint、ADR-010、E13 backlog、Case/Evidence/Timeline/Entity/Action/Audit 数据模型与安全边界设计。
+
+### 文件影响
+- 新增：`PROJECT_DOSSIER_V4.md`
+- 修改：`HANDOFF.md`
+- 修改：`README.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`TASK_BACKLOG.md`
+- 自动更新：`docs/DOCUMENT_INDEX.md`、`docs/AGENT_HANDOFF_SUMMARY.md`、`docs/GOVERNANCE_CHECK_2026-06-26.md`、`docs/GOVERNANCE_CHECK_LATEST.md`
+
+### 验证
+```bash
+make docs-check
+python3 -m compileall -q scripts/governance_check.py
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

@@ -7,7 +7,7 @@
 
 FORGE Factory 是在 macOS / 本地优先环境中，把“模糊想法”通过五阶段工作流、专家评审、配置化模型路由、隐私网关和联网取数能力，持续孵化为可运行 AI 软件项目的工程体系。
 
-> 当前开发重点：FORGE Factory 主体 + `_infra/network/` 联网增量模块。
+> 当前开发重点：FORGE Factory 主体已完成联网/本地模型/治理收尾，下一阶段准备升级 Case Intelligence Operating System。
 > 当前状态 SSOT：`docs/PROJECT_STATE.md`。
 > 任务状态 SSOT：`TASK_BACKLOG.md` §10。
 
@@ -115,12 +115,22 @@ scripts/backup.sh
 
 ---
 
+## 3A. 当前升级准备
+
+- 当前卷宗：`PROJECT_DOSSIER_V4.md`
+- 下一阶段：Case Intelligence Operating System SPEC Sprint
+- 运行参数 SSOT：`config/model_runtime.yaml`
+- 文档治理入口：`make docs-check` / `make governance-check`
+
+---
+
 ## 4. 接手阅读顺序
 
 任何新 Agent 接手必须先读：
 
 1. `HANDOFF.md`
-2. `docs/PROJECT_STATE.md`
+2. `PROJECT_DOSSIER_V4.md`
+3. `docs/PROJECT_STATE.md`
 3. `TASK_BACKLOG.md` §10
 4. `NETWORK_ARCHITECTURE_FINAL.md`
 5. `NETWORK_ENGINEERING_DESIGN.md`

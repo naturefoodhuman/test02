@@ -19,7 +19,7 @@
 6. `docs/DEV_LOG.md` 顶部 Latest Index + 最新一轮
 7. `docs/CHANGELOG.md` 顶部 Latest Index + 最新一轮
 8. `docs/adr/README.md`（工厂级 ADR）
-9. 如需背景再读：`PROJECT_DOSSIER_V3.md`、`DOCUMENT_AUDIT_REPORT.md`、`docs/UPGRADE_COMPLETION.md`
+9. 如需背景再读：`PROJECT_DOSSIER_V4.md`、`PROJECT_DOSSIER_V3.md`、`DOCUMENT_AUDIT_REPORT.md`、`docs/UPGRADE_COMPLETION.md`
 
 ---
 
@@ -29,7 +29,7 @@ FORGE Factory 是 AI 项目孵化工厂。
 
 - `debt-collection` 是试点 / 压测项目，不是当前主要开发目标。
 - 当前主要开发对象：`_infra/network/` 联网功能增量模块。
-- 当前架构版本：`v1.3.0-dossier + Network Increment`。
+- 当前架构版本：`v1.4.10-dossier + Case Intelligence OS Readiness`。
 
 ---
 
@@ -77,16 +77,21 @@ FORGE Factory 是 AI 项目孵化工厂。
 - 已升级 `scripts/governance_check.py --strict`，并在 Makefile 增加 `make docs-check` / `make governance-check`。
 - 每轮提交前应运行 `make docs-check`，重大变更后运行 `make governance-check` 并提交报告。
 
+### ✅ MTP / Runtime Benchmark 收尾 (2026-06-26)
+- 已完成本地模型运行参数 SSOT：`config/model_runtime.yaml` + ADR-009。
+- 已完成一键 benchmark 和最终分析：默认保留 MTP depth3，KV q8/q4 不进默认，no-MTP 仅作为 fast-interactive 候选。
+- 已新增 `PROJECT_DOSSIER_V4.md`，为 Case Intelligence OS 升级准备。
+
 ## 3. 当前下一步候选
 
-当前大部分 Network MVP 能力已完成。下一步建议在以下方向中选择：
+当前 Network MVP、Claude Code 本地模型接入、文档治理 P2、本地模型运行参数 SSOT 与 MTP benchmark 均已收尾。下一步建议进入：
 
-1. **API Key 配置与真机验收**：申请 Brave/Tavily/Serper API key，配置环境变量，重启 SearXNG，运行诊断 v2 与端到端 CLI search。
-2. **真实服务验证**：在用户 Mac 上验证 Docker / Ollama / MCP / Chrome / Playwright。
-3. **RAG 真机增强**：接入真实 Ollama bge-m3 与 sqlite-vec。
-4. **文档治理 / 接手体验强化**：继续修正文档漂移。
+1. **Case Intelligence OS SPEC Sprint**：先产出架构、工程设计、ADR-010、E13 backlog 与最小 case fixture。
+2. **Evidence / Case 数据模型设计**：定义 case、evidence、entity、timeline、claim、issue、action plan、audit log。
+3. **安全边界设计**：明确医疗/法律/事故分析场景中的隐私、免责声明、人工审批、不可自动执行边界。
+4. **实现前治理检查**：运行 `make docs-check`，确认 `PROJECT_DOSSIER_V4.md` 与 SSOT 文档一致。
 
-继续开发前先检查 `TASK_BACKLOG.md` §10。
+继续开发前先检查 `TASK_BACKLOG.md` §10，并阅读 `PROJECT_DOSSIER_V4.md`。
 
 ---
 

@@ -2986,3 +2986,20 @@ python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 ```bash
 python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 ```
+
+
+## 第 90 轮 · 2026-07-01（Project Dossier V4 与 Case Intelligence OS 升级准备）
+
+**触发**：用户确认当前 MTP 测试已收尾，要求全面更新维护文档，并新增 `PROJECT_DOSSIER_V4.md`，为 FORGE Factory 的 Case Intelligence Operating System 升级做准备。
+
+**完成内容**：
+- 新增 `PROJECT_DOSSIER_V4.md`：当前状态卷宗 + Case Intelligence OS Readiness。
+- 更新 `HANDOFF.md`：下一步候选改为 Case Intelligence OS SPEC Sprint，并要求先读 V4 Dossier。
+- 更新 `README.md`：新增当前升级准备入口。
+- 更新 `docs/PROJECT_STATE.md`：版本提升为 v1.4.10-dossier + Case Intelligence OS Readiness。
+- 更新 `TASK_BACKLOG.md`：新增 E12-C11-S1-T1 状态 DONE。
+- 维护文档与治理输出同步刷新。
+
+**关键结论**：
+- Network Increment、Claude Code 本地模型、文档治理、本地模型运行参数与 MTP benchmark 均已收尾。
+- 下一阶段不应直接编码 Case Intelligence OS，应先做 SPEC Sprint：Case schema、Evidence provenance、Timeline、Entity graph、Safety boundary、ADR-010、E13 backlog。

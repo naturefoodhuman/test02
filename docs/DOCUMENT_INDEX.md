@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-06-26 18:14:34
+创建时间（北京时间）：2026-07-01 09:31:16
 -->
 
 # Document Index（自动生成）
@@ -25,6 +25,7 @@
 | `NETWORK_ARCHITECTURE_FINAL.md` | SSOT | current |
 | `NETWORK_ENGINEERING_DESIGN.md` | SSOT | current |
 | `PROJECT_DOSSIER_V3.md` | root-doc | reference |
+| `PROJECT_DOSSIER_V4.md` | root-doc | reference |
 | `README.md` | SSOT | current |
 | `TASK_BACKLOG.md` | SSOT | current |
 | `_agents/arch-advisor.md` | root-doc | reference |
@@ -65,6 +66,7 @@
 | `_infra/network/README.md` | root-doc | reference |
 | `_infra/network/config_loader/README.md` | root-doc | reference |
 | `diagnostics/local_runtime_benchmark/20260626_164855/report.md` | diagnostic-output | runtime-artifact |
+| `diagnostics/local_runtime_benchmark/20260626_181952/report.md` | diagnostic-output | runtime-artifact |
 | `docker/README.md` | root-doc | reference |
 | `docs/AGENT_HANDOFF_SUMMARY.md` | supporting-doc | reference |
 | `docs/CHANGELOG.md` | SSOT | current |
@@ -77,6 +79,7 @@
 | `docs/GOVERNANCE_CHECK_2026-06-17.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-06-25.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-06-26.md` | governance | current |
+| `docs/GOVERNANCE_CHECK_2026-07-01.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_LATEST.md` | governance | current |
 | `docs/LOCAL_MODEL_RUNTIME_TUNING.md` | supporting-doc | reference |
 | `docs/PROJECT_STATE.md` | SSOT | current |
