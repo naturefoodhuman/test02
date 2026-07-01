@@ -1046,6 +1046,9 @@ FEOS 任务拆解遵循：
 
 ## FEOS-017 — 实现 Detector Signals 与 Escalation Score
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-017
 - **所属 Epic**：E2 Case Lifecycle, Detector & Workflow
 - **所属 Capability**：C2.3 Failure Detector
@@ -1094,10 +1097,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Detector scoring 可被 DetectorService 使用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-018 — 实现 DetectorService 与 Hard Trigger 集成
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-018
 - **所属 Epic**：E2 Case Lifecycle, Detector & Workflow
 - **所属 Capability**：C2.3 Failure Detector
@@ -1145,10 +1157,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Detector 与 CaseService 形成基础联动。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-019 — 实现 Evidence Collector 协议、Registry 与 Request/Result
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-019
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.1 Evidence Framework
@@ -1192,10 +1213,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Evidence 插件框架可扩展。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-020 — 实现 EvidenceService 保存 raw / normalized / index
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-020
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.1 Evidence Framework
@@ -1239,10 +1269,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Evidence 可被 Graph 和 Context 后续消费。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-021 — 实现 Evidence Normalizer、Importance Scoring 与基础 Parser
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-021
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.1 Evidence Framework
@@ -1287,10 +1326,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Evidence 具备 Context Compiler 可用的质量信息。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-022 — 实现 User Input / Previous Attempt / Agent Plan Collectors
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-022
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.2 Basic Collectors
@@ -1334,10 +1382,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - 基础人工/Agent 证据采集可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-023 — 实现 Git / Diff / Code Collectors
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-023
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.2 Basic Collectors
@@ -1383,10 +1440,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Git/Diff/Code 证据采集可用且安全。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-024 — 实现 StackTrace / Log / Runtime / Test Collectors
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-024
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.2 Basic Collectors
@@ -1433,10 +1499,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Debug 类 Case 的关键证据采集可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-025 — 实现 Config / Environment / Dependency / ADR / Architecture Collectors
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-025
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.2 Basic Collectors
@@ -1485,10 +1560,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Context Compiler 可获取项目约束类证据。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-026 — 实现 Case Graph Builder、Serializer 与 Query
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-026
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.3 Case Graph / Retrieval / Hypothesis
@@ -1535,6 +1619,12 @@ FEOS 任务拆解遵循：
 - **Definition of Done**：
   - 满足 G-DoD；
   - Case Graph 基础能力可供 Context Compiler 使用。
+
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
 
 ---
 

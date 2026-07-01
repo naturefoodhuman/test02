@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：FEOS-003~FEOS-016 Foundation 与 Case Lifecycle 基础
+- **最近完成**：FEOS-003~FEOS-026 Detector、Evidence 与 Graph 基础
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3127,6 +3127,26 @@ python3 -m compileall -q _infra/feos
 ```bash
 python3 -m pytest _infra/feos/tests/unit -q
 # 57 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+### 第 94 轮补充 3 · 2026-07-01（FEOS-017~FEOS-026：Detector / Evidence / Graph）
+
+**完成内容**：
+- FEOS-017：新增 DetectorSignals、EscalationScorer、DetectorResult，按架构权重计算可解释 Escalation Score。
+- FEOS-018：新增 DetectorService 与 hard triggers，支持 `continue_local` / `suggest_case` / `auto_create_case`，可联动 CaseService 创建 Case。
+- FEOS-019：新增 EvidenceCollector Protocol、EvidenceCollectionRequest、CollectedEvidence、CollectorRegistry。
+- FEOS-020：新增 EvidenceService，保存 raw evidence、normalized evidence、index，并可写 timeline event。
+- FEOS-021：新增 EvidenceNormalizer、importance weights、stacktrace/log/diff parser。
+- FEOS-022~025：新增 User/PreviousAttempt/AgentPlan、Git/Diff/Code、StackTrace/Log/Runtime/Test、Config/Environment/Dependency/ADR/Architecture collectors。
+- FEOS-026：新增 CaseGraphBuilder、CaseGraphService、serializer/query helpers。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit -q
+# 76 passed
 python3 -m compileall -q _infra/feos
 # pass
 ```

@@ -34,9 +34,10 @@ class ArtifactRepository:
 
     def path(self, case_id: str, artifact_id: str, extension: str | None = None) -> Path:
         ext = extension if extension is not None else self.extension
-        if "/" in artifact_id or ".." in artifact_id:
+        rel = Path(artifact_id)
+        if rel.is_absolute() or ".." in rel.parts or any(part.startswith(".") for part in rel.parts):
             raise ValueError(f"invalid artifact id: {artifact_id}")
-        return self.dir(case_id) / f"{artifact_id}{ext}"
+        return self.dir(case_id) / rel.with_suffix(ext)
 
     def put_yaml(self, case_id: str, artifact_id: str, data: Any) -> Path:
         path = self.path(case_id, artifact_id, ".yaml")
