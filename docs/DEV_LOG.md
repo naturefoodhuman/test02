@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：FEOS-001 模块骨架与默认配置
+- **最近完成**：FEOS-002 配置加载与 Bootstrap 基础
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3038,6 +3038,30 @@ python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 ```bash
 python3 -m pytest _infra/feos/tests/unit/test_package_import.py -q
 # 5 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+## 第 93 轮 · 2026-07-01（FEOS-002：配置加载、环境变量覆盖与 Bootstrap 基础）
+
+**目标**：按 `FEOS_TASK_BACKLOG.md` 执行 FEOS-002，实现 FEOS 配置加载器，支持 defaults → `config/feos.yaml` → `.env/_infra.env` → environment variables → CLI overrides，并提供 Bootstrap 基础。
+
+**完成内容**：
+- 新增 `_infra/feos/config_loader.py`。
+- 新增 `FEOSConfig` / `FEOSRootConfig` / gateway、policy、context、evidence、detector、observability 等配置模型。
+- 新增 `load_config()`，支持默认配置、项目配置、环境变量和 CLI override 深度合并。
+- 新增 `bootstrap_feos()`，返回 `FEOSBootstrapContext(project_root, config, feos_home)`，可选创建 home 目录。
+- 新增 `_infra/feos/bootstrap.py` 作为后续 service wiring 入口。
+- 更新 `_infra/feos/__init__.py`，导出 `load_config` 与 `bootstrap_feos`。
+- 新增 `_infra/feos/tests/unit/test_config_loader.py`。
+- 更新 FEOS-001 测试中的包版本。
+- 更新 `FEOS_TASK_BACKLOG.md`，将 FEOS-002 标记为 DONE。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit/test_package_import.py _infra/feos/tests/unit/test_config_loader.py -q
+# 12 passed
 python3 -m compileall -q _infra/feos
 # pass
 ```

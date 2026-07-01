@@ -10,6 +10,9 @@ logic starts in later backlog tasks.
 
 from __future__ import annotations
 
-__all__ = ["__version__"]
+__all__ = ["__version__", "load_config", "bootstrap_feos"]
 
-__version__ = "0.1.0-feos-foundation"
+__version__ = "0.2.0-feos-config"
+
+from .config_loader import load_config
+from .bootstrap import bootstrap_feos

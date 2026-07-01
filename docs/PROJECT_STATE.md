@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-07-01 00:00 CST
-**当前版本**：v1.4.11-feos-foundation-started
+**当前版本**：v1.4.12-feos-config-bootstrap
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -83,7 +83,8 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 ### FEOS Implementation
 - FEOS 已进入实现阶段。
 - FEOS-001 已完成：`_infra/feos` 包结构、默认 `feos.yaml`、默认 policies、renderer profiles、`config/feos.yaml`、`.forge/feos` gitignore 规则和基础单元测试。
-- 当前 FEOS 仍未实现业务逻辑；后续应继续执行 FEOS-002。
+- FEOS-002 已完成：`_infra/feos/config_loader.py`、`_infra/feos/bootstrap.py`、`FEOSConfig`、`load_config()`、`bootstrap_feos()` 与配置加载单元测试。
+- 当前 FEOS 仍未实现业务逻辑；后续应继续执行 FEOS-003。
 
 ---
 

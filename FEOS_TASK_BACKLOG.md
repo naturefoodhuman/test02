@@ -203,6 +203,9 @@ FEOS 任务拆解遵循：
 
 ## FEOS-002 — 实现配置加载、环境变量覆盖与 Bootstrap 基础
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-002
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.1 模块骨架与配置加载
@@ -247,8 +250,10 @@ FEOS 任务拆解遵循：
   - 非法 YAML 抛出配置错误；
   - 不访问任何外部服务。
 - **Definition of Done**：
-  - 满足 G-DoD；
-  - 配置加载与覆盖逻辑有单元测试覆盖。
+  - [x] 满足 G-DoD；
+  - [x] 配置加载与覆盖逻辑有单元测试覆盖；
+  - [x] 单元测试通过：`_infra/feos/tests/unit/test_config_loader.py`；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`。
 
 ---
 
