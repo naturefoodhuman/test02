@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-01 17:23:00
+创建时间（北京时间）：2026-07-01 17:48:47
 -->
 
 # Document Index（自动生成）
@@ -21,6 +21,9 @@
 |---|---|---|
 | `DOCUMENT_AUDIT_REPORT.md` | governance | current |
 | `DOCUMENT_CHANGE_REPORT.md` | governance | current |
+| `FEOS_ARCHITECTURE_FINAL.md` | root-doc | reference |
+| `FEOS_ENGINEERING_DESIGN.md` | root-doc | reference |
+| `FEOS_TASK_BACKLOG.md` | root-doc | reference |
 | `HANDOFF.md` | SSOT | current |
 | `NETWORK_ARCHITECTURE_FINAL.md` | SSOT | current |
 | `NETWORK_ENGINEERING_DESIGN.md` | SSOT | current |

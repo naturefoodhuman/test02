@@ -1,0 +1,50 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-01 00:00:00
+
+profile: "default_strict"
+
+security:
+  secret_detection: true
+  pii_detection: true
+  internal_url_redaction: true
+  credential_redaction: true
+  proprietary_code_policy: "allow_minimal_relevant_snippets"
+
+export:
+  export_allowed: true
+  attachment_allowed: true
+  max_file_size: 262144
+  allowed_evidence_types:
+    - stack_trace
+    - failing_test
+    - git_diff
+    - tool_call_trace
+    - mcp_call_trace
+    - config
+    - dependency_lock
+    - runtime_env
+    - architecture_doc
+    - agent_prompt
+    - previous_attempt
+
+model:
+  allowed_providers:
+    - chatgpt_web
+    - claude_web
+    - generic_external_ai
+  preferred_provider: "chatgpt_web"
+
+budget:
+  max_tokens: 24000
+  max_rounds: 3
+  max_external_sessions: 3
+
+approval:
+  require_user_review: true
+  require_security_review: false
+  require_architect_review: false
+
+audit:
+  record_export_content_hash: true
+  keep_redacted_copy: true
+  keep_original_local_only: true

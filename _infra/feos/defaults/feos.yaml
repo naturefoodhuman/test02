@@ -1,0 +1,111 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-01 00:00:00
+
+feos:
+  enabled: true
+  home: ".forge/feos"
+
+  defaults:
+    gateway: "clipboard"
+    provider: "chatgpt_web"
+    policy_profile: "default_strict"
+    renderer_profile: "generic_markdown"
+    token_budget: 24000
+
+  detector:
+    auto_create_case_if_score_above: 0.70
+    suggest_case_if_score_above: 0.50
+    continue_local_if_score_below: 0.50
+    hard_triggers:
+      - same_error_repeated_2_times
+      - tool_call_loop_detected
+      - local_agent_declares_no_new_strategy
+      - context_window_exceeded
+      - security_sensitive_failure
+      - architecture_decision_deadlock
+
+  evidence:
+    enabled_collectors:
+      - git
+      - diff
+      - stack_trace
+      - log
+      - runtime
+      - test
+      - dependency
+      - config
+      - environment
+      - tool_call
+      - mcp
+      - agent_plan
+      - architecture
+      - adr
+      - user_input
+      - previous_attempt
+    required_collectors:
+      - user_input
+    max_raw_evidence_bytes: 1048576
+    max_diff_bytes: 262144
+    allow_config_files:
+      - "config/*.yaml"
+      - "pyproject.toml"
+      - "package.json"
+      - "requirements*.txt"
+      - "Makefile"
+    deny_files:
+      - ".env"
+      - "_infra/.env"
+      - "*.pem"
+      - "*.key"
+      - "id_rsa"
+      - "cookies*"
+
+  context:
+    token_estimator: "heuristic"
+    default_budget: 24000
+    min_evidence_coverage_rate: 0.70
+    compression_order:
+      - duplicate_logs
+      - old_logs
+      - low_importance_evidence
+      - background
+      - long_code_snippets
+
+  policy:
+    privacy_policy_file: "config/privacy_policy.yaml"
+    canary_tokens_file: "config/canary_tokens.yaml"
+    default_requires_human_review: true
+    external_execution_allowed: false
+    keep_original_local_only: true
+    keep_redacted_copy: true
+
+  gateways:
+    clipboard:
+      enabled: true
+      copy_command: "pbcopy"
+      paste_command: "pbpaste"
+      audit_level: "full"
+    api:
+      enabled: false
+    mcp:
+      enabled: false
+    browser:
+      enabled: false
+    cloud_agent:
+      enabled: false
+
+  retrieval:
+    enabled: true
+    prefer_existing_local_rag: true
+    fallback: "lexical"
+    max_results: 5
+
+  knowledge:
+    write_candidates: true
+    write_to_knowledge_os: true
+    fallback_local_files: true
+
+  observability:
+    log_level: "INFO"
+    metrics_enabled: true
+    audit_enabled: true

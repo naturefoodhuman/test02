@@ -1,3 +1,8 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-07-01 00:00:00
+-->
+
 # FEOS_TASK_BACKLOG.md
 
 > 文件定位：FORGE Escalation OS（FEOS）开发任务 Backlog  
@@ -138,6 +143,9 @@ FEOS 任务拆解遵循：
 
 ## FEOS-001 — 创建 FEOS 模块骨架与默认配置
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-001
 - **所属 Epic**：E1 Foundation & Persistence
 - **所属 Capability**：C1.1 模块骨架与配置加载
@@ -185,9 +193,11 @@ FEOS 任务拆解遵循：
   - `.gitignore` 包含 FEOS runtime data；
   - 默认配置中 `clipboard.enabled=true`，其它 future gateways disabled。
 - **Definition of Done**：
-  - 满足 G-DoD；
-  - FEOS 包结构创建完成；
-  - 默认配置和 renderer profile 文件可解析。
+  - [x] 满足 G-DoD；
+  - [x] FEOS 包结构创建完成；
+  - [x] 默认配置和 renderer profile 文件可解析；
+  - [x] 单元测试通过：`_infra/feos/tests/unit/test_package_import.py`；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`。
 
 ---
 

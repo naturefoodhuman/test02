@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：Claude Code for VS Code 本地模型 alias 兼容修复
+- **最近完成**：FEOS-001 模块骨架与默认配置
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3018,3 +3018,26 @@ python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 - LLM 生成/修改文件仍必须写 header。
 - 人类手工文件允许无 LLM header。
 - 自动化只提醒，不阻断。
+
+
+## 第 92 轮 · 2026-07-01（FEOS-001：模块骨架与默认配置）
+
+**目标**：按 `FEOS_TASK_BACKLOG.md` 执行 FEOS-001，创建 FEOS 基础包结构、默认配置、默认 policy/profile 文件和 `.forge/feos` gitignore 规则。
+
+**完成内容**：
+- 新增 `_infra/feos/__init__.py`，FEOS 包可导入，版本为 `0.1.0-feos-foundation`。
+- 新增 `_infra/feos/defaults/feos.yaml`。
+- 新增默认 policies：`default.yaml`、`redaction.yaml`、`gateway.yaml`。
+- 新增 renderer profiles：`gpt_markdown_debug.yaml`、`claude_markdown_architecture.yaml`、`generic_markdown.yaml`、`api_json.yaml`、`mcp_message.yaml`。
+- 新增 `config/feos.yaml` 作为项目级 FEOS 配置 overlay。
+- 修改 `.gitignore`，忽略 `.forge/feos/cases/`、`metrics/`、`cache/`、`knowledge_index/`、`policies/`、`renderer_profiles/`。
+- 新增 `_infra/feos/tests/unit/test_package_import.py`。
+- 更新 `FEOS_TASK_BACKLOG.md`，将 FEOS-001 标记为 DONE。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit/test_package_import.py -q
+# 5 passed
+python3 -m compileall -q _infra/feos
+# pass
+```

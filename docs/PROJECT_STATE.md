@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-07-01 00:00 CST
-**当前版本**：v1.4.10-dossier-current-assets
+**当前版本**：v1.4.11-feos-foundation-started
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -79,6 +79,11 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 新增 `PROJECT_DOSSIER_V4.md`，作为当前项目资产卷宗。
 - V4 目标：完整记录当前资产、边界、运行方式、配置 SSOT、诊断命令和可扩展点，以便后续 AI 结合用户批准的架构方案生成工程设计文档。
 - MTP 测试已收尾：默认主模型保留 MTP depth3；KV q8/q4 不进默认；no-MTP 作为 fast-interactive 候选。
+
+### FEOS Implementation
+- FEOS 已进入实现阶段。
+- FEOS-001 已完成：`_infra/feos` 包结构、默认 `feos.yaml`、默认 policies、renderer profiles、`config/feos.yaml`、`.forge/feos` gitignore 规则和基础单元测试。
+- 当前 FEOS 仍未实现业务逻辑；后续应继续执行 FEOS-002。
 
 ---
 

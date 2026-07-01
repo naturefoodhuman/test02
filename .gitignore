@@ -73,3 +73,10 @@ _obsolete/
 
 # Local pinned MCP server checkouts
 mcp-servers/
+# FEOS local runtime data (Clipboard-first escalation cases, metrics, cache)
+.forge/feos/cases/
+.forge/feos/metrics/
+.forge/feos/cache/
+.forge/feos/knowledge_index/
+.forge/feos/policies/
+.forge/feos/renderer_profiles/

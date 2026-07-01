@@ -1,0 +1,32 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-01 00:00:00
+
+# FEOS global configuration overlay.
+# Defaults live in _infra/feos/defaults/feos.yaml.
+# Keep this file minimal and project-local.
+
+feos:
+  enabled: true
+  home: ".forge/feos"
+
+  defaults:
+    gateway: "clipboard"
+    provider: "chatgpt_web"
+    policy_profile: "default_strict"
+    renderer_profile: "generic_markdown"
+    token_budget: 24000
+
+  gateways:
+    clipboard:
+      enabled: true
+      copy_command: "pbcopy"
+      paste_command: "pbpaste"
+      audit_level: "full"
+    api:
+      enabled: false
+    mcp:
+      enabled: false
+    browser:
+      enabled: false
+    cloud_agent:
+      enabled: false
