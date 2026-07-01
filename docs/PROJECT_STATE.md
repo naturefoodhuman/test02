@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-07-01 00:00 CST
-**当前版本**：v1.4.20-feos-mvp-foundation
+**当前版本**：v1.4.21-feos-mvp-docs-finalized
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -54,6 +54,7 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 
 
 ### Training / Onboarding Documentation
+- `docs/工厂使用手册.md` 与 `docs/全功能最小示例项目.md` 已更新为 FEOS MVP 基础闭环版；当前全功能最小示例为 `mini-feos-debug-lab`。
 - `docs/工厂使用手册.md` 已升级为 Claude Code for VS Code 日常主工作流版：强调自然语言对话驱动，终端 CLI 作为验证/自动化辅助。
 - `docs/全功能最小示例项目.md` 已重新设计为 `mini-gratitude-control-tower`，覆盖普通功能与高风险能力安全演示。
 - `docs/工厂能力覆盖检查.md` 已重建矩阵，当前覆盖率 76/76 = 100%。
@@ -85,6 +86,7 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - FEOS-001 已完成：`_infra/feos` 包结构、默认 `feos.yaml`、默认 policies、renderer profiles、`config/feos.yaml`、`.forge/feos` gitignore 规则和基础单元测试。
 - FEOS-002 已完成：`_infra/feos/config_loader.py`、`_infra/feos/bootstrap.py`、`FEOSConfig`、`load_config()`、`bootstrap_feos()` 与配置加载单元测试。
 - FEOS-001~FEOS-056 已完成：FEOS MVP 基础闭环已具备，包括 Foundation、配置、领域模型、存储、Repository、Case Lifecycle、CLI、Detector、Evidence、Graph、Retrieval、Hypothesis、Policy、Context、Package、Renderer、Gateway、Clipboard Export、Response、Verification、Execution、Knowledge、Observability、Diagnostics、E2E/Governance/Test 基础。
+- FEOS MVP 收尾修复已完成：基础 Clipboard export workflow 默认只采集 user_input，避免自动采集 canary/security config 导致 policy block。
 - 当前 FEOS 已具备 Clipboard-first MVP 基础能力；后续应以真实场景 fixture 做强化测试与细化实现。
 
 ---

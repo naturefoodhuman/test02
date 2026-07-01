@@ -11,9 +11,39 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：FEOS-001 模块骨架与默认配置
+- **最新完成模块**：FEOS MVP 基础闭环与培训文档重写
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 95 轮] 2026-07-01
+
+### 需求变动
+- **FEOS 开发收尾**：对 FEOS 当前实现进行分析、检查、完善，修复基础 Clipboard export workflow 的默认采集范围，确保 MVP smoke 可运行。
+- **工厂使用手册重写**：以最新项目状态重写为 FEOS MVP 基础闭环版。
+- **全功能最小示例项目重设计**：改为 `mini-feos-debug-lab`，覆盖 FORGE + Network + FEOS 全流程。
+- **能力覆盖矩阵更新**：同步 FEOS MVP 能力覆盖。
+
+### 文件影响
+- 修改：`_infra/feos/workflows/clipboard_escalation_workflow.py`
+- 修改：`docs/工厂使用手册.md`
+- 修改：`docs/全功能最小示例项目.md`
+- 修改：`docs/工厂能力覆盖检查.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 自动更新：`docs/DOCUMENT_INDEX.md`、`docs/AGENT_HANDOFF_SUMMARY.md`、`docs/GOVERNANCE_CHECK_2026-07-01.md`、`docs/GOVERNANCE_CHECK_LATEST.md`
+
+### 验证
+```bash
+make feos-test
+# 110 passed
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+make docs-check
+# Blockers: 0
+```
 
 ---
 

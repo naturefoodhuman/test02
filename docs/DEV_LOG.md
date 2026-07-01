@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：FEOS-003~FEOS-047 Response、Verification、Execution 与 Knowledge 闭环基础
+- **最近完成**：FEOS MVP 收尾、工厂使用手册与全功能最小示例重写
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3249,4 +3249,27 @@ make docs-check
 ```bash
 python3 -m pytest _infra/feos/tests/integration/test_clipboard_escalation_workflow.py _infra/feos/tests/unit/test_clipboard_export.py -q
 # 3 passed
+```
+
+
+## 第 95 轮 · 2026-07-01（FEOS MVP 收尾与培训文档重写）
+
+**目标**：分析、检查、完善 FEOS 所有内容，对 FEOS 开发完成收尾；以最新项目状态更新 `docs/工厂使用手册.md`，重新设计 `docs/全功能最小示例项目.md`，并更新相关文档。
+
+**完成内容**：
+- 运行 FEOS smoke / E2E 检查，发现基础 export workflow 默认全量采集 config/canary 导致 policy block。
+- 修复 `ClipboardEscalationWorkflow.collect()` 默认只采集 `user_input`，保证基础 export smoke 安全最小；全量 collectors 保留给显式 evidence workflow。
+- 重写 `docs/工厂使用手册.md` 为 FEOS MVP 基础闭环版，覆盖 Claude Code、本地模型、Network、FEOS、治理和常见问题。
+- 重写 `docs/全功能最小示例项目.md` 为 `mini-feos-debug-lab`，自包含启动命令和 FEOS create/export/import/verify/plan/outcome/distill 全流程。
+- 重写 `docs/工厂能力覆盖检查.md`，覆盖 Core FORGE + Claude Code + Network + FEOS MVP。
+- 更新 FEOS 状态到 `docs/PROJECT_STATE.md` 与维护日志。
+
+**验证**：
+```bash
+make feos-test
+# 110 passed
+python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
+# 358 passed, 3 skipped, 44 warnings
+make docs-check
+# Blockers: 0
 ```
