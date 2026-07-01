@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：FEOS-003~FEOS-036 Context、Package、Renderer 与 Clipboard Export 基础
+- **最近完成**：FEOS-003~FEOS-047 Response、Verification、Execution 与 Knowledge 闭环基础
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3184,6 +3184,30 @@ python3 -m compileall -q _infra/feos
 ```bash
 python3 -m pytest _infra/feos/tests/unit _infra/feos/tests/security _infra/feos/tests/golden -q
 # 96 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+### 第 94 轮补充 6 · 2026-07-01（FEOS-037~FEOS-047：Response / Verification / Execution / Knowledge）
+
+**完成内容**：
+- FEOS-037：ClipboardGateway dispatch/receive、ClipboardAdapter/FakeClipboardAdapter、ExternalSession human_actions。
+- FEOS-038：Raw ExternalResponse import、raw response 保存、hash 计算。
+- FEOS-039：response format detection、Markdown sections、YAML fenced block parser。
+- FEOS-040：claim/recommendation/risk/assumption/action/patch extractor 与 ParsedResponse 保存。
+- FEOS-041：VerificationCheck Protocol、VerificationPipeline、VerificationService 与 VerificationRepository 写入。
+- FEOS-042：EvidenceAlignment、Constraint、Architecture、Security core checks。
+- FEOS-043：Compatibility、Dependency、Testability、KnowledgeConflict、Sandbox disabled extended checks。
+- FEOS-044：ExecutionPlanner 与 ExecutionService，failed verification 不生成 plan。
+- FEOS-045：approval、step tracking、OutcomeEvaluator。
+- FEOS-046：KnowledgeCandidateExtractor 与 lifecycle 基础。
+- FEOS-047：KnowledgeOSAdapter 与 local KnowledgeWriter fallback。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit _infra/feos/tests/security _infra/feos/tests/golden -q
+# 107 passed
 python3 -m compileall -q _infra/feos
 # pass
 ```
