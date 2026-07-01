@@ -412,8 +412,8 @@ python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 ## [第 90 轮] 2026-07-01
 
 ### 需求变动
-- **Project Dossier V4**：用户要求在 MTP 测试收尾后，全面更新维护文档，并新增 `PROJECT_DOSSIER_V4.md`，为 Case Intelligence Operating System 升级做准备。
-- **Case Intelligence OS Readiness**：明确下一阶段应先做 SPEC Sprint、ADR-010、E13 backlog、Case/Evidence/Timeline/Entity/Action/Audit 数据模型与安全边界设计。
+- **Project Dossier V4**：用户要求在 MTP 测试收尾后，全面更新维护文档，并新增 `PROJECT_DOSSIER_V4.md`，作为当前项目资产卷宗。
+- **范围修正**：V4 只记录当前资产、边界、运行方式和可扩展点，不写入任何未获批准的新业务系统设计。
 
 ### 文件影响
 - 新增：`PROJECT_DOSSIER_V4.md`

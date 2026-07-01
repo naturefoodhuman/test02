@@ -7,7 +7,7 @@
 
 > **文档版本**: v1.0.2 (源码状态收敛版)
 > **生成日期**: 2026-06-21
-> **最近同步**: 2026-07-01（Project Dossier V4 与 Case Intelligence OS 升级准备完成）
+> **最近同步**: 2026-07-01（Project Dossier V4 当前资产卷宗更新完成）
 > **调整说明**: 联网功能（Network Feature）是 **现有 FORGE Factory 项目上的增量模块**（_infra/network 子模块），而非独立新项目或整个项目的 MVP。所有目录/配置/CLI 均复用现有 FORGE 架构（_infra/、config/、_factory/patterns/、forge CLI）。
 > **状态 SSOT**: §10 `Task 完成度跟踪表` 是任务状态唯一追踪表；单个 Task 详细 DoD 仅作为验收清单，状态变更必须同步 §10。
 > **基准文档**: NETWORK_ENGINEERING_DESIGN.md (主要)、NETWORK_ARCHITECTURE_FINAL.md、PROJECT_DOSSIER_V3.md
@@ -3457,10 +3457,10 @@ graph TD
   - [x] 输出 `report.json` / `report.md`
 
 
-##### **Task E12-C11-S1-T1: Project Dossier V4 与 Case Intelligence OS 升级准备**
+##### **Task E12-C11-S1-T1: Project Dossier V4 当前资产卷宗更新**
 
 - **状态**: DONE
-- **目标**: 在 MTP 测试收尾后，全面更新维护文档，新增 `PROJECT_DOSSIER_V4.md`，为 Case Intelligence Operating System 升级准备。
+- **目标**: 在 MTP 测试收尾后，全面更新维护文档，新增 `PROJECT_DOSSIER_V4.md` 作为当前项目资产卷宗。
 - **涉及文件**:
   - 新增：`PROJECT_DOSSIER_V4.md`
   - 修改：`HANDOFF.md`
@@ -3473,7 +3473,7 @@ graph TD
 - **DoD**:
   - [x] V4 Dossier 完成
   - [x] 当前维护文档同步完成
-  - [x] 下一阶段 Case Intelligence OS SPEC Sprint 建议明确
+  - [x] V4 不写入未获批准的新业务系统设计
   - [x] governance check 通过
 
 ---

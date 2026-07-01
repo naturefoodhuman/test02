@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-07-01 00:00 CST
-**当前版本**：v1.4.10-dossier + Case Intelligence OS Readiness
+**当前版本**：v1.4.10-dossier-current-assets
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -75,9 +75,9 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 新增 `scripts/model_status.sh` 与 `scripts/stop_local_models.sh`，用于判断本地模型是否正常工作、释放 GPU 显存、重启本地模型网关。
 - 培训文档已修正 Claude Code for VS Code 操作方式：命令面板命令不在终端执行，首句优先用 `@HANDOFF.md` 等上下文附加，避免本地模型长工具链卡顿。
 
-### Project Dossier V4 / Case Intelligence OS Readiness
-- 新增 `PROJECT_DOSSIER_V4.md`，作为当前仓库状态卷宗与 Case Intelligence Operating System 升级准备文档。
-- 当前建议下一阶段先进行 Case Intelligence OS SPEC Sprint，产出架构、工程设计、ADR-010、E13 backlog 与最小 case fixture，不建议直接编码。
+### Project Dossier V4 / Current Assets
+- 新增 `PROJECT_DOSSIER_V4.md`，作为当前项目资产卷宗。
+- V4 目标：完整记录当前资产、边界、运行方式、配置 SSOT、诊断命令和可扩展点，以便后续 AI 结合用户批准的架构方案生成工程设计文档。
 - MTP 测试已收尾：默认主模型保留 MTP depth3；KV q8/q4 不进默认；no-MTP 作为 fast-interactive 候选。
 
 ---

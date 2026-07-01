@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-01 09:31:16
+创建时间（北京时间）：2026-07-01 09:47:20
 -->
 
 # Agent Handoff Summary（自动生成）
@@ -21,16 +21,16 @@
 ## 2. 当前状态摘要
 
 - 更新日期**：2026-07-01 00:00 CST
-- 当前版本**：v1.4.10-dossier + Case Intelligence OS Readiness
+- 当前版本**：v1.4.10-dossier-current-assets
 - 状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ## 3. 最新提交
 
+- `70b7faa docs(dossier): add V4 case intelligence readiness`
 - `eb32e84 0626测试`
 - `57a851b fix(runtime): finalize benchmark matrix and aggregation`
 - `a1a31d4 mtp测试文件20260626_164855`
 - `7bebcc0 fix(runtime): make benchmark use proxy-only startup`
-- `2897359 feat(runtime): add one-click local benchmark`
 
 ## 4. 治理健康
 
