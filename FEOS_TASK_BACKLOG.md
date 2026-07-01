@@ -1867,6 +1867,9 @@ FEOS 任务拆解遵循：
 
 ## FEOS-031 — 实现 Context Section Builder 与 Selector
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-031
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.2 Context Compiler
@@ -1914,10 +1917,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Context selection 基础可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-032 — 实现 Context Compression、Token Budget 与 Packer
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-032
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.2 Context Compiler
@@ -1963,10 +1975,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Context Compiler 具备可用输出。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-033 — 实现 Escalation Package Builder
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-033
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.3 Package & Renderer
@@ -2012,10 +2033,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Escalation Package 可供 Renderer / Gateway 使用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-034 — 实现 Renderer Registry 与 Markdown Renderer Profiles
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-034
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.3 Package & Renderer
@@ -2065,10 +2095,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Clipboard artifact 渲染基础可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-035 — 实现 Gateway Protocol、Registry、Router 与 Future Gateway Stubs
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-035
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.4 Gateway Layer
@@ -2119,10 +2158,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Gateway Layer 抽象具备扩展基础。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-036 — 实现 Clipboard Export Artifact 生成
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-036
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.4 Gateway Layer
@@ -2171,6 +2219,12 @@ FEOS 任务拆解遵循：
 - **Definition of Done**：
   - 满足 G-DoD；
   - Clipboard 主流程的 artifact export 可用。
+
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
 
 ---
 

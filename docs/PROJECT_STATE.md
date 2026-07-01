@@ -6,7 +6,7 @@
 # PROJECT_STATE —— 当前状态 SSOT
 
 **更新日期**：2026-07-01 00:00 CST
-**当前版本**：v1.4.17-feos-policy-retrieval-foundation
+**当前版本**：v1.4.18-feos-clipboard-export-foundation
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
@@ -84,8 +84,8 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - FEOS 已进入实现阶段。
 - FEOS-001 已完成：`_infra/feos` 包结构、默认 `feos.yaml`、默认 policies、renderer profiles、`config/feos.yaml`、`.forge/feos` gitignore 规则和基础单元测试。
 - FEOS-002 已完成：`_infra/feos/config_loader.py`、`_infra/feos/bootstrap.py`、`FEOSConfig`、`load_config()`、`bootstrap_feos()` 与配置加载单元测试。
-- FEOS-003~FEOS-030 已完成：核心领域模型、存储基础、Repository、Case 状态机、CaseService、基础 CLI、Facade、Workflow Guard、Detector、Evidence framework/collectors、Case Graph、Similarity Retrieval、Hypothesis Manager、PrivacyAdapter 与 PolicyEngine。
-- 当前 FEOS 已具备本地创建/查看 Case、Detector 决策、Evidence 采集保存、基础 Case Graph、相似案例 lexical 检索、假设管理与外发前 policy/redaction 基础；后续应继续执行 FEOS-031 Context selection。
+- FEOS-003~FEOS-036 已完成：核心领域模型、存储基础、Repository、Case 状态机、CaseService、基础 CLI、Facade、Workflow Guard、Detector、Evidence framework/collectors、Case Graph、Similarity Retrieval、Hypothesis Manager、PrivacyAdapter、PolicyEngine、Context Compiler、Package Builder、Renderer Registry、Gateway Router 与 Clipboard Export Artifact。
+- 当前 FEOS 已具备本地创建/查看 Case、Detector 决策、Evidence 采集保存、Case Graph、Context Package、Escalation Package、Markdown render 与 Clipboard export artifact 基础；后续应继续执行 FEOS-037 Clipboard Copy/Receive。
 
 ---
 

@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：FEOS-003~FEOS-030 Retrieval、Hypothesis、Privacy 与 Policy 基础
+- **最近完成**：FEOS-003~FEOS-036 Context、Package、Renderer 与 Clipboard Export 基础
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3165,6 +3165,25 @@ python3 -m compileall -q _infra/feos
 ```bash
 python3 -m pytest _infra/feos/tests/unit _infra/feos/tests/security -q
 # 86 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+### 第 94 轮补充 5 · 2026-07-01（FEOS-031~FEOS-036：Context / Package / Renderer / Clipboard Export）
+
+**完成内容**：
+- FEOS-031：新增 Context SectionBuilder 与 ContextSelector，按重要性选择 evidence，并构建 Case/Evidence/Hypotheses/Constraints sections。
+- FEOS-032：新增 ContextCompressor、ContextPacker、token budget heuristic，生成 `ContextPackage` 并记录 omitted/warnings。
+- FEOS-033：新增 EscalationPackageBuilder/Service、manifest、attachment filter、output contract。
+- FEOS-034：新增 Renderer protocol、RendererRegistry、Markdown/JSON/MCP renderers 和 golden renderer 测试。
+- FEOS-035：新增 Gateway protocol、GatewayRegistry、GatewayRouter，以及 API/MCP/Browser/Cloud disabled stubs。
+- FEOS-036：新增 ClipboardGateway.prepare，生成 `exports/clipboard.md`、`package.json`、`manifest.json`、`redaction_report.json`、`evidence_index.md`、`audit.json`。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit _infra/feos/tests/security _infra/feos/tests/golden -q
+# 96 passed
 python3 -m compileall -q _infra/feos
 # pass
 ```
