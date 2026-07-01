@@ -433,6 +433,26 @@ python3 -m compileall -q scripts/governance_check.py
 
 ---
 
+## [第 91 轮] 2026-07-01
+
+### 需求变动
+- **R5 Header 治理规则修正**：用户明确手写文档不应因缺少 LLM header 被阻断；LLM header 仅针对 LLM 生成/修改文件。
+
+### 文件影响
+- 修改：`scripts/governance_check.py`
+- 修改：`HANDOFF.md`
+- 修改：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+- 修改：`TASK_BACKLOG.md`
+
+### 验证
+```bash
+make docs-check
+```
+
+---
+
 ## [第 60 轮] 2026-06-24
 
 ### 需求变动

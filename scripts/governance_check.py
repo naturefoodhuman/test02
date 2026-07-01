@@ -443,7 +443,10 @@ def classify_blockers(changed_files: list[str]) -> dict[str, Any]:
     if zip_count > 0:
         blockers.append(f"Active ZIP/_patches refs in core docs: {zip_count}")
     if changed_r5_missing:
-        blockers.append(f"Changed files missing R5 LLM header: {changed_r5_missing}")
+        warnings.append(
+            "Changed files without LLM header (allowed for human-authored files; "
+            f"LLM-generated/LLM-edited files must add header): {changed_r5_missing}"
+        )
     if changelog_offenders:
         blockers.append(f"Code/config changed but docs/CHANGELOG.md not updated: {changelog_offenders[:10]}")
     if backlog_without_devlog:
@@ -507,7 +510,7 @@ def generate_report(changed_files: list[str]) -> str:
     if changed_files:
         for rel in changed_files[:50]:
             lines.append(f"  - `{rel}`")
-    lines.append(f"- Changed files missing R5 header: **{len(quality['changed_r5_missing'])}**")
+    lines.append(f"- Changed files without LLM header: **{len(quality['changed_r5_missing'])}** (warning only; human-authored files are allowed)")
     lines.append(f"- Code/config changes requiring CHANGELOG: **{len(quality['changelog_offenders'])}**")
     lines.append("")
     lines.append("## 3. ADR Coverage")

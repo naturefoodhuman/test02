@@ -105,7 +105,11 @@ FORGE Factory 是 AI 项目孵化工厂。
 
 ## 6. LLM 文件头留痕规则
 
-每次新建或修改文件，都必须更新文件头。
+本规则只针对 **LLM 生成或 LLM 修改的文件**，用于事故追溯和责任边界识别。
+
+- LLM 新建或修改文件：必须更新文件头。
+- 人类手写 / 手工维护的文件：不强制要求 LLM header，不得因缺少 LLM header 阻止用户提交或 Push。
+- 治理脚本可以对缺少 LLM header 的 changed files 给出 warning，但不得作为 blocker；是否补 header 由“该文件是否由 LLM 生成/修改”决定。
 
 Python / YAML / shell 示例：
 
@@ -125,8 +129,7 @@ Markdown 示例：
 
 JSON 文件不能写注释，使用 `_forge_trace` 字段。
 
-**模型名称**：必须写当前实际使用的模型比如 `Gpt 5.5 pro` 。
-
+**模型名称**：必须写当前实际使用的模型比如 `Gpt 5.5 pro`。
 
 ---
 

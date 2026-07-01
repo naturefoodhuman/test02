@@ -3264,6 +3264,7 @@ graph TD
 | M10 | E12-C9 | E12-C9-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
 | M10 | E12-C10 | E12-C10-S1-T1 | DONE | 2026-06-26 | Arena.ai Agent Mode |
 | M10 | E12-C11 | E12-C11-S1-T1 | DONE | 2026-07-01 | Arena.ai Agent Mode |
+| M10 | E12-C12 | E12-C12-S1-T1 | DONE | 2026-07-01 | Arena.ai Agent Mode |
 
 ---
 
@@ -3475,6 +3476,24 @@ graph TD
   - [x] 当前维护文档同步完成
   - [x] V4 不写入未获批准的新业务系统设计
   - [x] governance check 通过
+
+
+##### **Task E12-C12-S1-T1: R5 Header 治理规则修正**
+
+- **状态**: DONE
+- **目标**: 修正治理自动化：LLM header 只要求 LLM 生成/修改文件；人类手写文件缺少 LLM header 不得阻断提交或 Push。
+- **涉及文件**:
+  - 修改：`scripts/governance_check.py`
+  - 修改：`HANDOFF.md`
+  - 修改：`docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`
+  - 修改：`docs/DEV_LOG.md`
+  - 修改：`docs/CHANGELOG.md`
+  - 修改：`TASK_BACKLOG.md`
+- **DoD**:
+  - [x] changed-files R5 缺失从 blocker 改为 warning
+  - [x] HANDOFF 规则明确区分 LLM 文件与人类手写文件
+  - [x] 文档治理策略同步
+  - [x] docs-check 通过
 
 ---
 

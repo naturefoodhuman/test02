@@ -152,7 +152,7 @@ make governance-check
 | 架构变更但无 ADR | 阻断（当前需人工判断） |
 | TASK_BACKLOG 状态变化但 DEV_LOG 未更新 | 阻断（建议后续脚本化） |
 | DEV_LOG/CHANGELOG 最新索引未更新 | 警告，逐步升级为阻断 |
-| R5 合规率低于阈值 | 警告，新增/修改文件必须阻断 |
+| R5 合规率低于阈值 | 警告；仅 LLM 生成/修改文件必须补 header |
 
 ---
 
@@ -169,7 +169,8 @@ make governance-check
 
 1. **changed-files R5 检查**
    - `scripts/governance_check.py --strict` 会检查当前工作区新增/修改的 `.py/.md/.yml/.yaml/.sh` 文件是否包含 LLM 文件头。
-   - 缺失即阻断。
+   - 缺失只作为 warning；人类手写文件允许无 LLM header。
+   - LLM 生成/修改的文件仍必须补 header，由执行 Agent 自我约束并在交付前检查。
 
 2. **TASK_BACKLOG ↔ DEV_LOG 同步检查**
    - `TASK_BACKLOG.md` 发生变化但 `docs/DEV_LOG.md` 未变化时阻断。

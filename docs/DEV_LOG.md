@@ -3003,3 +3003,18 @@ python3 -m compileall -q scripts/diagnostics/benchmark_local_runtime.py
 **关键结论**：
 - Network Increment、Claude Code 本地模型、文档治理、本地模型运行参数与 MTP benchmark 均已收尾。
 - `PROJECT_DOSSIER_V4.md` 仅记录当前资产，不定义新的业务系统；后续工程设计必须等待用户批准的架构方案。
+
+
+## 第 91 轮 · 2026-07-01（R5 Header 治理规则修正：人类手写文件不阻断）
+
+**触发**：用户手工编写 `FEOS_ARCHITECTURE_FINAL.md`、`FEOS_ENGINEERING_DESIGN.md`、`FEOS_TASK_BACKLOG.md` 等文件并准备上传 GitHub 时，治理脚本因缺少 LLM header 阻断。用户明确指出：LLM header 要求只适用于 LLM 生成/修改的文件，不应阻断人类手写文档提交。
+
+**修正内容**：
+- `scripts/governance_check.py`：changed-files 缺少 LLM header 从 blocker 改为 warning。
+- `HANDOFF.md` §6：明确 LLM 文件头留痕规则只针对 LLM 生成/修改文件；人类手写文件不强制，不得阻止提交/Push。
+- `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`：同步修改 R5 自动化策略。
+
+**治理原则**：
+- LLM 生成/修改文件仍必须写 header。
+- 人类手工文件允许无 LLM header。
+- 自动化只提醒，不阻断。
