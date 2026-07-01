@@ -20,7 +20,7 @@
 ## [第 94 轮] 2026-07-01
 
 ### 需求变动
-- **FEOS Foundation 批量推进**：根据用户要求，在一次独立开发会话中尽可能多完成 FEOS Task，完成 FEOS-003~FEOS-026 领域模型、本地存储、Repository、Case Lifecycle、CLI、Facade、Workflow Guard、Detector、Evidence Framework、Collectors 与 Case Graph 基础。
+- **FEOS Foundation 批量推进**：根据用户要求，在一次独立开发会话中尽可能多完成 FEOS Task，完成 FEOS-003~FEOS-030 领域模型、本地存储、Repository、Case Lifecycle、CLI、Facade、Workflow Guard、Detector、Evidence Framework、Collectors、Case Graph、Retrieval、Hypothesis、Privacy 与 Policy 基础。
 
 ### 文件影响
 - 新增/修改：`_infra/feos/models/*`
@@ -51,13 +51,19 @@
 - 新增：`_infra/feos/adapters/git_adapter.py`
 - 新增：`_infra/feos/graph/*`
 - 新增：相关 detector/evidence/collector/graph 单元测试
+- 新增：`_infra/feos/retrieval/*`
+- 新增：`_infra/feos/hypothesis/*`
+- 新增：`_infra/feos/policy/*`
+- 新增：`_infra/feos/adapters/privacy_adapter.py`
+- 新增：`_infra/feos/adapters/local_rag_adapter.py`
+- 新增：相关 retrieval/hypothesis/privacy/policy 单元和安全测试
 - 修改：`FEOS_TASK_BACKLOG.md`
 - 修改：`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`
 
 ### 验证
 ```bash
 python3 -m pytest _infra/feos/tests/unit -q
-# 76 passed
+# 86 passed
 python3 -m compileall -q _infra/feos
 # pass
 ```

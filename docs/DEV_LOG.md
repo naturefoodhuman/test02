@@ -10,7 +10,7 @@
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`TASK_BACKLOG.md` §10
 - **最新测试基线**：`python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q` → `358 passed, 3 skipped, 44 warnings`
-- **最近完成**：FEOS-003~FEOS-026 Detector、Evidence 与 Graph 基础
+- **最近完成**：FEOS-003~FEOS-030 Retrieval、Hypothesis、Privacy 与 Policy 基础
 - **建议下一步**：将 `make docs-check` 固化为每轮提交前动作；按 `mini-gratitude-control-tower` 训练新用户。
 
 ---
@@ -3147,6 +3147,24 @@ python3 -m compileall -q _infra/feos
 ```bash
 python3 -m pytest _infra/feos/tests/unit -q
 # 76 passed
+python3 -m compileall -q _infra/feos
+# pass
+```
+
+
+### 第 94 轮补充 4 · 2026-07-01（FEOS-027~FEOS-030：Retrieval / Hypothesis / Privacy / Policy）
+
+**完成内容**：
+- FEOS-027：新增 Lexical Similarity Retrieval、SimilarityResult、SimilarityRetrievalService、LocalRAGAdapter placeholder 和 retrieval artifact 保存。
+- FEOS-028：新增 HypothesisManager、confidence 计算、graph 同步和 hypotheses.yaml 保存。
+- FEOS-029：新增 PrivacyAdapter、RegexRedactor、PrivacyScanResult/RedactionResult，支持 secret/token/password/private_key redaction 与 canary block。
+- FEOS-030：新增 PolicyEngine/PolicyResult，支持 clipboard export policy、disabled gateway block、token budget warning、redaction report。
+- 新增相关单元和安全测试。
+
+**验证**：
+```bash
+python3 -m pytest _infra/feos/tests/unit _infra/feos/tests/security -q
+# 86 passed
 python3 -m compileall -q _infra/feos
 # pass
 ```

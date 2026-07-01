@@ -1630,6 +1630,9 @@ FEOS 任务拆解遵循：
 
 ## FEOS-027 — 实现 Similarity Retrieval Lexical Fallback 与 RAG Adapter
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-027
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.3 Case Graph / Retrieval / Hypothesis
@@ -1677,10 +1680,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - FEOS 可避免重复升级的基础检索能力可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-028 — 实现 Hypothesis Manager
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-028
 - **所属 Epic**：E3 Evidence, Graph & Investigation
 - **所属 Capability**：C3.3 Case Graph / Retrieval / Hypothesis
@@ -1726,10 +1738,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - 本地调查假设管理能力可用。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-029 — 实现 PrivacyAdapter 与 Regex Redaction Fallback
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-029
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.1 Policy Plane
@@ -1773,10 +1794,19 @@ FEOS 任务拆解遵循：
   - 满足 G-DoD；
   - Policy Plane 可复用 PrivacyAdapter。
 
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
+
 ---
 
 ## FEOS-030 — 实现 Policy Engine、Budget、Approval 与 Redaction Report
 
+- **状态**：DONE
+- **完成日期**：2026-07-01
+- **负责 Agent**：Arena.ai Agent Mode - Execution Lead Engineer
 - **Task ID**：FEOS-030
 - **所属 Epic**：E4 Policy, Context, Package & Clipboard Gateway
 - **所属 Capability**：C4.1 Policy Plane
@@ -1826,6 +1856,12 @@ FEOS 任务拆解遵循：
 - **Definition of Done**：
   - 满足 G-DoD；
   - FEOS 外发安全关口基础可用。
+
+- **完成记录**：
+  - [x] 功能实现完成；
+  - [x] 单元测试通过；
+  - [x] 静态检查通过：`python3 -m compileall -q _infra/feos`；
+  - [x] 文档已同步至 DEV_LOG / CHANGELOG / PROJECT_STATE。
 
 ---
 
