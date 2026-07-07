@@ -11,11 +11,30 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：FEOS MVP 基础闭环与培训文档重写
+- **最新完成模块**：PROJECT_DOSSIER_V5 当前资产卷宗与新项目文档隔离建议
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
+
+## [第 96 轮] 2026-07-07
+
+### 需求变动
+- **全功能最小示例确认**：用户确认 `docs/全功能最小示例项目.md` 已测试完成且全部通过。
+- **资产卷宗升级**：在保留 `PROJECT_DOSSIER_V4.md` 的前提下，新增 `PROJECT_DOSSIER_V5.md`，同步 FEOS MVP、测试基线、全功能最小示例通过状态和当前资产状态。
+- **新项目文档整理建议**：新增根文档与项目文档隔离建议，推荐新项目使用 `projects/<new-project-slug>/docs/`，避免无前缀根目录文档干扰工厂级 SSOT。
+
+### 文件影响
+- 新增：`PROJECT_DOSSIER_V5.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ## [第 95 轮] 2026-07-01
 

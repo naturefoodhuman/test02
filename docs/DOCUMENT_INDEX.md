@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-01 21:11:38
+创建时间（北京时间）：2026-07-07 22:07:10
 -->
 
 # Document Index（自动生成）
@@ -29,6 +29,7 @@
 | `NETWORK_ENGINEERING_DESIGN.md` | SSOT | current |
 | `PROJECT_DOSSIER_V3.md` | root-doc | reference |
 | `PROJECT_DOSSIER_V4.md` | root-doc | reference |
+| `PROJECT_DOSSIER_V5.md` | root-doc | reference |
 | `README.md` | SSOT | current |
 | `TASK_BACKLOG.md` | SSOT | current |
 | `_agents/arch-advisor.md` | root-doc | reference |
@@ -84,6 +85,7 @@
 | `docs/GOVERNANCE_CHECK_2026-06-25.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-06-26.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-07-01.md` | governance | current |
+| `docs/GOVERNANCE_CHECK_2026-07-07.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_LATEST.md` | governance | current |
 | `docs/LOCAL_MODEL_RUNTIME_TUNING.md` | supporting-doc | reference |
 | `docs/PROJECT_STATE.md` | SSOT | current |

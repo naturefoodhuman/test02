@@ -3273,3 +3273,21 @@ python3 -m pytest _infra/network/tests/unit/ _infra/network/tests/security/ -q
 make docs-check
 # Blockers: 0
 ```
+
+
+## 第 96 轮 · 2026-07-07（PROJECT_DOSSIER_V5 与新项目文档隔离建议）
+
+**目标**：根据用户确认的《全功能最小示例项目》测试通过状态，保留 `PROJECT_DOSSIER_V4.md`，新增并更新 `PROJECT_DOSSIER_V5.md`；同时给出后续新开项目时的整体文档整理建议，避免旧根文档干扰新项目开发。
+
+**完成内容**：
+- 新增 `PROJECT_DOSSIER_V5.md`，作为当前最新资产卷宗，纳入 FEOS MVP 基础闭环、`mini-feos-debug-lab` 用户测试通过状态、当前验证基线、FEOS CLI/诊断命令和已知限制。
+- 保留 `PROJECT_DOSSIER_V4.md` 不改动，作为历史资产卷宗。
+- 在 V5 中新增“New Project Document Organization Recommendation”，建议新项目使用 `projects/<new-project-slug>/docs/` 或临时 `docs/projects/<new-project-slug>/`，避免在根目录直接放置无前缀 `ARCHITECTURE_FINAL.md` / `ENGINEERING_DESIGN.md` / `TASK_BACKLOG.md`。
+- 更新 `docs/PROJECT_STATE.md`，同步 V5 与全功能最小示例测试通过状态。
+- 更新 `docs/CHANGELOG.md` 与本日志。
+
+**验证**：
+```bash
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```

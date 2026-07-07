@@ -5,15 +5,15 @@
 
 # PROJECT_STATE —— 当前状态 SSOT
 
-**更新日期**：2026-07-01 00:00 CST
-**当前版本**：v1.4.21-feos-mvp-docs-finalized
+**更新日期**：2026-07-07 00:00 CST
+**当前版本**：v1.5.0-current-assets-feos-mvp-validated
 **状态说明**：本文件是当前真实状态 SSOT；任务状态以 `TASK_BACKLOG.md` §10 为准。
 
 ---
 
 ## 1. 项目定位
 
-FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/network/` 联网功能增量模块；`projects/debt-collection` 是试点/压测项目，不是当前主要开发目标。
+FORGE Factory 是 AI 项目孵化工厂。当前 Network Increment 已收尾，FEOS MVP 基础闭环已完成并完成培训/示例文档更新；项目处于可用工厂状态，可作为新项目孵化与升级求助基础设施。`projects/debt-collection` 是历史试点/压测项目，不是当前主要开发目标。
 
 ---
 
@@ -56,7 +56,7 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 ### Training / Onboarding Documentation
 - `docs/工厂使用手册.md` 与 `docs/全功能最小示例项目.md` 已更新为 FEOS MVP 基础闭环版；当前全功能最小示例为 `mini-feos-debug-lab`。
 - `docs/工厂使用手册.md` 已升级为 Claude Code for VS Code 日常主工作流版：强调自然语言对话驱动，终端 CLI 作为验证/自动化辅助。
-- `docs/全功能最小示例项目.md` 已重新设计为 `mini-gratitude-control-tower`，覆盖普通功能与高风险能力安全演示。
+- `docs/全功能最小示例项目.md` 已重新设计为 `mini-feos-debug-lab`，覆盖 FEOS create/export/import/verify/plan/outcome/distill 全流程；用户已确认测试完成且全部通过。
 - `docs/工厂能力覆盖检查.md` 已重建矩阵，当前覆盖率 76/76 = 100%。
 - 新增 `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md`，并升级 `scripts/governance_check.py` + `make docs-check`，推动文档治理自动化常态化。
 - 文档治理 P1 已落地：changed-files R5 阻断、Backlog/DEV_LOG 同步阻断、代码变更必须更新 CHANGELOG、架构触发词提示 ADR、自动生成 `docs/DOCUMENT_INDEX.md`；决策记录见 ADR-008。
@@ -76,9 +76,10 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - 新增 `scripts/model_status.sh` 与 `scripts/stop_local_models.sh`，用于判断本地模型是否正常工作、释放 GPU 显存、重启本地模型网关。
 - 培训文档已修正 Claude Code for VS Code 操作方式：命令面板命令不在终端执行，首句优先用 `@HANDOFF.md` 等上下文附加，避免本地模型长工具链卡顿。
 
-### Project Dossier V4 / Current Assets
-- 新增 `PROJECT_DOSSIER_V4.md`，作为当前项目资产卷宗。
-- V4 目标：完整记录当前资产、边界、运行方式、配置 SSOT、诊断命令和可扩展点，以便后续 AI 结合用户批准的架构方案生成工程设计文档。
+### Project Dossier V5 / Current Assets
+- `PROJECT_DOSSIER_V4.md` 已保留为历史资产卷宗。
+- 新增 `PROJECT_DOSSIER_V5.md`，作为当前最新资产卷宗，纳入 FEOS MVP、全功能最小示例测试通过状态，并增加新项目文档隔离建议。
+- V5 目标：完整记录当前资产、边界、运行方式、配置 SSOT、诊断命令、验证证据、FEOS MVP 状态和可扩展点，以便后续 AI 结合用户批准的架构方案生成工程设计文档。
 - MTP 测试已收尾：默认主模型保留 MTP depth3；KV q8/q4 不进默认；no-MTP 作为 fast-interactive 候选。
 
 ### FEOS Implementation
@@ -87,7 +88,7 @@ FORGE Factory 是 AI 项目孵化工厂。当前主要开发对象是 `_infra/ne
 - FEOS-002 已完成：`_infra/feos/config_loader.py`、`_infra/feos/bootstrap.py`、`FEOSConfig`、`load_config()`、`bootstrap_feos()` 与配置加载单元测试。
 - FEOS-001~FEOS-056 已完成：FEOS MVP 基础闭环已具备，包括 Foundation、配置、领域模型、存储、Repository、Case Lifecycle、CLI、Detector、Evidence、Graph、Retrieval、Hypothesis、Policy、Context、Package、Renderer、Gateway、Clipboard Export、Response、Verification、Execution、Knowledge、Observability、Diagnostics、E2E/Governance/Test 基础。
 - FEOS MVP 收尾修复已完成：基础 Clipboard export workflow 默认只采集 user_input，避免自动采集 canary/security config 导致 policy block。
-- 当前 FEOS 已具备 Clipboard-first MVP 基础能力；后续应以真实场景 fixture 做强化测试与细化实现。
+- 当前 FEOS 已具备 Clipboard-first MVP 基础能力；`mini-feos-debug-lab` 全功能最小示例已由用户测试通过；后续应以真实场景 fixture 做强化测试与细化实现。
 
 ---
 
