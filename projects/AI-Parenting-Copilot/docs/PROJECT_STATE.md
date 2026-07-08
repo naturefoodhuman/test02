@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:50:00
+创建时间（北京时间）：2026-07-09 03:35:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -237,12 +237,39 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T018`、`APC-T016` 未 DONE；State Engine 派生输入与真实告警联动待后续任务。
 
+
+### APC-T022 — 实现 Vaccine Planner Rule Domain
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/rule_engine/domains/vaccine.py`：VaccineRuleModule，可根据 birth_date/as_of/records 生成疫苗 due_date/status/evidence。
+- `config/rules/vaccine/cn-nip-2024.yaml`：CN NIP dev fixture 规则包。
+- `tests/golden/rules/vaccine_cases.yaml` 与 `tests/test_vaccine_rules.py`。
+- 覆盖出生当天计划、逾期、completed/skipped 记录状态。
+
+阻塞原因：前置 `APC-T018` 未 DONE；疫苗规则包为 dev fixture，生产前需官方免疫规划审查与 EvidencePolicy DB/audit 验收。
+
+### APC-T023 — 实现 Growth Rule Domain 与 WHO 百分位基础
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/rule_engine/domains/growth.py`：GrowthRuleModule，可按 sex/age_months/metric/value 返回 percentile_band/evidence。
+- `config/rules/growth/who-0-5.yaml`：简化 WHO-compatible fixture。
+- `tests/golden/rules/growth_cases.yaml` 与 `tests/test_growth_rules.py`。
+- 单点成长测量不产生强告警，输出 `alert_level=none`。
+
+阻塞原因：前置 `APC-T018` 未 DONE；P0 当前使用简化 fixture，完整 WHO LMS 表与生产规则审查待后续任务/验收。
+
 ---
 
 ## 4. 当前未实现
 
 - PostgreSQL / Mosquitto / PowerSync / Alembic 代码配置已接入，但容器运行验收尚未完成，归属 `APC-T003 BLOCKED`。
-- 核心 Schema、审计、Auth/API、ObservationEvent/Event API 代码已完成但集成验收 BLOCKED；Rule Engine 纯逻辑已部分完成但集成验收 BLOCKED；Android 等尚未开始。
+- 核心 Schema、审计、Auth/API、ObservationEvent/Event API 代码已完成但集成验收 BLOCKED；Rule Engine 各 P0 规则域纯逻辑已部分完成但集成验收 BLOCKED；Android 等尚未开始。
 
 ---
 
@@ -256,9 +283,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 60 source files
+# Success: no issues found in 62 source files
 make test
-# 49 passed, 1 warning
+# 53 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -271,7 +298,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021`
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023`
 - 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 

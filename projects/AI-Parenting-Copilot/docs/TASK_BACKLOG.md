@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:50:00
+创建时间（北京时间）：2026-07-09 03:35:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -750,6 +750,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现中国疫苗规则 P0：计划、逾期、已完成记录与 EvidencePolicy 版本化。
+- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests 已完成；前置 T018 与生产规则审查未完成）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4；`ENGINEERING_DESIGN.md` §13.2
 - **输出**：Vaccine RuleModule、规则包、golden tests
@@ -776,6 +777,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现 WHO 0–5 岁基础生长百分位计算与趋势提示规则。
+- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests 已完成；前置 T018 与完整 WHO 表验收未完成）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4
 - **输出**：Growth RuleModule、WHO 配置、golden tests

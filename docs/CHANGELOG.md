@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:50:00
+创建时间（北京时间）：2026-07-09 03:35:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,7 +11,7 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T018 Rule Engine、APC-T020 Medication、APC-T021 Triage/Threshold 纯逻辑；集成任务待验收
+- **最新完成模块**：AI Parenting Copilot APC-T022 Vaccine Planner 与 APC-T023 Growth rules 纯逻辑；集成任务待验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
@@ -20,6 +20,32 @@
 
 
 
+
+
+---
+
+## [第 104 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 并行推进**：完成 `APC-T022` Vaccine Planner 与 `APC-T023` Growth Rule Domain 的纯逻辑与测试。
+- **验收状态**：前置 Rule Engine DB/audit、生产规则审查与完整 WHO 表仍待后续验收，因此相关任务标记 BLOCKED。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/rule_engine/domains/vaccine.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/rule_engine/domains/growth.py`
+- 新增：vaccine/growth rule packs 与 golden tests
+- 修改：项目级维护文档
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# Project docs-check passed; ruff passed; mypy passed; 53 passed, 1 warning; rule packs validated.
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

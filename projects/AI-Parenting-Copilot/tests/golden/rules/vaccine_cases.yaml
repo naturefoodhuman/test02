@@ -1,0 +1,32 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-09 03:35:00
+
+cases:
+  - name: newborn_due_today
+    input:
+      birth_date: "2026-07-09"
+      as_of: "2026-07-09"
+      records: []
+    expect:
+      hep_b_1: due
+      bcg_1: due
+      hep_b_2: planned
+  - name: overdue_second_hepb
+    input:
+      birth_date: "2026-01-01"
+      as_of: "2026-02-20"
+      records:
+        - vaccine_key: hep_b_1
+          status: completed
+    expect:
+      hep_b_1: completed
+      hep_b_2: overdue
+  - name: skipped_respected
+    input:
+      birth_date: "2026-01-01"
+      as_of: "2026-01-01"
+      records:
+        - vaccine_key: bcg_1
+          status: skipped
+    expect:
+      bcg_1: skipped

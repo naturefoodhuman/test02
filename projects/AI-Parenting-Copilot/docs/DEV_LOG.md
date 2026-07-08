@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:50:00
+创建时间（北京时间）：2026-07-09 03:35:00
 -->
 
 
@@ -10,15 +10,59 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T018` Rule Engine kernel、`APC-T020` Medication rules、`APC-T021` Triage/Threshold rules 纯逻辑；均因前置/DB/State Engine 验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `49 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
-- **建议下一步**：继续实现不依赖真实 DB 的 Vaccine/Growth rule domains 或 Copilot base/fakes；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
+- **最新完成**：`APC-T022` Vaccine planner 与 `APC-T023` Growth percentile 纯逻辑；均因前置/规则审查/DB 验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `53 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **建议下一步**：继续实现不依赖真实 DB 的 Copilot base/Logger 或 Dose Interceptor 纯逻辑；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
 
 
 
 
 
 
+
+
+---
+
+## 第 8 轮 · 2026-07-09（APC-T022 Vaccine Planner + APC-T023 Growth Rules）
+
+**目标**：继续并行开发不依赖真实 DB 的规则域，补齐 P0 Vaccine/Growth 纯逻辑。
+
+**状态变更**：
+
+- `APC-T022`：TODO → BLOCKED（VaccineRuleModule/规则包/golden tests 完成；前置 T018 与生产规则审查未完成）
+- `APC-T023`：TODO → BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests 完成；前置 T018 与完整 WHO 表验收未完成）
+
+**完成内容**：
+
+1. **APC-T022 Vaccine Planner**：
+   - `server/app/rule_engine/domains/vaccine.py`：按 birth_date/as_of/records 输出 due_date/status/evidence。
+   - `config/rules/vaccine/cn-nip-2024.yaml`：CN NIP dev fixture。
+   - Golden cases 覆盖出生当天计划、逾期、completed/skipped 状态。
+
+2. **APC-T023 Growth Rules**：
+   - `server/app/rule_engine/domains/growth.py`：按 sex/age_months/metric/value 返回 percentile_band/evidence。
+   - `config/rules/growth/who-0-5.yaml`：简化 WHO-compatible fixture。
+   - Golden cases 覆盖男/女、不同月龄、边界百分位；单点不强告警。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 62 source files
+make test
+# 53 passed, 1 warning
+make rules-validate
+# growth / medication / triage / vaccine packs validated and hashed
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

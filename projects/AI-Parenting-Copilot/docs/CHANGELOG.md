@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:50:00
+创建时间（北京时间）：2026-07-09 03:35:00
 -->
 
 
@@ -10,15 +10,54 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T018` Rule Engine kernel、`APC-T020` Medication rules、`APC-T021` Triage/Threshold rules 纯逻辑；均 BLOCKED 待前置/DB/State Engine 验收。
-- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine 纯逻辑已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
-- **下一任务**：继续 Vaccine/Growth rule domains 或 Copilot base/fakes。
+- **最新完成任务**：`APC-T022` Vaccine Planner 与 `APC-T023` Growth rules 纯逻辑；均 BLOCKED 待前置/规则审查/DB 验收。
+- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine P0 纯逻辑已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
+- **下一任务**：继续 Copilot base/Logger 或 Dose Interceptor 纯逻辑。
 
 
 
 
 
 
+
+
+---
+
+## [第 8 轮] 2026-07-09 — APC-T022 / APC-T023 纯逻辑完成，集成验收 BLOCKED
+
+### 需求变动
+
+- 继续并行开发不依赖真实 DB 的代码。
+- 完成 Vaccine Planner 与 Growth Rule Domain 的纯逻辑和 golden tests。
+- 由于前置 Rule Engine DB/audit 验收、生产规则审查与完整 WHO 表未完成，T022/T023 标记 BLOCKED。
+
+### 文件影响
+
+新增/修改：
+
+- `server/app/rule_engine/domains/vaccine.py`
+- `server/app/rule_engine/domains/growth.py`
+- `config/rules/vaccine/cn-nip-2024.yaml`
+- `config/rules/growth/who-0-5.yaml`
+- `tests/golden/rules/vaccine_cases.yaml`
+- `tests/golden/rules/growth_cases.yaml`
+- vaccine/growth tests
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 62 source files
+make test
+# 53 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 

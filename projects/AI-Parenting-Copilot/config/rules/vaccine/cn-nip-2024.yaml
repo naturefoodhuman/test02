@@ -1,0 +1,37 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-09 03:35:00
+
+policy_type: vaccine
+domain: vaccine
+region: CN
+version: cn-nip-dev-0.1.0
+effective_from: "2026-07-09"
+source: "AI Parenting Copilot dev CN NIP fixture; requires official schedule review before production."
+constants:
+  default_grace_days: 7
+  schedule:
+    - vaccine_key: hep_b_1
+      label: Hepatitis B 1
+      dose: 1
+      due_day: 0
+      grace_days: 7
+    - vaccine_key: bcg_1
+      label: BCG 1
+      dose: 1
+      due_day: 0
+      grace_days: 30
+    - vaccine_key: hep_b_2
+      label: Hepatitis B 2
+      dose: 2
+      due_day: 30
+      grace_days: 7
+    - vaccine_key: ipv_1
+      label: IPV 1
+      dose: 1
+      due_day: 60
+      grace_days: 14
+rules:
+  - id: vaccine.plan_by_birth_date
+    description: Generate P0 vaccine due dates from birth_date.
+  - id: vaccine.completed_skipped_delayed_records
+    description: Respect completed/skipped/delayed record status.

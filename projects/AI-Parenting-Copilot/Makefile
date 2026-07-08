@@ -56,6 +56,8 @@ docs-check:
 	@test -f server/app/rule_engine/kernel.py
 	@test -f server/app/rule_engine/loader.py
 	@test -f server/app/rule_engine/domains/medication.py
+	@test -f server/app/rule_engine/domains/vaccine.py
+	@test -f server/app/rule_engine/domains/growth.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py
