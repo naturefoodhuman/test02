@@ -2396,3 +2396,7 @@ python -m compileall -q _infra/network scripts/diagnostics
 python -m _infra.network.cli config
 # Network Config loaded successfully
 ```
+
+### Added
+- **mini-feos-debug-lab**: Initial version (cli.py + test_cli.py)
+- **AI-Parenting-Copilot**: Initial project docs

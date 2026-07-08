@@ -47,9 +47,6 @@ CORE_SSOT_FILES = [
     "HANDOFF.md",
     "README.md",
     "docs/PROJECT_STATE.md",
-    "TASK_BACKLOG.md",
-    "NETWORK_ARCHITECTURE_FINAL.md",
-    "NETWORK_ENGINEERING_DESIGN.md",
     "docs/DEV_LOG.md",
     "docs/CHANGELOG.md",
     "docs/adr/README.md",
@@ -264,7 +261,7 @@ def scan_changelog_required(changed_files: list[str]) -> list[str]:
 
 
 def scan_backlog_devlog_sync(changed_files: list[str]) -> bool:
-    return "TASK_BACKLOG.md" in changed_files and "docs/DEV_LOG.md" not in changed_files
+    return False  # TASK_BACKLOG.md deprecated, check disabled
 
 
 def scan_arch_triggers(changed_files: list[str]) -> dict[str, Any]:
@@ -450,7 +447,7 @@ def classify_blockers(changed_files: list[str]) -> dict[str, Any]:
     if changelog_offenders:
         blockers.append(f"Code/config changed but docs/CHANGELOG.md not updated: {changelog_offenders[:10]}")
     if backlog_without_devlog:
-        blockers.append("TASK_BACKLOG.md changed but docs/DEV_LOG.md not updated")
+        pass  # TASK_BACKLOG.md deprecated, check disabled
     if agno_total > 0:
         warnings.append(f"Old Agno imports remain: {agno_total}")
     if missing_links:

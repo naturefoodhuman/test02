@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-07 22:07:10
+创建时间（北京时间）：2026-07-08 16:38:19
 -->
 
 # Document Index（自动生成）
@@ -19,19 +19,14 @@
 
 | 文档 | 分类 | 状态 |
 |---|---|---|
+| `.forge/feos/cases/case_2026_07_05_001/exports/clipboard.md` | root-doc | reference |
+| `.forge/feos/cases/case_2026_07_05_001/exports/evidence_index.md` | root-doc | reference |
+| `.forge/feos/cases/case_2026_07_05_001/response/resp_2026_07_05_001_raw.md` | root-doc | reference |
 | `DOCUMENT_AUDIT_REPORT.md` | governance | current |
 | `DOCUMENT_CHANGE_REPORT.md` | governance | current |
-| `FEOS_ARCHITECTURE_FINAL.md` | root-doc | reference |
-| `FEOS_ENGINEERING_DESIGN.md` | root-doc | reference |
-| `FEOS_TASK_BACKLOG.md` | root-doc | reference |
 | `HANDOFF.md` | SSOT | current |
-| `NETWORK_ARCHITECTURE_FINAL.md` | SSOT | current |
-| `NETWORK_ENGINEERING_DESIGN.md` | SSOT | current |
-| `PROJECT_DOSSIER_V3.md` | root-doc | reference |
-| `PROJECT_DOSSIER_V4.md` | root-doc | reference |
 | `PROJECT_DOSSIER_V5.md` | root-doc | reference |
 | `README.md` | SSOT | current |
-| `TASK_BACKLOG.md` | SSOT | current |
 | `_agents/arch-advisor.md` | root-doc | reference |
 | `_agents/code-explorer.md` | root-doc | reference |
 | `_agents/retro-analyst.md` | root-doc | reference |
@@ -70,6 +65,31 @@
 | `_infra/model-routing-rules.md` | root-doc | reference |
 | `_infra/network/README.md` | root-doc | reference |
 | `_infra/network/config_loader/README.md` | root-doc | reference |
+| `_obsolete/4-Final Architecture Design.md` | root-doc | reference |
+| `_obsolete/5-Architecture Upgrade Execution Plan.md` | root-doc | reference |
+| `_obsolete/README.md` | root-doc | reference |
+| `_obsolete/docs/ARCHITECTURE.md` | root-doc | reference |
+| `_obsolete/docs/FACTORY_ASSESSMENT.md` | root-doc | reference |
+| `_obsolete/docs/FACTORY_OPERATIONS.md` | root-doc | reference |
+| `_obsolete/docs/FEOS 功能/FEOS_ARCHITECTURE_FINAL.md` | root-doc | reference |
+| `_obsolete/docs/FEOS 功能/FEOS_ENGINEERING_DESIGN.md` | root-doc | reference |
+| `_obsolete/docs/FEOS 功能/FEOS_TASK_BACKLOG.md` | root-doc | reference |
+| `_obsolete/docs/FEOS 功能/PROJECT_DOSSIER_V4.md` | root-doc | reference |
+| `_obsolete/docs/LESSONS_LEARNED_SMART_PROXY_MTPX.md` | root-doc | reference |
+| `_obsolete/docs/PROBLEM_DIAGNOSTIC_PACKAGE.md` | root-doc | reference |
+| `_obsolete/docs/REAL_MACHINE_VALIDATION.md` | root-doc | reference |
+| `_obsolete/docs/RUNBOOK_BUILD_VERIFY.md` | root-doc | reference |
+| `_obsolete/docs/SETUP_GUIDE.md` | root-doc | reference |
+| `_obsolete/docs/SMART_PROXY_MTPX_ISSUE_REPORT.md` | root-doc | reference |
+| `_obsolete/docs/dossier_v2/PROJECT_DOSSIER_V2.md` | root-doc | reference |
+| `_obsolete/docs/dossier_v2/adr_candidates.md` | root-doc | reference |
+| `_obsolete/docs/dossier_v2/diagram_sources.md` | root-doc | reference |
+| `_obsolete/docs/repository-audit.md` | root-doc | reference |
+| `_obsolete/docs/repository-cleanup-report.md` | root-doc | reference |
+| `_obsolete/docs/联网功能/NETWORK_ARCHITECTURE_FINAL.md` | root-doc | reference |
+| `_obsolete/docs/联网功能/NETWORK_ENGINEERING_DESIGN.md` | root-doc | reference |
+| `_obsolete/docs/联网功能/NETWORK_TASK_BACKLOG.md` | root-doc | reference |
+| `_obsolete/docs/联网功能/PROJECT_DOSSIER_V3.md` | root-doc | reference |
 | `diagnostics/local_runtime_benchmark/20260626_164855/report.md` | diagnostic-output | runtime-artifact |
 | `diagnostics/local_runtime_benchmark/20260626_181952/report.md` | diagnostic-output | runtime-artifact |
 | `docker/README.md` | root-doc | reference |
@@ -86,6 +106,7 @@
 | `docs/GOVERNANCE_CHECK_2026-06-26.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-07-01.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-07-07.md` | governance | current |
+| `docs/GOVERNANCE_CHECK_2026-07-08.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_LATEST.md` | governance | current |
 | `docs/LOCAL_MODEL_RUNTIME_TUNING.md` | supporting-doc | reference |
 | `docs/PROJECT_STATE.md` | SSOT | current |
@@ -115,6 +136,11 @@
 | `profiles/README.md` | root-doc | reference |
 | `profiles/ai-private-github/README.md` | root-doc | reference |
 | `profiles/ai-public/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/ARCHITECTURE_FINAL.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/ENGINEERING_DESIGN.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/FINAL_PRD.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/PROJECT_DOSSIER_V5.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/TASK_BACKLOG.md` | root-doc | reference |
 | `projects/_TEMPLATE/.claude/CLAUDE.md` | root-doc | reference |
 | `projects/_TEMPLATE/.claude/agents/coder.md` | root-doc | reference |
 | `projects/_TEMPLATE/.claude/agents/reviewer.md` | root-doc | reference |
@@ -153,6 +179,7 @@
 | `projects/debt-collection/docs/specs/example-feature/acceptance.md` | root-doc | reference |
 | `projects/debt-collection/docs/specs/example-feature/spec.md` | root-doc | reference |
 | `projects/debt-collection/docs/strategy-sample-claude.md` | root-doc | reference |
+| `projects/debt-collection/runtime/test_acq/待查清单_张三.md` | root-doc | reference |
 | `projects/legal-bot/.claude/CLAUDE.md` | root-doc | reference |
 | `projects/legal-bot/.claude/agents/coder.md` | root-doc | reference |
 | `projects/legal-bot/.claude/agents/reviewer.md` | root-doc | reference |
@@ -172,6 +199,10 @@
 | `projects/legal-bot/experts/debt-lawyer.expert/knowledge/practical_qa_highlights.md` | root-doc | reference |
 | `projects/legal-bot/experts/debt-lawyer.expert/knowledge/statutes_summary.md` | root-doc | reference |
 | `projects/legal-bot/experts/debt-lawyer.expert/knowledge/民间借贷纠纷办案手册（1.0版） (法信).md` | root-doc | reference |
+| `projects/mini-feos-debug-lab/HANDOFF.md` | root-doc | reference |
+| `projects/mini-feos-debug-lab/docs/DISCOVERY.md` | root-doc | reference |
+| `projects/mini-feos-debug-lab/docs/SPEC.md` | root-doc | reference |
+| `projects/mini-feos-debug-lab/docs/TASK_GRAPH.md` | root-doc | reference |
 | `projects/mini-gratitude/.claude/CLAUDE.md` | root-doc | reference |
 | `projects/mini-gratitude/.claude/agents/coder.md` | root-doc | reference |
 | `projects/mini-gratitude/.claude/agents/reviewer.md` | root-doc | reference |
@@ -202,6 +233,27 @@
 | `projects/project-b/docs/harden/SECURITY_REVIEW.md` | root-doc | reference |
 | `projects/project-b/docs/specs/example-feature/acceptance.md` | root-doc | reference |
 | `projects/project-b/docs/specs/example-feature/spec.md` | root-doc | reference |
+| `runtime/mediacrawler/README.md` | root-doc | reference |
+| `runtime/mediacrawler/README_en.md` | root-doc | reference |
+| `runtime/mediacrawler/README_es.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/CDP模式使用指南.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/data_storage_guide.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/excel_export_guide.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/index.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/mediacrawlerpro订阅.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/代理使用.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/作者介绍.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/原生环境管理文档.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/常见问题.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/微信交流群.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/快代理使用文档.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/手机号登录说明.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/捐赠名单.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/知识付费介绍.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/词云图使用配置.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/豌豆HTTP使用文档.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/项目代码结构.md` | root-doc | reference |
+| `runtime/mediacrawler/docs/项目架构文档.md` | root-doc | reference |
 | `scripts/diagnostics/README.md` | root-doc | reference |
 | `scripts/launchd/README.md` | root-doc | reference |
 

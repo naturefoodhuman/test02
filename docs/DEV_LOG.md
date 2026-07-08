@@ -3291,3 +3291,8 @@ make docs-check
 make docs-check
 # Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
 ```
+
+## 2026-07-08
+- 模板迁移至 template_library，根目录保留 symlink
+- mini-feos-debug-lab: 新增调试实验室项目
+- AI-Parenting-Copilot: 新增项目文档
