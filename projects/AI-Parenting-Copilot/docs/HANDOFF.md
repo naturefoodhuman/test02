@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 03:35:00
+创建时间（北京时间）：2026-07-09 04:25:00
 -->
 
 
@@ -59,6 +59,10 @@ projects/AI-Parenting-Copilot/
 - `APC-T021` 纯逻辑已完成但 BLOCKED：Triage/Threshold rules/golden tests 通过，等待 T018/T016 解除。
 - `APC-T022` 纯逻辑已完成但 BLOCKED：Vaccine planner/golden tests 通过，等待 T018 与规则审查。
 - `APC-T023` 纯逻辑已完成但 BLOCKED：Growth fixture/golden tests 通过，等待 T018 与完整 WHO 表验收。
+- `APC-T026` 纯逻辑已完成但 BLOCKED：M1-M5 MemorySnapshot/in-memory store tests 通过，等待 T016 与真实 RAG/DB 适配。
+- `APC-T027` 纯逻辑已完成但 BLOCKED：Copilot base/registry/logger tests 通过，等待 T026 解除。
+- `APC-T028` dev 链路已完成但 BLOCKED：Orchestrator API logger candidate 通过，等待 T027/T006 解除。
+- `APC-T029` 纯逻辑已完成但 BLOCKED：Dose Interceptor 安全测试通过，等待 T028 与真实 audit_log 写入。
 - Android / firmware 仍为目录占位。
 
 ---

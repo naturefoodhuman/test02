@@ -27,6 +27,8 @@ from server.app.observability.audit import MemoryAuditSink
 from server.app.observability.logger import configure_logging
 from server.app.observability.metrics import metrics_response, set_app_info
 from server.app.observability.tracing import configure_tracing
+from server.app.orchestrator.api.routes import router as orchestrator_router
+from server.app.orchestrator.orchestrator import Orchestrator
 from server.app.settings import Settings
 
 
@@ -60,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.container = container
     app.state.audit_sink = MemoryAuditSink()
     app.state.event_repository = InMemoryEventRepository()
+    app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
     app.state.auth_service = AuthService(
         InMemoryAuthRepository(),
         JWTService(
@@ -73,6 +76,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(events_router)
+    app.include_router(orchestrator_router)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:

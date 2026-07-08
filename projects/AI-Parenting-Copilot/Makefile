@@ -58,6 +58,10 @@ docs-check:
 	@test -f server/app/rule_engine/domains/medication.py
 	@test -f server/app/rule_engine/domains/vaccine.py
 	@test -f server/app/rule_engine/domains/growth.py
+	@test -f server/app/memory/injector.py
+	@test -f server/app/copilots/logger_copilot.py
+	@test -f server/app/orchestrator/dose_interceptor.py
+	@test -f server/app/orchestrator/orchestrator.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py

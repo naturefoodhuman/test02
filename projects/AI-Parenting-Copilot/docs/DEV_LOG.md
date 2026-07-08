@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 03:35:00
+创建时间（北京时间）：2026-07-09 04:25:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T022` Vaccine planner 与 `APC-T023` Growth percentile 纯逻辑；均因前置/规则审查/DB 验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `53 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
-- **建议下一步**：继续实现不依赖真实 DB 的 Copilot base/Logger 或 Dose Interceptor 纯逻辑；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
+- **最新完成**：`APC-T026` Memory snapshot、`APC-T027` Logger Copilot、`APC-T028` Orchestrator dev API、`APC-T029` Dose Interceptor 纯逻辑；均因前置/DB/audit 集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `62 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **建议下一步**：继续实现不依赖真实 DB 的 P0 Copilot wrappers 或 Alert dev repo/API；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
 
 
 
@@ -20,6 +20,47 @@
 
 
 
+
+
+---
+
+## 第 9 轮 · 2026-07-09（APC-T026 Memory + APC-T027 Logger Copilot + APC-T028 Orchestrator + APC-T029 Dose Interceptor）
+
+**目标**：继续并行开发不依赖真实 DB 的 Copilot/Orchestrator 安全链路。
+
+**状态变更**：
+
+- `APC-T026`：TODO → BLOCKED（M1-M5 snapshot/in-memory MemoryStore 完成；前置 T016 与 Local RAG 真实适配未完成）
+- `APC-T027`：TODO → BLOCKED（Copilot base/registry/logger parser/tests 完成；前置 T026 未 DONE）
+- `APC-T028`：TODO → BLOCKED（IntentRouter/ContextBuilder/OutputGuard/Orchestrator dev API 完成；T027/T006 未 DONE）
+- `APC-T029`：TODO → BLOCKED（DoseInterceptor 纯逻辑/安全测试完成；T028 与真实 audit_log 写入未 DONE）
+
+**完成内容**：
+
+1. **APC-T026 Memory snapshot**：MemorySnapshot、in-memory M1-M5 MemoryStore。
+2. **APC-T027 Logger Copilot**：DomainCopilot 协议、CopilotRegistry、LoggerCopilot，支持中文记录候选。
+3. **APC-T028 Orchestrator dev**：IntentRouter、ContextBuilder、OutputGuard、Orchestrator、`POST /api/v1/copilot/query`。
+4. **APC-T029 Dose Interceptor**：拦截 mg/ml/毫升/滴/片，Rule Engine source 可通过，MemoryAuditSink 记录。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 75 source files
+make test
+# 62 passed, 1 warning
+make rules-validate
+# rule packs validated
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

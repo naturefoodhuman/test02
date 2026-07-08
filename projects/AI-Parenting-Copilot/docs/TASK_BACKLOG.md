@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 03:35:00
+创建时间（北京时间）：2026-07-09 04:25:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -862,6 +862,7 @@
 - **所属 Capability**：C11
 - **所属 Story**：S11
 - **目标**：实现五层记忆读取与上下文快照生成，M5 复用工厂 Local RAG。
+- **状态**：BLOCKED（M1-M5 snapshot/in-memory MemoryStore 已完成；State Engine 与 Local RAG 真实适配待前置解除）
 - **前置依赖**：APC-T016, APC-T025
 - **输入**：`ENGINEERING_DESIGN.md` §5.9；`ARCHITECTURE_FINAL.md` §6.5
 - **输出**：MemoryStore、MemorySnapshot、injector
@@ -888,6 +889,7 @@
 - **所属 Capability**：C12 Orchestrator & Copilots
 - **所属 Story**：S12 意图路由、上下文注入、Dose Interceptor、P0 Copilots
 - **目标**：实现 DomainCopilot 协议、注册表与 P0 Logger Copilot。
+- **状态**：BLOCKED（Copilot base/registry/logger regex parser/tests 已完成；前置 T026 未 DONE，LLM ModelClient 注入待后续）
 - **前置依赖**：APC-T024, APC-T026
 - **输入**：`ENGINEERING_DESIGN.md` §5.4、§13.1；`ARCHITECTURE_FINAL.md` §11.4
 - **输出**：Copilot 抽象、Registry、Logger Copilot
@@ -916,6 +918,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 `/api/v1/copilot/query` 主编排链路。
+- **状态**：BLOCKED（IntentRouter/ContextBuilder/OutputGuard/Orchestrator dev API 已完成；T027/T006 未 DONE，Memory/DB/audit 集成待验收）
 - **前置依赖**：APC-T027, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §5.5、§7.3；`ARCHITECTURE_FINAL.md` §11.2
 - **输出**：Orchestrator service 与 API
@@ -945,6 +948,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：拦截 LLM/Copilot 自由输出中的具体剂量数字，并写审计。
+- **状态**：BLOCKED（DoseInterceptor 纯逻辑与 MemoryAuditSink 测试已完成；前置 T028 与真实 audit_log 写入待验收）
 - **前置依赖**：APC-T028
 - **输入**：`ENGINEERING_DESIGN.md` §5.5、§9、§14；`ARCHITECTURE_FINAL.md` §11.3
 - **输出**：Dose Interceptor、安全测试、审计记录

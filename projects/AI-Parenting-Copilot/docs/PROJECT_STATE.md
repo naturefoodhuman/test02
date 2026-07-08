@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 03:35:00
+创建时间（北京时间）：2026-07-09 04:25:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -264,6 +264,58 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T018` 未 DONE；P0 当前使用简化 fixture，完整 WHO LMS 表与生产规则审查待后续任务/验收。
 
+
+### APC-T026 — 实现 Memory Store M1-M5 与 Local RAG 适配
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/memory/injector.py`：MemorySnapshot 与 in-memory MemoryStore，覆盖 M1 硬事实、M2 家庭偏好、M3 baseline、M4 短期上下文、M5 纠错记忆结构。
+- 测试覆盖 M1-M5 snapshot 构建。
+
+阻塞原因：前置 `APC-T016` 未完成；真实 DerivedBabyState/FamilyKnowledge/Local RAG 适配待后续集成。
+
+### APC-T027 — 实现 Copilot Base、Registry 与 Logger Copilot
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/copilots/base.py`：DomainCopilot Protocol、CopilotRequest、CopilotResponse、CopilotRegistry。
+- `server/app/copilots/logger_copilot.py`：P0 Logger Copilot，支持中文喂奶/尿布/体温文本解析，仅输出 `record_candidate`，不写 DB，requires_confirmation=true。
+- 测试覆盖 “刚喂了90ml奶” 生成 feeding candidate、未知输入低置信、registry 选择。
+
+阻塞原因：前置 `APC-T026` 未 DONE；完整 LLM ModelClient 注入与 Quick Record 联动待后续。
+
+### APC-T028 — 实现 Orchestrator、Intent Router、Context Builder 与 Output Guard
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/orchestrator/intent_router.py`：record/question/triage/config/alert_ack 意图路由。
+- `server/app/orchestrator/context_builder.py`：基于 MemoryStore 构建 MemorySnapshot。
+- `server/app/orchestrator/output_guard.py` 与 `orchestrator.py`：dev Orchestrator façade。
+- `server/app/orchestrator/api/routes.py`：`POST /api/v1/copilot/query` dev API。
+- `server/app/main.py`：dev Orchestrator 注入与 router 注册。
+- 测试覆盖 intent routing 与 copilot query → logger candidate。
+
+阻塞原因：前置 `APC-T027` 与 `APC-T006` 未 DONE；真实 Memory/DB/audit 集成待验收。
+
+### APC-T029 — 实现 Dose Interceptor 与安全回归测试
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/orchestrator/dose_interceptor.py`：匹配 mg/ml/毫升/滴/片 等剂量模式，LLM/Copilot free text 替换为固定安全话术。
+- Rule Engine 标记的结构化 dose 可通过。
+- MemoryAuditSink 审计记录 `dose_intercept`。
+- 测试覆盖 prompt injection 风格剂量输出拦截、Rule Engine 剂量通过、审计 sink 写入。
+
+阻塞原因：前置 `APC-T028` 未 DONE；真实 audit_log DB 写入待 PostgreSQL 验收。
+
 ---
 
 ## 4. 当前未实现
@@ -283,9 +335,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 62 source files
+# Success: no issues found in 75 source files
 make test
-# 53 passed, 1 warning
+# 62 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -298,7 +350,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023`
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029`
 - 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 
