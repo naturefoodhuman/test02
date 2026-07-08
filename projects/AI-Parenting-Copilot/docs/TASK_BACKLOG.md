@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:08:00
+创建时间（北京时间）：2026-07-08 22:55:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 TODO。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T005 DONE；APC-T003 TODO；APC-T004 TODO；APC-T006 TODO。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -152,6 +152,7 @@
 - **所属 Capability**：C01
 - **所属 Story**：S01
 - **目标**：实现服务端应用入口、配置加载、依赖装配、公共错误、ID、时钟、Repository Protocol。
+- **状态**：DONE
 - **前置依赖**：APC-T001
 - **输入**：`ENGINEERING_DESIGN.md` §1.2、§3、§5、§8、§9
 - **输出**：可启动的 FastAPI 应用壳与公共基础模块
@@ -244,6 +245,7 @@
 - **所属 Capability**：C03 可观测性与审计
 - **所属 Story**：S03 建立日志、指标、追踪、不可删除审计
 - **目标**：实现 structlog JSON 日志、Prometheus `/metrics`、OpenTelemetry 基础 tracing、系统健康端点。
+- **状态**：DONE
 - **前置依赖**：APC-T002
 - **输入**：`ENGINEERING_DESIGN.md` §10；`ARCHITECTURE_FINAL.md` §22
 - **输出**：可观测性基础设施

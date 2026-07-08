@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-07-08 22:08:00
+# 创建时间（北京时间）：2026-07-08 22:55:00
 
 PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -10,7 +10,7 @@ test:
 	@if find tests -name 'test_*.py' -print -quit | grep -q .; then \
 		$(PYTHON) -m pytest tests -q; \
 	else \
-		echo "No tests yet for APC-T001 skeleton."; \
+		echo "No tests found."; \
 	fi
 
 lint:
@@ -18,7 +18,7 @@ lint:
 	@if $(PYTHON) -m ruff --version >/dev/null 2>&1; then \
 		$(PYTHON) -m ruff check server tests; \
 	else \
-		echo "ruff not installed; compileall fallback passed for APC-T001 skeleton."; \
+		echo "ruff not installed; compileall fallback passed."; \
 	fi
 
 typecheck:
@@ -38,17 +38,22 @@ docs-check:
 	@test -f docs/CHANGELOG.md
 	@test -f docs/HANDOFF.md
 	@test -f docs/ADR/ADR-001-project-bootstrap.md
+	@test -f server/app/main.py
+	@test -f server/app/settings.py
+	@test -f server/app/observability/logger.py
 	@grep -q "projects/AI-Parenting-Copilot/" docs/ARCHITECTURE_FINAL.md
 	@grep -q "projects/AI-Parenting-Copilot/" docs/ENGINEERING_DESIGN.md
 	@grep -q "APC-T001" docs/TASK_BACKLOG.md
 	@grep -q "APC-T001" docs/DEV_LOG.md
+	@grep -q "APC-T002" docs/TASK_BACKLOG.md
+	@grep -q "APC-T005" docs/TASK_BACKLOG.md
 	@echo "Project docs-check passed."
 
 governance-check: docs-check
 	@echo "Project-level governance placeholder passed. Factory governance remains at repository root."
 
 run-dev:
-	@echo "APC-T002 will implement FastAPI app startup. No dev server is available in APC-T001."
+	@$(PYTHON) -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000
 
 clean:
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

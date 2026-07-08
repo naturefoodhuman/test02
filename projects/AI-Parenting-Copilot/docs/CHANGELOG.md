@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:08:00
+创建时间（北京时间）：2026-07-08 22:55:00
 -->
 
 
@@ -10,9 +10,65 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T001 — 初始化项目目录与工程元数据`
-- **当前状态**：P0-M0 工程地基已启动，项目骨架完成。
-- **下一任务**：`APC-T002 — 实现 FastAPI 应用壳、Settings、DI 与公共基础类型`
+- **最新完成任务**：`APC-T002 — FastAPI 应用壳`、`APC-T005 — 可观测性基础`
+- **当前状态**：P0-M0 工程地基已完成项目骨架、API 壳与可观测性基础。
+- **下一任务**：`APC-T003 — 本地基础设施 Docker Compose 与 Alembic 初始化`
+
+
+---
+
+## [第 2 轮] 2026-07-08 — APC-T002 / APC-T005
+
+### 需求变动
+
+- 用户要求后续每轮尽可能多开发任务。
+- 在完成最高优先级 `APC-T002` 后，继续完成依赖已满足的 `APC-T005`。
+- `APC-T003` 需要 Docker 容器健康验收；当前沙盒无 Docker CLI，因此未标记 DONE。
+
+### 文件影响
+
+新增：
+
+- `server/__init__.py`
+- `server/app/main.py`
+- `server/app/settings.py`
+- `server/app/di.py`
+- `server/app/common/*.py`
+- `server/app/gateway/exception_handlers.py`
+- `server/app/gateway/middleware/logging.py`
+- `server/app/health/api.py`
+- `server/app/observability/logger.py`
+- `server/app/observability/metrics.py`
+- `server/app/observability/tracing.py`
+- `tests/test_settings_ids_errors.py`
+- `tests/test_app_health_observability.py`
+
+修改：
+
+- `Makefile`：`run-dev` 接入 uvicorn，docs-check 增加 T002/T005 文件检查。
+- `pyproject.toml`：加入 FastAPI、pydantic-settings、python-ulid、structlog、Prometheus、OpenTelemetry 等依赖。
+- `.env.example`：加入 observability 配置。
+- `docs/TASK_BACKLOG.md`：同步 `APC-T002`、`APC-T005` 状态为 DONE。
+- `docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、`docs/HANDOFF.md`：同步当前状态与下一任务。
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 20 source files
+make test
+# 11 passed, 1 warning
+python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
+# /healthz smoke: HTTP 200
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

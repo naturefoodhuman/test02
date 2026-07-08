@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:08:00
+创建时间（北京时间）：2026-07-08 22:55:00
 -->
 
 # AI Parenting Copilot
@@ -24,10 +24,11 @@
 
 ## 当前实现状态
 
-当前完成 `APC-T001 — 初始化项目目录与工程元数据`：
+当前完成：`APC-T001`、`APC-T002`、`APC-T005`。
 
 - 已创建项目骨架、基础配置、维护文档与 ADR。
-- 服务端仅包含 `server/app/__init__.py` 占位，FastAPI 应用壳将在 `APC-T002` 实现。
+- 已实现 FastAPI 应用壳、Settings、DI、公共错误、ULID、timezone-aware clock、Repository Protocol 与事件总线占位。
+- 已实现 structlog JSON 日志、PII mask、Prometheus `/metrics`、OpenTelemetry 安全降级、请求日志 middleware 与健康端点。
 - Android / firmware / config / deploy / runtime 目录已预留。
 
 ## 本地命令

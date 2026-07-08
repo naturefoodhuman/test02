@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:08:00
+创建时间（北京时间）：2026-07-08 22:55:00
 -->
 
 
@@ -43,25 +43,26 @@ projects/AI-Parenting-Copilot/
 截至 2026-07-08：
 
 - `APC-T001` 已完成：项目骨架、基础配置、项目级维护文档与 ADR 已创建。
-- 服务端业务代码尚未实现；`server/app/__init__.py` 仅为包占位。
-- Android / firmware / config / deploy / runtime 仅为目录占位。
-- 下一最高优先级任务是 `APC-T002`。
+- `APC-T002` 已完成：FastAPI 应用壳、Settings、DI 与公共基础类型已实现。
+- `APC-T005` 已完成：结构化日志、Prometheus metrics、OpenTelemetry 基础 tracing、请求日志 middleware 与健康端点已实现。
+- Android / firmware / config / deploy / runtime 仍为目录占位。
+- 下一顺序最高优先级任务是 `APC-T003`。
 
 ---
 
 ## 3. 当前下一步
 
-Task ID：`APC-T002`
+Task ID：`APC-T003`
 
-任务名称：实现 FastAPI 应用壳、Settings、DI 与公共基础类型
+任务名称：本地基础设施 Docker Compose 与 Alembic 初始化
 
 执行前必须再次确认：
 
 - 不改变架构边界。
-- 不引入新基础设施。
-- FastAPI 应用壳只实现 `APC-T002` 范围，不提前实现 Auth/Event/DB worker。
-- Settings 使用 `pydantic-settings`，支持 `PARENTING_` 前缀与 `__` 嵌套。
-- 全局错误格式为 `{code,message,evidence,trace_id}`。
+- 不自研同步，PowerSync 使用官方镜像。
+- PostgreSQL 15+、Mosquitto 2.x、PowerSync 仅作为本地开发基础设施。
+- SQLAlchemy 2.0 async + asyncpg；迁移使用 Alembic。
+- 当前沙盒无 Docker CLI，容器健康验收需在用户 Mac 或可用 Docker 环境完成；未满足 DoD 前不得标记 `APC-T003 DONE`。
 
 ---
 
@@ -77,7 +78,7 @@ make typecheck
 make test
 ```
 
-`APC-T001` 阶段尚未实现 FastAPI，`make run-dev` 只输出提示。`APC-T002` 完成后再接入实际启动命令。
+`make run-dev` 已接入 `python3 -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000`。
 
 ---
 

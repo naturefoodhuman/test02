@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:08:00
+创建时间（北京时间）：2026-07-08 22:55:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,9 +11,38 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot 项目级 APC-T001 工程骨架初始化
+- **最新完成模块**：AI Parenting Copilot APC-T002 FastAPI 应用壳与 APC-T005 可观测性基础
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+
+---
+
+## [第 98 轮] 2026-07-08
+
+### 需求变动
+- **AI Parenting Copilot 继续执行开发**：完成项目级 `APC-T002` FastAPI 应用壳与 `APC-T005` 可观测性基础。
+- **任务推进策略**：在不超过上下文情况下尽可能多开发；`APC-T003` 因 Docker 验收依赖未在沙盒标记 DONE，转而完成依赖已满足的 `APC-T005`。
+
+### 文件影响
+- 新增/修改：`projects/AI-Parenting-Copilot/server/app/*`
+- 新增：`projects/AI-Parenting-Copilot/tests/test_settings_ids_errors.py`
+- 新增：`projects/AI-Parenting-Copilot/tests/test_app_health_observability.py`
+- 修改：`projects/AI-Parenting-Copilot/Makefile`、`pyproject.toml`、`.env.example`
+- 修改：项目级 `docs/TASK_BACKLOG.md`、`PROJECT_STATE.md`、`DEV_LOG.md`、`CHANGELOG.md`、`HANDOFF.md`
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test
+# Project docs-check passed; ruff passed; mypy passed; 11 passed, 1 warning.
+python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
+# /healthz smoke: HTTP 200
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 
