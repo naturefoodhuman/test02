@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 00:30:00
+创建时间（北京时间）：2026-07-09 01:15:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -310,6 +310,7 @@
 - **所属 Capability**：C04 Auth/RBAC
 - **所属 Story**：S04 家庭账号、角色、设备注册
 - **目标**：实现家庭、用户、角色、JWT、RBAC 判定基础能力。
+- **状态**：BLOCKED（domain/service/JWT/RBAC/in-memory repo/unit tests 已完成；DB repo 与真实审计验收待 PostgreSQL）
 - **前置依赖**：APC-T004, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §2 M02、§6；`ARCHITECTURE_FINAL.md` §19
 - **输出**：Auth domain/service/infra
@@ -339,6 +340,7 @@
 - **所属 Capability**：C04
 - **所属 Story**：S04
 - **目标**：提供登录、刷新、家庭初始化、设备注册 API 与本地种子脚本。
+- **状态**：BLOCKED（dev/in-memory API 与 seed 脚本已完成；DB 持久化与 audit_log 集成验收待 PostgreSQL）
 - **前置依赖**：APC-T007
 - **输入**：`ARCHITECTURE_FINAL.md` §15.2、§19、§25.3
 - **输出**：Auth API 与 seed 脚本

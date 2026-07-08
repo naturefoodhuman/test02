@@ -54,6 +54,13 @@ class ModelGatewaySettings(BaseSettings):
     timeout_seconds: float = 30.0
 
 
+class AuthSettings(BaseSettings):
+    """Auth/JWT runtime settings."""
+
+    jwt_secret: str = "dev-secret-change-me-at-least-16"
+    access_token_ttl_seconds: int = 86_400
+
+
 class ObservabilitySettings(BaseSettings):
     """Logging, metrics and tracing switches."""
 
@@ -83,6 +90,7 @@ class Settings(BaseSettings):
     powersync: PowerSyncSettings = Field(default_factory=PowerSyncSettings)
     model_gateway: ModelGatewaySettings = Field(default_factory=ModelGatewaySettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
+    auth: AuthSettings = Field(default_factory=AuthSettings)
 
     @property
     def is_dev_mode(self) -> bool:

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 00:30:00
+创建时间（北京时间）：2026-07-09 01:15:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -141,12 +141,41 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：当前执行沙盒没有 PostgreSQL/Docker，无法完成 audit_log 实际插入与 UPDATE/DELETE 被 DB 拒绝的集成验收，因此按 DoD 不能标记 DONE。
 
+
+### APC-T007 — 实现 Auth/RBAC Domain、Repository 与 JWT 服务
+
+状态：BLOCKED
+
+已完成代码/单元验证：
+
+- `server/app/auth/domain/models.py`：Role、DeviceKind、Family、User、Device、Principal。
+- `server/app/auth/service/passwords.py`：PBKDF2-HMAC-SHA256 密码/PIN hash，明文不存储。
+- `server/app/auth/service/jwt_service.py`：本地 HS256 JWT 签发/解析，claims 包含 user_id、family_id、role、device_id。
+- `server/app/auth/service/auth_service.py`：family/admin 创建、登录、Principal 解析、RBAC allow/deny、设备注册用例。
+- `server/app/auth/infra/repository.py`：AuthRepository protocol 与 InMemoryAuthRepository。
+- 测试覆盖密码校验、JWT claims、RBAC allow/deny、设备注册。
+
+阻塞原因：T004/T006 仍待 PostgreSQL 集成验收；DB-backed repository 与真实 audit_log 接入尚未完成，因此按 DoD 不能标记 DONE。
+
+### APC-T008 — 实现 Auth API、设备注册与 seed_family 脚本
+
+状态：BLOCKED
+
+已完成代码/测试：
+
+- `server/app/auth/api/routes.py`：`/api/v1/auth/init-family`、`/login`、`/refresh`、`/me`、`/devices/register`。
+- `server/scripts/seed_family.py`：可运行的 dev/in-memory seed 脚本。
+- `server/app/main.py`：dev/in-memory AuthService 注入与 auth router 注册。
+- 测试覆盖 init-family → login → bearer token → me → device registration。
+
+阻塞原因：当前实现为 dev/in-memory 模式；真实 family/user/device DB 持久化、seed DB 写入与 mutating audit_log 集成验收待 PostgreSQL，因此按 DoD 不能标记 DONE。
+
 ---
 
 ## 4. 当前未实现
 
 - PostgreSQL / Mosquitto / PowerSync / Alembic 代码配置已接入，但容器运行验收尚未完成，归属 `APC-T003 BLOCKED`。
-- 核心 Schema 与审计代码已完成但集成验收 BLOCKED；Auth、Event Store、Android 等均未开始。
+- 核心 Schema、审计、Auth/API 代码已完成但集成验收 BLOCKED；Event Store、Android 等均未开始。
 
 ---
 
@@ -160,9 +189,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 29 source files
+# Success: no issues found in 40 source files
 make test
-# 30 passed, 1 warning
+# 36 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -175,8 +204,8 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006`
-- 任务名称：完成 Docker/PostgreSQL 相关集成验收
-- 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级与 audit_log immutability 验证。
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008`
+- 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth 持久化
+- 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth DB repository / seed DB 写入验证。
 
-可并行候选：继续实现不依赖真实 DB 的上层纯逻辑或测试 fake，但不得把依赖 PostgreSQL 集成验收的任务标记 DONE。
+可并行候选：继续实现不依赖真实 DB 的事件契约、Rule Engine 纯逻辑或测试 fake，但不得把依赖 PostgreSQL 集成验收的任务标记 DONE。

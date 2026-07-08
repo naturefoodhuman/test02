@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 00:30:00
+创建时间（北京时间）：2026-07-09 01:15:00
 -->
 
 
@@ -10,12 +10,62 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T004` schema 代码与 `APC-T006` audit 代码；二者均因 PostgreSQL 集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `30 passed, 1 warning`；Alembic offline SQL 生成通过；根目录 `make docs-check` Blockers 0
-- **建议下一步**：在 Docker/PostgreSQL 环境验证 `APC-T003/T004/T006`；若继续并行，优先实现不依赖真实 DB 的纯逻辑/fake。
+- **最新完成**：`APC-T007` Auth/RBAC 代码与 `APC-T008` Auth API/seed dev 代码；二者均因 DB/audit 集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `36 passed, 1 warning`；seed_family dev 脚本可运行；根目录 `make docs-check` Blockers 0
+- **建议下一步**：继续实现不依赖真实 DB 的事件契约或 Rule Engine 纯逻辑；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
 
 
 
+
+
+---
+
+## 第 5 轮 · 2026-07-09（APC-T007 Auth/RBAC 代码 + APC-T008 Auth API dev 代码）
+
+**目标**：按用户指示继续并行开发不依赖真实 DB 的代码，严格不将依赖 PostgreSQL 集成验收的任务标记 DONE。
+
+**状态变更**：
+
+- `APC-T007`：TODO → BLOCKED（domain/service/JWT/RBAC/in-memory repo/unit tests 完成；DB repo 与真实审计验收待 PostgreSQL）
+- `APC-T008`：TODO → BLOCKED（dev/in-memory Auth API 与 seed 脚本完成；DB 持久化与 audit_log 集成验收待 PostgreSQL）
+
+**完成内容**：
+
+1. **APC-T007 Auth/RBAC**：
+   - `server/app/auth/domain/models.py`：Role、DeviceKind、Family、User、Device、Principal。
+   - `server/app/auth/service/passwords.py`：PBKDF2-HMAC-SHA256 hash/verify，明文不存储。
+   - `server/app/auth/service/jwt_service.py`：本地 HS256 JWT，claims 包含 user_id/family_id/role/device_id。
+   - `server/app/auth/service/auth_service.py`：family/admin 创建、登录、token Principal、RBAC、设备注册。
+   - `server/app/auth/infra/repository.py`：AuthRepository Protocol 与 InMemoryAuthRepository。
+
+2. **APC-T008 Auth API / seed dev**：
+   - `server/app/auth/api/routes.py`：`/api/v1/auth/init-family`、`/login`、`/refresh`、`/me`、`/devices/register`。
+   - `server/scripts/seed_family.py`：dev/in-memory seed 脚本，可在无 DB 环境运行。
+   - `server/app/main.py`：注册 auth router，并在 dev/mock 模式注入 InMemoryAuthRepository AuthService。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 40 source files
+make test
+# 36 passed, 1 warning
+python3 server/scripts/seed_family.py
+# outputs in-memory family_id/admin_user_id/access_token JSON
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
+
+**阻塞说明**：
+
+当前实现已支持 dev/in-memory flow，但还未接入 PostgreSQL Auth repository、真实 seed DB 写入与 mutating audit_log 集成验收。因此 `APC-T007`、`APC-T008` 均保持 `BLOCKED`。
 
 ---
 

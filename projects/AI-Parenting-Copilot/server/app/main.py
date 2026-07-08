@@ -12,6 +12,11 @@ from typing import cast
 
 from fastapi import FastAPI
 
+from server.app.auth.api.routes import router as auth_router
+from server.app.auth.infra.repository import InMemoryAuthRepository
+from server.app.auth.service.auth_service import AuthService
+from server.app.auth.service.jwt_service import JWTService
+from server.app.auth.service.passwords import PasswordHasher
 from server.app.di import AppContainer, create_container
 from server.app.gateway.exception_handlers import register_exception_handlers
 from server.app.gateway.middleware.logging import RequestLoggingMiddleware
@@ -50,9 +55,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.container = container
+    app.state.auth_service = AuthService(
+        InMemoryAuthRepository(),
+        JWTService(
+            container.settings.auth.jwt_secret,
+            ttl_seconds=container.settings.auth.access_token_ttl_seconds,
+        ),
+        PasswordHasher(),
+    )
     register_exception_handlers(app)
     app.add_middleware(RequestLoggingMiddleware)
     app.include_router(health_router)
+    app.include_router(auth_router)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:
