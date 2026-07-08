@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 01:15:00
+创建时间（北京时间）：2026-07-09 02:05:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,13 +11,39 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T007 Auth/RBAC 与 APC-T008 Auth API dev 代码；DB 相关任务待 Docker/PostgreSQL 验收
+- **最新完成模块**：AI Parenting Copilot APC-T009 ObservationEvent 与 APC-T010 Events API dev 代码；DB 相关任务待 Docker/PostgreSQL 验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 
 
 
+
+
+---
+
+## [第 102 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 并行推进**：完成 `APC-T009` ObservationEvent 契约/in-memory repository 与 `APC-T010` Events API dev 代码。
+- **验收状态**：真实 DB repository、PowerSync 写入契约与 audit_log 持久化仍依赖 PostgreSQL，因此 T009/T010 标记 BLOCKED。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/events/*`
+- 修改：`server/app/main.py`
+- 新增：Events domain/repository/API tests
+- 修改：项目级维护文档
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test
+# Project docs-check passed; ruff passed; mypy passed; 42 passed, 1 warning.
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

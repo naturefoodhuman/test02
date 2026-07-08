@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 01:15:00
+创建时间（北京时间）：2026-07-09 02:05:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -170,12 +170,38 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：当前实现为 dev/in-memory 模式；真实 family/user/device DB 持久化、seed DB 写入与 mutating audit_log 集成验收待 PostgreSQL，因此按 DoD 不能标记 DONE。
 
+
+### APC-T009 — 实现 ObservationEvent 契约、Repository 与幂等写入
+
+状态：BLOCKED
+
+已完成代码/单元验证：
+
+- `server/app/events/domain/observation_event.py`：ObservationEvent Pydantic 契约、EventSource、SyncStatus、ProcessingStatus、timezone-aware 校验。
+- `server/app/events/service/idempotency.py`：event_id 幂等身份校验与冲突检测。
+- `server/app/events/infra/repository.py`：EventRepository Protocol 与 InMemoryEventRepository，支持 upsert/get/list/soft_delete/correct。
+- 测试覆盖合法同步契约、naive datetime 拒绝、重复 upsert 幂等、冲突检测、纠错链与软删除。
+
+阻塞原因：DB-backed repository 与重复 upsert 的 PostgreSQL 集成验收待 Docker/PostgreSQL 环境。
+
+### APC-T010 — 实现 Events API：创建、查询、纠错、软删除
+
+状态：BLOCKED
+
+已完成代码/测试：
+
+- `server/app/events/api/routes.py`：`POST /api/v1/events`、`GET /api/v1/events`、`GET /api/v1/events/{event_id}`、`POST /api/v1/events/{event_id}/correct`、`DELETE /api/v1/events/{event_id}`。
+- `server/app/main.py`：dev/in-memory EventRepository 与 MemoryAuditSink 注入，events router 注册。
+- 测试覆盖 create/list/correct/delete 流程与 MemoryAuditSink 审计记录。
+
+阻塞原因：当前 API 为 dev/in-memory 模式；真实 DB repository、PowerSync 契约与 audit_log 持久化集成验收待 PostgreSQL。
+
 ---
 
 ## 4. 当前未实现
 
 - PostgreSQL / Mosquitto / PowerSync / Alembic 代码配置已接入，但容器运行验收尚未完成，归属 `APC-T003 BLOCKED`。
-- 核心 Schema、审计、Auth/API 代码已完成但集成验收 BLOCKED；Event Store、Android 等均未开始。
+- 核心 Schema、审计、Auth/API、ObservationEvent/Event API 代码已完成但集成验收 BLOCKED；Android 等尚未开始。
 
 ---
 
@@ -189,9 +215,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 40 source files
+# Success: no issues found in 49 source files
 make test
-# 36 passed, 1 warning
+# 42 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -204,8 +230,8 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008`
-- 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth 持久化
-- 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth DB repository / seed DB 写入验证。
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010`
+- 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
+- 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 
 可并行候选：继续实现不依赖真实 DB 的事件契约、Rule Engine 纯逻辑或测试 fake，但不得把依赖 PostgreSQL 集成验收的任务标记 DONE。

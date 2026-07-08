@@ -18,9 +18,12 @@ from server.app.auth.service.auth_service import AuthService
 from server.app.auth.service.jwt_service import JWTService
 from server.app.auth.service.passwords import PasswordHasher
 from server.app.di import AppContainer, create_container
+from server.app.events.api.routes import router as events_router
+from server.app.events.infra.repository import InMemoryEventRepository
 from server.app.gateway.exception_handlers import register_exception_handlers
 from server.app.gateway.middleware.logging import RequestLoggingMiddleware
 from server.app.health.api import router as health_router
+from server.app.observability.audit import MemoryAuditSink
 from server.app.observability.logger import configure_logging
 from server.app.observability.metrics import metrics_response, set_app_info
 from server.app.observability.tracing import configure_tracing
@@ -55,6 +58,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.container = container
+    app.state.audit_sink = MemoryAuditSink()
+    app.state.event_repository = InMemoryEventRepository()
     app.state.auth_service = AuthService(
         InMemoryAuthRepository(),
         JWTService(
@@ -67,6 +72,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestLoggingMiddleware)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(events_router)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:

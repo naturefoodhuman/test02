@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 01:15:00
+创建时间（北京时间）：2026-07-09 02:05:00
 -->
 
 
@@ -10,13 +10,59 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T007` Auth/RBAC 代码与 `APC-T008` Auth API/seed dev 代码；二者均因 DB/audit 集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `36 passed, 1 warning`；seed_family dev 脚本可运行；根目录 `make docs-check` Blockers 0
-- **建议下一步**：继续实现不依赖真实 DB 的事件契约或 Rule Engine 纯逻辑；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
+- **最新完成**：`APC-T009` ObservationEvent 契约/in-memory repo 与 `APC-T010` Events API dev 代码；二者均因 DB/audit 集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `42 passed, 1 warning`；root docs-check Blockers 0
+- **建议下一步**：继续实现不依赖真实 DB 的 Rule Engine kernel 或 Event Bus/PowerSync 契约静态部分；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
 
 
 
 
+
+
+---
+
+## 第 6 轮 · 2026-07-09（APC-T009 ObservationEvent + APC-T010 Events API dev）
+
+**目标**：继续并行开发不依赖真实 DB 的 MVP 服务端记录链路代码。
+
+**状态变更**：
+
+- `APC-T009`：TODO → BLOCKED（Pydantic 契约、idempotency、in-memory repo/unit tests 完成；DB repository/upsert 集成验收待 PostgreSQL）
+- `APC-T010`：TODO → BLOCKED（dev/in-memory API 与 MemoryAuditSink 测试完成；真实 DB/audit_log 集成验收待 PostgreSQL）
+
+**完成内容**：
+
+1. **APC-T009 ObservationEvent 契约 / Repository**：
+   - `server/app/events/domain/observation_event.py`：统一事件契约与 timezone-aware 校验。
+   - `server/app/events/service/idempotency.py`：event_id 幂等冲突校验。
+   - `server/app/events/infra/repository.py`：EventRepository Protocol 与 InMemoryEventRepository。
+
+2. **APC-T010 Events API dev**：
+   - `server/app/events/api/routes.py`：创建、查询、纠错、软删除 API。
+   - `server/app/main.py`：注册 events router，注入 InMemoryEventRepository 与 MemoryAuditSink。
+   - 测试覆盖 create/list/correct/delete 与审计记录。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 49 source files
+make test
+# 42 passed, 1 warning
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
+
+**阻塞说明**：
+
+真实 PostgreSQL repository、PowerSync 写入契约与 audit_log 持久化仍需 Docker/PostgreSQL 环境验收，因此 `APC-T009`、`APC-T010` 保持 `BLOCKED`。
 
 ---
 

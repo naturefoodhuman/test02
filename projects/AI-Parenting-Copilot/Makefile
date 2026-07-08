@@ -50,6 +50,9 @@ docs-check:
 	@test -f server/migrations/versions/0001_initial_schema.py
 	@test -f server/app/observability/audit.py
 	@test -f server/app/common/audit_decorator.py
+	@test -f server/app/events/domain/observation_event.py
+	@test -f server/app/events/infra/repository.py
+	@test -f server/app/events/api/routes.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py
