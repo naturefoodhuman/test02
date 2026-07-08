@@ -60,6 +60,9 @@ docs-check:
 	@test -f server/app/rule_engine/domains/growth.py
 	@test -f server/app/memory/injector.py
 	@test -f server/app/copilots/logger_copilot.py
+	@test -f server/app/copilots/vaccine_planner.py
+	@test -f server/app/copilots/growth_milestone.py
+	@test -f server/app/copilots/medication_safety.py
 	@test -f server/app/orchestrator/dose_interceptor.py
 	@test -f server/app/orchestrator/orchestrator.py
 	@test -f server/migrations/env.py

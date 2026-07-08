@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 04:25:00
+创建时间（北京时间）：2026-07-09 05:10:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T026` Memory snapshot、`APC-T027` Logger Copilot、`APC-T028` Orchestrator dev API、`APC-T029` Dose Interceptor 纯逻辑；均因前置/DB/audit 集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `62 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
-- **建议下一步**：继续实现不依赖真实 DB 的 P0 Copilot wrappers 或 Alert dev repo/API；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
+- **最新完成**：`APC-T030` P0 Copilot wrappers 纯逻辑；因前置/DB/Memory/audit 集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `67 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **建议下一步**：继续实现不依赖真实 DB 的 Alert dev repo/API 或 Notification Channel fakes；等待集中验收后解除 BLOCKED。
 
 
 
@@ -21,6 +21,46 @@
 
 
 
+
+
+---
+
+## 第 10 轮 · 2026-07-09（APC-T030 P0 Copilot wrappers）
+
+**目标**：继续并行开发不依赖真实 DB 的 P0 Copilot 外壳与 Rule Engine 调用链。
+
+**状态变更**：
+
+- `APC-T030`：TODO → BLOCKED（P0 Copilot wrappers/tests 完成；前置 T020/T022/T023/T028/T029 未 DONE，DB/Memory/audit 集成待验收）
+
+**完成内容**：
+
+- `ProactiveCopilot`：生成 reminder candidates，不自行生成 alert level。
+- `FamilyMemoryCopilot`：生成 memory_update candidate，requires_confirmation=true。
+- `VaccinePlannerCopilot`：调用 VaccineRuleModule，输出 rule_result/evidence。
+- `GrowthMilestoneCopilot`：调用 GrowthRuleModule，输出 percentile/evidence。
+- `MedicationSafetyCopilot`：调用 MedicationRuleModule，结构化 dose 只来自 Rule Engine。
+- Orchestrator 默认 registry 注册 P0 Copilots，可通过显式 intent 选择。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 80 source files
+make test
+# 67 passed, 1 warning
+make rules-validate
+# rule packs validated
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 
