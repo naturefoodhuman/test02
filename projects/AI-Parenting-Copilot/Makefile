@@ -3,8 +3,9 @@
 
 PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: test lint typecheck docs-check governance-check run-dev clean
+.PHONY: test lint typecheck docs-check governance-check run-dev infra-up infra-down infra-logs db-migrate db-current clean
 
 test:
 	@if find tests -name 'test_*.py' -print -quit | grep -q .; then \
@@ -41,6 +42,14 @@ docs-check:
 	@test -f server/app/main.py
 	@test -f server/app/settings.py
 	@test -f server/app/observability/logger.py
+	@test -f deploy/docker-compose.yml
+	@test -f deploy/.env.example
+	@test -f alembic.ini
+	@test -f server/app/db.py
+	@test -f server/migrations/env.py
+	@test -f server/app/model_gateway/client.py
+	@test -f server/app/privacy/adapter.py
+	@test -f config/routing_plans.yaml
 	@grep -q "projects/AI-Parenting-Copilot/" docs/ARCHITECTURE_FINAL.md
 	@grep -q "projects/AI-Parenting-Copilot/" docs/ENGINEERING_DESIGN.md
 	@grep -q "APC-T001" docs/TASK_BACKLOG.md
@@ -51,6 +60,21 @@ docs-check:
 
 governance-check: docs-check
 	@echo "Project-level governance placeholder passed. Factory governance remains at repository root."
+
+infra-up:
+	@docker compose --env-file $(DEPLOY_ENV) -f deploy/docker-compose.yml up -d
+
+infra-down:
+	@docker compose --env-file $(DEPLOY_ENV) -f deploy/docker-compose.yml down
+
+infra-logs:
+	@docker compose --env-file $(DEPLOY_ENV) -f deploy/docker-compose.yml logs -f
+
+db-migrate:
+	@$(PYTHON) -m alembic -c alembic.ini upgrade head
+
+db-current:
+	@$(PYTHON) -m alembic -c alembic.ini current
 
 run-dev:
 	@$(PYTHON) -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000

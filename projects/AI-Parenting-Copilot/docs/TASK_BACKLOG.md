@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:55:00
+创建时间（北京时间）：2026-07-08 23:55:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T005 DONE；APC-T003 TODO；APC-T004 TODO；APC-T006 TODO。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T005 DONE；APC-T024 DONE；APC-T025 DONE；APC-T004 TODO；APC-T006 TODO。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -185,6 +185,7 @@
 - **所属 Capability**：C02 本地基础设施与数据库迁移
 - **所属 Story**：S02 启动 PostgreSQL / Mosquitto / PowerSync 并建立 Schema
 - **目标**：提供本地开发基础设施：PostgreSQL、Mosquitto、PowerSync，并初始化 SQLAlchemy async 与 Alembic。
+- **状态**：BLOCKED（代码/配置/静态验证完成；当前沙盒无 Docker CLI，无法完成容器健康验收）
 - **前置依赖**：APC-T001, APC-T002
 - **输入**：`ENGINEERING_DESIGN.md` §1.3、§4、§6、§14
 - **输出**：可启动 DB/MQTT/PowerSync 栈与迁移框架
@@ -793,6 +794,7 @@
 - **所属 Capability**：C11 Model / Privacy / Memory 适配
 - **所属 Story**：S11 复用工厂模型、隐私、Local RAG 能力
 - **目标**：实现项目内唯一 LLM/VLM 入口，调用工厂 Smart Proxy 4000。
+- **状态**：DONE
 - **前置依赖**：APC-T002, APC-T005
 - **输入**：`ENGINEERING_DESIGN.md` §5.8、§8；工厂根目录 `../../../PROJECT_DOSSIER_V5.md` §4.2、§6
 - **输出**：ModelClient、routing plan loader、FakeModelClient
@@ -821,6 +823,7 @@
 - **所属 Capability**：C11
 - **所属 Story**：S11
 - **目标**：通过适配层复用工厂 `_infra/network/privacy`，在云端出站前执行脱敏与 canary 检查。
+- **状态**：DONE
 - **前置依赖**：APC-T024
 - **输入**：`ENGINEERING_DESIGN.md` §2 M14、§8；工厂根目录 `../../../PROJECT_DOSSIER_V5.md` §5.4
 - **输出**：Privacy adapter、安全测试

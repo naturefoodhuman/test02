@@ -1,0 +1,26 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-08 23:55:00
+
+
+default_plan: parenting-local-first
+
+plans:
+  parenting-local-first:
+    provider: smart_proxy
+    base_url: http://127.0.0.1:4000
+    model: parenting-local-default
+    endpoint: /v1/messages
+    max_tokens: 1024
+    temperature: 0.2
+    allow_cloud_fallback: false
+    safety_profile: local_first_no_raw_media
+
+  parenting-cloud-redacted-fallback:
+    provider: smart_proxy
+    base_url: http://127.0.0.1:4000
+    model: parenting-cloud-redacted
+    endpoint: /v1/messages
+    max_tokens: 1024
+    temperature: 0.2
+    allow_cloud_fallback: true
+    safety_profile: privacy_gateway_required

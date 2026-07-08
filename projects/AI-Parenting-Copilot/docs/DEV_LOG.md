@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:55:00
+创建时间（北京时间）：2026-07-08 23:55:00
 -->
 
 
@@ -10,10 +10,67 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T002 — FastAPI 应用壳`、`APC-T005 — 可观测性基础`
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `11 passed, 1 warning`；uvicorn `/healthz` smoke HTTP 200
-- **建议下一步**：进入 `APC-T003`，实现 Docker Compose 与 Alembic 初始化；注意当前沙盒无 Docker，容器健康验收需在可用 Docker 环境完成。
+- **最新完成**：`APC-T024 — Model Gateway`、`APC-T025 — Privacy Adapter`；`APC-T003` 代码/配置完成但 Docker 验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `25 passed, 1 warning`；根目录 `make docs-check` Blockers 0
+- **建议下一步**：在 Docker 环境验证 `APC-T003`；或继续实现 `APC-T004` schema 代码但保持 DB 验收约束。
 
+
+
+---
+
+## 第 3 轮 · 2026-07-08（APC-T003 基础设施代码 / APC-T024 Model Gateway / APC-T025 Privacy Adapter）
+
+**目标**：继续尽可能多推进任务；严格遵守架构边界与 DoD。
+
+**状态变更**：
+
+- `APC-T003`：TODO → BLOCKED（代码/配置/静态验证完成；Docker 容器健康验收受环境阻塞）
+- `APC-T024`：TODO → DONE
+- `APC-T025`：TODO → DONE
+
+**完成内容**：
+
+1. **APC-T003 代码与配置**：
+   - `deploy/docker-compose.yml`：PostgreSQL 15、Mosquitto 2、PowerSync official service。
+   - PowerSync 使用 `journeyapps/powersync-service:latest`；为避免引入架构外 MongoDB，bucket storage 配置为 PostgreSQL。
+   - `server/app/db.py`：SQLAlchemy async engine/session primitives。
+   - `alembic.ini`、`server/migrations/env.py`：Alembic 初始化。
+   - Makefile 增加 `infra-up`、`infra-down`、`infra-logs`、`db-migrate`、`db-current`。
+   - 测试覆盖 compose/service.yaml 配置、Postgres URL normalize、Alembic offline SQL generation。
+
+2. **APC-T024 Model Gateway**：
+   - 新增 `server/app/model_gateway/`。
+   - 支持 Smart Proxy `/v1/messages`、chat、vision、routing plan、FakeModelClient。
+   - 新增 `config/routing_plans.yaml` 与 `config/models.yaml`。
+   - 测试使用 httpx MockTransport，CI 不调用真实模型。
+
+3. **APC-T025 Privacy Adapter**：
+   - 新增 `server/app/privacy/adapter.py`，通过适配层复用工厂 `_infra.network.privacy_gateway`。
+   - 文本云出站前执行 PII 脱敏与 canary 检查。
+   - 原始媒体云出站显式阻断。
+   - 测试覆盖 PII 脱敏、canary 阻断、媒体出站阻断。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 26 source files
+make test
+# 25 passed, 1 warning
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
+
+**阻塞说明**：
+
+当前沙盒无 Docker CLI，无法执行 `make infra-up` 容器健康验收，因此 `APC-T003` 不满足完整 DoD，状态保持 `BLOCKED`，没有标记 DONE。
 
 ---
 

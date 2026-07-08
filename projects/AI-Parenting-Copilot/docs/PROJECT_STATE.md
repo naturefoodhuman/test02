@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:55:00
+创建时间（北京时间）：2026-07-08 23:55:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T005 DONE`；下一顺序任务 `APC-T003 TODO`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T005 DONE`、`APC-T024 DONE`、`APC-T025 DONE`；`APC-T004 TODO`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -74,16 +74,58 @@ projects/AI-Parenting-Copilot/
 - `server/app/gateway/middleware/logging.py`：请求 request_id/trace_id 注入、结构化 HTTP 日志与 metrics 记录。
 - `server/app/health/api.py`：基础健康端点与系统健康端点。
 
+
+### APC-T024 — 实现 Model Gateway Smart Proxy 客户端与 Routing Plan
+
+状态：DONE
+
+已完成：
+
+- `server/app/model_gateway/client.py`：Smart Proxy `/v1/messages` 客户端，支持 chat 与 vision 请求、timeout、错误映射和 FakeModelClient。
+- `server/app/model_gateway/routing.py`：项目级 routing plan loader。
+- `config/routing_plans.yaml`、`config/models.yaml`：项目级模型路由与别名配置，实际运行仍由工厂 Smart Proxy / 根配置承载。
+- 测试覆盖 routing 解析、Anthropic-compatible payload、vision payload、FakeModelClient。
+
+### APC-T025 — 实现 Privacy Gateway 适配层与云出站安全测试
+
+状态：DONE
+
+已完成：
+
+- `server/app/privacy/adapter.py`：通过适配层复用工厂 `_infra.network.privacy_gateway`，不复制实现。
+- 云端文本出站前可调用 `PrivacyAdapter.prepare_cloud_text()` 进行 PII 脱敏与 canary 检查。
+- 原始 image/video/audio/media 云出站通过 `reject_cloud_media()` 阻断。
+- 测试覆盖邮箱/手机号脱敏、canary 阻断、原始媒体出站阻断。
+
+
 ---
 
-## 3. 当前未实现
+## 3. 当前阻塞
 
-- PostgreSQL / Mosquitto / PowerSync / Alembic 尚未接入，归属 `APC-T003`。
+### APC-T003 — 本地基础设施 Docker Compose 与 Alembic 初始化
+
+状态：BLOCKED
+
+已完成代码/配置：
+
+- `deploy/docker-compose.yml`：PostgreSQL 15、Mosquitto 2、PowerSync official service。
+- `deploy/.env.example`、Mosquitto config、PowerSync service/sync config、Postgres init SQL。
+- `server/app/db.py`：SQLAlchemy async engine/session primitives 与 declarative Base。
+- `alembic.ini`、`server/migrations/env.py`、`server/migrations/versions/.gitkeep`。
+- `Makefile`：`infra-up`、`infra-down`、`infra-logs`、`db-migrate`、`db-current`。
+
+阻塞原因：当前执行沙盒没有 Docker CLI，无法验证 `make infra-up` 后 PG/MQTT/PowerSync 容器健康，因此按 DoD 不能标记 DONE。
+
+---
+
+## 4. 当前未实现
+
+- PostgreSQL / Mosquitto / PowerSync / Alembic 代码配置已接入，但容器运行验收尚未完成，归属 `APC-T003 BLOCKED`。
 - 核心 Schema、审计、Auth、Event Store、Android 等均未开始。
 
 ---
 
-## 4. 最新验证基线
+## 5. 最新验证基线
 
 在 `projects/AI-Parenting-Copilot/` 下运行：
 
@@ -93,9 +135,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 20 source files
+# Success: no issues found in 26 source files
 make test
-# 11 passed, 1 warning
+# 25 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -104,13 +146,12 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 ---
 
-## 5. 下一步
+## 6. 下一步
 
 最高优先级任务：
 
 - Task ID：`APC-T003`
-- 任务名称：本地基础设施 Docker Compose 与 Alembic 初始化
-- 所属 Epic：E01 项目地基与运行治理
-- 所属 Capability：C02 本地基础设施与数据库迁移
+- 任务名称：完成本地基础设施 Docker 容器健康验收
+- 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up` / `make db-migrate` 验证。
 
-备注：当前沙盒无 Docker CLI，`APC-T003` 的容器健康验收需在具备 Docker 的 Mac 环境完成；未验证前不得标记 DONE。
+可并行候选：在不标记 DB 相关任务 DONE 的前提下，可继续实现 `APC-T004` schema 代码，但其最终验收仍依赖 PostgreSQL 环境。

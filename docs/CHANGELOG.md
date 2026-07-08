@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:55:00
+创建时间（北京时间）：2026-07-08 23:55:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,38 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T002 FastAPI 应用壳与 APC-T005 可观测性基础
+- **最新完成模块**：AI Parenting Copilot APC-T024 Model Gateway 与 APC-T025 Privacy Adapter；APC-T003 基础设施代码 BLOCKED 待 Docker 验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
+
+
+---
+
+## [第 99 轮] 2026-07-08
+
+### 需求变动
+- **AI Parenting Copilot 继续推进**：完成 `APC-T024` Model Gateway 与 `APC-T025` Privacy Adapter。
+- **基础设施状态**：`APC-T003` 已完成 Docker Compose / Alembic / DB helper 代码与静态测试，但当前沙盒无 Docker CLI，无法完成容器健康验收，按 DoD 标记 BLOCKED。
+
+### 文件影响
+- 新增/修改：`projects/AI-Parenting-Copilot/deploy/*`
+- 新增/修改：`projects/AI-Parenting-Copilot/server/app/db.py`、`server/migrations/*`
+- 新增：`projects/AI-Parenting-Copilot/server/app/model_gateway/*`
+- 新增：`projects/AI-Parenting-Copilot/server/app/privacy/*`
+- 新增：`projects/AI-Parenting-Copilot/config/routing_plans.yaml`、`config/models.yaml`
+- 新增/修改：项目测试与项目级维护文档
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test
+# Project docs-check passed; ruff passed; mypy passed; 25 passed, 1 warning.
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

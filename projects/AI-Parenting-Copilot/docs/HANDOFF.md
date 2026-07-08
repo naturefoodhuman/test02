@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:55:00
+创建时间（北京时间）：2026-07-08 23:55:00
 -->
 
 
@@ -45,8 +45,10 @@ projects/AI-Parenting-Copilot/
 - `APC-T001` 已完成：项目骨架、基础配置、项目级维护文档与 ADR 已创建。
 - `APC-T002` 已完成：FastAPI 应用壳、Settings、DI 与公共基础类型已实现。
 - `APC-T005` 已完成：结构化日志、Prometheus metrics、OpenTelemetry 基础 tracing、请求日志 middleware 与健康端点已实现。
-- Android / firmware / config / deploy / runtime 仍为目录占位。
-- 下一顺序最高优先级任务是 `APC-T003`。
+- `APC-T003` 代码/配置已完成但 BLOCKED：当前沙盒无 Docker CLI，尚未完成容器健康验收。
+- `APC-T024` 已完成：Model Gateway Smart Proxy 客户端、routing loader、FakeModelClient。
+- `APC-T025` 已完成：Privacy Gateway 适配、PII/canary/media 出站安全测试。
+- Android / firmware 仍为目录占位。
 
 ---
 
@@ -54,7 +56,7 @@ projects/AI-Parenting-Copilot/
 
 Task ID：`APC-T003`
 
-任务名称：本地基础设施 Docker Compose 与 Alembic 初始化
+任务名称：完成本地基础设施 Docker Compose 与 Alembic 验收
 
 执行前必须再次确认：
 

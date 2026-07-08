@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 22:55:00
+创建时间（北京时间）：2026-07-08 23:55:00
 -->
 
 
@@ -10,10 +10,49 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T002 — FastAPI 应用壳`、`APC-T005 — 可观测性基础`
-- **当前状态**：P0-M0 工程地基已完成项目骨架、API 壳与可观测性基础。
-- **下一任务**：`APC-T003 — 本地基础设施 Docker Compose 与 Alembic 初始化`
+- **最新完成任务**：`APC-T024 — Model Gateway`、`APC-T025 — Privacy Adapter`；`APC-T003` BLOCKED
+- **当前状态**：项目骨架、API 壳、可观测性、模型网关与隐私适配已完成；本地基础设施代码完成但待 Docker 验收。
+- **下一任务**：验证 `APC-T003` 或继续 `APC-T004` schema 代码实现。
 
+
+
+---
+
+## [第 3 轮] 2026-07-08 — APC-T003 / APC-T024 / APC-T025
+
+### 需求变动
+
+- 继续尽可能多推进任务。
+- `APC-T003` 已完成代码与配置，但当前沙盒无 Docker CLI，无法完成容器健康验收，状态设为 BLOCKED。
+- 完成依赖已满足且不受 DB 阻塞的 `APC-T024` 与 `APC-T025`。
+
+### 文件影响
+
+新增/修改：
+
+- `deploy/docker-compose.yml`、`deploy/.env.example`、`deploy/postgres/init/001-create-powersync-storage.sql`
+- `deploy/mosquitto/mosquitto.conf`
+- `deploy/powersync/service.yaml`、`deploy/powersync/sync-config.yaml`
+- `alembic.ini`、`server/app/db.py`、`server/migrations/env.py`
+- `server/app/model_gateway/*`
+- `server/app/privacy/*`
+- `config/routing_plans.yaml`、`config/models.yaml`
+- `tests/test_infra_config.py`、`tests/test_db.py`、`tests/test_model_gateway.py`、`tests/test_privacy_adapter.py`
+- `Makefile`、`pyproject.toml`、`.env.example`
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 26 source files
+make test
+# 25 passed, 1 warning
+```
 
 ---
 
