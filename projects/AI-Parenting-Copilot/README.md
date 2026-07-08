@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:05:00
+创建时间（北京时间）：2026-07-09 02:50:00
 -->
 
 # AI Parenting Copilot
@@ -24,7 +24,7 @@
 
 ## 当前实现状态
 
-当前完成：`APC-T001`、`APC-T002`、`APC-T005`、`APC-T024`、`APC-T025`；`APC-T003/T004/T006/T007/T008/T009/T010` BLOCKED。
+当前完成：`APC-T001`、`APC-T002`、`APC-T005`、`APC-T024`、`APC-T025`；`APC-T003/T004/T006/T007/T008/T009/T010/T018/T020/T021` BLOCKED。
 
 - 已创建项目骨架、基础配置、维护文档与 ADR。
 - 已实现 FastAPI 应用壳、Settings、DI、公共错误、ULID、timezone-aware clock、Repository Protocol 与事件总线占位。
@@ -33,6 +33,7 @@
 - 已实现 Model Gateway 与 Privacy Gateway 适配。
 - 已实现 Auth/RBAC/JWT 与 dev/in-memory Auth API / seed 脚本；真实 DB 持久化待 PostgreSQL 验收。
 - 已实现 ObservationEvent 契约、in-memory EventRepository 与 dev Events API；真实 DB/PowerSync/audit 持久化待 PostgreSQL 验收。
+- 已实现 Rule Engine kernel、Medication rules、Triage/Threshold rules 纯逻辑与 golden tests；EvidencePolicy DB/audit 与 State Engine 集成待验收。
 - Android / firmware 目录已预留。
 
 ## 本地命令

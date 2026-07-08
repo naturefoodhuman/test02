@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:05:00
+创建时间（北京时间）：2026-07-09 02:50:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -196,12 +196,53 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：当前 API 为 dev/in-memory 模式；真实 DB repository、PowerSync 契约与 audit_log 持久化集成验收待 PostgreSQL。
 
+
+### APC-T018 — 实现 Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/rule_engine/domain/models.py`：RuleInput、RuleResult、EvidenceItem、Verdict。
+- `server/app/rule_engine/loader.py`：YAML RulePack 加载、schema 校验、hash 计算、`rules-validate` CLI。
+- `server/app/rule_engine/registry.py`、`kernel.py`：RuleModule registry 与 RuleEngine façade。
+- `server/app/rule_engine/evidence_repo.py`：InMemoryEvidencePolicyRepository，支持 activate/current/cache invalidation。
+- `make rules-validate` 通过。
+
+阻塞原因：EvidencePolicy PostgreSQL 持久化与规则变更 audit_log 集成验收待 Docker/PostgreSQL。
+
+### APC-T020 — 实现 Medication Rule Domain 与黄金测试
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/rule_engine/domains/medication.py`：MedicationRuleModule。
+- `config/rules/medication/base.yaml`：dev 规则包。
+- `tests/golden/rules/medication_cases.yaml` 与 `tests/test_medication_rules.py`。
+- 覆盖未知体重、未知浓度、<6 月龄布洛芬、间隔/24h 上限与剂量计算；剂量仅由 RuleResult.outputs 输出。
+
+阻塞原因：前置 `APC-T018` 尚待 DB/audit 验收，规则包医学内容也需生产前临床审查。
+
+### APC-T021 — 实现 Triage 与 Alert Threshold Rule Domain
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/rule_engine/domains/triage.py`：3 月龄以下 ≥38°C 红色分诊规则、危险信号规则。
+- `server/app/rule_engine/domains/thresholds.py`：趋势双条件规则、mmWave 单信号禁止红警。
+- `config/rules/triage/base.yaml`、`config/alert_thresholds.yaml`。
+- `tests/golden/rules/triage_cases.yaml` 与 `tests/test_triage_threshold_rules.py`。
+
+阻塞原因：前置 `APC-T018`、`APC-T016` 未 DONE；State Engine 派生输入与真实告警联动待后续任务。
+
 ---
 
 ## 4. 当前未实现
 
 - PostgreSQL / Mosquitto / PowerSync / Alembic 代码配置已接入，但容器运行验收尚未完成，归属 `APC-T003 BLOCKED`。
-- 核心 Schema、审计、Auth/API、ObservationEvent/Event API 代码已完成但集成验收 BLOCKED；Android 等尚未开始。
+- 核心 Schema、审计、Auth/API、ObservationEvent/Event API 代码已完成但集成验收 BLOCKED；Rule Engine 纯逻辑已部分完成但集成验收 BLOCKED；Android 等尚未开始。
 
 ---
 
@@ -215,9 +256,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 49 source files
+# Success: no issues found in 60 source files
 make test
-# 42 passed, 1 warning
+# 49 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -230,7 +271,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010`
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021`
 - 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 

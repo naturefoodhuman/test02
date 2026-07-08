@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:05:00
+创建时间（北京时间）：2026-07-09 02:50:00
 -->
 
 
@@ -10,14 +10,67 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T009` ObservationEvent 契约/in-memory repo 与 `APC-T010` Events API dev 代码；二者均因 DB/audit 集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `42 passed, 1 warning`；root docs-check Blockers 0
-- **建议下一步**：继续实现不依赖真实 DB 的 Rule Engine kernel 或 Event Bus/PowerSync 契约静态部分；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
+- **最新完成**：`APC-T018` Rule Engine kernel、`APC-T020` Medication rules、`APC-T021` Triage/Threshold rules 纯逻辑；均因前置/DB/State Engine 验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `49 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **建议下一步**：继续实现不依赖真实 DB 的 Vaccine/Growth rule domains 或 Copilot base/fakes；等待 Docker/PostgreSQL 后统一解除 BLOCKED。
 
 
 
 
 
+
+
+---
+
+## 第 7 轮 · 2026-07-09（APC-T018 Rule Engine + APC-T020 Medication + APC-T021 Triage/Threshold）
+
+**目标**：继续并行开发不依赖真实 DB 的规则引擎纯逻辑，为后续 Medication/Triage/Vaccine/Growth 与 Copilot 链路打基础。
+
+**状态变更**：
+
+- `APC-T018`：TODO → BLOCKED（kernel/loader/registry/in-memory EvidencePolicy repo/rules-validate 完成；DB persistence/audit 待 PostgreSQL）
+- `APC-T020`：TODO → BLOCKED（MedicationRuleModule/规则包/golden tests 完成；前置 T018 未 DONE）
+- `APC-T021`：TODO → BLOCKED（Triage/Threshold pure rules/golden tests 完成；前置 T018/T016 未 DONE）
+
+**完成内容**：
+
+1. **APC-T018 Rule Engine Kernel**：
+   - RuleInput / RuleResult / EvidenceItem / Verdict。
+   - YAML RulePack loader、hash、schema validation。
+   - RuleRegistry、RuleEngine façade。
+   - InMemoryEvidencePolicyRepository。
+   - `make rules-validate`。
+
+2. **APC-T020 Medication Rules**：
+   - MedicationRuleModule。
+   - `config/rules/medication/base.yaml`。
+   - Golden cases 覆盖 allow/block、未知体重、未知浓度、布洛芬月龄禁忌、剂量计算。
+
+3. **APC-T021 Triage / Threshold Rules**：
+   - 3 月龄以下 ≥38°C 红色分诊。
+   - danger signals orange/red candidate。
+   - 趋势告警双条件。
+   - mmWave 单信号禁止红警。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 60 source files
+make test
+# 49 passed, 1 warning
+make rules-validate
+# medication / triage packs validated and hashed
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

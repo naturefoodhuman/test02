@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:05:00
+创建时间（北京时间）：2026-07-09 02:50:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -632,6 +632,7 @@
 - **所属 Capability**：C09 Rule Engine Kernel
 - **所属 Story**：S09 规则加载、注册、EvidencePolicy 版本化
 - **目标**：实现规则引擎基础抽象、YAML 加载、EvidencePolicy 持久化与规则注册。
+- **状态**：BLOCKED（kernel/loader/registry/in-memory EvidencePolicy repo/rules-validate 已完成；DB persistence/audit 待 PostgreSQL）
 - **前置依赖**：APC-T004, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §5.3、§6、§13.2
 - **输出**：Rule Engine kernel 可加载 YAML 并执行空/示例规则
@@ -687,6 +688,7 @@
 - **所属 Capability**：C10 规则域
 - **所属 Story**：S10 用药、分诊、阈值、疫苗、生长规则
 - **目标**：实现 P0/V1 用药规则：体重、月龄、浓度、间隔、24h 上限、防重复。
+- **状态**：BLOCKED（MedicationRuleModule/规则包/golden tests 已完成；前置 T018 仍待 DB/audit 验收）
 - **前置依赖**：APC-T018
 - **输入**：`ENGINEERING_DESIGN.md` §7.4；`ARCHITECTURE_FINAL.md` §4.4、§10.2
 - **输出**：Medication RuleModule、规则 YAML、golden tests
@@ -718,6 +720,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现分诊红线、危险信号、体温阈值、趋势告警双条件规则。
+- **状态**：BLOCKED（Triage/Threshold pure rule modules/golden tests 已完成；前置 T018/T016 未 DONE）
 - **前置依赖**：APC-T018, APC-T016
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§12；`ENGINEERING_DESIGN.md` §7.3
 - **输出**：Triage/Threshold RuleModules 与规则包

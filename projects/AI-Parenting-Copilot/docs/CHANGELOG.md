@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 02:05:00
+创建时间（北京时间）：2026-07-09 02:50:00
 -->
 
 
@@ -10,14 +10,53 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T009` ObservationEvent 契约/in-memory repo、`APC-T010` Events API dev 代码；均 BLOCKED 待 DB/audit 集成验收。
-- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events dev 链路完成；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
-- **下一任务**：继续 Rule Engine kernel 或 Event Bus/PowerSync 契约静态代码。
+- **最新完成任务**：`APC-T018` Rule Engine kernel、`APC-T020` Medication rules、`APC-T021` Triage/Threshold rules 纯逻辑；均 BLOCKED 待前置/DB/State Engine 验收。
+- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine 纯逻辑已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
+- **下一任务**：继续 Vaccine/Growth rule domains 或 Copilot base/fakes。
 
 
 
 
 
+
+
+---
+
+## [第 7 轮] 2026-07-09 — APC-T018 / APC-T020 / APC-T021 纯逻辑完成，集成验收 BLOCKED
+
+### 需求变动
+
+- 继续并行开发不依赖真实 DB 的代码。
+- 完成 Rule Engine kernel、Medication rules、Triage/Threshold rules 的纯逻辑和 golden tests。
+- DB-backed EvidencePolicy/audit、State Engine 输入与真实告警联动仍待后续验收，因此相关任务标记 BLOCKED。
+
+### 文件影响
+
+新增/修改：
+
+- `server/app/rule_engine/*`
+- `config/rules/README.md`
+- `config/rules/medication/base.yaml`
+- `config/rules/triage/base.yaml`
+- `config/alert_thresholds.yaml`
+- `tests/golden/rules/*`
+- rule engine / medication / triage / threshold tests
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 60 source files
+make test
+# 49 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 

@@ -1,0 +1,29 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-09 02:50:00
+
+policy_type: medication
+region: CN
+domain: medication
+version: cn-medication-dev-0.1.0
+effective_from: "2026-07-09"
+source: "AI Parenting Copilot dev medication safety baseline; requires clinical review before production."
+constants:
+  max_weight_age_days: 14
+  medications:
+    acetaminophen:
+      min_age_months: 3
+      dose_mg_per_kg: 10
+      min_interval_hours: 4
+      max_doses_24h: 5
+    ibuprofen:
+      min_age_months: 6
+      dose_mg_per_kg: 10
+      min_interval_hours: 6
+      max_doses_24h: 4
+rules:
+  - id: medication.weight_required
+    description: Unknown weight blocks dose output.
+  - id: medication.concentration_required
+    description: Unknown concentration blocks ml output.
+  - id: medication.ibuprofen_min_age
+    description: Ibuprofen is blocked under 6 months.

@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: test lint typecheck docs-check governance-check run-dev infra-up infra-down infra-logs db-migrate db-current clean
+.PHONY: test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current clean
 
 test:
 	@if find tests -name 'test_*.py' -print -quit | grep -q .; then \
@@ -53,6 +53,9 @@ docs-check:
 	@test -f server/app/events/domain/observation_event.py
 	@test -f server/app/events/infra/repository.py
 	@test -f server/app/events/api/routes.py
+	@test -f server/app/rule_engine/kernel.py
+	@test -f server/app/rule_engine/loader.py
+	@test -f server/app/rule_engine/domains/medication.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py
@@ -64,6 +67,9 @@ docs-check:
 	@grep -q "APC-T002" docs/TASK_BACKLOG.md
 	@grep -q "APC-T005" docs/TASK_BACKLOG.md
 	@echo "Project docs-check passed."
+
+rules-validate:
+	@$(PYTHON) -m server.app.rule_engine.loader config/rules
 
 governance-check: docs-check
 	@echo "Project-level governance placeholder passed. Factory governance remains at repository root."
