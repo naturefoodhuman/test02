@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:10:00
+创建时间（北京时间）：2026-07-09 05:55:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -333,6 +333,45 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T020/T022/T023/T028/T029` 均未 DONE；FamilyMemory 真实写入、Memory/RAG、DB/audit 与 App/API 集成待后续验收。
 
+
+### APC-T031 — 实现 Alert Repository、API、确认与反馈
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/notification/alert_repo.py`：AlertRecord、Create/Ack/Feedback request、AlertLevel、AlertStatus、FeedbackType、InMemoryAlertRepository。
+- `server/app/notification/api/routes.py`：`/api/v1/alerts` create/list/get/ack/feedback dev API。
+- `server/app/main.py`：dev alert repository 注入与 alert router 注册。
+- 测试覆盖 create → list → ack → feedback，并通过 MemoryAuditSink 记录 alert.create/alert.ack/alert.feedback。
+
+阻塞原因：前置 `APC-T004/T006/T021` 未 DONE；真实 alert DB repository 与 audit_log 持久化待 PostgreSQL 验收。
+
+### APC-T032 — 实现 Notification Channel 抽象与 FCM/Mac/App/Camera 通道
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/notification/channels/base.py`：NotificationChannel Protocol 与 DeliveryReceipt。
+- `server/app/notification/channels/fake.py`：FakeFCM、FakeMacSpeaker、FakeAppFullscreen、FakeCameraSpeaker 通道。
+- `config/notification.yaml`：P0 channel config skeleton。
+- 测试覆盖 FCM-like payload 仅包含 alert_id/level/type，敏感 evidence/recommended_action 不出 payload；通道失败返回 failed receipt。
+
+阻塞原因：前置 `APC-T031` 未 DONE；真实 FCM/TTS/摄像头扬声器通道待后续接入与设备验收。
+
+### APC-T033 — 实现 Notification Orchestrator 扇出与 Delivery Receipt
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/notification/orchestrator.py`：按 Alert.level 选择通道、red/orange 多通道扇出、FCM 失败不阻断 Mac/App fallback。
+- `server/app/notification/delivery_repo.py`：InMemoryDeliveryRepository。
+- 测试覆盖 red alert 多通道 delivery receipts 与失败隔离。
+
+阻塞原因：前置 `APC-T032` 未 DONE；真实 alert_delivery DB 持久化与升级状态机待后续验收。
+
 ---
 
 ## 4. 当前未实现
@@ -352,9 +391,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 80 source files
+# Success: no issues found in 87 source files
 make test
-# 67 passed, 1 warning
+# 72 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -367,7 +406,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030`
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030` / `APC-T031` / `APC-T032` / `APC-T033`
 - 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 

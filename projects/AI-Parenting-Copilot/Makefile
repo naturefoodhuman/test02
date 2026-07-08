@@ -5,29 +5,27 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current clean
 
-test:
+ensure-dev-deps:
+	@$(PYTHON) server/scripts/ensure_dev_deps.py
+
+install-dev:
+	@$(PYTHON) -m pip install -e ".[dev]"
+
+test: ensure-dev-deps
 	@if find tests -name 'test_*.py' -print -quit | grep -q .; then \
 		$(PYTHON) -m pytest tests -q; \
 	else \
 		echo "No tests found."; \
 	fi
 
-lint:
+lint: ensure-dev-deps
 	@$(PYTHON) -m compileall -q server tests
-	@if $(PYTHON) -m ruff --version >/dev/null 2>&1; then \
-		$(PYTHON) -m ruff check server tests; \
-	else \
-		echo "ruff not installed; compileall fallback passed."; \
-	fi
+	@$(PYTHON) -m ruff check server tests
 
-typecheck:
-	@if $(PYTHON) -m mypy --version >/dev/null 2>&1; then \
-		$(PYTHON) -m mypy server/app; \
-	else \
-		echo "mypy not installed; typecheck skipped until dev dependencies are installed."; \
-	fi
+typecheck: ensure-dev-deps
+	@$(PYTHON) -m mypy server/app
 
 docs-check:
 	@test -f README.md
@@ -65,6 +63,10 @@ docs-check:
 	@test -f server/app/copilots/medication_safety.py
 	@test -f server/app/orchestrator/dose_interceptor.py
 	@test -f server/app/orchestrator/orchestrator.py
+	@test -f server/app/notification/alert_repo.py
+	@test -f server/app/notification/orchestrator.py
+	@test -f server/app/notification/channels/base.py
+	@test -f server/scripts/ensure_dev_deps.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py
@@ -77,7 +79,7 @@ docs-check:
 	@grep -q "APC-T005" docs/TASK_BACKLOG.md
 	@echo "Project docs-check passed."
 
-rules-validate:
+rules-validate: ensure-dev-deps
 	@$(PYTHON) -m server.app.rule_engine.loader config/rules
 
 governance-check: docs-check
@@ -92,13 +94,13 @@ infra-down:
 infra-logs:
 	@docker compose --env-file $(DEPLOY_ENV) -f deploy/docker-compose.yml logs -f
 
-db-migrate:
+db-migrate: ensure-dev-deps
 	@$(PYTHON) -m alembic -c alembic.ini upgrade head
 
-db-current:
+db-current: ensure-dev-deps
 	@$(PYTHON) -m alembic -c alembic.ini current
 
-run-dev:
+run-dev: ensure-dev-deps
 	@$(PYTHON) -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000
 
 clean:

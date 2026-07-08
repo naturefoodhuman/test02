@@ -23,6 +23,8 @@ from server.app.events.infra.repository import InMemoryEventRepository
 from server.app.gateway.exception_handlers import register_exception_handlers
 from server.app.gateway.middleware.logging import RequestLoggingMiddleware
 from server.app.health.api import router as health_router
+from server.app.notification.alert_repo import InMemoryAlertRepository
+from server.app.notification.api.routes import router as alert_router
 from server.app.observability.audit import MemoryAuditSink
 from server.app.observability.logger import configure_logging
 from server.app.observability.metrics import metrics_response, set_app_info
@@ -61,6 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.container = container
     app.state.audit_sink = MemoryAuditSink()
+    app.state.alert_repository = InMemoryAlertRepository(app.state.audit_sink)
     app.state.event_repository = InMemoryEventRepository()
     app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
     app.state.auth_service = AuthService(
@@ -77,6 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router)
     app.include_router(events_router)
     app.include_router(orchestrator_router)
+    app.include_router(alert_router)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:

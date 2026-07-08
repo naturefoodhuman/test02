@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:10:00
+创建时间（北京时间）：2026-07-09 05:55:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T030` P0 Copilot wrappers 纯逻辑；因前置/DB/Memory/audit 集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `67 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
-- **建议下一步**：继续实现不依赖真实 DB 的 Alert dev repo/API 或 Notification Channel fakes；等待集中验收后解除 BLOCKED。
+- **最新完成**：`APC-T031` Alert dev API、`APC-T032` Notification fake channels、`APC-T033` Notification fan-out 纯逻辑；均因前置/DB/设备集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `72 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **本轮修复**：Makefile 新增 `ensure-dev-deps`，自动安装当前 venv 缺失的 alembic/structlog/python-ulid/pytest-asyncio/ruff/mypy 等依赖，解决用户验收中的 ModuleNotFoundError。
 
 
 
@@ -22,6 +22,51 @@
 
 
 
+
+
+---
+
+## 第 11 轮 · 2026-07-09（验收依赖修复 + APC-T031 Alert + APC-T032 Channels + APC-T033 Notification Orchestrator）
+
+**目标**：修复用户集中验收暴露的本地依赖缺失问题，并继续开发不依赖真实 DB 的 Alert/Notification 纯逻辑。
+
+**状态变更**：
+
+- `APC-T031`：TODO → BLOCKED（Alert dev repo/API/MemoryAuditSink tests 完成；DB audit 集成待验收）
+- `APC-T032`：TODO → BLOCKED（NotificationChannel/Fake channels/config/tests 完成；真实 FCM/TTS/Camera 待设备验收）
+- `APC-T033`：TODO → BLOCKED（NotificationOrchestrator fan-out/in-memory delivery receipts/tests 完成；DB delivery repo 待验收）
+
+**修复内容**：
+
+- `server/scripts/ensure_dev_deps.py`：自动检查并安装当前 Python 环境缺失依赖。
+- `Makefile`：`test/lint/typecheck/rules-validate/db-migrate/db-current/run-dev` 自动先执行 `ensure-dev-deps`。
+- `pyproject.toml`：补充 setuptools package discovery，支持 `pip install -e .[dev]`。
+
+**开发内容**：
+
+- `InMemoryAlertRepository` 与 Alert API dev routes。
+- NotificationChannel Protocol、DeliveryReceipt 与 Fake channels。
+- NotificationOrchestrator fan-out，red/orange 多通道，FCM 失败不阻断 fallback。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 87 source files
+make test
+# 72 passed, 1 warning
+make rules-validate
+# rule packs validated
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

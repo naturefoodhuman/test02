@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:10:00
+创建时间（北京时间）：2026-07-09 05:55:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 BLOCKED；APC-T032 BLOCKED；APC-T033 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -1010,6 +1010,7 @@
 - **所属 Capability**：C13 Alert Store/API
 - **所属 Story**：S13 告警查询、确认、反馈、审计
 - **目标**：实现 Alert CRUD 查询、ack、feedback，并接入审计。
+- **状态**：BLOCKED（Alert dev repo/API/MemoryAuditSink tests 已完成；前置 T004/T006/T021 未 DONE，DB audit 集成待验收）
 - **前置依赖**：APC-T004, APC-T006, APC-T021
 - **输入**：`ENGINEERING_DESIGN.md` §6.1、§7.2；`ARCHITECTURE_FINAL.md` §5.3、§14
 - **输出**：Alert service/API
@@ -1039,6 +1040,7 @@
 - **所属 Capability**：C14 Notification Orchestrator
 - **所属 Story**：S14 多通道扇出、送达凭证、升级状态机
 - **目标**：实现通知通道协议和 P0 通道适配。
+- **状态**：BLOCKED（NotificationChannel/Fake channels/config/tests 已完成；前置 T031 未 DONE，真实 FCM/TTS 待接入）
 - **前置依赖**：APC-T031
 - **输入**：`ENGINEERING_DESIGN.md` §5.6、§7.2、§13.3
 - **输出**：NotificationChannel 实现与 Fake 通道
@@ -1068,6 +1070,7 @@
 - **所属 Capability**：C14
 - **所属 Story**：S14
 - **目标**：实现按告警等级选择通道、并发扇出、记录 alert_delivery。
+- **状态**：BLOCKED（NotificationOrchestrator fan-out/in-memory delivery receipts/tests 已完成；前置 T032 未 DONE，DB delivery repo 待验收）
 - **前置依赖**：APC-T032
 - **输入**：`ARCHITECTURE_FINAL.md` §14.4；`ENGINEERING_DESIGN.md` §7.2
 - **输出**：Notification orchestrator

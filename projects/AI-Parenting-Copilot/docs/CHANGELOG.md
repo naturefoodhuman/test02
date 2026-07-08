@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:10:00
+创建时间（北京时间）：2026-07-09 05:55:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T030` P0 Copilot wrappers 纯逻辑；BLOCKED 待前置/DB/Memory/audit 集成验收。
-- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
-- **下一任务**：继续 Alert dev repo/API 或 Notification Channel fakes。
+- **最新完成任务**：验收依赖修复、`APC-T031` Alert dev API、`APC-T032` Notification fake channels、`APC-T033` Notification fan-out 纯逻辑；均 BLOCKED 待 DB/设备集成验收。
+- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
+- **下一任务**：继续告警升级状态机/Device Health/Scheduler 纯逻辑或等待集中验收反馈。
 
 
 
@@ -22,6 +22,44 @@
 
 
 
+
+
+---
+
+## [第 11 轮] 2026-07-09 — 验收依赖修复 + APC-T031 / APC-T032 / APC-T033 纯逻辑完成
+
+### 需求变动
+
+- 修复用户集中验收中出现的 `No module named alembic/structlog/ulid`、ruff/mypy/pytest-asyncio 未安装问题。
+- 完成 Alert dev repo/API、Notification fake channels、Notification fan-out 纯逻辑。
+- 由于真实 DB/audit/device 通道未验收，T031/T032/T033 标记 BLOCKED。
+
+### 文件影响
+
+新增/修改：
+
+- `server/scripts/ensure_dev_deps.py`
+- `Makefile`
+- `pyproject.toml`
+- `server/app/notification/*`
+- `config/notification.yaml`
+- notification/alert tests
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 87 source files
+make test
+# 72 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 
