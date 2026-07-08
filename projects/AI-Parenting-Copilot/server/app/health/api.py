@@ -3,6 +3,7 @@
 
 
 """Health endpoints for local operation and future device monitoring."""
+
 from __future__ import annotations
 
 from typing import Any, cast

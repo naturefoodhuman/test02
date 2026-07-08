@@ -3,6 +3,7 @@
 
 
 """APC-T002/T005 integration tests for app shell and observability."""
+
 from __future__ import annotations
 
 import structlog

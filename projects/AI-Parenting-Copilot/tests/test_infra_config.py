@@ -3,6 +3,7 @@
 
 
 """APC-T003 tests for local infrastructure configuration."""
+
 from __future__ import annotations
 
 from pathlib import Path

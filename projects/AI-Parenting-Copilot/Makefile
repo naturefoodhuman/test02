@@ -46,6 +46,10 @@ docs-check:
 	@test -f deploy/.env.example
 	@test -f alembic.ini
 	@test -f server/app/db.py
+	@test -f server/app/models.py
+	@test -f server/migrations/versions/0001_initial_schema.py
+	@test -f server/app/observability/audit.py
+	@test -f server/app/common/audit_decorator.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py

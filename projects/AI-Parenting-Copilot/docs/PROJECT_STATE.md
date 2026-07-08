@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 23:55:00
+创建时间（北京时间）：2026-07-09 00:30:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T005 DONE`、`APC-T024 DONE`、`APC-T025 DONE`；`APC-T004 TODO`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -116,12 +116,37 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：当前执行沙盒没有 Docker CLI，无法验证 `make infra-up` 后 PG/MQTT/PowerSync 容器健康，因此按 DoD 不能标记 DONE。
 
+
+### APC-T004 — 创建核心数据库 Schema 初版
+
+状态：BLOCKED
+
+已完成代码/静态验证：
+
+- `server/app/models.py`：SQLAlchemy metadata 初版，覆盖 family/user/device/baby/observation_event、领域派生表、derived_baby_state、alert、alert_delivery、sleep_session、family_knowledge、evidence_policy、sensor_event、camera_event、media_asset、audit_log、sync_state 等核心表。
+- `server/migrations/versions/0001_initial_schema.py`：初版 Alembic migration，包含 updated_at trigger、audit_log append-only trigger 与 app_user revoke 保护。
+- `python3 -m alembic -c alembic.ini upgrade head --sql` offline SQL 生成通过。
+
+阻塞原因：当前执行沙盒没有 PostgreSQL/Docker，无法执行空库 `alembic upgrade head` 与迁移升降级集成验收，因此按 DoD 不能标记 DONE。
+
+### APC-T006 — 实现审计日志服务与 `@audit` 装饰器
+
+状态：BLOCKED
+
+已完成代码/单元验证：
+
+- `server/app/observability/audit.py`：AuditRecord、AuditActor、AuditService、MemoryAuditSink、AuditWriteError。
+- `server/app/common/audit_decorator.py`：`@audit` 装饰器；高风险 mutating 操作无 AuditSink 时阻断。
+- 测试覆盖 decorator before/after 捕获、高风险无审计 sink 阻断。
+
+阻塞原因：当前执行沙盒没有 PostgreSQL/Docker，无法完成 audit_log 实际插入与 UPDATE/DELETE 被 DB 拒绝的集成验收，因此按 DoD 不能标记 DONE。
+
 ---
 
 ## 4. 当前未实现
 
 - PostgreSQL / Mosquitto / PowerSync / Alembic 代码配置已接入，但容器运行验收尚未完成，归属 `APC-T003 BLOCKED`。
-- 核心 Schema、审计、Auth、Event Store、Android 等均未开始。
+- 核心 Schema 与审计代码已完成但集成验收 BLOCKED；Auth、Event Store、Android 等均未开始。
 
 ---
 
@@ -135,9 +160,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 26 source files
+# Success: no issues found in 29 source files
 make test
-# 25 passed, 1 warning
+# 30 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -150,8 +175,8 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003`
-- 任务名称：完成本地基础设施 Docker 容器健康验收
-- 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up` / `make db-migrate` 验证。
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006`
+- 任务名称：完成 Docker/PostgreSQL 相关集成验收
+- 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级与 audit_log immutability 验证。
 
-可并行候选：在不标记 DB 相关任务 DONE 的前提下，可继续实现 `APC-T004` schema 代码，但其最终验收仍依赖 PostgreSQL 环境。
+可并行候选：继续实现不依赖真实 DB 的上层纯逻辑或测试 fake，但不得把依赖 PostgreSQL 集成验收的任务标记 DONE。

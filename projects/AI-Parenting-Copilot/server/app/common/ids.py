@@ -7,6 +7,7 @@
 ULIDs keep identifiers sortable while remaining globally unique across Android,
 Mac server and future device adapters.
 """
+
 from __future__ import annotations
 
 import re

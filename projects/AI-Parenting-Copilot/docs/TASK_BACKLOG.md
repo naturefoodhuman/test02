@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 23:55:00
+创建时间（北京时间）：2026-07-09 00:30:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T005 DONE；APC-T024 DONE；APC-T025 DONE；APC-T004 TODO；APC-T006 TODO。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T024 DONE；APC-T025 DONE。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -216,6 +216,7 @@
 - **所属 Capability**：C02
 - **所属 Story**：S02
 - **目标**：实现核心表结构 migration，覆盖 P0 与未来预留实体。
+- **状态**：BLOCKED（metadata/migration/static/offline SQL 已完成；空库 `alembic upgrade head` 需 PostgreSQL 验收）
 - **前置依赖**：APC-T003
 - **输入**：`ENGINEERING_DESIGN.md` §6；`ARCHITECTURE_FINAL.md` §6、§7
 - **输出**：Alembic migration、SQLAlchemy metadata/models 初版
@@ -276,6 +277,7 @@
 - **所属 Capability**：C03
 - **所属 Story**：S03
 - **目标**：实现不可删除审计写入服务与 mutating API 装饰器。
+- **状态**：BLOCKED（service/decorator/unit tests 已完成；audit_log DB insert/update/delete 需 PostgreSQL 验收）
 - **前置依赖**：APC-T004, APC-T005
 - **输入**：`ENGINEERING_DESIGN.md` §10.4、§14；`ARCHITECTURE_FINAL.md` §1.2、§22.2
 - **输出**：Audit service、decorator、数据库写入与测试

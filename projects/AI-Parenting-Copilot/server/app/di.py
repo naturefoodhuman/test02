@@ -3,6 +3,7 @@
 
 
 """Dependency injection container and worker registration hooks."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

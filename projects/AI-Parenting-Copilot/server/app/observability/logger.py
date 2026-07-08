@@ -3,6 +3,7 @@
 
 
 """Structured logging setup and PII masking."""
+
 from __future__ import annotations
 
 import logging

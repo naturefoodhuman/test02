@@ -3,6 +3,7 @@
 
 
 """Smart Proxy client for Anthropic-compatible model calls."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -140,9 +141,7 @@ class ModelGatewayClient:
                 request.temperature if request.temperature is not None else plan.temperature
             ),
             "messages": [
-                msg.model_dump()
-                for msg in request.messages
-                if msg.role in {"user", "assistant"}
+                msg.model_dump() for msg in request.messages if msg.role in {"user", "assistant"}
             ],
             "metadata": {**request.metadata, "routing_plan": plan_key},
         }

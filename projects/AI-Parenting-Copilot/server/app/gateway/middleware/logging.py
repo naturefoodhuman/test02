@@ -3,6 +3,7 @@
 
 
 """HTTP request logging and metrics middleware."""
+
 from __future__ import annotations
 
 import time

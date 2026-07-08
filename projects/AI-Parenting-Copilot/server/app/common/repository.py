@@ -3,6 +3,7 @@
 
 
 """Repository protocol definitions used by bounded contexts."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence

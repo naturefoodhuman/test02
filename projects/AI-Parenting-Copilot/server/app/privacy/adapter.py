@@ -7,6 +7,7 @@
 Cloud-bound text must pass through this adapter before Model Gateway fallback plans
 with `allow_cloud_fallback=true` are allowed to send it onward.
 """
+
 from __future__ import annotations
 
 import importlib

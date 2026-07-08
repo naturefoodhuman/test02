@@ -7,6 +7,7 @@
 APC-T003 introduces the SQLAlchemy async infrastructure only. Domain models and
 migrations are added by APC-T004 and later tasks.
 """
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator

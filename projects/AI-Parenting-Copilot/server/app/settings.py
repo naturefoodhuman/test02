@@ -7,6 +7,7 @@
 Settings are intentionally small in APC-T002. Database, MQTT and PowerSync are
 represented as configuration contracts, but no connection is opened until later tasks.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache

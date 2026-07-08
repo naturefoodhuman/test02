@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 23:55:00
+创建时间（北京时间）：2026-07-09 00:30:00
 -->
 
 
@@ -10,11 +10,49 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T024 — Model Gateway`、`APC-T025 — Privacy Adapter`；`APC-T003` BLOCKED
-- **当前状态**：项目骨架、API 壳、可观测性、模型网关与隐私适配已完成；本地基础设施代码完成但待 Docker 验收。
-- **下一任务**：验证 `APC-T003` 或继续 `APC-T004` schema 代码实现。
+- **最新完成任务**：`APC-T004` schema 代码、`APC-T006` audit 代码；均 BLOCKED 待 PostgreSQL 集成验收。
+- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配完成；基础设施/schema/audit 代码完成但待 Docker/PostgreSQL 验收。
+- **下一任务**：验证 `APC-T003/T004/T006` 或继续不依赖真实 DB 的并行代码。
 
 
+
+
+---
+
+## [第 4 轮] 2026-07-09 — APC-T004 / APC-T006 代码完成，集成验收 BLOCKED
+
+### 需求变动
+
+- 继续尽可能多推进任务。
+- 完成核心 schema 与审计服务/装饰器代码；由于当前沙盒无 Docker/PostgreSQL，相关集成验收无法完成，按 DoD 标记 BLOCKED。
+
+### 文件影响
+
+新增/修改：
+
+- `server/app/models.py`
+- `server/migrations/versions/0001_initial_schema.py`
+- `server/app/observability/audit.py`
+- `server/app/common/audit_decorator.py`
+- `tests/test_schema_models.py`
+- `tests/test_audit_decorator.py`
+- `Makefile`
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 29 source files
+make test
+# 30 passed, 1 warning
+python3 -m alembic -c alembic.ini upgrade head --sql
+# offline SQL generation passed
+```
 
 ---
 

@@ -3,6 +3,7 @@
 
 
 """APC-T024 tests for Model Gateway routing and client behavior."""
+
 from __future__ import annotations
 
 import httpx

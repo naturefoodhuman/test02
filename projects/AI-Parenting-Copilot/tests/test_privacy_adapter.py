@@ -3,6 +3,7 @@
 
 
 """APC-T025 tests for project Privacy Gateway adapter."""
+
 from __future__ import annotations
 
 import pytest

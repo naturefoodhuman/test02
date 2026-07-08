@@ -6,6 +6,7 @@
 
 APC-T011 replaces this in-memory publisher with PG LISTEN/NOTIFY integration.
 """
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable

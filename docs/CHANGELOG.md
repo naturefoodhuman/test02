@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 23:55:00
+创建时间（北京时间）：2026-07-09 00:30:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,11 +11,41 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T024 Model Gateway 与 APC-T025 Privacy Adapter；APC-T003 基础设施代码 BLOCKED 待 Docker 验收
+- **最新完成模块**：AI Parenting Copilot APC-T004 Schema 代码与 APC-T006 Audit 代码；T003/T004/T006 待 Docker/PostgreSQL 验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 
+
+
+---
+
+## [第 100 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 继续推进**：完成 `APC-T004` 核心 schema 代码与 `APC-T006` audit service/decorator 代码。
+- **验收状态**：由于当前沙盒无 Docker/PostgreSQL，`APC-T004` 与 `APC-T006` 集成验收无法完成，按 DoD 标记 BLOCKED。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/models.py`
+- 新增：`projects/AI-Parenting-Copilot/server/migrations/versions/0001_initial_schema.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/observability/audit.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/common/audit_decorator.py`
+- 新增：schema/audit 相关测试
+- 修改：项目级维护文档与 Makefile
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test
+# Project docs-check passed; ruff passed; mypy passed; 30 passed, 1 warning.
+python3 -m alembic -c alembic.ini upgrade head --sql
+# offline SQL generation passed
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ---
 

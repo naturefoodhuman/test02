@@ -3,6 +3,7 @@
 
 
 """Routing plan loader for the project-level Model Gateway."""
+
 from __future__ import annotations
 
 from pathlib import Path

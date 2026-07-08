@@ -3,6 +3,7 @@
 
 
 """Alembic environment for AI Parenting Copilot."""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 23:55:00
+创建时间（北京时间）：2026-07-09 00:30:00
 -->
 
 
@@ -10,11 +10,61 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T024 — Model Gateway`、`APC-T025 — Privacy Adapter`；`APC-T003` 代码/配置完成但 Docker 验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `25 passed, 1 warning`；根目录 `make docs-check` Blockers 0
-- **建议下一步**：在 Docker 环境验证 `APC-T003`；或继续实现 `APC-T004` schema 代码但保持 DB 验收约束。
+- **最新完成**：`APC-T004` schema 代码与 `APC-T006` audit 代码；二者均因 PostgreSQL 集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `30 passed, 1 warning`；Alembic offline SQL 生成通过；根目录 `make docs-check` Blockers 0
+- **建议下一步**：在 Docker/PostgreSQL 环境验证 `APC-T003/T004/T006`；若继续并行，优先实现不依赖真实 DB 的纯逻辑/fake。
 
 
+
+
+---
+
+## 第 4 轮 · 2026-07-09（APC-T004 Schema 代码 + APC-T006 Audit 代码）
+
+**目标**：继续推进 DB 相关任务的代码实现，但严格按 DoD 处理无法在当前沙盒完成的 PostgreSQL 集成验收。
+
+**状态变更**：
+
+- `APC-T004`：TODO → BLOCKED（metadata/migration/static/offline SQL 完成；等待 PostgreSQL 空库 upgrade/downgrade 验收）
+- `APC-T006`：TODO → BLOCKED（service/decorator/unit tests 完成；等待 audit_log DB insert/update/delete 集成验收）
+
+**完成内容**：
+
+1. **APC-T004 Schema 初版**：
+   - `server/app/models.py`：SQLAlchemy metadata，覆盖架构与工程设计要求的核心表。
+   - `server/migrations/versions/0001_initial_schema.py`：Alembic 初版 migration。
+   - migration 包含：updated_at trigger、audit_log append-only trigger、`REVOKE UPDATE, DELETE ON TABLE audit_log FROM app_user` 条件执行。
+   - schema 测试覆盖 required tables、ObservationEvent PK/状态字段/索引、audit immutability SQL。
+   - Alembic offline SQL：`python3 -m alembic -c alembic.ini upgrade head --sql` 通过。
+
+2. **APC-T006 Audit 代码**：
+   - `server/app/observability/audit.py`：AuditActor、AuditRecord、AuditService、MemoryAuditSink、AuditWriteError。
+   - `server/app/common/audit_decorator.py`：`@audit` 装饰器。
+   - 单元测试覆盖 before/after 捕获与高风险操作无审计 sink 时阻断。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 29 source files
+make test
+# 30 passed, 1 warning
+python3 -m alembic -c alembic.ini upgrade head --sql
+# offline SQL generation passed
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
+
+**阻塞说明**：
+
+当前沙盒无 Docker/PostgreSQL，无法完成 `APC-T004` 的空库 `alembic upgrade head`、迁移升降级集成测试，也无法完成 `APC-T006` 的 audit_log DB 插入与 UPDATE/DELETE 被拒绝验证。因此二者均保持 `BLOCKED`，未标记 DONE。
 
 ---
 

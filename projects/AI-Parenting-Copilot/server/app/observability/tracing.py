@@ -8,6 +8,7 @@ The setup is intentionally local-only by default. If no exporter endpoint is con
 tracing uses the SDK provider without external network output and therefore safely
 degrades when Jaeger/OTLP is absent.
 """
+
 from __future__ import annotations
 
 from opentelemetry import trace

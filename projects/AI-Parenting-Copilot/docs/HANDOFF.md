@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 23:55:00
+创建时间（北京时间）：2026-07-09 00:30:00
 -->
 
 
@@ -48,6 +48,8 @@ projects/AI-Parenting-Copilot/
 - `APC-T003` 代码/配置已完成但 BLOCKED：当前沙盒无 Docker CLI，尚未完成容器健康验收。
 - `APC-T024` 已完成：Model Gateway Smart Proxy 客户端、routing loader、FakeModelClient。
 - `APC-T025` 已完成：Privacy Gateway 适配、PII/canary/media 出站安全测试。
+- `APC-T004` 代码已完成但 BLOCKED：metadata/migration/offline SQL 通过，等待 PostgreSQL 空库迁移验收。
+- `APC-T006` 代码已完成但 BLOCKED：audit service/decorator/unit tests 通过，等待 audit_log DB immutability 集成验收。
 - Android / firmware 仍为目录占位。
 
 ---
