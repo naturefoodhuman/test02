@@ -1,1 +1,0 @@
-template_library/NETWORK_ARCHITECTURE_FINAL.md
