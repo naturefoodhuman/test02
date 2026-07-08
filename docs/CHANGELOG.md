@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-创建时间（北京时间）：2026-06-25 00:00:00
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-07-08 22:08:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,11 +11,37 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：PROJECT_DOSSIER_V5 当前资产卷宗与新项目文档隔离建议
+- **最新完成模块**：AI Parenting Copilot 项目级 APC-T001 工程骨架初始化
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
+
+## [第 97 轮] 2026-07-08
+
+### 需求变动
+- **AI Parenting Copilot 项目进入执行阶段**：用户批准开始开发并确认 SSH Deploy Key 已添加。
+- **项目文档隔离落地**：在 `projects/AI-Parenting-Copilot/` 内创建项目级 README、维护文档、ADR、Makefile 与基础目录骨架。
+- **路径与资料来源澄清**：统一项目目录大小写为 `projects/AI-Parenting-Copilot/`；工厂能力背景直接使用工厂根目录 `PROJECT_DOSSIER_V5.md`。
+- **临时文件清理**：删除项目 docs 下 Office 临时锁文件。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/README.md`、`Makefile`、`pyproject.toml`、`.env.example`、`.gitignore`
+- 新增：`projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`、`DEV_LOG.md`、`CHANGELOG.md`、`HANDOFF.md`、`docs/ADR/ADR-001-project-bootstrap.md`
+- 新增：`projects/AI-Parenting-Copilot/server/app/__init__.py`、`tests/test_project_structure.py` 及目录占位文件
+- 修改：项目级 `ARCHITECTURE_FINAL.md`、`ENGINEERING_DESIGN.md`、`TASK_BACKLOG.md`（仅路径/资料来源/任务状态同步）
+- 删除：`projects/AI-Parenting-Copilot/docs/~$TASK_BACKLOG家庭私有化 AI 育儿副驾驶系统-gpt-5.5-high.docx`
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test
+# Project docs-check passed; ruff passed; mypy passed; 3 passed.
+
+cd ../..
+make docs-check
+# Blockers: 0; Warnings: 1（architecture-sensitive terms review warning, non-blocking）
+```
 
 ## [第 96 轮] 2026-07-07
 

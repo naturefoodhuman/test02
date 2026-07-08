@@ -1,3 +1,8 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-07-08 22:08:00
+-->
+
 # ARCHITECTURE_FINAL.md
 
 > 项目：AI Parenting Copilot（家庭私有化 AI 育儿副驾驶系统）
@@ -9,7 +14,7 @@
 
 ## 0. 文档定位与边界
 
-本文档依据 `PRD.md`（业务需求唯一来源）与 `PROJECT_DOSSIER_V5.md`（FORGE Factory 工厂能力来源）推导得出。
+本文档依据 `PRD.md`（业务需求唯一来源）与 `../../../PROJECT_DOSSIER_V5.md`（工厂根目录 FORGE Factory 工厂能力来源）推导得出。
 
 - 业务需求：只来自 PRD，本文档不新增、不修改、不删除业务需求。
 - 工厂能力：默认复用 FORGE Factory 已有能力；仅在 PRD 需求无法由工厂能力满足时新增模块。
@@ -672,7 +677,7 @@ Orchestrator → Rule Engine → Copilot → Notification 全链路 trace，关�
 
 - 数据库 Schema 迁移采用版本化 migration 脚本，向前兼容。
 - 规则库（EvidencePolicy）以版本记录迁移，保留历史版本用于审计与追溯。
-- 文档只放置 SQLite 若临时先文档后代码，进入实现迁移至 `projects/ai-parenting-copilot/`（工厂 §13 建议）。
+- 文档只放置 SQLite 若临时先文档后代码，进入实现迁移至 `projects/AI-Parenting-Copilot/`（工厂 §13 建议）。
 
 ---
 
@@ -723,7 +728,7 @@ Orchestrator → Rule Engine → Copilot → Notification 全链路 trace，关�
 ## 27. 目录结构
 
 ```text
-projects/ai-parenting-copilot/
+projects/AI-Parenting-Copilot/
 ├── README.md
 ├── docs/
 │   ├── ARCHITECTURE_FINAL.md        # 本文档

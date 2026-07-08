@@ -1,8 +1,13 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-07-08 22:08:00
+-->
+
 # ENGINEERING_DESIGN.md — AI Parenting Copilot
 
 > 工程实现蓝图（Engineering Blueprint）。本文件仅回答"如何实现、如何组织、如何落地"，不重新设计架构。
 > **唯一架构事实来源**：`docs/ARCHITECTURE_FINAL.md`。任何冲突，以架构文档为准，本文档不得修改架构决策、技术路线、模块职责、调用链或架构组件。
-> **工厂能力来源**：`PROJECT_DOSSIER_V5.md`。凡工厂已有能力（模型路由、Privacy Gateway、Local RAG、Agent/Skill、治理、FEOS、诊断脚本）一律复用，禁止重复建设。
+> **工厂能力来源**：`../../../PROJECT_DOSSIER_V5.md`（工厂根目录）。凡工厂已有能力（模型路由、Privacy Gateway、Local RAG、Agent/Skill、治理、FEOS、诊断脚本）一律复用，禁止重复建设。
 > **项目路径**：`projects/AI-Parenting-Copilot/`（独立项目，与工厂根文档隔离）。
 
 ---
@@ -145,7 +150,7 @@
 ## 3. 推荐目录结构
 
 ```text
-projects/AI-parenting-copilot/
+projects/AI-Parenting-Copilot/
 ├── README.md
 ├── Makefile                              # docs-check / test / rules-validate / run
 ├── pyproject.toml                        # server 依赖 + ruff + mypy

@@ -1,11 +1,16 @@
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建时间（北京时间）：2026-07-08 22:08:00
+-->
+
 # TASK_BACKLOG.md
 
-> 项目：AI Parenting Copilot  
-> 项目根目录：`projects/AI-Parenting-Copilot/`（如仓库实际目录为小写，以仓库实际路径为准）  
-> 主要实施依据：`docs/ENGINEERING_DESIGN.md`  
-> 架构事实来源：`docs/ARCHITECTURE_FINAL.md`  
-> 工厂能力背景：`PROJECT_DOSSIER_V5.md`  
-> 状态：初始生成版，供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 项目：AI Parenting Copilot
+> 项目根目录：`projects/AI-Parenting-Copilot/`（仓库实际目录，大小写固定）
+> 主要实施依据：`docs/ENGINEERING_DESIGN.md`
+> 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
+> 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
+> 状态：APC-T001 DONE；APC-T002 TODO。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -115,9 +120,10 @@
 - **所属 Epic**：E01 项目地基与运行治理
 - **所属 Capability**：C01 项目骨架与配置
 - **所属 Story**：S01 初始化可运行工程骨架
+- **状态**：DONE
 - **目标**：创建项目推荐目录结构、基础配置文件、文档占位与 Makefile，使项目具备可开发入口。
 - **前置依赖**：无
-- **输入**：`ENGINEERING_DESIGN.md` §3、§14；`ARCHITECTURE_FINAL.md` §27；`PROJECT_DOSSIER_V5.md` §13
+- **输入**：`ENGINEERING_DESIGN.md` §3、§14；`ARCHITECTURE_FINAL.md` §27；工厂根目录 `../../../PROJECT_DOSSIER_V5.md` §13
 - **输出**：完整项目骨架、基础文档、Makefile、`.env.example`
 - **涉及模块**：project root、docs、config、deploy、server、android、firmware
 - **涉及文件**：
@@ -786,7 +792,7 @@
 - **所属 Story**：S11 复用工厂模型、隐私、Local RAG 能力
 - **目标**：实现项目内唯一 LLM/VLM 入口，调用工厂 Smart Proxy 4000。
 - **前置依赖**：APC-T002, APC-T005
-- **输入**：`ENGINEERING_DESIGN.md` §5.8、§8；`PROJECT_DOSSIER_V5.md` §4.2、§6
+- **输入**：`ENGINEERING_DESIGN.md` §5.8、§8；工厂根目录 `../../../PROJECT_DOSSIER_V5.md` §4.2、§6
 - **输出**：ModelClient、routing plan loader、FakeModelClient
 - **涉及模块**：model_gateway
 - **涉及文件**：
@@ -814,7 +820,7 @@
 - **所属 Story**：S11
 - **目标**：通过适配层复用工厂 `_infra/network/privacy`，在云端出站前执行脱敏与 canary 检查。
 - **前置依赖**：APC-T024
-- **输入**：`ENGINEERING_DESIGN.md` §2 M14、§8；`PROJECT_DOSSIER_V5.md` §5.4
+- **输入**：`ENGINEERING_DESIGN.md` §2 M14、§8；工厂根目录 `../../../PROJECT_DOSSIER_V5.md` §5.4
 - **输出**：Privacy adapter、安全测试
 - **涉及模块**：privacy, model_gateway
 - **涉及文件**：
@@ -1758,7 +1764,7 @@
 - **所属 Story**：S23
 - **目标**：整合项目级安全测试，覆盖规则/LLM/隐私/审计关键铁律。
 - **前置依赖**：APC-T006, APC-T025, APC-T029, APC-T031
-- **输入**：`ENGINEERING_DESIGN.md` §12.1；`PROJECT_DOSSIER_V5.md` §5.4
+- **输入**：`ENGINEERING_DESIGN.md` §12.1；工厂根目录 `../../../PROJECT_DOSSIER_V5.md` §5.4
 - **输出**：Security regression suite
 - **涉及模块**：privacy, orchestrator, rule_engine, observability
 - **涉及文件**：
