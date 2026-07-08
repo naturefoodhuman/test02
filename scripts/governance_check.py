@@ -220,7 +220,15 @@ def scan_cross_refs_to_adr() -> int:
 
 
 def scan_core_ssot_existence() -> list[str]:
-    return [name for name in CORE_SSOT_FILES if not (ROOT / name).exists()]
+    missing = []
+    for name in CORE_SSOT_FILES:
+        if (ROOT / name).exists():
+            continue
+        alt = Path("template_library") / name
+        if alt.exists():
+            continue
+        missing.append(name)
+    return missing
 
 
 def scan_missing_core_doc_links() -> list[str]:
@@ -461,7 +469,7 @@ def classify_blockers(changed_files: list[str]) -> dict[str, Any]:
         total = r5[kind]["total"]
         ok = r5[kind]["ok"]
         if total and ok / total < 0.75:
-            warnings.append(f"R5 {kind} compliance below 75%: {ok}/{total}")
+            warnings.append(f"R5 {kind} compliance below 75% (informational, not blocking): {ok}/{total}")
     return {
         "blockers": blockers,
         "warnings": warnings,

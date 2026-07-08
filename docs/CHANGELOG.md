@@ -2400,3 +2400,4 @@ python -m _infra.network.cli config
 ### Added
 - **mini-feos-debug-lab**: Initial version (cli.py + test_cli.py)
 - **AI-Parenting-Copilot**: Initial project docs
+- scripts/governance_check.py: 简化治理检查（SSOT回退template_library、R5降级为信息提示、TASK_BACKLOG支持双路径）
