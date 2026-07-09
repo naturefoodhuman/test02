@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:05:00
+创建时间（北京时间）：2026-07-09 18:30:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -40,6 +40,23 @@
 
 
 
+
+
+---
+
+## [第 124 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 验收修复**：修复 `make db-integration-test` 中 migration roundtrip URL 使用 SQLAlchemy 默认 masked password (`***`) 导致 asyncpg 认证失败的问题，改用 `render_as_string(hide_password=False)`。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make test
+# 134 passed, 4 deselected, 1 warning
+make db-integration-test
+# no DB URL in sandbox: 4 skipped
+```
 
 ---
 

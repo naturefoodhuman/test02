@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:05:00
+创建时间（北京时间）：2026-07-09 18:30:00
 -->
 
 
@@ -39,6 +39,31 @@
 
 
 
+
+
+---
+
+## [第 28 轮] 2026-07-09 — DB integration URL password rendering fix
+
+### 需求变动
+
+- 修复 migration roundtrip integration test 中 SQLAlchemy URL 字符串化隐藏密码为 `***`，导致 asyncpg 认证失败的问题。
+- 新增 regression test 确保临时 DB URL 保留真实密码。
+
+### 文件影响
+
+- 修改：`tests/integration/test_db_repository_adapters.py`
+- 新增：`tests/test_db_integration_url_rendering.py`
+- 修改：项目级状态/开发日志
+
+### 验证
+
+```bash
+make test
+# 134 passed, 4 deselected, 1 warning
+make db-integration-test
+# no DB URL: 4 skipped
+```
 
 ---
 

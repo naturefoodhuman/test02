@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:05:00
+创建时间（北京时间）：2026-07-09 18:30:00
 -->
 
 
@@ -39,6 +39,27 @@
 
 
 
+
+
+---
+
+## 第 28 轮 · 2026-07-09（DB integration URL password rendering fix）
+
+**问题**：用户 Mac 执行 `make db-integration-test` 时，migration roundtrip test 仍报 `InvalidPasswordError`。虽然已改为连接应用库 `parenting`，但 SQLAlchemy URL 转字符串时默认将密码隐藏为 `***`，导致 asyncpg 实际收到错误密码。
+
+**修复**：
+
+- `_temp_database_urls()` 使用 `render_as_string(hide_password=False)`，保留真实密码。
+- 新增 `tests/test_db_integration_url_rendering.py`，防止再次把 `***` 传给 asyncpg。
+
+**验证**：
+
+```bash
+make test
+# 134 passed, 4 deselected, 1 warning
+make db-integration-test
+# no DB URL: 4 skipped
+```
 
 ---
 

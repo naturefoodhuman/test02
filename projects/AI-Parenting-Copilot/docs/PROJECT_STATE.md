@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:05:00
+创建时间（北京时间）：2026-07-09 18:30:00
 -->
 
 
@@ -874,3 +874,8 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 ## 10. Temporary migration database admin URL fix
 
 用户 Mac 验收发现 `test_alembic_upgrade_downgrade_roundtrip_on_temporary_database` 连接 maintenance database `postgres` 时，`parenting` 用户认证失败。已修复为使用已验证可登录的应用数据库连接作为 admin connection target，再创建/删除临时数据库。该修复不改变架构，只调整 integration test harness 对本地 Docker volume/role 的兼容性。
+
+
+## 11. DB integration URL password rendering fix
+
+用户 Mac 验收发现 migration roundtrip test 即使连接应用库 `parenting`，仍然报 `InvalidPasswordError`。根因是 SQLAlchemy `URL.__str__()` 默认隐藏密码为 `***`，integration harness 将隐藏后的 URL 传给 asyncpg。已改为 `render_as_string(hide_password=False)`，并新增 regression test `tests/test_db_integration_url_rendering.py`，确保临时 DB URL 不含 `***`。

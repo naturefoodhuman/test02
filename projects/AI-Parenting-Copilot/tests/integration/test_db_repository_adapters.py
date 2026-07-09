@@ -76,7 +76,10 @@ def _temp_database_urls(name: str) -> tuple[str, str]:
     # and drop databases from its own DB.
     admin = parsed.set(drivername="postgresql")
     temp = parsed.set(database=name)
-    return str(admin), str(temp)
+    return (
+        admin.render_as_string(hide_password=False),
+        temp.render_as_string(hide_password=False),
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
