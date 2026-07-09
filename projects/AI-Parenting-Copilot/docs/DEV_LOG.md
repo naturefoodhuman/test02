@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 12:00:00
+创建时间（北京时间）：2026-07-09 12:50:00
 -->
 
 
@@ -31,6 +31,26 @@
 
 
 
+
+
+---
+
+## 第 20 轮 · 2026-07-09（APC-T013~T017 Normalization + State Engine dev chain）
+
+**状态变更**：
+
+- `APC-T013`：TODO → BLOCKED（parsers/service/in-memory derived store/tests 完成；DB 派生表写入待验收）
+- `APC-T014`：TODO → BLOCKED（dedup/correction/scan_pending tests 完成；真实 event bus worker 待验收）
+- `APC-T015`：TODO → BLOCKED（P0 projection pure functions/tests 完成；DB 集成待验收）
+- `APC-T016`：TODO → BLOCKED（BabyStateEngine/snapshot repo/State API dev 完成；DB upsert 待验收）
+- `APC-T017`：TODO → BLOCKED（dev event→normalization→state integration test 完成；真实 PG/PowerSync 链路待验收）
+
+**验证**：
+
+```bash
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# 120 passed, 1 warning; rule packs validated
+```
 
 ---
 

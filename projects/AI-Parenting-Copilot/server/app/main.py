@@ -29,6 +29,7 @@ from server.app.health.api import router as health_router
 from server.app.health.monitor import DeviceHealthMonitor
 from server.app.media.api.routes import router as media_router
 from server.app.media.storage import MediaStorageService
+from server.app.normalization.service import InMemoryDerivedTableStore, NormalizationService
 from server.app.notification.alert_repo import InMemoryAlertRepository
 from server.app.notification.api.routes import router as alert_router
 from server.app.observability.audit import MemoryAuditSink
@@ -38,6 +39,9 @@ from server.app.observability.tracing import configure_tracing
 from server.app.orchestrator.api.routes import router as orchestrator_router
 from server.app.orchestrator.orchestrator import Orchestrator
 from server.app.settings import Settings
+from server.app.state_engine.api.routes import router as state_router
+from server.app.state_engine.engine import BabyStateEngine
+from server.app.state_engine.snapshot_repo import InMemoryStateSnapshotRepository
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -73,6 +77,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.device_health_monitor = DeviceHealthMonitor([], app.state.alert_repository)
     app.state.sleep_session_repository = InMemorySleepSessionRepository(app.state.audit_sink)
     app.state.event_repository = InMemoryEventRepository()
+    app.state.derived_table_store = InMemoryDerivedTableStore()
+    app.state.normalization_service = NormalizationService(app.state.derived_table_store)
+    app.state.state_snapshot_repository = InMemoryStateSnapshotRepository()
+    app.state.state_engine = BabyStateEngine(app.state.state_snapshot_repository)
     app.state.media_storage = MediaStorageService()
     app.state.export_service = ExportService()
     app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
@@ -93,6 +101,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(alert_router)
     app.include_router(camera_router)
     app.include_router(media_router)
+    app.include_router(state_router)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:

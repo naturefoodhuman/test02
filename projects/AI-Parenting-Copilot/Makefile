@@ -72,6 +72,9 @@ docs-check:
 	@test -f server/app/mmwave/frame_parser.py
 	@test -f server/app/mmwave/sensor_event_mapper.py
 	@test -f server/app/media/storage.py
+	@test -f server/app/normalization/service.py
+	@test -f server/app/state_engine/engine.py
+	@test -f server/app/state_engine/api/routes.py
 	@test -f server/app/backup/pg_dump_task.py
 	@test -f server/scripts/mock_mmwave_publisher.py
 	@test -f tests/fakes.py

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 12:00:00
+创建时间（北京时间）：2026-07-09 12:50:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T053 BLOCKED`、`APC-T058 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T013 BLOCKED`、`APC-T014 BLOCKED`、`APC-T015 BLOCKED`、`APC-T016 BLOCKED`、`APC-T017 BLOCKED`、`APC-T053 BLOCKED`、`APC-T058 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -668,6 +668,47 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T037/T038/T039` 未 DONE；真实 RN UI/snapshot/ROI 手势待验收。
 
+
+### APC-T013 — 实现 Normalization 表单/语音文本解析与领域派生表写入
+
+状态：BLOCKED
+
+已完成代码/验证：`server/app/normalization/*`，支持 voice/form feeding/diaper/sleep/temperature/supplement 归一化、event_id lineage 与 in-memory derived store。
+
+阻塞原因：前置 `APC-T011` 未完成；真实 DB 派生表写入待验收。
+
+### APC-T014 — 实现去重、纠错链处理与 Normalization Worker
+
+状态：BLOCKED
+
+已完成代码/验证：`scan_pending`、feeding dedup helper、correction chain helper；重复 pending 事件不会重复写入 in-memory derived store。
+
+阻塞原因：真实 PG LISTEN/NOTIFY worker、pending recovery scan 与 DB 派生表更新待验收。
+
+### APC-T015 — 实现 Baby State Engine P0 Projection
+
+状态：BLOCKED
+
+已完成代码/验证：feeding/diaper/sleep/temperature/supplement projection pure functions；测试覆盖顺序无关的稳定 DerivedBabyState 输出。
+
+阻塞原因：前置 `APC-T013` 未 DONE；DB 集成待验收。
+
+### APC-T016 — 实现 State Engine 增量重算、Snapshot Repo 与 State API
+
+状态：BLOCKED
+
+已完成代码/验证：`BabyStateEngine`、`InMemoryStateSnapshotRepository`、`GET /api/v1/babies/{baby_id}/state` dev API。
+
+阻塞原因：前置 `APC-T015/T006` 未 DONE；真实 `derived_baby_state` DB upsert 与 auth/audit 集成待验收。
+
+### APC-T017 — 打通 Event → Normalization → State 集成链路
+
+状态：BLOCKED
+
+已完成代码/验证：dev/in-memory integration test 覆盖 event API write → normalization → state recompute → state API read。
+
+阻塞原因：前置 `APC-T010/T014/T016` 未 DONE；真实 PG event bus、PowerSync、DB 派生链路待验收。
+
 ---
 
 ## 4. 当前未实现
@@ -689,7 +730,7 @@ make lint
 make typecheck
 # Success: no issues found in 120 source files
 make test
-# 114 passed, 1 warning
+# 120 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
