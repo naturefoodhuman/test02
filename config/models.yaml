@@ -12,6 +12,8 @@ models:
     base_url: http://localhost:4000/v1
     type: local
     memory_required_gb: 20
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 15
 
   mtplx-gemma4:
     display_name: "Gemma4-MTPLX-Optimized (独立评审)"
@@ -21,6 +23,9 @@ models:
     base_url: http://localhost:4000/v1
     type: local
     memory_required_gb: 16
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 10
+    
 
   qwopus-35b:
     display_name: "Qwopus3.6-35B-A3B (独立评审)"
@@ -30,6 +35,8 @@ models:
     base_url: http://localhost:4000/v1
     type: local
     memory_required_gb: 36
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 15
 
   local-deepseek-r1:
     display_name: "DeepSeek-R1 32B"
@@ -39,6 +46,8 @@ models:
     base_url: http://localhost:4000/v1
     type: local
     memory_required_gb: 20
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 15
 
   qwen3-coder-next:
     display_name: "Qwen3-Coder-Next Q4_K_M (coding test)"
@@ -48,6 +57,8 @@ models:
     base_url: http://localhost:4000/v1
     type: local
     memory_required_gb: 52
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 15
 
   # ── API 模型：直接访问官方，不经过本地代理 ──
   deepseek-pro:
@@ -58,6 +69,8 @@ models:
     base_url: https://integrate.api.nvidia.com/v1
     api_key: ${DEEPSEEK_API_KEY}
     type: api
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 20
 
   deepseek-flash:
     display_name: "DeepSeek V4 Flash"
@@ -67,3 +80,5 @@ models:
     base_url: https://integrate.api.nvidia.com/v1
     api_key: ${DEEPSEEK_API_KEY}
     type: api
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 20

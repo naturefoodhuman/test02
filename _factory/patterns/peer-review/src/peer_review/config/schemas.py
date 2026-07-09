@@ -67,6 +67,11 @@ class ModelConfig(BaseModel):
     stream: bool = Field(default=False, description="是否使用流式输出")
     rpm: int | None = Field(default=None, description="每分钟限制请求数 (RPM)")
     tpm: int | None = Field(default=None, description="每分钟限制 Token 数 (TPM)")
+    
+    # ── Tool Calling / Agent Loop 扩展 (方案C) ─────────────────────
+    tools: list[str] | None = Field(default=None, description="启用的工具名称列表 (对应 ToolRegistry 中注册的工具)")
+    max_agent_turns: int = Field(default=10, ge=1, le=100, description="Agent Loop 最大循环轮次")
+
 
     @field_validator("api_key", mode="before")
     @classmethod
