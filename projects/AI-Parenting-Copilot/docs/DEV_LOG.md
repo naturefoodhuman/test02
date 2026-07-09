@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:00:00
+创建时间（北京时间）：2026-07-09 21:25:00
 -->
 
 
@@ -45,6 +45,30 @@
 
 
 
+
+
+---
+
+## 第 34 轮 · 2026-07-09（Request-level DB audit wiring + API DB integration fix）
+
+**问题修复**：用户 Mac `test_db_backed_auth_event_alert_state_and_rules_api` 暴露 transaction teardown 与 fixture engine 误用问题。
+
+**完成内容**：
+
+- 新增 `record_request_audit()`，DB mode 写入 `audit_log`，dev mode fallback MemoryAuditSink。
+- Auth/Event/Alert/Rules API mutating routes 接入 request-level audit。
+- API DB integration test 改为显式 AsyncEngine fixture，独立 session seed baby，并按 family_id 清理数据。
+- Integration test 增加 audit rows 断言。
+- 修正 TASK_BACKLOG 顶部状态索引，使已通过 DB 验收的 T003/T004/T006/T007/T009/T018 与明细一致。
+
+**验证**：
+
+```bash
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL: 5 skipped; user Mac should run real 5 tests
+```
 
 ---
 

@@ -177,6 +177,32 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert activated.status_code == 200
             assert activated.json()["activated"]["policy_type"] == "integration"
 
+        async with engine.connect() as audit_connection:
+            audit_actions = set(
+                await audit_connection.scalars(
+                    text(
+                        """
+                        SELECT action FROM audit_log
+                        WHERE resource IN (
+                            :family_resource,
+                            :event_resource,
+                            :alert_resource,
+                            :rule_resource
+                        )
+                        """
+                    ),
+                    {
+                        "family_resource": f"family:{family_id}",
+                        "event_resource": f"observation_event:{event.json()['event_id']}",
+                        "alert_resource": f"alert:{alert_id}",
+                        "rule_resource": f"evidence_policy:integration:{integration_rule_version}",
+                    },
+                )
+            )
+            assert {"auth.init_family", "event.upsert", "alert.create", "rule.activate"}.issubset(
+                audit_actions
+            )
+
         async with async_sessionmaker(engine, expire_on_commit=False)() as state_session:
             async with state_session.begin():
                 await SQLAlchemyStateSnapshotRepository(state_session).upsert(

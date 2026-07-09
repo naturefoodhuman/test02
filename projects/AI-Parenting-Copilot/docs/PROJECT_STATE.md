@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:00:00
+创建时间（北京时间）：2026-07-09 21:25:00
 -->
 
 
@@ -964,3 +964,18 @@ make db-integration-test
 - 测试通过 API 创建 family/admin，再通过独立 DB session 为同一 family seed baby。
 - 测试结束后按 family_id 清理相关 DB 数据，避免污染持久化开发库。
 - State snapshot seeding 使用 `async_sessionmaker(engine, ...)` 的真实 AsyncEngine fixture。
+
+
+## 17. Request-level DB audit wiring
+
+状态：已新增，等待用户 Mac DB integration 复验。
+
+新增：
+
+- `server/app/observability/request_audit.py`
+
+修复与增强：
+
+- Auth/Event/Alert/Rules API 在 DB mode 下可将 audit records 写入 `audit_log`，dev mode 仍 fallback 到 MemoryAuditSink。
+- `test_api_db_runtime.py` 修复 transaction isolation：使用真实 AsyncEngine fixture、独立 session seed、按 family_id 清理数据。
+- API runtime integration test 新增 audit row 断言，覆盖 auth/event/alert/rule audit actions。

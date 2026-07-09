@@ -19,6 +19,7 @@ from server.app.notification.alert_repo import (
     InMemoryAlertRepository,
 )
 from server.app.notification.sqlalchemy_alert_repo import SQLAlchemyAlertRepository
+from server.app.observability.request_audit import record_request_audit
 
 router = APIRouter(prefix="/api/v1/alerts", tags=["alerts"])
 
@@ -39,7 +40,15 @@ def _repo(request: Request) -> InMemoryAlertRepository | SQLAlchemyAlertReposito
 
 @router.post("", response_model=AlertRecord)
 async def create_alert(payload: CreateAlertRequest, request: Request) -> AlertRecord:
-    return await _repo(request).create(payload)
+    alert = await _repo(request).create(payload)
+    await record_request_audit(
+        request,
+        action="alert.create",
+        resource=f"alert:{alert.id}",
+        after=alert.model_dump(mode="json"),
+        db_only=True,
+    )
+    return alert
 
 
 @router.get("", response_model=list[AlertRecord])
@@ -54,7 +63,15 @@ async def get_alert(alert_id: str, request: Request) -> AlertRecord:
 
 @router.post("/{alert_id}/ack", response_model=AlertRecord)
 async def ack_alert(alert_id: str, payload: AckAlertRequest, request: Request) -> AlertRecord:
-    return await _repo(request).ack(alert_id, payload)
+    alert = await _repo(request).ack(alert_id, payload)
+    await record_request_audit(
+        request,
+        action="alert.ack",
+        resource=f"alert:{alert_id}",
+        after=alert.model_dump(mode="json"),
+        db_only=True,
+    )
+    return alert
 
 
 @router.post("/{alert_id}/feedback", response_model=AlertRecord)
@@ -63,4 +80,12 @@ async def feedback_alert(
     payload: FeedbackRequest,
     request: Request,
 ) -> AlertRecord:
-    return await _repo(request).feedback(alert_id, payload)
+    alert = await _repo(request).feedback(alert_id, payload)
+    await record_request_audit(
+        request,
+        action="alert.feedback",
+        resource=f"alert:{alert_id}",
+        after=alert.model_dump(mode="json"),
+        db_only=True,
+    )
+    return alert

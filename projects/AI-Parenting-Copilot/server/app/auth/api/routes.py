@@ -15,6 +15,7 @@ from server.app.auth.domain.models import DeviceKind, Role
 from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.auth.service.auth_service import AuthService
 from server.app.common.errors import AppError
+from server.app.observability.request_audit import record_request_audit
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -101,6 +102,12 @@ async def init_family(payload: InitFamilyRequest, request: Request) -> InitFamil
         display_name=admin.display_name,
         secret=payload.admin_secret,
     )
+    await record_request_audit(
+        request,
+        action="auth.init_family",
+        resource=f"family:{family.id}",
+        after={"family_id": family.id, "admin_user_id": admin.id},
+    )
     return InitFamilyResponse(
         family_id=family.id,
         admin_user_id=admin.id,
@@ -178,6 +185,12 @@ async def register_device(
         name=payload.name,
         fcm_token=payload.fcm_token,
         meta=payload.meta,
+    )
+    await record_request_audit(
+        request,
+        action="auth.device_register",
+        resource=f"device:{device.id}",
+        after={"device_id": device.id, "family_id": device.family_id},
     )
     return DeviceResponse(
         device_id=device.id,

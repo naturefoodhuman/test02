@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:00:00
+创建时间（北京时间）：2026-07-09 21:25:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -46,6 +46,23 @@
 
 
 
+
+
+---
+
+## [第 130 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 验收修复与增强**：修复 API DB runtime integration transaction isolation；新增 request-level DB audit helper，使 Auth/Event/Alert/Rules mutating API 在 DB mode 下写入 audit_log。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL in sandbox: 5 skipped; user Mac should run real 5 tests
+```
 
 ---
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:00:00
+创建时间（北京时间）：2026-07-09 21:25:00
 -->
 
 
@@ -45,6 +45,33 @@
 
 
 
+
+
+---
+
+## [第 34 轮] 2026-07-09 — Request-level DB audit wiring + API DB integration fix
+
+### 需求变动
+
+- 修复 API DB runtime integration test transaction teardown / fixture engine 误用问题。
+- Auth/Event/Alert/Rules mutating API 在 DB mode 下接入 `audit_log` 写入。
+- 修正 TASK_BACKLOG 顶部状态索引与明细状态一致。
+
+### 文件影响
+
+- 新增：`server/app/observability/request_audit.py`
+- 修改：Auth/Event/Alert/Rules API routes
+- 修改：`tests/integration/test_api_db_runtime.py`
+- 修改：项目级维护文档
+
+### 验证
+
+```bash
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL: 5 skipped
+```
 
 ---
 

@@ -18,7 +18,7 @@ from server.app.events.domain.observation_event import (
 )
 from server.app.events.infra.repository import EventRepository
 from server.app.events.infra.sqlalchemy_repository import SQLAlchemyEventRepository
-from server.app.observability.audit import AuditActor, AuditRecord, AuditSink
+from server.app.observability.request_audit import record_request_audit
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
 
@@ -37,38 +37,14 @@ def _event_repo(request: Request) -> EventRepository:
     return cast(EventRepository, repo)
 
 
-def _audit_sink(request: Request) -> AuditSink | None:
-    return getattr(request.app.state, "audit_sink", None)
-
-
-async def _record_audit(
-    request: Request,
-    *,
-    action: str,
-    resource: str,
-    after: dict[str, object] | None = None,
-    before: dict[str, object] | None = None,
-) -> None:
-    sink = _audit_sink(request)
-    if sink is None:
-        return
-    await sink.record(
-        AuditRecord(
-            actor=AuditActor(actor_kind="api"),
-            action=action,
-            resource=resource,
-            before=before,
-            after=after,
-            trace_id=str(getattr(request.state, "trace_id", "")) or None,
-        )
-    )
 
 
 @router.post("", response_model=ObservationEvent)
 async def create_event(payload: ObservationEventCreate, request: Request) -> ObservationEvent:
     event = await _event_repo(request).upsert(payload)
-    await _record_audit(
+    await record_request_audit(
         request,
+        actor_kind="api",
         action="event.upsert",
         resource=f"observation_event:{event.event_id}",
         after=event.model_dump(mode="json"),
@@ -100,8 +76,9 @@ async def correct_event(
     request: Request,
 ) -> ObservationEvent:
     event = await _event_repo(request).correct(event_id, payload)
-    await _record_audit(
+    await record_request_audit(
         request,
+        actor_kind="api",
         action="event.correct",
         resource=f"observation_event:{event_id}",
         after=event.model_dump(mode="json"),
@@ -112,8 +89,9 @@ async def correct_event(
 @router.delete("/{event_id}", response_model=ObservationEvent)
 async def delete_event(event_id: str, request: Request) -> ObservationEvent:
     event = await _event_repo(request).soft_delete(event_id)
-    await _record_audit(
+    await record_request_audit(
         request,
+        actor_kind="api",
         action="event.soft_delete",
         resource=f"observation_event:{event_id}",
         after=event.model_dump(mode="json"),

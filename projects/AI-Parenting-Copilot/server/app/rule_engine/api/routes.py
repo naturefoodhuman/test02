@@ -15,9 +15,8 @@ from fastapi import APIRouter, Header, Request
 from pydantic import BaseModel
 
 from server.app.common.errors import AppError
-from server.app.observability.audit import AuditActor, AuditRecord, AuditSink
+from server.app.observability.request_audit import record_request_audit
 from server.app.rule_engine.evidence_repo import (
-    EvidencePolicyRecord,
     InMemoryEvidencePolicyRepository,
 )
 from server.app.rule_engine.loader import RulePack, load_rule_pack, validate_rule_packs
@@ -51,21 +50,6 @@ def _repo(
     return cast(InMemoryEvidencePolicyRepository, repo)
 
 
-async def _audit(request: Request, action: str, record: EvidencePolicyRecord) -> None:
-    sink = getattr(request.app.state, "audit_sink", None)
-    if sink is None:
-        return
-    audit_sink = cast(AuditSink, sink)
-    await audit_sink.record(
-        AuditRecord(
-            actor=AuditActor(actor_kind="admin"),
-            action=action,
-            resource=f"evidence_policy:{record.policy_type}:{record.version}",
-            after=asdict(record),
-        )
-    )
-
-
 @router.get("/validate")
 async def validate_rules(root: str = "config/rules") -> dict[str, object]:
     packs = validate_rule_packs(Path(root))
@@ -85,5 +69,11 @@ async def activate_rule_pack(
         record = await record_or_awaitable
     else:
         record = record_or_awaitable
-    await _audit(request, "rule.activate", record)
+    await record_request_audit(
+        request,
+        actor_kind="admin",
+        action="rule.activate",
+        resource=f"evidence_policy:{record.policy_type}:{record.version}",
+        after=asdict(record),
+    )
     return {"activated": asdict(record)}
