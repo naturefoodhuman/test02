@@ -7,6 +7,7 @@
 This adapter is intentionally thin and mirrors the in-memory repository contract.
 Live DB integration tests run during Mac/PostgreSQL validation.
 """
+
 from __future__ import annotations
 
 from sqlalchemy import select

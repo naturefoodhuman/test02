@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 15:20:00
+创建时间（北京时间）：2026-07-09 16:05:00
 -->
 
 
@@ -35,6 +35,32 @@
 
 
 
+
+
+---
+
+## [第 24 轮] 2026-07-09 — Additional DB-backed repository adapter skeletons
+
+### 需求变动
+
+- 继续减少 DB 持久化 BLOCKED 任务的剩余工作。
+- 新增 State/EvidencePolicy/Media/Delivery/SleepSession SQLAlchemy adapters；状态不改为 DONE，等待真实 PostgreSQL 集成验收。
+
+### 文件影响
+
+- 新增：`server/app/state_engine/sqlalchemy_snapshot_repo.py`
+- 新增：`server/app/rule_engine/sqlalchemy_evidence_repo.py`
+- 新增：`server/app/media/sqlalchemy_media_repo.py`
+- 新增：`server/app/notification/sqlalchemy_delivery_repo.py`
+- 新增：`server/app/camera/sqlalchemy_sleep_session_repo.py`
+- 新增：`tests/test_more_db_repository_adapters.py`
+
+### 验证
+
+```bash
+make docs-check && make lint && make typecheck && make test
+# 133 passed, 1 warning
+```
 
 ---
 

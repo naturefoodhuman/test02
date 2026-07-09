@@ -6,6 +6,7 @@
 Target: 1 req/s household scale. The file imports without locust installed so CI can
 validate syntax; running it as a Locust test requires installing `locust` manually.
 """
+
 from __future__ import annotations
 
 try:

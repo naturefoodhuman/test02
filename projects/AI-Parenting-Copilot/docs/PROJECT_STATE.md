@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 15:20:00
+创建时间（北京时间）：2026-07-09 16:05:00
 -->
 
 
@@ -826,3 +826,18 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 - `server/app/notification/sqlalchemy_alert_repo.py`
 
 这些 adapters 为解除 `APC-T007/T008/T009/T010/T031` 的 DB 持久化阻塞做准备；当前通过 mypy/ruff/static tests，但尚未在真实 PostgreSQL transaction 中验收，因此对应任务状态不变。
+
+
+### Additional DB-backed repository adapter progress
+
+状态：部分完成，仍 BLOCKED 待 PostgreSQL 集成验收。
+
+本轮新增 SQLAlchemy adapters：
+
+- `server/app/state_engine/sqlalchemy_snapshot_repo.py`
+- `server/app/rule_engine/sqlalchemy_evidence_repo.py`
+- `server/app/media/sqlalchemy_media_repo.py`
+- `server/app/notification/sqlalchemy_delivery_repo.py`
+- `server/app/camera/sqlalchemy_sleep_session_repo.py`
+
+这些 adapters 为解除 `APC-T016/T018/T032/T037/T042` 的 DB 持久化阻塞做准备；当前通过 mypy/ruff/static tests，但尚未在真实 PostgreSQL transaction 中验收，因此对应任务状态不变。

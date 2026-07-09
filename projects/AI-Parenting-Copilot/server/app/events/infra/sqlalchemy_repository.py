@@ -3,6 +3,7 @@
 
 
 """SQLAlchemy EventRepository implementation."""
+
 from __future__ import annotations
 
 from sqlalchemy import select

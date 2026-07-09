@@ -2,6 +2,7 @@
 # 创建时间（北京时间）：2026-07-09 15:20:00
 
 """Static tests for SQLAlchemy DB repository adapters."""
+
 from __future__ import annotations
 
 from pathlib import Path

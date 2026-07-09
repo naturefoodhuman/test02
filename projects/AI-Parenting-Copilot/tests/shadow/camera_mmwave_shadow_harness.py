@@ -6,6 +6,7 @@
 The harness is deterministic and uses fixture data by default. It never creates strong
 alerts; it only reports shadow candidates and feedback statistics.
 """
+
 from __future__ import annotations
 
 import argparse

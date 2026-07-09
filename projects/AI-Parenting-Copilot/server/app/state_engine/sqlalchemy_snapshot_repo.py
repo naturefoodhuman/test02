@@ -1,0 +1,60 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建时间（北京时间）：2026-07-09 16:05:00
+
+
+"""SQLAlchemy DerivedBabyState snapshot repository."""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from server.app.common.clock import utc_now
+from server.app.models import DerivedBabyState as ORMDerivedBabyState
+from server.app.state_engine.snapshot_repo import DerivedBabyStateSnapshot
+
+
+def _parse_computed_at(value: str) -> datetime:
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return utc_now()
+
+
+class SQLAlchemyStateSnapshotRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def upsert(self, snapshot: DerivedBabyStateSnapshot) -> DerivedBabyStateSnapshot:
+        row = await self.session.scalar(
+            select(ORMDerivedBabyState).where(ORMDerivedBabyState.baby_id == snapshot.baby_id)
+        )
+        if row is None:
+            row = ORMDerivedBabyState(
+                baby_id=snapshot.baby_id,
+                family_id=snapshot.family_id,
+                snapshot=snapshot.snapshot,
+                computed_at=_parse_computed_at(snapshot.computed_at),
+            )
+            self.session.add(row)
+        else:
+            row.snapshot = snapshot.snapshot
+            row.computed_at = _parse_computed_at(snapshot.computed_at)
+        await self.session.flush()
+        return snapshot
+
+    async def get(self, baby_id: str) -> DerivedBabyStateSnapshot | None:
+        row = await self.session.scalar(
+            select(ORMDerivedBabyState).where(ORMDerivedBabyState.baby_id == baby_id)
+        )
+        if row is None:
+            return None
+        return DerivedBabyStateSnapshot(
+            baby_id=row.baby_id,
+            family_id=row.family_id,
+            snapshot=row.snapshot,
+            computed_at=row.computed_at.isoformat(),
+            source_event_count=int(row.snapshot.get("source_event_count", 0) or 0),
+        )

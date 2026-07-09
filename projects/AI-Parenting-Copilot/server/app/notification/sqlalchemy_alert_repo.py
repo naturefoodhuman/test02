@@ -3,6 +3,7 @@
 
 
 """SQLAlchemy Alert repository adapter."""
+
 from __future__ import annotations
 
 from sqlalchemy import select

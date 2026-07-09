@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 15:20:00
+创建时间（北京时间）：2026-07-09 16:05:00
 -->
 
 
@@ -35,6 +35,33 @@
 
 
 
+
+
+---
+
+## 第 24 轮 · 2026-07-09（更多 DB-backed repository adapter skeletons）
+
+**目标**：继续减少 BLOCKED 任务剩余工作，补充 State/EvidencePolicy/Media/Delivery/SleepSession 的 SQLAlchemy adapters。
+
+**完成内容**：
+
+- `SQLAlchemyStateSnapshotRepository`：derived_baby_state upsert/get。
+- `SQLAlchemyEvidencePolicyRepository`：EvidencePolicy activate/get_current。
+- `SQLAlchemyMediaAssetRepository`：MediaAsset metadata add/get。
+- `SQLAlchemyDeliveryRepository`：alert_delivery add/list_by_alert。
+- `SQLAlchemySleepSessionRepository`：SleepSession add/get。
+- `tests/test_more_db_repository_adapters.py`：静态验证 adapters 使用 AsyncSession/select，并保留关键 metadata paths。
+
+**状态说明**：
+
+该轮不改变 task 状态：真实 PostgreSQL transaction、DB constraints 与 audit 持久化仍需用户 Mac 集中验收。
+
+**验证**：
+
+```bash
+make docs-check && make lint && make typecheck && make test
+# 133 passed, 1 warning
+```
 
 ---
 
