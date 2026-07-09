@@ -1,26 +1,25 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 12:00:00
+创建时间（北京时间）：2026-07-09 21:40:00
 -->
 
 
 # HANDOFF —— AI Parenting Copilot Agent 接手入口
 
-> 本文件是 AI Parenting Copilot 项目级接手入口。任何新 Agent 必须先建立项目边界：本项目只处理 `projects/AI-Parenting-Copilot/` 内的育儿系统，不把工厂根目录 FEOS / Network / TASK_BACKLOG 当作本项目任务来源。
+> 本文件是 AI Parenting Copilot 项目级接手入口。只处理 `projects/AI-Parenting-Copilot/` 内的育儿系统；工厂根目录仅作为能力/治理参考，不作为本项目 backlog。
 
 ---
 
 ## 0. 必读顺序
 
 1. `docs/HANDOFF.md`（本文件）
-2. `docs/PROJECT_STATE.md`（当前状态 SSOT）
-3. `docs/TASK_BACKLOG.md`（任务状态与验收标准）
-4. `docs/ARCHITECTURE_FINAL.md`（唯一架构基线）
-5. `docs/ENGINEERING_DESIGN.md`（工程实现蓝图）
-6. 工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（工厂能力背景）
-7. `docs/DEV_LOG.md` 最新一轮
-8. `docs/CHANGELOG.md` 最新一轮
-9. `docs/ADR/` 决策记录
+2. `docs/PROJECT_STATE.md`
+3. `docs/TASK_BACKLOG.md`
+4. `docs/ARCHITECTURE_FINAL.md`
+5. `docs/ENGINEERING_DESIGN.md`
+6. `docs/DEV_LOG.md` 最新轮次
+7. `docs/CHANGELOG.md` 最新轮次
+8. 工厂根目录 `../../../PROJECT_DOSSIER_V5.md`
 
 不要使用项目内旧拷贝 `docs/PROJECT_DOSSIER_V5.md` 作为执行依据。
 
@@ -28,78 +27,66 @@
 
 ## 1. 项目定位
 
-AI Parenting Copilot 是家庭私有化 AI 育儿副驾驶系统，目标是在家庭局域网内通过 Mac M1 Max 家庭服务端与 Android App，实现低摩擦记录、离线同步、派生状态、规则安全、告警必达与克制 AI Copilot。
+AI Parenting Copilot 是家庭私有化 AI 育儿副驾驶系统，目标是在家庭局域网 Mac 服务端 + Android App 上实现低摩擦记录、离线同步、派生状态、规则安全、告警必达与克制 AI Copilot。
 
-项目根目录：
+项目根目录固定为：
 
 ```text
 projects/AI-Parenting-Copilot/
 ```
 
----
+Android 手机端应用位置：
 
-## 2. 当前真实状态
+```text
+projects/AI-Parenting-Copilot/android/
+├── src/              # React Native / TypeScript 业务与 view model 逻辑
+├── android/          # Android native Gradle skeleton
+├── e2e/              # Detox placeholder
+├── package.json
+└── README.md
+```
 
-截至 2026-07-08：
-
-- `APC-T001` 已完成：项目骨架、基础配置、项目级维护文档与 ADR 已创建。
-- `APC-T002` 已完成：FastAPI 应用壳、Settings、DI 与公共基础类型已实现。
-- `APC-T005` 已完成：结构化日志、Prometheus metrics、OpenTelemetry 基础 tracing、请求日志 middleware 与健康端点已实现。
-- `APC-T003` 代码/配置已完成但 BLOCKED：当前沙盒无 Docker CLI，尚未完成容器健康验收。
-- `APC-T024` 已完成：Model Gateway Smart Proxy 客户端、routing loader、FakeModelClient。
-- `APC-T025` 已完成：Privacy Gateway 适配、PII/canary/media 出站安全测试。
-- `APC-T004` 代码已完成但 BLOCKED：metadata/migration/offline SQL 通过，等待 PostgreSQL 空库迁移验收。
-- `APC-T006` 代码已完成但 BLOCKED：audit service/decorator/unit tests 通过，等待 audit_log DB immutability 集成验收。
-- `APC-T007` 代码已完成但 BLOCKED：Auth/RBAC/JWT/in-memory repo/unit tests 通过，等待 DB repository 与真实 audit 集成验收。
-- `APC-T008` dev 代码已完成但 BLOCKED：Auth API 与 in-memory seed 脚本通过，等待 DB 持久化验收。
-- `APC-T009` 代码已完成但 BLOCKED：ObservationEvent 契约/idempotency/in-memory repo tests 通过，等待 DB repository 集成验收。
-- `APC-T010` dev 代码已完成但 BLOCKED：Events API dev/in-memory flow 通过，等待真实 DB/audit_log 集成验收。
-- `APC-T018` 纯逻辑已完成但 BLOCKED：Rule Engine kernel/loader/registry/rules-validate 通过，等待 EvidencePolicy DB/audit 验收。
-- `APC-T020` 纯逻辑已完成但 BLOCKED：Medication rules/golden tests 通过，等待 T018 解除。
-- `APC-T021` 纯逻辑已完成但 BLOCKED：Triage/Threshold rules/golden tests 通过，等待 T018/T016 解除。
-- `APC-T022` 纯逻辑已完成但 BLOCKED：Vaccine planner/golden tests 通过，等待 T018 与规则审查。
-- `APC-T023` 纯逻辑已完成但 BLOCKED：Growth fixture/golden tests 通过，等待 T018 与完整 WHO 表验收。
-- `APC-T026` 纯逻辑已完成但 BLOCKED：M1-M5 MemorySnapshot/in-memory store tests 通过，等待 T016 与真实 RAG/DB 适配。
-- `APC-T027` 纯逻辑已完成但 BLOCKED：Copilot base/registry/logger tests 通过，等待 T026 解除。
-- `APC-T028` dev 链路已完成但 BLOCKED：Orchestrator API logger candidate 通过，等待 T027/T006 解除。
-- `APC-T029` 纯逻辑已完成但 BLOCKED：Dose Interceptor 安全测试通过，等待 T028 与真实 audit_log 写入。
-- `APC-T030` 纯逻辑已完成但 BLOCKED：P0 Copilot wrappers/tests 通过，等待前置 Rule/Orchestrator/Dose/Memory 与真实 DB/audit 集成。
-- `APC-T031` dev 代码已完成但 BLOCKED：Alert repo/API/MemoryAuditSink tests 通过，等待 DB/audit 持久化。
-- `APC-T032` fake 通道已完成但 BLOCKED：NotificationChannel/FakeFCM/Mac/App/Camera tests 通过，等待真实设备/FCM/TTS。
-- `APC-T033` 纯逻辑已完成但 BLOCKED：Notification fan-out/delivery receipts tests 通过，等待 DB delivery repo 与升级状态机。
-- `APC-T034` dev 逻辑已完成但 BLOCKED：EscalationStateMachine tests 通过，等待真实通道 cancel/audit。
-- `APC-T035` dev 逻辑已完成但 BLOCKED：DeviceHealthMonitor/gray alert tests 通过，等待真实 probes/DB。
-- `APC-T036` dev 逻辑已完成但 BLOCKED：manual scheduler jobs tests 通过，等待真实 worker/DB。
-- `APC-T037` dev 逻辑已完成但 BLOCKED：Sleep Session state machine/API/ROI tests 通过，等待 DB/audit 持久化。
-- `APC-T038` dev 逻辑已完成但 BLOCKED：Camera mock snapshot/adapters tests 通过，等待真实 RTSP/ISAPI/Fregata/设备健康验收。
-- `APC-T039` dev 逻辑已完成但 BLOCKED：clip plan/fusion/VLM dispatcher tests 通过，等待真实 DB/VLM/media。
-- `APC-T040` dev 逻辑已完成但 BLOCKED：mmWave parser/mapper/subscriber skeleton tests 通过，等待真实 MQTT/DB。
-- `APC-T042` dev 逻辑已完成但 BLOCKED：AES-GCM media storage/thumbnail/API tests 通过，等待 DB media_asset/audit/key management。
-- `APC-T043` dev 逻辑已完成但 BLOCKED：MD export/PDF placeholder tests 通过，等待 event/state query、audit 与授权。
-- 依赖安装规则：项目 Makefile/ensure-dev-deps 必须优先使用 `uv pip install --python <venv-python> ...`，不要假设 venv 内有 pip。
-- Android / firmware 仍为目录占位。
+当前 Android 仍是 skeleton/static logic；尚未完成真实 RN bridge、Gradle wrapper、APK build、真机安装与 native modules 验收。
 
 ---
 
-## 3. 当前下一步
+## 2. 当前真实状态（截至 2026-07-09）
 
-Task ID：`APC-T003`
+### 已可标记 DONE
 
-任务名称：完成本地基础设施 Docker Compose 与 Alembic 验收
+用户 Mac 已验收 `make db-integration-test` 早期 4/4 通过，随后新增 API runtime integration 仍待用户复验。当前可确认 DONE：
 
-执行前必须再次确认：
+- `APC-T001` 项目骨架
+- `APC-T002` FastAPI 应用壳 / Settings / DI / common
+- `APC-T003` Docker Compose / Alembic 初始化
+- `APC-T004` 核心数据库 Schema 初版
+- `APC-T005` 日志 / metrics / tracing / health
+- `APC-T006` audit service / decorator / audit_log immutability 基础
+- `APC-T007` Auth/RBAC/JWT + SQLAlchemy adapter 基础
+- `APC-T009` ObservationEvent 契约 + SQLAlchemy adapter 基础
+- `APC-T018` Rule Engine kernel / loader / registry / EvidencePolicy adapter 基础
+- `APC-T024` Model Gateway Smart Proxy client / routing / FakeModelClient
+- `APC-T025` Privacy Gateway adapter / PII / canary / media outbound block
 
-- 不改变架构边界。
-- 不自研同步，PowerSync 使用官方镜像。
-- PostgreSQL 15+、Mosquitto 2.x、PowerSync 仅作为本地开发基础设施。
-- SQLAlchemy 2.0 async + asyncpg；迁移使用 Alembic。
-- 当前沙盒无 Docker CLI，容器健康验收需在用户 Mac 或可用 Docker 环境完成；未满足 DoD 前不得标记 `APC-T003 DONE`。
+### 代码基本完成但仍 BLOCKED 的大类
+
+这些已有 dev/in-memory/static/fake 或 adapter 代码和测试，但还没满足完整 DoD：
+
+- API runtime DB wiring：已新增 request-level DB session middleware 和 API DB integration harness；最新用户验收还未复跑修复后的 `make db-integration-test`。
+- Auth API / Events API / Rules Admin / Alert API：已有 DB-mode adapter 切换，仍需用户复验。
+- PG NOTIFY / PowerSync：trigger/config/contract validator 已有，真实 worker/PowerSync 行为待验收。
+- Normalization / State Engine：in-memory event→normalization→state dev pipeline 已有，DB worker/upsert 待验收。
+- Rule domains：Medication/Triage/Threshold/Vaccine/Growth pure rules + golden tests 已有；生产医学/疫苗/WHO 表审查待完成。
+- Memory / Copilots / Orchestrator / Dose Interceptor：pure/dev API 已有；真实 memory/RAG/audit integration 待完成。
+- Notification / Alert / Escalation / Health / Scheduler：dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
+- Camera / mmWave / Media / Export / Backup / Firmware：mock/dev/skeleton 已有；真实 RTSP/ISAPI/Fregata/MQTT/PlatformIO/NAS 待验收。
+- Android：TS view models/static flows + native skeleton 已有；真实 RN/Gradle/APK/device/Notifee/FCM/op-sqlite/PowerSync 待验收。
 
 ---
 
-## 4. 常用命令
+## 3. 最新验证基线
 
-在项目根目录运行：
+沙盒验证（无外部 DB URL）：
 
 ```bash
 cd projects/AI-Parenting-Copilot
@@ -107,34 +94,98 @@ make docs-check
 make lint
 make typecheck
 make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL: 5 skipped
+make security-test
+# 5 passed
+make e2e-fake-test
+# 1 passed
+make shadow-test
+make rules-validate
 ```
 
-`make run-dev` 已接入 `python3 -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000`。
+用户 Mac 最近已验收过：
+
+```bash
+export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+make infra-up
+make db-migrate
+make db-current
+make db-integration-test
+# 曾通过 4 passed；之后新增 API runtime integration 修复，需复验到 5 passed。
+```
 
 ---
 
-## 5. 文档 SSOT
+## 4. 当前最高优先级
 
-- 当前状态：`docs/PROJECT_STATE.md`
-- 任务状态：`docs/TASK_BACKLOG.md`
-- 架构基线：`docs/ARCHITECTURE_FINAL.md`
-- 工程设计：`docs/ENGINEERING_DESIGN.md`
-- 开发流水：`docs/DEV_LOG.md`
-- 变更记录：`docs/CHANGELOG.md`
-- 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`
+### 立即需要用户复验
 
-冲突优先级：用户当前最新指令 → 本项目 `docs/HANDOFF.md` → `docs/ARCHITECTURE_FINAL.md` → `docs/ENGINEERING_DESIGN.md` → `docs/TASK_BACKLOG.md` → 工厂根目录 `PROJECT_DOSSIER_V5.md` → 源码历史实现。
+本轮最后修复了 API DB runtime integration 的 transaction isolation / audit wiring。下一 Agent 应要求用户运行：
+
+```bash
+cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory/projects/AI-Parenting-Copilot
+export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+make infra-up
+make db-migrate
+make db-current
+make db-integration-test
+```
+
+预期：
+
+```text
+5 passed
+```
+
+若通过，可考虑解除更多 DB-backed API runtime / audit 相关 BLOCKED；若失败，先修失败。
+
+### 如继续开发且暂不等复验
+
+优先做：
+
+1. DB-backed API smoke target：`make api-db-smoke-test`，覆盖真实 HTTP + DB 的 auth/event/alert/rule/state。
+2. Android Gradle wrapper / RN bridge / native modules（需要 Android toolchain，可能很快需要用户验收）。
+3. PowerSync real config validation / worker wiring（需要真实 PowerSync）。
+4. FCM/Notifee/FullScreenIntent native implementation（需要 Firebase/Android device）。
+
+---
+
+## 5. 常用命令
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+make lint
+make typecheck
+make test
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+make backup-dry-run
+```
+
+DB integration：
+
+```bash
+export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+make infra-up
+make db-migrate
+make db-current
+make db-integration-test
+```
+
+依赖安装规则：**uv-first**。不要假设 venv 中有 pip。`server/scripts/ensure_dev_deps.py` 会优先使用：
+
+```bash
+uv pip install --python <venv-python> -e .[dev]
+```
 
 ---
 
 ## 6. 架构保护速查
-
-禁止未经用户明确批准：
-
-- 修改架构决策、技术路线、系统边界、模块职责、调用链、核心设计原则。
-- 引入新的基础设施或框架。
-- 替换已有核心组件。
-- 擅自大规模重构。
 
 必须遵守：
 
@@ -145,30 +196,17 @@ make test
 5. 所有 mutating 操作必须审计。
 6. Android 离线记录不得丢失。
 
+禁止未经用户批准改变架构、边界、调用链、基础设施、核心组件或大规模重构。
+
 ---
 
 ## 7. LLM 文件头规则
 
-LLM 新建或修改 Markdown、Python、YAML、Shell 等文件时，必须在文件头记录：
+文件头必须使用当前实际可确认模型标识：
 
 ```text
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
 创建时间（北京时间）：YYYY-MM-DD HH:MM:SS
 ```
 
-JSON 文件不能写注释时，使用 `_forge_trace` 字段。
-
-- `APC-T041` skeleton 已完成但 BLOCKED：firmware files/tests 通过，等待 PlatformIO 与真实 ESP32C6 验收。
-- `APC-T044` dev 逻辑已完成但 BLOCKED：backup dry-run/runbook/tests 通过，等待真实 pg_dump/NAS/restore drill。
-
-- `APC-T054` dev 逻辑已完成但 BLOCKED：run scripts/launchd/runbook 通过静态验证，等待真实 launchd/infra。
-- `APC-T055` dev 逻辑已完成但 BLOCKED：fixtures/fakes/mock publisher 通过，等待真实 MQTT integration。
-- `APC-T057` server fake E2E 已完成但 BLOCKED：red alert fake delivery/ack 通过，等待 Android notification E2E。
-- `APC-T058` security suite 已完成但 BLOCKED：dose/PII/canary/audit static 通过，等待 DB audit immutability。
-
-- `APC-T045` Android source skeleton 已完成但 BLOCKED：API client/theme/navigation static tests 通过，等待 RN/Gradle build。
-- `APC-T046` Auth TS flow 已完成但 BLOCKED：session/authService static tests 通过，等待 secure storage/native integration。
-- `APC-T047` Sync schema/local pending store 已完成但 BLOCKED：static tests 通过，等待 op-sqlite/PowerSync native integration。
-- `APC-T048` Quick Record candidate builder 已完成但 BLOCKED：static tests 通过，等待 UI/native offline write。
-
-- `APC-T049`~`APC-T053` Android feature TS view models/flows 已完成但 BLOCKED：static tests 通过，等待 RN/Gradle/native/device 验收。
+JSON / JSONL 使用 `_forge_trace` 字段。不要把“Execution Lead Engineer”等角色名写成模型名。

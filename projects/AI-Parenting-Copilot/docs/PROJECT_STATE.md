@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:25:00
+创建时间（北京时间）：2026-07-09 21:40:00
 -->
 
 
@@ -979,3 +979,13 @@ make db-integration-test
 - Auth/Event/Alert/Rules API 在 DB mode 下可将 audit records 写入 `audit_log`，dev mode 仍 fallback 到 MemoryAuditSink。
 - `test_api_db_runtime.py` 修复 transaction isolation：使用真实 AsyncEngine fixture、独立 session seed、按 family_id 清理数据。
 - API runtime integration test 新增 audit row 断言，覆盖 auth/event/alert/rule audit actions。
+
+
+## 18. Final handoff checkpoint before context compaction
+
+已更新 `docs/HANDOFF.md` 为下一 Agent 的最新入口。重点：
+
+- Android app 位于 `projects/AI-Parenting-Copilot/android/`。
+- DB integration harness 最新目标是 `make db-integration-test` = `5 passed`。
+- 当前最新修复为 request-level DB audit wiring 和 API DB runtime integration isolation。
+- 下一 Agent 应先复验用户 Mac 上 `make db-integration-test` 结果，再决定是否解除更多 BLOCKED。
