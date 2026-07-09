@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 07:55:00
+创建时间（北京时间）：2026-07-09 08:40:00
 -->
 
 
@@ -74,6 +74,8 @@ projects/AI-Parenting-Copilot/
 - `APC-T038` dev 逻辑已完成但 BLOCKED：Camera mock snapshot/adapters tests 通过，等待真实 RTSP/ISAPI/Fregata/设备健康验收。
 - `APC-T039` dev 逻辑已完成但 BLOCKED：clip plan/fusion/VLM dispatcher tests 通过，等待真实 DB/VLM/media。
 - `APC-T040` dev 逻辑已完成但 BLOCKED：mmWave parser/mapper/subscriber skeleton tests 通过，等待真实 MQTT/DB。
+- `APC-T042` dev 逻辑已完成但 BLOCKED：AES-GCM media storage/thumbnail/API tests 通过，等待 DB media_asset/audit/key management。
+- `APC-T043` dev 逻辑已完成但 BLOCKED：MD export/PDF placeholder tests 通过，等待 event/state query、audit 与授权。
 - 依赖安装规则：项目 Makefile/ensure-dev-deps 必须优先使用 `uv pip install --python <venv-python> ...`，不要假设 venv 内有 pip。
 - Android / firmware 仍为目录占位。
 

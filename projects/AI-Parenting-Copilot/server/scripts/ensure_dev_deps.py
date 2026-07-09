@@ -23,10 +23,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_MODULES = {
     "alembic": "alembic",
+    "cryptography": "cryptography",
     "fastapi": "fastapi",
     "httpx": "httpx",
     "mypy": "mypy",
     "opentelemetry": "opentelemetry-api",
+    "PIL": "Pillow",
     "prometheus_client": "prometheus-client",
     "pydantic": "pydantic",
     "pydantic_settings": "pydantic-settings",

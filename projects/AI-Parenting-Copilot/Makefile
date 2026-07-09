@@ -71,6 +71,8 @@ docs-check:
 	@test -f config/devices.yaml
 	@test -f server/app/mmwave/frame_parser.py
 	@test -f server/app/mmwave/sensor_event_mapper.py
+	@test -f server/app/media/storage.py
+	@test -f server/app/export/service.py
 	@test -f server/app/camera/fusion.py
 	@test -f server/app/camera/vlm_dispatcher.py
 	@test -f server/scripts/ensure_dev_deps.py

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 07:55:00
+创建时间（北京时间）：2026-07-09 08:40:00
 -->
 
 
@@ -10,8 +10,8 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T039` camera shadow fusion/VLM dispatcher 与 `APC-T040` mmWave parser/mapper/subscriber skeleton；均因真实 MQTT/DB/VLM/前置验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `90 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **最新完成**：`APC-T042` Media encrypted storage/thumbnail/dev API 与 `APC-T043` Export MD/PDF placeholder；均因 DB/audit/State Engine 集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `95 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，仅在 uv 不存在时 fallback 到 pip/ensurepip。
 
 
@@ -26,6 +26,42 @@
 
 
 
+
+
+---
+
+## 第 15 轮 · 2026-07-09（APC-T042 Media Storage + APC-T043 Export dev）
+
+**目标**：继续开发不依赖真实 DB 的媒体加密存储、缩略图和导出基础。
+
+**状态变更**：
+
+- `APC-T042`：TODO → BLOCKED（AES-GCM file storage/thumbnail/dev API tests 完成；DB media_asset/audit/key management 待验收）
+- `APC-T043`：TODO → BLOCKED（Markdown export/PDF placeholder/local file export tests 完成；真实 event/state query 与 audit/download auth 待集成）
+
+**完成内容**：
+
+- AES-GCM encrypted local media file store。
+- In-memory MediaAssetRecord index 与 JSON/base64 dev upload/read API。
+- Pillow thumbnail generation。
+- Markdown summary renderer 与 PDF placeholder。
+- ExportService 写入 runtime/exports local files。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 117 source files
+make test
+# 95 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 

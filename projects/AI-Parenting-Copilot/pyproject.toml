@@ -25,6 +25,8 @@ dependencies = [
   "alembic>=1.13",
   "SQLAlchemy>=2.0",
   "aiomqtt>=2.3",
+  "Pillow>=10.0",
+  "cryptography>=42.0",
 ]
 
 [project.optional-dependencies]

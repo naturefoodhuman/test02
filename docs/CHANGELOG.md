@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 07:55:00
+创建时间（北京时间）：2026-07-09 08:40:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,7 +11,7 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T039 Camera shadow 与 APC-T040 mmWave parser/mapper dev 逻辑；集成任务待验收
+- **最新完成模块**：AI Parenting Copilot APC-T042 Media storage 与 APC-T043 Export dev 逻辑；集成任务待验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
@@ -27,6 +27,29 @@
 
 
 
+
+
+---
+
+## [第 111 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 并行推进**：完成 `APC-T042` Media encrypted storage/thumbnail/dev API 与 `APC-T043` Export MD/PDF placeholder。
+- **验收状态**：真实 DB media_asset、audit_log、State Engine/event query 与下载授权仍待后续验收，因此相关任务标记 BLOCKED。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/media/*`
+- 新增：`projects/AI-Parenting-Copilot/server/app/export/*`
+- 修改：`server/app/main.py`、`pyproject.toml`
+- 新增：media/export tests
+- 修改：项目级维护文档
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# Project docs-check passed; ruff passed; mypy passed; 95 passed, 1 warning; rule packs validated.
+```
 
 ---
 

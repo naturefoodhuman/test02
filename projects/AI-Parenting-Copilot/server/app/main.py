@@ -22,10 +22,13 @@ from server.app.camera.sleep_session import InMemorySleepSessionRepository
 from server.app.di import AppContainer, create_container
 from server.app.events.api.routes import router as events_router
 from server.app.events.infra.repository import InMemoryEventRepository
+from server.app.export.service import ExportService
 from server.app.gateway.exception_handlers import register_exception_handlers
 from server.app.gateway.middleware.logging import RequestLoggingMiddleware
 from server.app.health.api import router as health_router
 from server.app.health.monitor import DeviceHealthMonitor
+from server.app.media.api.routes import router as media_router
+from server.app.media.storage import MediaStorageService
 from server.app.notification.alert_repo import InMemoryAlertRepository
 from server.app.notification.api.routes import router as alert_router
 from server.app.observability.audit import MemoryAuditSink
@@ -70,6 +73,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.device_health_monitor = DeviceHealthMonitor([], app.state.alert_repository)
     app.state.sleep_session_repository = InMemorySleepSessionRepository(app.state.audit_sink)
     app.state.event_repository = InMemoryEventRepository()
+    app.state.media_storage = MediaStorageService()
+    app.state.export_service = ExportService()
     app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
     app.state.auth_service = AuthService(
         InMemoryAuthRepository(),
@@ -87,6 +92,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(orchestrator_router)
     app.include_router(alert_router)
     app.include_router(camera_router)
+    app.include_router(media_router)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:
