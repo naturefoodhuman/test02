@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 07:15:00
+创建时间（北京时间）：2026-07-09 07:55:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：uv-first 依赖修复、`APC-T037` Sleep Session dev API、`APC-T038` Camera mock snapshot/adapters；均 BLOCKED 待 DB/audit/设备验收。
-- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification/health/scheduler、camera/sleep dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
-- **下一任务**：继续 mmWave parser / Camera shadow / Media storage dev 逻辑。
+- **最新完成任务**：`APC-T039` Camera shadow fusion/VLM dispatcher 与 `APC-T040` mmWave parser/mapper/subscriber skeleton；均 BLOCKED 待真实 MQTT/DB/VLM/前置验收。
+- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification/health/scheduler、camera/sleep/mmWave dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
+- **下一任务**：继续 Media storage / Export / Backup dev 逻辑或固件 skeleton。
 
 
 
@@ -25,6 +25,43 @@
 
 
 
+
+
+---
+
+## [第 14 轮] 2026-07-09 — APC-T039 / APC-T040 dev 逻辑完成，集成验收 BLOCKED
+
+### 需求变动
+
+- 继续并行开发不依赖真实 DB/MQTT/VLM 的代码。
+- 完成 camera shadow fusion/VLM dispatcher 与 mmWave parser/mapper/subscriber skeleton。
+
+### 文件影响
+
+新增/修改：
+
+- `server/app/mmwave/*`
+- `server/app/camera/clip_recorder.py`
+- `server/app/camera/fusion.py`
+- `server/app/camera/vlm_dispatcher.py`
+- `tests/fixtures/radar_frames.jsonl`
+- camera shadow / mmWave tests
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 109 source files
+make test
+# 90 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 

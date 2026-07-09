@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 07:15:00
+创建时间（北京时间）：2026-07-09 07:55:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T037` Sleep Session dev API 与 `APC-T038` Camera mock snapshot/adapters；均因前置/设备/DB/audit 验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `83 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
-- **本轮修复**：按用户反馈改为 uv-first：`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，仅在 uv 不存在时 fallback 到 pip/ensurepip。
+- **最新完成**：`APC-T039` camera shadow fusion/VLM dispatcher 与 `APC-T040` mmWave parser/mapper/subscriber skeleton；均因真实 MQTT/DB/VLM/前置验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `90 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，仅在 uv 不存在时 fallback 到 pip/ensurepip。
 
 
 
@@ -25,6 +25,43 @@
 
 
 
+
+
+---
+
+## 第 14 轮 · 2026-07-09（APC-T039 Camera Shadow + APC-T040 mmWave Parser/Mapper）
+
+**目标**：继续开发不依赖真实 MQTT/DB/VLM 的 camera/mmWave shadow pipeline 基础。
+
+**状态变更**：
+
+- `APC-T039`：TODO → BLOCKED（Clip plan/FusionStateMachine/VLMDispatcher shadow tests 完成；真实 DB/VLM/媒体待验收）
+- `APC-T040`：TODO → BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests 完成；真实 MQTT/DB 入库待验收）
+
+**完成内容**：
+
+- mmWave RadarFrame JSON/JSONL parser。
+- SensorEventCandidate 与 ObservationEventCreate candidate mapper。
+- MMWaveMQTTSubscriber skeleton：topic whitelist + handler 注入。
+- Camera ClipRecorder plan：前 15s / 后 30s。
+- FusionStateMachine：仅 active sleep session 分析；mmWave 单信号不产生红警；多信号输出 shadow candidate。
+- VLMDispatcher：只通过注入 ModelGateway-compatible vision client，shadow mode 默认。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 109 source files
+make test
+# 90 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 

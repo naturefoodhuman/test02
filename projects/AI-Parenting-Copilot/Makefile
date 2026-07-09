@@ -69,6 +69,10 @@ docs-check:
 	@test -f server/app/camera/sleep_session.py
 	@test -f server/app/camera/rtsp_client.py
 	@test -f config/devices.yaml
+	@test -f server/app/mmwave/frame_parser.py
+	@test -f server/app/mmwave/sensor_event_mapper.py
+	@test -f server/app/camera/fusion.py
+	@test -f server/app/camera/vlm_dispatcher.py
 	@test -f server/scripts/ensure_dev_deps.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py

@@ -24,6 +24,7 @@ dependencies = [
   "asyncpg>=0.29",
   "alembic>=1.13",
   "SQLAlchemy>=2.0",
+  "aiomqtt>=2.3",
 ]
 
 [project.optional-dependencies]
