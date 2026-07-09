@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 14:30:00
+创建时间（北京时间）：2026-07-09 15:20:00
 -->
 
 
@@ -34,6 +34,31 @@
 
 
 
+
+
+---
+
+## 第 23 轮 · 2026-07-09（DB-backed repository adapter skeletons）
+
+**目标**：继续减少 BLOCKED 任务剩余工作，先实现可静态验证的 SQLAlchemy DB repository adapters。
+
+**完成内容**：
+
+- `SQLAlchemyAuthRepository`：family/user/device/baby 基础持久化与查询。
+- `SQLAlchemyEventRepository`：ObservationEvent upsert/get/list/soft_delete/correct，保留 idempotency 检查。
+- `SQLAlchemyAlertRepository`：Alert create/get/ack/feedback DB adapter。
+- `tests/test_db_repository_adapters.py`：静态验证 adapters 使用 AsyncSession/select，并保留幂等/软删除/ack/feedback 关键路径。
+
+**状态说明**：
+
+该轮不改变 task 状态：真实 PostgreSQL transaction、DB constraints 与 audit 持久化仍需用户 Mac 集中验收。
+
+**验证**：
+
+```bash
+make docs-check && make lint && make typecheck && make test
+# 130 passed, 1 warning
+```
 
 ---
 

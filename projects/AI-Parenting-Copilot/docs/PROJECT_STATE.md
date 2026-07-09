@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 14:30:00
+创建时间（北京时间）：2026-07-09 15:20:00
 -->
 
 
@@ -813,3 +813,16 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 
 可并行候选：继续实现不依赖真实 DB 的事件契约、Rule Engine 纯逻辑或测试 fake，但不得把依赖 PostgreSQL 集成验收的任务标记 DONE。
+
+
+## 7. DB-backed repository adapter progress
+
+状态：部分完成，仍 BLOCKED 待 PostgreSQL 集成验收。
+
+已新增 SQLAlchemy adapters：
+
+- `server/app/auth/infra/sqlalchemy_repository.py`
+- `server/app/events/infra/sqlalchemy_repository.py`
+- `server/app/notification/sqlalchemy_alert_repo.py`
+
+这些 adapters 为解除 `APC-T007/T008/T009/T010/T031` 的 DB 持久化阻塞做准备；当前通过 mypy/ruff/static tests，但尚未在真实 PostgreSQL transaction 中验收，因此对应任务状态不变。
