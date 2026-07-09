@@ -1,17 +1,18 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-07-09 05:45:00
+# 创建时间（北京时间）：2026-07-09 06:40:00
+
 
 """Ensure local development dependencies are installed for Makefile targets.
 
-This script intentionally uses the current interpreter, so it works with the user's
-active project/factory virtualenv. It installs the project in editable mode with
-`dev` extras only when required imports or command modules are missing.
+Works with regular venvs and uv-created pipless venvs. Installation is attempted
+using, in order: current interpreter pip, ensurepip+pip, and `uv pip install`.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import os
+import shutil
 import site
 import stat
 import subprocess
@@ -40,47 +41,81 @@ REQUIRED_MODULES = {
 }
 
 
-def missing_modules() -> list[str]:
-    """Return import module names missing from the active interpreter."""
+def _run(cmd: list[str], *, check: bool = False) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd,
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+        check=check,
+    )
 
-    missing: list[str] = []
-    for module_name in REQUIRED_MODULES:
-        if importlib.util.find_spec(module_name) is None:
-            missing.append(module_name)
-    return missing
+
+def missing_modules() -> list[str]:
+    return [name for name in REQUIRED_MODULES if importlib.util.find_spec(name) is None]
+
+
+def python_pip_available() -> bool:
+    return _run([sys.executable, "-m", "pip", "--version"]).returncode == 0
+
+
+def try_bootstrap_pip() -> bool:
+    if python_pip_available():
+        return True
+    result = _run([sys.executable, "-m", "ensurepip", "--upgrade"])
+    if result.returncode != 0:
+        return False
+    return python_pip_available()
+
+
+def install_with_current_pip() -> bool:
+    if not try_bootstrap_pip():
+        return False
+    subprocess.check_call(
+        [sys.executable, "-m", "pip", "install", "-e", ".[dev]"],
+        cwd=PROJECT_ROOT,
+    )
+    return True
+
+
+def install_with_uv() -> bool:
+    uv = shutil.which("uv")
+    if not uv:
+        return False
+    subprocess.check_call(
+        [uv, "pip", "install", "--python", sys.executable, "-e", ".[dev]"],
+        cwd=PROJECT_ROOT,
+    )
+    return True
 
 
 def install_dev_dependencies(missing: list[str]) -> None:
-    """Install project runtime + dev dependencies into the active environment."""
-
     packages = sorted({REQUIRED_MODULES[name] for name in missing})
     print(
         "Installing missing AI Parenting Copilot dev dependencies: " + ", ".join(packages),
         file=sys.stderr,
     )
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "-e", ".[dev]"],
-        cwd=PROJECT_ROOT,
+    if install_with_current_pip():
+        return
+    if install_with_uv():
+        return
+    raise SystemExit(
+        "Cannot install dev dependencies: current Python has no pip, ensurepip failed, "
+        "and uv is not available. Install pip for this venv or run `uv pip install -e .[dev]`."
     )
 
 
-def ensure_ruff_executable() -> None:
-    """Fix occasional non-executable ruff script mode in restored sandboxes."""
-
-    script_name = "ruff.exe" if os.name == "nt" else "ruff"
+def ensure_script_executable(script_name: str) -> None:
     candidates = [
         Path(sysconfig.get_path("scripts")) / script_name,
         Path(site.getuserbase()) / "bin" / script_name,
     ]
     for script_path in candidates:
         if script_path.exists():
-            mode = script_path.stat().st_mode
-            script_path.chmod(mode | stat.S_IXUSR)
+            script_path.chmod(script_path.stat().st_mode | stat.S_IXUSR)
 
 
 def command_module_works(module_name: str) -> bool:
-    """Return True if `python -m <module> --version` exits successfully."""
-
     try:
         subprocess.check_call(
             [sys.executable, "-m", module_name, "--version"],
@@ -93,18 +128,18 @@ def command_module_works(module_name: str) -> bool:
 
 
 def main() -> None:
-    ensure_ruff_executable()
+    ensure_script_executable("ruff.exe" if os.name == "nt" else "ruff")
     missing = missing_modules()
     if missing:
         install_dev_dependencies(missing)
-    ensure_ruff_executable()
+    ensure_script_executable("ruff.exe" if os.name == "nt" else "ruff")
     still_missing = missing_modules()
     if still_missing:
         raise SystemExit(f"Missing modules after install: {still_missing}")
     broken_commands = [name for name in ("ruff", "mypy") if not command_module_works(name)]
     if broken_commands:
         install_dev_dependencies(broken_commands)
-        ensure_ruff_executable()
+        ensure_script_executable("ruff.exe" if os.name == "nt" else "ruff")
     broken_commands = [name for name in ("ruff", "mypy") if not command_module_works(name)]
     if broken_commands:
         raise SystemExit(f"Command modules unavailable after install: {broken_commands}")

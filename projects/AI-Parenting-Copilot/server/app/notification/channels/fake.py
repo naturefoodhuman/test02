@@ -15,6 +15,7 @@ class FakeNotificationChannel:
         self.name = name
         self.fail = fail
         self.sent: list[dict[str, object]] = []
+        self.cancelled: list[str] = []
 
     async def send(self, alert: AlertRecord) -> DeliveryReceipt:
         # FCM-like privacy: payload intentionally contains only alert_id/level/type.
@@ -37,6 +38,9 @@ class FakeNotificationChannel:
             status="sent",
             receipt={"payload": payload},
         )
+
+    async def cancel(self, alert: AlertRecord) -> None:
+        self.cancelled.append(alert.id)
 
 
 class FakeFCMChannel(FakeNotificationChannel):

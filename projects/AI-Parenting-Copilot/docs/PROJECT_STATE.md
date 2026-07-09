@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:55:00
+创建时间（北京时间）：2026-07-09 06:40:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -372,6 +372,44 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T032` 未 DONE；真实 alert_delivery DB 持久化与升级状态机待后续验收。
 
+
+### APC-T034 — 实现告警升级状态机与确认取消
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/notification/escalation.py`：EscalationStateMachine，支持 0s 初始扇出、60s Mac repeat、90s phone/camera escalation、ack cancel。
+- `FakeNotificationChannel.cancel()` dev cancel hook。
+- `tests/test_escalation.py`：虚拟时间 advance 与 ack 后不再升级。
+
+阻塞原因：前置 `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` 未 DONE；真实 channel cancel、升级计时 worker 与 audit_log 集成待验收。
+
+### APC-T035 — 实现 Device Health Monitor 与灰色告警
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/health/monitor.py`：HealthProbe Protocol、MockHealthProbe、DeviceHealthMonitor。
+- mock probe offline 时生成 `level=gray` / `type=device_health` 告警。
+- `/api/v1/system/health` dev response 预留 `device_health` snapshot。
+- `tests/test_device_health_monitor.py` 覆盖 probe failure → gray alert。
+
+阻塞原因：真实 DB/MQTT/PowerSync/Camera/mmWave/FCM/NAS probes 与 DB alert 持久化待验收。
+
+### APC-T036 — 实现 Scheduler：晨报、疫苗到期、补剂提醒、健康巡检
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/scheduler/runner.py`：manual-trigger SchedulerRunner。
+- jobs：`morning_brief.py`、`vaccine_due.py`、`supplement.py`、`health_check.py`。
+- `tests/test_scheduler_jobs.py` 覆盖手动触发、疫苗 due、补剂提醒、健康巡检。
+
+阻塞原因：前置 `APC-T022/T031/T035` 未 DONE；FastAPI 同进程 worker/真实 schedule/audit/DB 持久化待接入。
+
 ---
 
 ## 4. 当前未实现
@@ -391,9 +429,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 87 source files
+# Success: no issues found in 95 source files
 make test
-# 72 passed, 1 warning
+# 78 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -406,7 +444,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030` / `APC-T031` / `APC-T032` / `APC-T033`
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030` / `APC-T031` / `APC-T032` / `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036`
 - 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 

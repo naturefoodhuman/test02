@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:55:00
+创建时间（北京时间）：2026-07-09 06:40:00
 -->
 
 
@@ -67,6 +67,9 @@ projects/AI-Parenting-Copilot/
 - `APC-T031` dev 代码已完成但 BLOCKED：Alert repo/API/MemoryAuditSink tests 通过，等待 DB/audit 持久化。
 - `APC-T032` fake 通道已完成但 BLOCKED：NotificationChannel/FakeFCM/Mac/App/Camera tests 通过，等待真实设备/FCM/TTS。
 - `APC-T033` 纯逻辑已完成但 BLOCKED：Notification fan-out/delivery receipts tests 通过，等待 DB delivery repo 与升级状态机。
+- `APC-T034` dev 逻辑已完成但 BLOCKED：EscalationStateMachine tests 通过，等待真实通道 cancel/audit。
+- `APC-T035` dev 逻辑已完成但 BLOCKED：DeviceHealthMonitor/gray alert tests 通过，等待真实 probes/DB。
+- `APC-T036` dev 逻辑已完成但 BLOCKED：manual scheduler jobs tests 通过，等待真实 worker/DB。
 - Android / firmware 仍为目录占位。
 
 ---

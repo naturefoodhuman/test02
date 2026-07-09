@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:55:00
+创建时间（北京时间）：2026-07-09 06:40:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 BLOCKED；APC-T032 BLOCKED；APC-T033 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 BLOCKED；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -1099,6 +1099,7 @@
 - **所属 Capability**：C14
 - **所属 Story**：S14
 - **目标**：实现 0s/60s/90s 升级策略，任一 ack 后停止所有通道。
+- **状态**：BLOCKED（EscalationStateMachine/虚拟时钟测试已完成；前置 T033 未 DONE，真实通道 cancel/审计待验收）
 - **前置依赖**：APC-T033
 - **输入**：`ENGINEERING_DESIGN.md` §7.2；`ARCHITECTURE_FINAL.md` §14.4
 - **输出**：Escalation state machine
@@ -1128,6 +1129,7 @@
 - **所属 Capability**：C15 Health Monitor & Scheduler
 - **所属 Story**：S15 设备健康、晨报、提醒、灰色告警
 - **目标**：监测 DB、MQTT、PowerSync、摄像头、mmWave、FCM、NAS 并在 60s 内产生灰色告警。
+- **状态**：BLOCKED（MockHealthProbe/DeviceHealthMonitor/gray alert tests 已完成；真实 probes 与 DB alert 持久化待验收）
 - **前置依赖**：APC-T031, APC-T033
 - **输入**：`ENGINEERING_DESIGN.md` §10.5；`ARCHITECTURE_FINAL.md` §22.5
 - **输出**：health probes、monitor、system health API
@@ -1157,6 +1159,7 @@
 - **所属 Capability**：C15
 - **所属 Story**：S15
 - **目标**：实现 APScheduler runner 与 P0 定时任务。
+- **状态**：BLOCKED（manual SchedulerRunner 与 morning/vaccine/supplement/health jobs 已完成；前置 T022/T031/T035 未 DONE，真实 worker 待接入）
 - **前置依赖**：APC-T022, APC-T031, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M20、§7.2
 - **输出**：Scheduler jobs

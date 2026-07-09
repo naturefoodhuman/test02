@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:55:00
+创建时间（北京时间）：2026-07-09 06:40:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T031` Alert dev API、`APC-T032` Notification fake channels、`APC-T033` Notification fan-out 纯逻辑；均因前置/DB/设备集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `72 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
-- **本轮修复**：Makefile 新增 `ensure-dev-deps`，自动安装当前 venv 缺失的 alembic/structlog/python-ulid/pytest-asyncio/ruff/mypy 等依赖，解决用户验收中的 ModuleNotFoundError。
+- **最新完成**：`APC-T034` Escalation、`APC-T035` Device Health Monitor、`APC-T036` Scheduler jobs dev 逻辑；均因前置/真实通道/DB/worker 集成验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `78 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **本轮修复**：`ensure-dev-deps` 支持 pipless uv venv：优先 pip，其次 ensurepip，再用 `uv pip install --python <venv-python>`，解决用户 venv 无 pip 导致依赖无法安装的问题。
 
 
 
@@ -23,6 +23,46 @@
 
 
 
+
+
+---
+
+## 第 12 轮 · 2026-07-09（pipless venv 修复 + APC-T034/T035/T036 dev 逻辑）
+
+**目标**：修复用户重新验收发现的 pipless uv venv 问题，并继续开发 Alert escalation、Device Health 与 Scheduler dev 逻辑。
+
+**状态变更**：
+
+- `APC-T034`：TODO → BLOCKED（EscalationStateMachine/虚拟时钟 tests 完成；真实通道 cancel/审计待验收）
+- `APC-T035`：TODO → BLOCKED（DeviceHealthMonitor/MockProbe/gray alert tests 完成；真实 probes 与 DB alert 持久化待验收）
+- `APC-T036`：TODO → BLOCKED（manual SchedulerRunner/jobs tests 完成；真实 worker/DB/audit 待接入）
+
+**修复内容**：
+
+- `ensure_dev_deps.py` 支持当前 Python 无 pip 的 uv venv：先尝试 pip，再 ensurepip，最后 `uv pip install --python <sys.executable> -e .[dev]`。
+- 保持 Makefile 自动依赖安装，避免 alembic/structlog/python-ulid/pytest-asyncio 缺失导致验收失败。
+
+**开发内容**：
+
+- `notification/escalation.py`：0s/60s/90s 升级状态机与 ack cancel。
+- `health/monitor.py`：mock probes、gray alert 生成、device health snapshot。
+- `scheduler/runner.py` 与 jobs：morning brief、vaccine due、supplement、health check。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 95 source files
+make test
+# 78 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 

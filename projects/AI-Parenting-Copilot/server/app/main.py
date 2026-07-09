@@ -23,6 +23,7 @@ from server.app.events.infra.repository import InMemoryEventRepository
 from server.app.gateway.exception_handlers import register_exception_handlers
 from server.app.gateway.middleware.logging import RequestLoggingMiddleware
 from server.app.health.api import router as health_router
+from server.app.health.monitor import DeviceHealthMonitor
 from server.app.notification.alert_repo import InMemoryAlertRepository
 from server.app.notification.api.routes import router as alert_router
 from server.app.observability.audit import MemoryAuditSink
@@ -64,6 +65,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.container = container
     app.state.audit_sink = MemoryAuditSink()
     app.state.alert_repository = InMemoryAlertRepository(app.state.audit_sink)
+    app.state.device_health_monitor = DeviceHealthMonitor([], app.state.alert_repository)
     app.state.event_repository = InMemoryEventRepository()
     app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
     app.state.auth_service = AuthService(

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 05:55:00
+创建时间（北京时间）：2026-07-09 06:40:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：验收依赖修复、`APC-T031` Alert dev API、`APC-T032` Notification fake channels、`APC-T033` Notification fan-out 纯逻辑；均 BLOCKED 待 DB/设备集成验收。
-- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
-- **下一任务**：继续告警升级状态机/Device Health/Scheduler 纯逻辑或等待集中验收反馈。
+- **最新完成任务**：pipless venv 依赖修复、`APC-T034` Escalation、`APC-T035` Device Health Monitor、`APC-T036` Scheduler jobs dev 逻辑；均 BLOCKED 待真实通道/DB/worker 集成验收。
+- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification/health/scheduler dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
+- **下一任务**：继续 Sleep Session / Camera dev 状态机或等待集中验收反馈。
 
 
 
@@ -23,6 +23,44 @@
 
 
 
+
+
+---
+
+## [第 12 轮] 2026-07-09 — pipless venv 修复 + APC-T034/T035/T036 dev 逻辑
+
+### 需求变动
+
+- 修复用户验收中 `.venv/bin/python3: No module named pip` 导致 ensure-dev-deps 失败的问题。
+- 完成 Escalation、Device Health、Scheduler dev 纯逻辑。
+
+### 文件影响
+
+新增/修改：
+
+- `server/scripts/ensure_dev_deps.py`
+- `server/app/notification/escalation.py`
+- `server/app/health/monitor.py`
+- `server/app/scheduler/*`
+- `server/app/health/api.py`
+- `server/app/notification/channels/fake.py`
+- escalation/device-health/scheduler tests
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 95 source files
+make test
+# 78 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 
