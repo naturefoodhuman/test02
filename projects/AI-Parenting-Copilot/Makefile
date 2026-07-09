@@ -66,6 +66,9 @@ docs-check:
 	@test -f server/app/notification/alert_repo.py
 	@test -f server/app/notification/orchestrator.py
 	@test -f server/app/notification/channels/base.py
+	@test -f server/app/camera/sleep_session.py
+	@test -f server/app/camera/rtsp_client.py
+	@test -f config/devices.yaml
 	@test -f server/scripts/ensure_dev_deps.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py

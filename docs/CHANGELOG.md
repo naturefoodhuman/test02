@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 06:40:00
+创建时间（北京时间）：2026-07-09 07:15:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,7 +11,7 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot pipless venv 修复 + APC-T034/T035/T036 Alert escalation/Device Health/Scheduler dev 逻辑；集成任务待验收
+- **最新完成模块**：AI Parenting Copilot uv-first 依赖修复 + APC-T037/T038 Sleep Session/Camera mock dev 逻辑；集成任务待验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
@@ -25,6 +25,29 @@
 
 
 
+
+
+---
+
+## [第 109 轮] 2026-07-09
+
+### 需求变动
+- **验收问题修复**：用户明确 venv 依赖安装需使用 `uv pip`；AI Parenting Copilot `ensure-dev-deps` 改为 uv-first，只有 uv 不存在时才 fallback 到 pip/ensurepip。
+- **并行推进**：完成 `APC-T037` Sleep Session dev API 与 `APC-T038` Camera mock snapshot/adapters。
+
+### 文件影响
+- 修改：`projects/AI-Parenting-Copilot/server/scripts/ensure_dev_deps.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/camera/*`
+- 新增：`projects/AI-Parenting-Copilot/config/devices.yaml`
+- 新增：camera/sleep tests
+- 修改：项目级维护文档
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# Project docs-check passed; ruff passed; mypy passed; 83 passed, 1 warning; rule packs validated.
+```
 
 ---
 

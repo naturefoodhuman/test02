@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 06:40:00
+创建时间（北京时间）：2026-07-09 07:15:00
 -->
 
 # AI Parenting Copilot
@@ -24,7 +24,7 @@
 
 ## 当前实现状态
 
-当前完成：`APC-T001`、`APC-T002`、`APC-T005`、`APC-T024`、`APC-T025`；`APC-T003/T004/T006/T007/T008/T009/T010/T018/T020/T021/T022/T023/T026/T027/T028/T029/T030/T031/T032/T033/T034/T035/T036` BLOCKED。
+当前完成：`APC-T001`、`APC-T002`、`APC-T005`、`APC-T024`、`APC-T025`；`APC-T003/T004/T006/T007/T008/T009/T010/T018/T020/T021/T022/T023/T026/T027/T028/T029/T030/T031/T032/T033/T034/T035/T036/T037/T038` BLOCKED。
 
 - 已创建项目骨架、基础配置、维护文档与 ADR。
 - 已实现 FastAPI 应用壳、Settings、DI、公共错误、ULID、timezone-aware clock、Repository Protocol 与事件总线占位。
@@ -64,3 +64,5 @@ make test
 
 - 已实现 Alert/Notification dev 链路与 fake channel fan-out；真实 DB/device/FCM/TTS 集成待验收。
 - 已实现 Alert escalation、Device Health/Scheduler dev 逻辑；真实通道、真实 probes、worker 与 DB 持久化待验收。
+- 已实现 Sleep Session/Camera mock dev 链路；真实 DB、RTSP/ISAPI/Fregata 与设备健康集成待验收。
+- 本项目依赖安装遵循 uv-first：优先 `uv pip install --python <venv-python> -e .[dev]`，不要假设 venv 内存在 pip。

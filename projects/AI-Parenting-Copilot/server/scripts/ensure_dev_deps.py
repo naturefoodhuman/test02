@@ -95,13 +95,16 @@ def install_dev_dependencies(missing: list[str]) -> None:
         "Installing missing AI Parenting Copilot dev dependencies: " + ", ".join(packages),
         file=sys.stderr,
     )
-    if install_with_current_pip():
-        return
+    # The factory environment is uv-first and may intentionally use pipless venvs.
+    # Prefer `uv pip` when available; only fall back to interpreter pip/ensurepip when uv
+    # is absent so the Makefile still works in generic Python environments.
     if install_with_uv():
         return
+    if install_with_current_pip():
+        return
     raise SystemExit(
-        "Cannot install dev dependencies: current Python has no pip, ensurepip failed, "
-        "and uv is not available. Install pip for this venv or run `uv pip install -e .[dev]`."
+        "Cannot install dev dependencies: uv is not available, and current Python pip/"
+        "ensurepip failed. Install uv or run `uv pip install --python <venv-python> -e .[dev]`."
     )
 
 

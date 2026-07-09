@@ -1,0 +1,12 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建时间（北京时间）：2026-07-09 07:15:00
+
+cameras:
+  nursery:
+    mode: mock
+    rtsp_url: rtsp://127.0.0.1/mock
+    snapshot_timeout_seconds: 5
+    vendor_cloud_required_off: true
+mmwave:
+  mqtt_topics:
+    - baby/radar/telemetry

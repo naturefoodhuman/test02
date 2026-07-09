@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 06:40:00
+创建时间（北京时间）：2026-07-09 07:15:00
 -->
 
 
@@ -10,9 +10,9 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T034` Escalation、`APC-T035` Device Health Monitor、`APC-T036` Scheduler jobs dev 逻辑；均因前置/真实通道/DB/worker 集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `78 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
-- **本轮修复**：`ensure-dev-deps` 支持 pipless uv venv：优先 pip，其次 ensurepip，再用 `uv pip install --python <venv-python>`，解决用户 venv 无 pip 导致依赖无法安装的问题。
+- **最新完成**：`APC-T037` Sleep Session dev API 与 `APC-T038` Camera mock snapshot/adapters；均因前置/设备/DB/audit 验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `83 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **本轮修复**：按用户反馈改为 uv-first：`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，仅在 uv 不存在时 fallback 到 pip/ensurepip。
 
 
 
@@ -24,6 +24,45 @@
 
 
 
+
+
+---
+
+## 第 13 轮 · 2026-07-09（uv-first 依赖修复 + APC-T037/T038 Camera/Sleep dev）
+
+**目标**：按用户反馈将依赖安装改为 uv-first，并继续开发 Sleep Session / Camera mock 能力。
+
+**状态变更**：
+
+- `APC-T037`：TODO → BLOCKED（SleepSession state machine/dev API/ROI tests 完成；DB/audit 验收待 PostgreSQL）
+- `APC-T038`：TODO → BLOCKED（devices.yaml/mock snapshot API/adapters placeholders/tests 完成；真实设备验收待后续）
+
+**修复内容**：
+
+- `ensure-dev-deps.py` 改为 uv-first：优先 `uv pip install --python <当前venv python> -e .[dev]`，仅 uv 不存在时 fallback 到 pip/ensurepip。
+
+**开发内容**：
+
+- Sleep Session state machine：active/paused/ended 与 analysis_allowed gate。
+- ROI 配置与 sleep session dev API。
+- Camera mock snapshot API：`GET /api/v1/cameras/{camera_id}/snapshot` 返回 PNG。
+- ISAPI/Fregata 适配入口 placeholder 与 devices.yaml。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+# Project docs-check passed.
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 102 source files
+make test
+# 83 passed, 1 warning
+make rules-validate
+# rule packs validated
+```
 
 ---
 
