@@ -205,8 +205,8 @@ uv pip install --python <venv-python> -e .[dev]
 文件头必须使用当前实际可确认模型标识：
 
 ```text
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建/修改该文件的LLM大模型：gpt 5.5（示例）
 创建时间（北京时间）：YYYY-MM-DD HH:MM:SS
 ```
 
-JSON / JSONL 使用 `_forge_trace` 字段。不要把“Execution Lead Engineer”等角色名写成模型名。
+JSON / JSONL 使用 `_forge_trace` 字段。
