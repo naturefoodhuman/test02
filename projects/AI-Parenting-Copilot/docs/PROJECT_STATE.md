@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 17:15:00
+创建时间（北京时间）：2026-07-09 17:35:00
 -->
 
 
@@ -861,6 +861,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 - EvidencePolicy activation。
 - observation_event PG `events.changed` NOTIFY trigger emits event_id/baby_id/operation。
 - audit_log UPDATE 被 DB trigger 拒绝。
+- Alembic upgrade/downgrade/upgrade roundtrip on a temporary PostgreSQL database.
 
 默认 `make test` 排除 `integration` marker；无 DB URL 时 `make db-integration-test` 自动 skip。
 

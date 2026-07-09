@@ -21,6 +21,7 @@ import asyncpg
 import pytest
 import pytest_asyncio
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -47,6 +48,7 @@ from server.app.notification.alert_repo import AckAlertRequest, CreateAlertReque
 from server.app.notification.channels.base import DeliveryReceipt
 from server.app.notification.sqlalchemy_alert_repo import SQLAlchemyAlertRepository
 from server.app.notification.sqlalchemy_delivery_repo import SQLAlchemyDeliveryRepository
+from server.app.observability.audit import AuditActor, AuditRecord, AuditService
 from server.app.rule_engine.loader import load_rule_pack
 from server.app.rule_engine.sqlalchemy_evidence_repo import SQLAlchemyEvidencePolicyRepository
 from server.app.state_engine.snapshot_repo import DerivedBabyStateSnapshot
@@ -64,6 +66,14 @@ def _db_url() -> str:
 
 def _asyncpg_url() -> str:
     return _db_url().replace("postgresql+asyncpg://", "postgresql://")
+
+
+def _temp_database_urls(name: str) -> tuple[str, str]:
+    parsed = make_url(_db_url())
+    driverless = parsed.set(drivername="postgresql")
+    maintenance = driverless.set(database="postgres")
+    temp = parsed.set(database=name)
+    return str(maintenance), str(temp)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -230,6 +240,17 @@ async def test_evidence_policy_repository_and_audit_immutability(engine: AsyncEn
             current = await repo.get_current("medication", "CN")
             assert current is not None
             assert current.hash == record.hash
+
+            audit_service = AuditService(
+                async_sessionmaker(bind=connection, expire_on_commit=False)
+            )
+            await audit_service.record(
+                AuditRecord(
+                    actor=AuditActor(actor_kind="integration"),
+                    action="audit_service.insert",
+                    resource="audit_log",
+                )
+            )
         finally:
             await transaction.rollback()
 
@@ -320,3 +341,34 @@ async def test_observation_event_notify_trigger_emits_payload(engine: AsyncEngin
             )
             await connection.execute(text("DELETE FROM baby WHERE id=:id"), {"id": baby_id})
             await connection.execute(text("DELETE FROM family WHERE id=:id"), {"id": family_id})
+
+
+@pytest.mark.asyncio
+async def test_alembic_upgrade_downgrade_roundtrip_on_temporary_database() -> None:
+    temp_db = f"apc_migration_{new_ulid().lower()}"
+    maintenance_url, temp_url = _temp_database_urls(temp_db)
+    admin = await asyncpg.connect(maintenance_url)
+    try:
+        await admin.execute(f'CREATE DATABASE "{temp_db}"')
+    finally:
+        await admin.close()
+
+    env = {**os.environ, "PARENTING_DATABASE__URL": temp_url}
+    cwd = Path(__file__).resolve().parents[2]
+    try:
+        for command in [
+            ["python3", "-m", "alembic", "-c", "alembic.ini", "upgrade", "head"],
+            ["python3", "-m", "alembic", "-c", "alembic.ini", "downgrade", "base"],
+            ["python3", "-m", "alembic", "-c", "alembic.ini", "upgrade", "head"],
+        ]:
+            subprocess.check_call(command, cwd=cwd, env=env)
+    finally:
+        admin = await asyncpg.connect(maintenance_url)
+        try:
+            await admin.execute(
+                "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1",
+                temp_db,
+            )
+            await admin.execute(f'DROP DATABASE IF EXISTS "{temp_db}"')
+        finally:
+            await admin.close()
