@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 08:40:00
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-07-09 09:20:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -383,7 +383,7 @@ projects/AI-Parenting-Copilot/
 - `FakeNotificationChannel.cancel()` dev cancel hook。
 - `tests/test_escalation.py`：虚拟时间 advance 与 ack 后不再升级。
 
-阻塞原因：前置 `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T042` / `APC-T043` 未 DONE；真实 channel cancel、升级计时 worker 与 audit_log 集成待验收。
+阻塞原因：前置 `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T041` / `APC-T042` / `APC-T043` / `APC-T044` 未 DONE；真实 channel cancel、升级计时 worker 与 audit_log 集成待验收。
 
 ### APC-T035 — 实现 Device Health Monitor 与灰色告警
 
@@ -494,6 +494,36 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T016/T042` 未 DONE；真实事件/派生态查询、导出 audit_log 与下载授权待后续集成。
 
+
+### APC-T041 — 实现 ESP32C6 mmWave MQTT 固件基础
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `firmware/esp32c6/platformio.ini`：XIAO ESP32C6 + Arduino + PubSubClient skeleton。
+- `firmware/esp32c6/src/main.cpp`：mock payload MQTT publisher，字段包含 presence/state/breathing_rate/heart_rate/abnormal_event/timestamp。
+- `firmware/esp32c6/config.h.example`：无真实 WiFi/MQTT 密钥。
+- `firmware/esp32c6/README.md`：配置、构建、payload 说明。
+- `tests/test_firmware_skeleton.py`：静态验证 payload fields 与 secret placeholder。
+
+阻塞原因：前置 `APC-T040` 未 DONE；当前环境无 PlatformIO/真实 ESP32C6，`pio run` 与硬件发布待验收。
+
+### APC-T044 — 实现 Backup：PG dump、媒体归档、launchd 与恢复演练文档
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/backup/pg_dump_task.py`：PGDumpTask dry-run plan 与 pg_dump command。
+- `server/app/backup/media_archive.py`：MediaArchiveTask dry-run plan，归档 encrypted files/thumbs。
+- `deploy/launchd/com.parenting.backup.plist`：launchd 示例。
+- `docs/RUNBOOK_BACKUP_RESTORE.md`：备份/恢复演练文档。
+- `make backup-dry-run`：输出 dry-run backup plans。
+- `tests/test_backup_tasks.py`：备份路径、命令、保留 encrypted media 策略测试。
+
+阻塞原因：前置 `APC-T003/T042` 未 DONE；真实 `pg_dump`、NAS 路径与恢复演练待 Mac 环境验收。
+
 ---
 
 ## 4. 当前未实现
@@ -513,9 +543,9 @@ make docs-check
 make lint
 # All checks passed.
 make typecheck
-# Success: no issues found in 117 source files
+# Success: no issues found in 120 source files
 make test
-# 95 passed, 1 warning
+# 98 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -528,7 +558,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030` / `APC-T031` / `APC-T032` / `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T042` / `APC-T043`
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030` / `APC-T031` / `APC-T032` / `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T041` / `APC-T042` / `APC-T043` / `APC-T044`
 - 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 

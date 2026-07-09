@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 08:40:00
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-07-09 09:20:00
 -->
 
 
@@ -152,8 +152,11 @@ make test
 LLM 新建或修改 Markdown、Python、YAML、Shell 等文件时，必须在文件头记录：
 
 ```text
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
 创建时间（北京时间）：YYYY-MM-DD HH:MM:SS
 ```
 
 JSON 文件不能写注释时，使用 `_forge_trace` 字段。
+
+- `APC-T041` skeleton 已完成但 BLOCKED：firmware files/tests 通过，等待 PlatformIO 与真实 ESP32C6 验收。
+- `APC-T044` dev 逻辑已完成但 BLOCKED：backup dry-run/runbook/tests 通过，等待真实 pg_dump/NAS/restore drill。

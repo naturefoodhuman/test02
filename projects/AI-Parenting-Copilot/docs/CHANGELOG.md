@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 08:40:00
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-07-09 09:20:00
 -->
 
 
@@ -10,7 +10,7 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T042` Media encrypted storage/thumbnail/dev API 与 `APC-T043` Export MD/PDF placeholder；均 BLOCKED 待 DB/audit/State Engine 集成验收。
+- **最新完成任务**：`APC-T041` Firmware skeleton、`APC-T044` Backup dry-run/runbook；`APC-T042/T043` dev 逻辑保持完成。
 - **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification/health/scheduler、camera/sleep/mmWave/media/export dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
 - **下一任务**：继续 Backup dev/runbook 或 Android shell skeleton。
 
@@ -27,6 +27,34 @@
 
 
 
+
+
+---
+
+## [第 16 轮] 2026-07-09 — APC-T041 / APC-T044 dev 逻辑完成，验收 BLOCKED
+
+### 需求变动
+
+- 继续并行开发不依赖真实硬件/NAS 的代码。
+- 完成 ESP32C6 firmware skeleton 与 backup dry-run/runbook。
+
+### 文件影响
+
+新增/修改：
+
+- `firmware/esp32c6/*`
+- `server/app/backup/*`
+- `deploy/launchd/com.parenting.backup.plist`
+- `docs/RUNBOOK_BACKUP_RESTORE.md`
+- backup/firmware tests
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# 98 passed, 1 warning; rule packs validated.
+```
 
 ---
 

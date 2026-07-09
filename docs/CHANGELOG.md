@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 08:40:00
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-07-09 09:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,7 +11,7 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T042 Media storage 与 APC-T043 Export dev 逻辑；集成任务待验收
+- **最新完成模块**：AI Parenting Copilot APC-T041 Firmware skeleton 与 APC-T044 Backup dry-run/runbook；集成任务待验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
@@ -28,6 +28,27 @@
 
 
 
+
+
+---
+
+## [第 112 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 并行推进**：完成 `APC-T041` ESP32C6 firmware skeleton 与 `APC-T044` backup dry-run/runbook。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/firmware/esp32c6/*`
+- 新增：`projects/AI-Parenting-Copilot/server/app/backup/*`
+- 新增：backup runbook / launchd plist / tests
+- 修改：项目级维护文档
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# 98 passed, 1 warning; rule packs validated.
+```
 
 ---
 
@@ -2259,7 +2280,7 @@ python -m compileall -q _infra/network
 - `_infra/network/mcp_guard/__init__.py` exports mode policy classes.
 - `TASK_BACKLOG.md` marks `E2-C4-S1-T2` as done and sets next TODO to `E2-C4-S1-T3`.
 - `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
-- LLM trace headers for files touched this round use `Arena.ai Agent Mode - Execution Lead Engineer` per user request.
+- LLM trace headers for files touched this round use `Arena.ai Agent Mode` per user request.
 
 ### Verified
 ```bash
@@ -2316,7 +2337,7 @@ python -m compileall -q _infra/network
 
 ### Note
 - This round follows the user's updated instruction allowing multiple sequential tasks in one turn; E2-C4-S1-T4 development started only after E2-C4-S1-T3 tests passed.
-- LLM trace headers use `Arena.ai Agent Mode - Execution Lead Engineer`.
+- LLM trace headers use `Arena.ai Agent Mode`.
 
 ---
 
@@ -2334,7 +2355,7 @@ python -m compileall -q _infra/network
 ### Changed
 - `TASK_BACKLOG.md` marks `E11-C5-S1-T1` and `E6-C1-S1-T1` as done.
 - `docs/PROJECT_STATE.md`, `docs/DEV_LOG.md`, `_infra/network/README.md` synchronized to current source state.
-- LLM trace uses `Arena.ai Agent Mode - Execution Lead Engineer`.
+- LLM trace uses `Arena.ai Agent Mode`.
 
 ### Verified
 ```bash

@@ -1,6 +1,6 @@
 <!--
-创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-09 08:40:00
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-07-09 09:20:00
 -->
 
 
@@ -10,8 +10,8 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T042` Media encrypted storage/thumbnail/dev API 与 `APC-T043` Export MD/PDF placeholder；均因 DB/audit/State Engine 集成验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `95 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **最新完成**：`APC-T041` firmware skeleton 与 `APC-T044` backup dry-run/runbook；`APC-T042/T043` dev 逻辑保持完成；均因硬件/DB/NAS/restore 验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `98 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，仅在 uv 不存在时 fallback 到 pip/ensurepip。
 
 
@@ -27,6 +27,35 @@
 
 
 
+
+
+---
+
+## 第 16 轮 · 2026-07-09（APC-T041 Firmware skeleton + APC-T044 Backup runbook/tasks）
+
+**目标**：继续开发不依赖真实硬件/NAS 的固件与备份基础能力。
+
+**状态变更**：
+
+- `APC-T041`：TODO → BLOCKED（ESP32C6 PlatformIO skeleton/tests 完成；pio 编译与真实硬件待验收）
+- `APC-T044`：TODO → BLOCKED（PG dump/media archive dry-run tasks/runbook/launchd/tests 完成；真实 pg_dump/NAS/restore drill 待验收）
+
+**完成内容**：
+
+- ESP32C6 firmware skeleton：PlatformIO、PubSubClient、config example、mock JSON payload publisher、README。
+- Backup dry-run tasks：PG dump plan、media archive plan、launchd plist、Backup/Restore runbook、`make backup-dry-run`。
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+make lint
+make typecheck
+make test
+# 98 passed, 1 warning
+make rules-validate
+```
 
 ---
 

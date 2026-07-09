@@ -1,11 +1,11 @@
-# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
 # 创建时间（北京时间）：2026-07-08 22:55:00
 
 PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -72,6 +72,8 @@ docs-check:
 	@test -f server/app/mmwave/frame_parser.py
 	@test -f server/app/mmwave/sensor_event_mapper.py
 	@test -f server/app/media/storage.py
+	@test -f server/app/backup/pg_dump_task.py
+	@test -f firmware/esp32c6/platformio.ini
 	@test -f server/app/export/service.py
 	@test -f server/app/camera/fusion.py
 	@test -f server/app/camera/vlm_dispatcher.py
@@ -109,6 +111,8 @@ db-migrate: ensure-dev-deps
 db-current: ensure-dev-deps
 	@$(PYTHON) -m alembic -c alembic.ini current
 
+backup-dry-run: ensure-dev-deps
+	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"
 run-dev: ensure-dev-deps
 	@$(PYTHON) -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000
 
