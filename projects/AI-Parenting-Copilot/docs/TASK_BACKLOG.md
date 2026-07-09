@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 10:10:00
+创建时间（北京时间）：2026-07-09 11:10:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 BLOCKED；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T042 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 BLOCKED；APC-T004 BLOCKED；APC-T005 DONE；APC-T006 BLOCKED；APC-T007 BLOCKED；APC-T008 BLOCKED；APC-T009 BLOCKED；APC-T010 BLOCKED；APC-T018 BLOCKED；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 BLOCKED；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T042 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T057 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T058 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -1436,6 +1436,7 @@
 - **所属 Capability**：C19 Android 基础与同步
 - **所属 Story**：S19 RN Android-only 壳、Auth、PowerSync、离线写入
 - **目标**：创建 Android-only React Native 应用基础壳，接入导航、主题、API client。
+- **状态**：BLOCKED（Android RN source skeleton/API client/theme/navigation/static tests 已完成；Gradle/RN native project build 待 Android toolchain 验收）
 - **前置依赖**：APC-T001, APC-T008
 - **输入**：`ENGINEERING_DESIGN.md` §2 安卓端模块、§3；`ARCHITECTURE_FINAL.md` §3.2
 - **输出**：可运行 Android App skeleton
@@ -1464,6 +1465,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现登录、token 保存、家庭/宝宝上下文、设备注册。
+- **状态**：BLOCKED（session reducer/authService TS flow/static tests 已完成；安全存储/native integration 与前置 T045/T008 待验收）
 - **前置依赖**：APC-T045, APC-T008
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§19
 - **输出**：Android Auth feature
@@ -1492,6 +1494,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现 Android 本地 SQLite、PowerSync client、ObservationEvent 本地写入与 pending_sync 标记。
+- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests 已完成；op-sqlite/PowerSync native integration 与前置 T012/T046 待验收）
 - **前置依赖**：APC-T012, APC-T046
 - **输入**：`ENGINEERING_DESIGN.md` §1.2 Android、§7.1；`ARCHITECTURE_FINAL.md` §9
 - **输出**：Android Sync module
@@ -1520,6 +1523,7 @@
 - **所属 Capability**：C20 Android 核心页面
 - **所属 Story**：S20 Quick Record、Today、Timeline、Alert Center
 - **目标**：实现大按钮快捷记录、计时器、语音文本候选与一次轻确认。
+- **状态**：BLOCKED（Quick Record candidate builder/local event payload TS/static tests 已完成；UI/native offline write 与前置 T027/T047 待验收）
 - **前置依赖**：APC-T027, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §4.1、§3.2；`ENGINEERING_DESIGN.md` §7.1
 - **输出**：Quick Record feature

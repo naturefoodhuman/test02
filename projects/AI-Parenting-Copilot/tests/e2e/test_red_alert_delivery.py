@@ -3,6 +3,7 @@
 
 
 """APC-T057 fake red alert delivery E2E regression."""
+
 from __future__ import annotations
 
 import pytest

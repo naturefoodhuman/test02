@@ -7,6 +7,7 @@
 Dry-run by default: prints fixture frames. Use --mqtt after aiomqtt/Mosquitto are
 available to publish to the configured broker.
 """
+
 from __future__ import annotations
 
 import argparse

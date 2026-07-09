@@ -3,6 +3,7 @@
 
 
 """Reusable fake services for integration tests."""
+
 from __future__ import annotations
 
 from server.app.model_gateway.client import FakeModelClient

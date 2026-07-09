@@ -3,6 +3,7 @@
 
 
 """APC-T058 privacy and canary regression tests."""
+
 from __future__ import annotations
 
 import pytest

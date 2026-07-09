@@ -1,0 +1,29 @@
+{
+  "_forge_trace": {
+    "created_by": "Arena.ai Agent Mode",
+    "created_at_beijing": "2026-07-09 11:10:00"
+  },
+  "name": "ai-parenting-copilot-android",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Android-only React Native shell for AI Parenting Copilot.",
+  "scripts": {
+    "test:static": "node --test src/__tests__/*.test.mjs",
+    "android": "react-native run-android",
+    "lint": "echo 'Use project-level Python static tests until RN toolchain is installed.'"
+  },
+  "dependencies": {
+    "@react-native-firebase/messaging": "^21.0.0",
+    "@notifee/react-native": "^9.0.0",
+    "@powersync/react-native": "^1.0.0",
+    "@op-engineering/op-sqlite": "^10.0.0",
+    "@react-navigation/native": "^6.1.0",
+    "@react-navigation/native-stack": "^6.9.0",
+    "react": "18.2.0",
+    "react-native": "^0.74.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.4.0"
+  }
+}
