@@ -24,8 +24,8 @@ runtime/secrets/
 # Logs, media, exports
 logs/
 *.log
-media/
-exports/
+/media/
+/exports/
 *.mp4
 *.mov
 *.wav

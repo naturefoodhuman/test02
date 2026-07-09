@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 16:45:00
+创建时间（北京时间）：2026-07-09 16:55:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -38,6 +38,24 @@
 
 
 
+
+
+---
+
+## [第 122 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 验收问题修复**：修复项目 `.gitignore` 中 `media/` 递归忽略导致 `server/app/media` 源码包未提交的问题；改为仅忽略根级运行产物 `/media/`。
+
+### 文件影响
+- 修改：`projects/AI-Parenting-Copilot/.gitignore`
+- 新增跟踪：`projects/AI-Parenting-Copilot/server/app/media/*`
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test && make db-integration-test && make security-test && make e2e-fake-test && make shadow-test && make rules-validate
+```
 
 ---
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 16:45:00
+创建时间（北京时间）：2026-07-09 16:55:00
 -->
 
 
@@ -37,6 +37,29 @@
 
 
 
+
+
+---
+
+## [第 26 轮] 2026-07-09 — Media package tracking fix
+
+### 需求变动
+
+- 修复 `.gitignore` 中 `media/` 递归忽略导致 `server/app/media/*` Python package 未被 Git 跟踪的问题。
+- 将 ignore 规则改为仅忽略项目根运行产物 `/media/`，不再忽略 `server/app/media/` 源码目录。
+- 补充 `server/app/media/api/__init__.py` 与 `server/app/media/export/__init__.py`。
+
+### 文件影响
+
+- 修改：`.gitignore`
+- 新增/纳入跟踪：`server/app/media/*`
+
+### 验证
+
+```bash
+make docs-check && make lint && make typecheck && make test && make db-integration-test && make security-test && make e2e-fake-test && make shadow-test && make rules-validate
+# default tests passed; db-integration-test skipped without DB URL in sandbox
+```
 
 ---
 

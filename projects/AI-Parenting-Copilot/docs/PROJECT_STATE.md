@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 16:45:00
+创建时间（北京时间）：2026-07-09 16:55:00
 -->
 
 
@@ -860,3 +860,8 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 - audit_log UPDATE 被 DB trigger 拒绝。
 
 默认 `make test` 排除 `integration` marker；无 DB URL 时 `make db-integration-test` 自动 skip。
+
+
+## 9. Media package tracking fix
+
+已修复 `.gitignore` 的 `media/` 递归忽略问题，`server/app/media/` 源码包已纳入 Git 跟踪。该修复解决用户侧 `ModuleNotFoundError: server.app.media` 集成测试导入失败。
