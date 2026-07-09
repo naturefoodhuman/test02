@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 17:35:00
+创建时间（北京时间）：2026-07-09 18:05:00
 -->
 
 
@@ -38,6 +38,29 @@
 
 
 
+
+
+---
+
+## [第 27 轮] 2026-07-09 — DB integration temp database auth fix
+
+### 需求变动
+
+- 修复用户 Mac 上 migration roundtrip integration test 连接 `postgres` maintenance database 时的 `InvalidPasswordError`。
+- 临时数据库创建/删除改为通过应用数据库连接执行，避免依赖本地 volume 中 `postgres` database 的单独认证状态。
+
+### 文件影响
+
+- 修改：`tests/integration/test_db_repository_adapters.py`
+
+### 验证
+
+```bash
+make test
+# 133 passed, 4 deselected, 1 warning
+make db-integration-test
+# no DB URL: 4 skipped
+```
 
 ---
 

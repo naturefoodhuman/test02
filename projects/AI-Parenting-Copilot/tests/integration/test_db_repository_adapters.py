@@ -70,10 +70,13 @@ def _asyncpg_url() -> str:
 
 def _temp_database_urls(name: str) -> tuple[str, str]:
     parsed = make_url(_db_url())
-    driverless = parsed.set(drivername="postgresql")
-    maintenance = driverless.set(database="postgres")
+    # Use the already-validated application database as the admin connection target.
+    # Some local Docker volumes do not allow the application role to authenticate
+    # against the maintenance `postgres` database even though the same role can create
+    # and drop databases from its own DB.
+    admin = parsed.set(drivername="postgresql")
     temp = parsed.set(database=name)
-    return str(maintenance), str(temp)
+    return str(admin), str(temp)
 
 
 @pytest.fixture(scope="session", autouse=True)

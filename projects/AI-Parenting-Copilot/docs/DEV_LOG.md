@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 17:35:00
+创建时间（北京时间）：2026-07-09 18:05:00
 -->
 
 
@@ -38,6 +38,27 @@
 
 
 
+
+
+---
+
+## 第 27 轮 · 2026-07-09（DB integration temp database auth fix）
+
+**问题**：用户 Mac 执行 `make db-integration-test` 时，前三个 integration tests 通过，migration roundtrip test 连接 maintenance database `postgres` 报 `InvalidPasswordError`。
+
+**修复**：
+
+- `_temp_database_urls()` 不再强制切换到 `postgres` maintenance database。
+- 改为使用已经验证可登录的应用数据库作为 admin connection target，仍然创建独立临时 database 执行 Alembic upgrade/downgrade/upgrade。
+
+**验证**：
+
+```bash
+make test
+# 133 passed, 4 deselected, 1 warning
+make db-integration-test
+# sandbox without DB URL: 4 skipped
+```
 
 ---
 

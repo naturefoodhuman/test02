@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 17:35:00
+创建时间（北京时间）：2026-07-09 18:05:00
 -->
 
 
@@ -869,3 +869,8 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 ## 9. Media package tracking fix
 
 已修复 `.gitignore` 的 `media/` 递归忽略问题，`server/app/media/` 源码包已纳入 Git 跟踪。该修复解决用户侧 `ModuleNotFoundError: server.app.media` 集成测试导入失败。
+
+
+## 10. Temporary migration database admin URL fix
+
+用户 Mac 验收发现 `test_alembic_upgrade_downgrade_roundtrip_on_temporary_database` 连接 maintenance database `postgres` 时，`parenting` 用户认证失败。已修复为使用已验证可登录的应用数据库连接作为 admin connection target，再创建/删除临时数据库。该修复不改变架构，只调整 integration test harness 对本地 Docker volume/role 的兼容性。
