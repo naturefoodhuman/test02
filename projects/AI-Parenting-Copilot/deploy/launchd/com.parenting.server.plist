@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+创建时间（北京时间）：2026-07-09 10:10:00
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.parenting.server</string>
+  <key>WorkingDirectory</key><string>/Users/naturist/MusicProject/AI-Project-Incubation-Factory/projects/AI-Parenting-Copilot</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>server/scripts/run_dev.sh</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>runtime/logs/parenting-server.out</string>
+  <key>StandardErrorPath</key><string>runtime/logs/parenting-server.err</string>
+</dict>
+</plist>

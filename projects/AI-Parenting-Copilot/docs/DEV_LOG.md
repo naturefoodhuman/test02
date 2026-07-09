@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 09:20:00
+创建时间（北京时间）：2026-07-09 10:10:00
 -->
 
 
@@ -10,8 +10,8 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T041` firmware skeleton 与 `APC-T044` backup dry-run/runbook；`APC-T042/T043` dev 逻辑保持完成；均因硬件/DB/NAS/restore 验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `98 passed, 1 warning`；`make rules-validate` 通过；root docs-check Blockers 0
+- **最新完成**：`APC-T054` dev/launchd runbooks、`APC-T055` fixtures/fakes、`APC-T057` fake red alert E2E、`APC-T058` security regression suite；均因前置/真实设备/DB/Android 验收 BLOCKED
+- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `104 passed, 1 warning`；`make security-test` → `5 passed`；`make e2e-fake-test` → `1 passed`; `make rules-validate` 通过；root docs-check Blockers 0
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，仅在 uv 不存在时 fallback 到 pip/ensurepip。
 
 
@@ -28,6 +28,41 @@
 
 
 
+
+
+---
+
+## 第 17 轮 · 2026-07-09（APC-T054 DevOps + APC-T055 Fixtures + APC-T057 Fake Red Alert E2E + APC-T058 Security）
+
+**目标**：继续开发不依赖真实设备/DB/Android 的 DevOps、fixtures、fake E2E 与安全回归能力。
+
+**状态变更**：
+
+- `APC-T054`：TODO → BLOCKED（run scripts/launchd/runbook 完成；真实 launchd/infra/Fregata 待验收）
+- `APC-T055`：TODO → BLOCKED（fixtures/fakes/mock publisher 完成；真实 MQTT integration 待验收）
+- `APC-T057`：TODO → BLOCKED（server fake red alert E2E 完成；Android notification E2E 待实现）
+- `APC-T058`：TODO → BLOCKED（security regression suite 完成；真实 DB audit immutability 待验收）
+
+**完成内容**：
+
+- Dev run scripts、launchd server/fregata plist、deployment runbook。
+- Reusable fake services and model response fixture。
+- Mock mmWave publisher dry-run / optional aiomqtt publisher。
+- Security tests for prompt injection dose, PII/canary/raw media, audit immutability static.
+- Fake red alert delivery E2E over Notification/Escalation stack.
+
+**验证**：
+
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check
+make lint
+make typecheck
+make test          # 104 passed, 1 warning
+make security-test # 5 passed
+make e2e-fake-test # 1 passed
+make rules-validate
+```
 
 ---
 

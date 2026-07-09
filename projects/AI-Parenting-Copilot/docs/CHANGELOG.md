@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 09:20:00
+创建时间（北京时间）：2026-07-09 10:10:00
 -->
 
 
@@ -10,7 +10,7 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T041` Firmware skeleton、`APC-T044` Backup dry-run/runbook；`APC-T042/T043` dev 逻辑保持完成。
+- **最新完成任务**：`APC-T054` DevOps runbook/scripts、`APC-T055` fixtures/fakes、`APC-T057` fake red alert E2E、`APC-T058` security regression suite。
 - **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification/health/scheduler、camera/sleep/mmWave/media/export dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
 - **下一任务**：继续 Backup dev/runbook 或 Android shell skeleton。
 
@@ -28,6 +28,34 @@
 
 
 
+
+
+---
+
+## [第 17 轮] 2026-07-09 — APC-T054/T055/T057/T058 dev 逻辑完成，验收 BLOCKED
+
+### 需求变动
+
+- 继续并行开发不依赖真实设备/DB/Android 的代码。
+- 完成 DevOps run scripts/launchd/runbook、fixtures/fakes/mock publisher、fake red alert E2E、安全回归套件。
+
+### 文件影响
+
+新增/修改：
+
+- `server/scripts/run_dev.sh`, `run_worker.sh`, `mock_mmwave_publisher.py`
+- `deploy/launchd/com.parenting.server.plist`, `com.parenting.fregata.plist`
+- `docs/RUNBOOK_DEPLOYMENT.md`
+- `tests/fakes.py`, `tests/security/*`, `tests/e2e/*`, fixtures
+- Makefile security/e2e targets
+- 项目级维护文档与根目录 CHANGELOG
+
+### 验证
+
+```bash
+make docs-check && make lint && make typecheck && make test && make security-test && make e2e-fake-test && make rules-validate
+# 104 passed, 1 warning; security-test 5 passed; e2e-fake-test 1 passed.
+```
 
 ---
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 09:20:00
+创建时间（北京时间）：2026-07-09 10:10:00
 -->
 
 
@@ -160,3 +160,8 @@ JSON 文件不能写注释时，使用 `_forge_trace` 字段。
 
 - `APC-T041` skeleton 已完成但 BLOCKED：firmware files/tests 通过，等待 PlatformIO 与真实 ESP32C6 验收。
 - `APC-T044` dev 逻辑已完成但 BLOCKED：backup dry-run/runbook/tests 通过，等待真实 pg_dump/NAS/restore drill。
+
+- `APC-T054` dev 逻辑已完成但 BLOCKED：run scripts/launchd/runbook 通过静态验证，等待真实 launchd/infra。
+- `APC-T055` dev 逻辑已完成但 BLOCKED：fixtures/fakes/mock publisher 通过，等待真实 MQTT integration。
+- `APC-T057` server fake E2E 已完成但 BLOCKED：red alert fake delivery/ack 通过，等待 Android notification E2E。
+- `APC-T058` security suite 已完成但 BLOCKED：dose/PII/canary/audit static 通过，等待 DB audit immutability。

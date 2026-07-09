@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -73,6 +73,8 @@ docs-check:
 	@test -f server/app/mmwave/sensor_event_mapper.py
 	@test -f server/app/media/storage.py
 	@test -f server/app/backup/pg_dump_task.py
+	@test -f server/scripts/mock_mmwave_publisher.py
+	@test -f tests/fakes.py
 	@test -f firmware/esp32c6/platformio.ini
 	@test -f server/app/export/service.py
 	@test -f server/app/camera/fusion.py
@@ -110,6 +112,12 @@ db-migrate: ensure-dev-deps
 
 db-current: ensure-dev-deps
 	@$(PYTHON) -m alembic -c alembic.ini current
+
+security-test: ensure-dev-deps
+	@$(PYTHON) -m pytest tests/security -q
+
+e2e-fake-test: ensure-dev-deps
+	@$(PYTHON) -m pytest tests/e2e -q
 
 backup-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"

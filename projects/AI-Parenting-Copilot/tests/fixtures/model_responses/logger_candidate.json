@@ -1,0 +1,8 @@
+{
+  "_forge_trace": {
+    "created_by": "Arena.ai Agent Mode",
+    "created_at_beijing": "2026-07-09 10:10:00"
+  },
+  "content": [{"type": "text", "text": "{"event_type":"feeding","amount_ml":90}"}],
+  "model": "fake-parenting-local"
+}

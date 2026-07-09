@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 09:20:00
+创建时间（北京时间）：2026-07-09 10:10:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T058 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -383,7 +383,7 @@ projects/AI-Parenting-Copilot/
 - `FakeNotificationChannel.cancel()` dev cancel hook。
 - `tests/test_escalation.py`：虚拟时间 advance 与 ack 后不再升级。
 
-阻塞原因：前置 `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T041` / `APC-T042` / `APC-T043` / `APC-T044` 未 DONE；真实 channel cancel、升级计时 worker 与 audit_log 集成待验收。
+阻塞原因：前置 `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T041` / `APC-T042` / `APC-T043` / `APC-T044` / `APC-T054` / `APC-T055` / `APC-T057` / `APC-T058` 未 DONE；真实 channel cancel、升级计时 worker 与 audit_log 集成待验收。
 
 ### APC-T035 — 实现 Device Health Monitor 与灰色告警
 
@@ -524,6 +524,57 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T003/T042` 未 DONE；真实 `pg_dump`、NAS 路径与恢复演练待 Mac 环境验收。
 
+
+### APC-T054 — 实现开发启动脚本、launchd plist 与部署样例
+
+状态：BLOCKED
+
+已完成代码/文档：
+
+- `server/scripts/run_dev.sh`、`run_worker.sh`。
+- `deploy/launchd/com.parenting.server.plist`、`com.parenting.fregata.plist`。
+- `docs/RUNBOOK_DEPLOYMENT.md`。
+- `make backup-dry-run` 与部署/启动文档入口。
+
+阻塞原因：前置 `APC-T003/T036/T044` 未 DONE；真实 launchd、infra bootstrap 与 Fregata binary 配置待 Mac 环境验收。
+
+### APC-T055 — 实现 Dev Fixtures、Fake Services 与 Mock Publishers
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `tests/fixtures/model_responses/logger_candidate.json`、`tests/fakes.py`。
+- `server/scripts/mock_mmwave_publisher.py`：dry-run print 与 optional aiomqtt publish。
+- `tests/fixtures/radar_frames.jsonl` 已带 `_forge_trace`。
+- `make security-test` 与 `make e2e-fake-test` 复用 fake services。
+
+阻塞原因：前置 `APC-T032/T038/T040` 未 DONE；真实 MQTT integration 与设备级 fixture 验收待后续。
+
+### APC-T057 — 实现红色告警 E2E：生成 → 多通道 → 升级 → Ack 停止
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `tests/e2e/test_red_alert_delivery.py`：server-side fake red alert delivery/escalation/ack regression。
+- 验证 fake FCM/Mac/App/Camera 多通道、虚拟时间升级、ack cancel。
+
+阻塞原因：前置 `APC-T021/T034/T052/T055` 未 DONE；Android notification E2E 与真实设备 ack 流程待实现。
+
+### APC-T058 — 建立安全回归套件：Dose、Prompt Injection、PII、Canary、审计不可删除
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `tests/security/test_prompt_injection.py`：LLM/prompt injection 剂量输出拦截。
+- `tests/security/test_privacy_regression.py`：PII redaction、canary block、raw media cloud block。
+- `tests/security/test_audit_immutability_static.py`：audit_log trigger/revoke 静态回归。
+- `make security-test`：当前 5 passed。
+
+阻塞原因：前置 `APC-T006/T029/T031` 未 DONE；真实 DB audit update/delete 被拒集成测试待 PostgreSQL 验收。
+
 ---
 
 ## 4. 当前未实现
@@ -545,7 +596,7 @@ make lint
 make typecheck
 # Success: no issues found in 120 source files
 make test
-# 98 passed, 1 warning
+# 104 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
@@ -558,7 +609,7 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 最高优先级任务：
 
-- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030` / `APC-T031` / `APC-T032` / `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T041` / `APC-T042` / `APC-T043` / `APC-T044`
+- Task ID：`APC-T003` / `APC-T004` / `APC-T006` / `APC-T007` / `APC-T008` / `APC-T009` / `APC-T010` / `APC-T018` / `APC-T020` / `APC-T021` / `APC-T022` / `APC-T023` / `APC-T026` / `APC-T027` / `APC-T028` / `APC-T029` / `APC-T030` / `APC-T031` / `APC-T032` / `APC-T033` / `APC-T034` / `APC-T035` / `APC-T036` / `APC-T037` / `APC-T038` / `APC-T039` / `APC-T040` / `APC-T041` / `APC-T042` / `APC-T043` / `APC-T044` / `APC-T054` / `APC-T055` / `APC-T057` / `APC-T058`
 - 任务名称：完成 Docker/PostgreSQL 相关集成验收与 DB-backed Auth/Event 持久化
 - 状态：BLOCKED，等待具备 Docker CLI 的环境执行 `make infra-up`、`make db-migrate`、迁移升降级、audit_log immutability、Auth/Event DB repository / seed DB 写入验证。
 
