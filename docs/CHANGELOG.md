@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 11:10:00
+创建时间（北京时间）：2026-07-09 12:00:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,7 +11,7 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T045/T046/T047/T048 Android skeleton/Auth/Sync/Quick Record static logic；集成任务待验收
+- **最新完成模块**：AI Parenting Copilot APC-T049/T050/T051/T052/T053 Android feature view models/flows；集成任务待验收
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
@@ -31,6 +31,21 @@
 
 
 
+
+
+---
+
+## [第 115 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 并行推进**：完成 Android Today/Timeline/Alert Center/Notification/Sleep Session TS view models 与 flows。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make docs-check && make lint && make typecheck && make test
+# 114 passed, 1 warning.
+```
 
 ---
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 11:10:00
+创建时间（北京时间）：2026-07-09 12:00:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T058 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T053 BLOCKED`、`APC-T058 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -627,6 +627,47 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T027/T047` 未 DONE；真实 UI、大按钮、语音文本、一次确认和本地 SQLite 写入待 Android toolchain 验收。
 
+
+### APC-T049 — 实现 Android Today 首页
+
+状态：BLOCKED
+
+已完成代码/验证：`android/src/features/today/viewModel.ts`，展示 feeding/diaper/sleep/pending_sync/device health/active alerts 的 view model；static tests 已覆盖。
+
+阻塞原因：前置 `APC-T016/T035/T047` 未 DONE；真实 RN UI 与 PowerSync 副本读取待验收。
+
+### APC-T050 — 实现 Android Timeline
+
+状态：BLOCKED
+
+已完成代码/验证：`android/src/features/timeline/viewModel.ts`，支持 day grouping、source display、correction payload、soft delete payload、5 分钟重复 feeding soft hint；static tests 已覆盖。
+
+阻塞原因：前置 `APC-T010/T012/T047` 未 DONE；真实 UI 编辑/撤销与审计链路待验收。
+
+### APC-T051 — 实现 Android Alert Center
+
+状态：BLOCKED
+
+已完成代码/验证：`android/src/features/alert_center/viewModel.ts`，支持 evidence rows、ack API、feedback API 与 feedback enum；static tests 已覆盖。
+
+阻塞原因：前置 `APC-T031/T046` 未 DONE；真实 UI 与 server DB ack/feedback 持久化待验收。
+
+### APC-T052 — 实现 Android Notification
+
+状态：BLOCKED
+
+已完成代码/验证：`android/src/notification/*` 与 `android/src/background/work_manager.ts`，支持 FCM trigger-only payload、alert detail REST fetch、高优先级 channel config、FullScreenIntent 权限引导、本地兜底、background sync work request；static tests 已覆盖。
+
+阻塞原因：前置 `APC-T034/T051` 未 DONE；真实 FCM/Notifee/native FullScreenIntent/WorkManager 待 Android 设备验收。
+
+### APC-T053 — 实现 Android Sleep Session UI 与 ROI 配置
+
+状态：BLOCKED
+
+已完成代码/验证：`android/src/features/sleep_session/viewModel.ts`，支持 active-only analysisVisible、shadow mode label、ROI save API；static tests 已覆盖。
+
+阻塞原因：前置 `APC-T037/T038/T039` 未 DONE；真实 RN UI/snapshot/ROI 手势待验收。
+
 ---
 
 ## 4. 当前未实现
@@ -648,7 +689,7 @@ make lint
 make typecheck
 # Success: no issues found in 120 source files
 make test
-# 109 passed, 1 warning
+# 114 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```

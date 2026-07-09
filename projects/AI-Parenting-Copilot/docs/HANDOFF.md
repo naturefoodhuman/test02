@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 11:10:00
+创建时间（北京时间）：2026-07-09 12:00:00
 -->
 
 
@@ -170,3 +170,5 @@ JSON 文件不能写注释时，使用 `_forge_trace` 字段。
 - `APC-T046` Auth TS flow 已完成但 BLOCKED：session/authService static tests 通过，等待 secure storage/native integration。
 - `APC-T047` Sync schema/local pending store 已完成但 BLOCKED：static tests 通过，等待 op-sqlite/PowerSync native integration。
 - `APC-T048` Quick Record candidate builder 已完成但 BLOCKED：static tests 通过，等待 UI/native offline write。
+
+- `APC-T049`~`APC-T053` Android feature TS view models/flows 已完成但 BLOCKED：static tests 通过，等待 RN/Gradle/native/device 验收。

@@ -76,6 +76,11 @@ docs-check:
 	@test -f server/scripts/mock_mmwave_publisher.py
 	@test -f tests/fakes.py
 	@test -f firmware/esp32c6/platformio.ini
+	@test -f android/src/features/today/viewModel.ts
+	@test -f android/src/features/timeline/viewModel.ts
+	@test -f android/src/features/alert_center/viewModel.ts
+	@test -f android/src/notification/fcm.ts
+	@test -f android/src/features/sleep_session/viewModel.ts
 	@test -f server/app/export/service.py
 	@test -f server/app/camera/fusion.py
 	@test -f server/app/camera/vlm_dispatcher.py

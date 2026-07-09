@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 11:10:00
+创建时间（北京时间）：2026-07-09 12:00:00
 -->
 
 # TASK_BACKLOG.md
@@ -1552,6 +1552,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：展示 DerivedBabyState、统计、待办、告警、同步态、设备健康。
+- **状态**：BLOCKED（Today view model/static tests 已完成；前置 T016/T035/T047 与真实 RN UI 待验收）
 - **前置依赖**：APC-T016, APC-T035, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§22.5
 - **输出**：Today feature
@@ -1579,6 +1580,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：实现事件时间线、记录人/来源显示、编辑纠错、软删除撤销、重复提示。
+- **状态**：BLOCKED（Timeline view model/correction/delete/duplicate hint static tests 已完成；前置 T010/T012/T047 与真实 UI 待验收）
 - **前置依赖**：APC-T010, APC-T012, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §9.2、§3.2
 - **输出**：Timeline feature
@@ -1605,6 +1607,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：展示告警列表、证据链、确认、反馈。
+- **状态**：BLOCKED（Alert Center view model/ack/feedback TS flow/static tests 已完成；前置 T031/T046 与真实 UI 待验收）
 - **前置依赖**：APC-T031, APC-T046
 - **输入**：`ARCHITECTURE_FINAL.md` §14、§3.2
 - **输出**：Alert Center feature
@@ -1631,6 +1634,7 @@
 - **所属 Capability**：C21 Android 告警与睡眠会话
 - **所属 Story**：S21 FCM/Notifee/FullScreenIntent、Sleep Session UI
 - **目标**：实现 Android 高优先级告警接收与强提醒能力。
+- **状态**：BLOCKED（FCM payload parser/notifee channel config/fullscreen guide/local fallback/work manager static tests 已完成；前置 T034/T051 与 native integration 待验收）
 - **前置依赖**：APC-T034, APC-T051
 - **输入**：`ARCHITECTURE_FINAL.md` §14.5；`ENGINEERING_DESIGN.md` Android A08/A09
 - **输出**：Android notification/background module
@@ -1660,6 +1664,7 @@
 - **所属 Capability**：C21
 - **所属 Story**：S21
 - **目标**：实现睡眠会话开始/暂停/结束、snapshot 展示、ROI 配置、影子事件查看。
+- **状态**：BLOCKED（Sleep Session view model/ROI save TS flow/static tests 已完成；前置 T037/T038/T039 与真实 UI 待验收）
 - **前置依赖**：APC-T037, APC-T038, APC-T039
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§12.3
 - **输出**：Sleep Session feature

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 11:10:00
+创建时间（北京时间）：2026-07-09 12:00:00
 -->
 
 # AI Parenting Copilot
@@ -24,7 +24,7 @@
 
 ## 当前实现状态
 
-当前完成：`APC-T001`、`APC-T002`、`APC-T005`、`APC-T024`、`APC-T025`；`APC-T003/T004/T006/T007/T008/T009/T010/T018/T020/T021/T022/T023/T026/T027/T028/T029/T030/T031/T032/T033/T034/T035/T036/T037/T038/T039/T040/T041/T042/T043/T044/T045/T046/T047/T048/T054/T055/T057/T058` BLOCKED。
+当前完成：`APC-T001`、`APC-T002`、`APC-T005`、`APC-T024`、`APC-T025`；`APC-T003/T004/T006/T007/T008/T009/T010/T018/T020/T021/T022/T023/T026/T027/T028/T029/T030/T031/T032/T033/T034/T035/T036/T037/T038/T039/T040/T041/T042/T043/T044/T045/T046/T047/T048/T049/T050/T051/T052/T053/T054/T055/T057/T058` BLOCKED。
 
 - 已创建项目骨架、基础配置、维护文档与 ADR。
 - 已实现 FastAPI 应用壳、Settings、DI、公共错误、ULID、timezone-aware clock、Repository Protocol 与事件总线占位。
@@ -71,3 +71,4 @@ make test
 - 已实现 Firmware/Backup dev 基础：ESP32C6 skeleton、PG dump/media archive dry-run、Backup/Restore runbook；真实硬件/NAS/restore 验收待执行。
 - 已实现 DevOps/Fake/Security dev 能力：run scripts、launchd/runbooks、fixtures/fakes、security-test、fake red alert E2E；真实设备/DB/Android 验收待执行。
 - 已实现 Android-only RN skeleton、Auth/session TS flow、sync schema/local pending store、Quick Record candidate builder；真实 RN/Gradle/native integration 待验收。
+- 已实现 Android feature view models/flows：Today、Timeline、Alert Center、Notification、Sleep Session；真实 RN/Gradle/native/device 验收待执行。
