@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:30:00
+创建时间（北京时间）：2026-07-09 19:05:00
 -->
 
 
@@ -40,6 +40,60 @@
 
 
 
+
+
+
+---
+
+## 第 30 轮 · 2026-07-09（DB-backed runtime repository wiring）
+
+**目标**：继续推进从 dev/in-memory API 到 DB-backed runtime 的切换。
+
+**完成内容**：
+
+- `create_app()` 在配置 DB URL 时创建 async engine/session factory。
+- 新增 request-level db_session middleware，成功响应 commit，错误响应 rollback。
+- Auth API 在 DB mode 使用 `SQLAlchemyAuthRepository`。
+- Events API 在 DB mode 使用 `SQLAlchemyEventRepository`。
+- Alert API 在 DB mode 使用 `SQLAlchemyAlertRepository`。
+- Rules Admin API 在 DB mode 使用 `SQLAlchemyEvidencePolicyRepository`。
+- `SQLAlchemyAlertRepository` 补齐 `list_active`。
+
+**验证**：
+
+```bash
+make test
+# 134 passed, 4 deselected, 1 warning
+make db-integration-test
+# no DB URL: 4 skipped
+```
+
+---
+
+## 第 29 轮 · 2026-07-09（DB integration accepted; core task unblock）
+
+**用户验收结果**：
+
+```bash
+make infra-up
+make db-migrate
+make db-current
+make db-integration-test
+# 4 passed
+```
+
+**状态变更**：
+
+- `APC-T003`：BLOCKED → DONE
+- `APC-T004`：BLOCKED → DONE
+- `APC-T006`：BLOCKED → DONE
+- `APC-T007`：BLOCKED → DONE
+- `APC-T009`：BLOCKED → DONE
+- `APC-T018`：BLOCKED → DONE
+
+**未解除项说明**：
+
+`APC-T008/T010/T011/T012/T013/T014/T015/T016/T017/T019` 等仍依赖 API runtime DB wiring、PowerSync、worker、真实链路或前置任务完整验收，暂不标记 DONE。
 
 ---
 

@@ -18,11 +18,15 @@ from server.app.notification.alert_repo import (
     FeedbackRequest,
     InMemoryAlertRepository,
 )
+from server.app.notification.sqlalchemy_alert_repo import SQLAlchemyAlertRepository
 
 router = APIRouter(prefix="/api/v1/alerts", tags=["alerts"])
 
 
-def _repo(request: Request) -> InMemoryAlertRepository:
+def _repo(request: Request) -> InMemoryAlertRepository | SQLAlchemyAlertRepository:
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return SQLAlchemyAlertRepository(db_session)
     repo = getattr(request.app.state, "alert_repository", None)
     if repo is None:
         raise AppError(

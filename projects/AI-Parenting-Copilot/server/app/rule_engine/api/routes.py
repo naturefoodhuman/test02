@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import inspect
 from dataclasses import asdict
 from pathlib import Path
 from typing import cast
@@ -20,6 +21,7 @@ from server.app.rule_engine.evidence_repo import (
     InMemoryEvidencePolicyRepository,
 )
 from server.app.rule_engine.loader import RulePack, load_rule_pack, validate_rule_packs
+from server.app.rule_engine.sqlalchemy_evidence_repo import SQLAlchemyEvidencePolicyRepository
 
 router = APIRouter(prefix="/api/v1/rules", tags=["rules"])
 
@@ -33,7 +35,12 @@ def _require_admin(role: str | None) -> None:
         raise AppError("Admin role required", code="PERMISSION_DENIED", status_code=403)
 
 
-def _repo(request: Request) -> InMemoryEvidencePolicyRepository:
+def _repo(
+    request: Request,
+) -> InMemoryEvidencePolicyRepository | SQLAlchemyEvidencePolicyRepository:
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return SQLAlchemyEvidencePolicyRepository(db_session)
     repo = getattr(request.app.state, "evidence_policy_repo", None)
     if repo is None:
         raise AppError(
@@ -73,6 +80,10 @@ async def activate_rule_pack(
 ) -> dict[str, object]:
     _require_admin(x_role)
     pack: RulePack = load_rule_pack(Path(payload.path))
-    record = _repo(request).activate(pack)
+    record_or_awaitable = _repo(request).activate(pack)
+    if inspect.isawaitable(record_or_awaitable):
+        record = await record_or_awaitable
+    else:
+        record = record_or_awaitable
     await _audit(request, "rule.activate", record)
     return {"activated": asdict(record)}

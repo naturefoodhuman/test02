@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:30:00
+创建时间（北京时间）：2026-07-09 19:05:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T019 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T013 BLOCKED`、`APC-T014 BLOCKED`、`APC-T015 BLOCKED`、`APC-T016 BLOCKED`、`APC-T017 BLOCKED`、`APC-T053 BLOCKED`、`APC-T056 BLOCKED`、`APC-T058 BLOCKED`、`APC-T059 BLOCKED`
+**当前任务状态**：核心 DB 验收通过：`APC-T003/T004/T006/T007/T009/T018 DONE`；仍 BLOCKED：`APC-T008/T010/T011/T012/T013/T014/T015/T016/T017/T019+` 等待后续真实链路/设备/Android 验收
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -879,3 +879,42 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 ## 11. DB integration URL password rendering fix
 
 用户 Mac 验收发现 migration roundtrip test 即使连接应用库 `parenting`，仍然报 `InvalidPasswordError`。根因是 SQLAlchemy `URL.__str__()` 默认隐藏密码为 `***`，integration harness 将隐藏后的 URL 传给 asyncpg。已改为 `render_as_string(hide_password=False)`，并新增 regression test `tests/test_db_integration_url_rendering.py`，确保临时 DB URL 不含 `***`。
+
+
+## 12. DB integration validation accepted
+
+用户 Mac 集中验收已通过：
+
+```bash
+export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+make infra-up
+make db-migrate
+make db-current
+make db-integration-test
+# 4 passed
+```
+
+据此解除以下任务的 DB/migration/audit 阻塞并标记 DONE：
+
+- `APC-T003`：本地基础设施 Docker Compose 与 Alembic 初始化。
+- `APC-T004`：核心数据库 Schema 初版。
+- `APC-T006`：审计日志服务与 `@audit` 装饰器基础。
+- `APC-T007`：Auth/RBAC Domain、Repository 与 JWT 服务。
+- `APC-T009`：ObservationEvent 契约、Repository 与幂等写入。
+- `APC-T018`：Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo。
+
+仍保持 BLOCKED 的原因：API runtime 尚有部分 dev/in-memory wiring、PowerSync/worker/Android/硬件/生产规则审查尚未完成。
+
+
+## 13. DB-backed runtime wiring progress
+
+状态：部分完成，仍等待用户 Mac DB integration 复验。
+
+已完成：
+
+- `server/app/main.py` 在 `PARENTING_DATABASE__URL` 存在时创建 async SQLAlchemy engine/session factory。
+- HTTP middleware 为每个请求注入 `request.state.db_session` 并按响应状态 commit/rollback。
+- Auth API、Events API、Alert API、Rules Admin API 可在请求级 db_session 存在时使用 SQLAlchemy repositories，否则保持 dev in-memory fallback。
+- `SQLAlchemyAlertRepository` 补齐 `list_active`，支持 Alert API DB mode。
+
+下一次用户验收 `make db-integration-test` 通过后，可继续增加 DB-backed API integration tests。

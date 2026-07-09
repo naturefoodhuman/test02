@@ -17,12 +17,16 @@ from server.app.events.domain.observation_event import (
     ObservationEventCreate,
 )
 from server.app.events.infra.repository import EventRepository
+from server.app.events.infra.sqlalchemy_repository import SQLAlchemyEventRepository
 from server.app.observability.audit import AuditActor, AuditRecord, AuditSink
 
 router = APIRouter(prefix="/api/v1/events", tags=["events"])
 
 
 def _event_repo(request: Request) -> EventRepository:
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return SQLAlchemyEventRepository(db_session)
     repo = getattr(request.app.state, "event_repository", None)
     if repo is None:
         raise AppError(

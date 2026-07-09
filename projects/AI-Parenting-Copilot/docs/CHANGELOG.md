@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:30:00
+创建时间（北京时间）：2026-07-09 19:05:00
 -->
 
 
@@ -40,6 +40,55 @@
 
 
 
+
+
+
+---
+
+## [第 30 轮] 2026-07-09 — DB-backed runtime repository wiring
+
+### 需求变动
+
+- API runtime 开始支持 DB-backed repository mode：存在 `PARENTING_DATABASE__URL` 时请求级注入 SQLAlchemy session，Auth/Events/Alert/Rules API 使用 DB adapters。
+
+### 文件影响
+
+- 修改：`server/app/main.py`
+- 修改：`server/app/auth/api/routes.py`
+- 修改：`server/app/events/api/routes.py`
+- 修改：`server/app/notification/api/routes.py`
+- 修改：`server/app/notification/sqlalchemy_alert_repo.py`
+- 修改：`server/app/rule_engine/api/routes.py`
+
+### 验证
+
+```bash
+make test
+# 134 passed, 4 deselected, 1 warning
+```
+
+---
+
+## [第 29 轮] 2026-07-09 — DB integration accepted; core task unblock
+
+### 需求变动
+
+- 用户 Mac `make db-integration-test` 通过 4/4。
+- 解除并标记 DONE：`APC-T003`、`APC-T004`、`APC-T006`、`APC-T007`、`APC-T009`、`APC-T018`。
+
+### 文件影响
+
+- 修改：`docs/TASK_BACKLOG.md`
+- 修改：`docs/PROJECT_STATE.md`
+- 修改：`docs/DEV_LOG.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+make db-integration-test
+# user Mac: 4 passed
+```
 
 ---
 

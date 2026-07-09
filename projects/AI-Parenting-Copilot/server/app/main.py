@@ -19,6 +19,7 @@ from server.app.auth.service.jwt_service import JWTService
 from server.app.auth.service.passwords import PasswordHasher
 from server.app.camera.api.routes import router as camera_router
 from server.app.camera.sleep_session import InMemorySleepSessionRepository
+from server.app.db import create_optional_engine, create_session_factory
 from server.app.di import AppContainer, create_container
 from server.app.events.api.routes import router as events_router
 from server.app.events.infra.repository import InMemoryEventRepository
@@ -52,6 +53,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     container = create_container(settings)
     configure_logging(container.settings)
     configure_tracing(container.settings)
+    db_engine = create_optional_engine(container.settings)
+    db_session_factory = create_session_factory(db_engine) if db_engine is not None else None
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -66,6 +69,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             yield
         finally:
             await container.worker_registry.stop_all()
+            if db_engine is not None:
+                await db_engine.dispose()
 
     app = FastAPI(
         title=container.settings.app_name,
@@ -74,6 +79,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.container = container
+    app.state.db_engine = db_engine
+    app.state.db_session_factory = db_session_factory
     app.state.audit_sink = MemoryAuditSink()
     app.state.alert_repository = InMemoryAlertRepository(app.state.audit_sink)
     app.state.device_health_monitor = DeviceHealthMonitor([], app.state.alert_repository)
@@ -106,6 +113,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(media_router)
     app.include_router(state_router)
     app.include_router(rules_router)
+
+    @app.middleware("http")
+    async def db_session_middleware(request, call_next):  # type: ignore[no-untyped-def]
+        session_factory = getattr(request.app.state, "db_session_factory", None)
+        if session_factory is None:
+            return await call_next(request)
+        async with session_factory() as session:
+            request.state.db_session = session
+            response = await call_next(request)
+            if response.status_code < 400:
+                await session.commit()
+            else:
+                await session.rollback()
+            return response
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:

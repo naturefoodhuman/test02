@@ -50,6 +50,13 @@ class SQLAlchemyAlertRepository:
             raise NotFoundError("Alert not found", evidence={"alert_id": alert_id})
         return self._to_domain(row)
 
+    async def list_active(self, family_id: str | None = None) -> list[AlertRecord]:
+        stmt = select(ORMAlert).where(ORMAlert.status == AlertStatus.ACTIVE.value)
+        if family_id is not None:
+            stmt = stmt.where(ORMAlert.family_id == family_id)
+        rows = await self.session.scalars(stmt.order_by(ORMAlert.created_at.desc()))
+        return [self._to_domain(row) for row in rows]
+
     async def ack(self, alert_id: str, request: AckAlertRequest) -> AlertRecord:
         row = await self.session.scalar(select(ORMAlert).where(ORMAlert.id == alert_id))
         if row is None:

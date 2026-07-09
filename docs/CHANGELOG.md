@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 18:30:00
+创建时间（北京时间）：2026-07-09 19:05:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -41,6 +41,37 @@
 
 
 
+
+
+
+---
+
+## [第 126 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 并行推进**：API runtime 增加 DB-backed repository mode，按请求注入 SQLAlchemy session；Auth/Events/Alert/Rules API 可在 DB URL 存在时使用 SQLAlchemy adapters。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make test
+# 134 passed, 4 deselected, 1 warning
+```
+
+---
+
+## [第 125 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 验收通过**：用户 Mac `make db-integration-test` 通过 4/4。
+- **任务状态解除**：`APC-T003/T004/T006/T007/T009/T018` 从 BLOCKED 标记为 DONE。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make db-integration-test
+# user Mac: 4 passed
+```
 
 ---
 

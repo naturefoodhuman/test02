@@ -12,6 +12,7 @@ from fastapi import APIRouter, Header, Request
 from pydantic import BaseModel, Field
 
 from server.app.auth.domain.models import DeviceKind, Role
+from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.auth.service.auth_service import AuthService
 from server.app.common.errors import AppError
 
@@ -69,6 +70,13 @@ def _auth_service(request: Request) -> AuthService:
             "Auth service is not configured",
             code="AUTH_SERVICE_UNAVAILABLE",
             status_code=500,
+        )
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return AuthService(
+            SQLAlchemyAuthRepository(db_session),
+            service.jwt_service,
+            service.password_hasher,
         )
     return service
 
