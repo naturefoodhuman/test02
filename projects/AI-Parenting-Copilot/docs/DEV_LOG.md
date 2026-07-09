@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 20:10:00
+创建时间（北京时间）：2026-07-09 20:05:00
 -->
 
 
@@ -43,6 +43,28 @@
 
 
 
+
+
+---
+
+## 第 32 轮 · 2026-07-09（DB-backed API runtime integration harness）
+
+**目标**：为 DB-backed FastAPI runtime wiring 增加真实集成验收入口。
+
+**完成内容**：
+
+- 新增 `tests/integration/test_api_db_runtime.py`。
+- 覆盖 request-level SQLAlchemy session middleware。
+- 覆盖 Auth/Events/Alert/Rules/State API 在 DB URL 存在时走 SQLAlchemy adapters。
+
+**验证**：
+
+```bash
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL: 5 skipped; with DB URL on Mac should run 5 real tests
+```
 
 ---
 

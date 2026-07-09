@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 20:10:00
+创建时间（北京时间）：2026-07-09 20:05:00
 -->
 
 
@@ -934,3 +934,23 @@ make db-integration-test
 - `android/android/app/src/main/java/com/aiparentingcopilot/MainApplication.kt`
 
 该 skeleton 用于让“安卓手机端应用程序”有明确 native 工程入口。当前仍是最小 Android shell，React Native bridge、Gradle wrapper、真实 native modules 与设备构建需后续 Android toolchain 验收。
+
+
+## 15. DB-backed API runtime integration harness
+
+状态：已新增，等待用户 Mac/PostgreSQL 环境执行。
+
+新增：
+
+- `tests/integration/test_api_db_runtime.py`
+
+覆盖：
+
+- FastAPI runtime 在 `PARENTING_DATABASE__URL` 存在时注入 request-level SQLAlchemy session。
+- Auth API DB mode：init-family、device registration。
+- Events API DB mode：create/list。
+- Alert API DB mode：create/ack。
+- Rules Admin API DB mode：activate unique temporary rule pack。
+- State API DB mode：读取 `derived_baby_state` snapshot。
+
+`make db-integration-test` 现在无 DB URL 时 5 skipped；用户 Mac DB 环境应执行 5 个真实 integration tests。

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 20:10:00
+创建时间（北京时间）：2026-07-09 20:05:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -44,6 +44,23 @@
 
 
 
+
+
+---
+
+## [第 128 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 集成验收增强**：新增 DB-backed FastAPI runtime integration test，覆盖 Auth/Events/Alert/Rules/State API 在真实 DB session 下的 smoke flow。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL in sandbox: 5 skipped; with PARENTING_DATABASE__URL on Mac should run 5 real integration tests
+```
 
 ---
 
