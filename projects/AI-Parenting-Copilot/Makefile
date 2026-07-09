@@ -90,6 +90,8 @@ docs-check:
 	@test -f android/src/features/alert_center/viewModel.ts
 	@test -f android/src/notification/fcm.ts
 	@test -f android/src/features/sleep_session/viewModel.ts
+	@test -f android/android/app/src/main/AndroidManifest.xml
+	@test -f android/android/app/build.gradle
 	@test -f server/app/export/service.py
 	@test -f server/app/camera/fusion.py
 	@test -f server/app/camera/vlm_dispatcher.py

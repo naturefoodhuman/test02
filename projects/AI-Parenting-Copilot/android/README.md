@@ -22,3 +22,15 @@ npm install
 npm run android
 npm run test:static
 ```
+
+## Native Android skeleton
+
+The initial native Android project skeleton is under `android/android/`:
+
+- `android/android/settings.gradle`
+- `android/android/build.gradle`
+- `android/android/app/build.gradle`
+- `android/android/app/src/main/AndroidManifest.xml`
+- `android/android/app/src/main/java/com/aiparentingcopilot/*`
+
+This is a minimal Android shell for toolchain validation. The React Native bridge and full native modules remain blocked until Gradle/RN/device validation.

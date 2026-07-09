@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 19:05:00
+创建时间（北京时间）：2026-07-09 20:10:00
 -->
 
 
@@ -918,3 +918,19 @@ make db-integration-test
 - `SQLAlchemyAlertRepository` 补齐 `list_active`，支持 Alert API DB mode。
 
 下一次用户验收 `make db-integration-test` 通过后，可继续增加 DB-backed API integration tests。
+
+
+## 14. Android native skeleton progress
+
+状态：部分完成，仍 BLOCKED 待 Android toolchain/RN integration 验收。
+
+新增 native Android skeleton：
+
+- `android/android/settings.gradle`
+- `android/android/build.gradle`
+- `android/android/app/build.gradle`
+- `android/android/app/src/main/AndroidManifest.xml`
+- `android/android/app/src/main/java/com/aiparentingcopilot/MainActivity.kt`
+- `android/android/app/src/main/java/com/aiparentingcopilot/MainApplication.kt`
+
+该 skeleton 用于让“安卓手机端应用程序”有明确 native 工程入口。当前仍是最小 Android shell，React Native bridge、Gradle wrapper、真实 native modules 与设备构建需后续 Android toolchain 验收。

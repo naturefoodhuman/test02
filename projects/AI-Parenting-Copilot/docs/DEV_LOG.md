@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 19:05:00
+创建时间（北京时间）：2026-07-09 20:10:00
 -->
 
 
@@ -42,6 +42,32 @@
 
 
 
+
+
+---
+
+## 第 31 轮 · 2026-07-09（Android native skeleton）
+
+**目标**：明确 Android 手机端应用程序位置，并补齐最小 native Android 工程骨架。
+
+**完成内容**：
+
+- `android/android/` native Android skeleton。
+- AndroidManifest 权限：INTERNET、POST_NOTIFICATIONS、USE_FULL_SCREEN_INTENT、VIBRATE、WAKE_LOCK。
+- MainActivity/MainApplication Kotlin placeholder。
+- Native modules placeholder 与 red alert Detox placeholder。
+- Static tests: `tests/test_android_native_skeleton.py`。
+
+**状态说明**：
+
+`APC-T045/T052/T057` 仍保持 BLOCKED：真实 Gradle wrapper、RN bridge、Notifee/FCM native integration 与设备 E2E 尚未验收。
+
+**验证**：
+
+```bash
+make test
+# 137 passed, 4 deselected, 1 warning
+```
 
 ---
 
