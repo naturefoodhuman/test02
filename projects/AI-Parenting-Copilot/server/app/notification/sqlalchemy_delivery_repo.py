@@ -6,11 +6,20 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.app.models import AlertDelivery as ORMAlertDelivery
 from server.app.notification.channels.base import DeliveryReceipt
+
+
+def _parse_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    parsed = datetime.fromisoformat(value)
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
 
 class SQLAlchemyDeliveryRepository:
@@ -25,7 +34,7 @@ class SQLAlchemyDeliveryRepository:
                 channel=receipt.channel,
                 target=receipt.target,
                 status=receipt.status,
-                sent_at=receipt.sent_at,
+                sent_at=_parse_datetime(receipt.sent_at),
                 receipt=receipt.receipt,
             )
         )

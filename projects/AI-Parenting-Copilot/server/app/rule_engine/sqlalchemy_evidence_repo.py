@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,6 +16,11 @@ from server.app.common.ids import new_ulid
 from server.app.models import EvidencePolicy as ORMEvidencePolicy
 from server.app.rule_engine.evidence_repo import EvidencePolicyRecord
 from server.app.rule_engine.loader import RulePack
+
+
+def _parse_datetime(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value)
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
 
 class SQLAlchemyEvidencePolicyRepository:
@@ -32,7 +37,7 @@ class SQLAlchemyEvidencePolicyRepository:
         )
         if current is not None:
             current.effective_to = utc_now()
-        effective_from = datetime.fromisoformat(pack.effective_from)
+        effective_from = _parse_datetime(pack.effective_from)
         row = ORMEvidencePolicy(
             id=new_ulid(),
             policy_type=pack.policy_type,

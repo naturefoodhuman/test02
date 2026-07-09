@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 16:05:00
+创建时间（北京时间）：2026-07-09 16:45:00
 -->
 
 
@@ -36,6 +36,36 @@
 
 
 
+
+
+---
+
+## 第 25 轮 · 2026-07-09（DB integration test harness）
+
+**目标**：为用户下一次集中验收提供真实 PostgreSQL transaction 级验证入口。
+
+**完成内容**：
+
+- 新增 `tests/integration/test_db_repository_adapters.py`。
+- 新增 `make db-integration-test`。
+- 默认 `make test` 改为排除 `integration` marker，避免无 DB 环境误跑外部依赖测试。
+- `pyproject.toml` 注册 `integration` pytest marker。
+
+**覆盖范围**：
+
+- Alembic upgrade head。
+- Auth/Event/State/Alert/Delivery/Media/SleepSession SQLAlchemy adapters CRUD。
+- EvidencePolicy activation。
+- audit_log immutability trigger 拒绝 UPDATE。
+
+**验证**：
+
+```bash
+make test
+# 133 passed, 2 deselected, 1 warning
+make db-integration-test
+# no PARENTING_DATABASE__URL 时 2 skipped；用户 Mac DB 环境应执行真实测试
+```
 
 ---
 

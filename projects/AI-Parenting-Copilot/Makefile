@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -15,7 +15,7 @@ install-dev:
 
 test: ensure-dev-deps
 	@if find tests -name 'test_*.py' -print -quit | grep -q .; then \
-		$(PYTHON) -m pytest tests -q; \
+		$(PYTHON) -m pytest tests -q -m "not integration"; \
 	else \
 		echo "No tests found."; \
 	fi
@@ -135,6 +135,9 @@ e2e-fake-test: ensure-dev-deps
 
 shadow-test: ensure-dev-deps
 	@$(PYTHON) tests/shadow/camera_mmwave_shadow_harness.py --output runtime/shadow_report.json >/dev/null
+
+db-integration-test: ensure-dev-deps
+	@$(PYTHON) -m pytest tests/integration -q
 
 backup-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"

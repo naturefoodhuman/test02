@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 16:05:00
+创建时间（北京时间）：2026-07-09 16:45:00
 -->
 
 
@@ -36,6 +36,31 @@
 
 
 
+
+
+---
+
+## [第 25 轮] 2026-07-09 — DB integration test harness
+
+### 需求变动
+
+- 新增 PostgreSQL 集成验收入口 `make db-integration-test`。
+- 默认 `make test` 排除 integration marker，避免无 DB 环境误跑。
+
+### 文件影响
+
+- 新增：`tests/integration/test_db_repository_adapters.py`
+- 修改：`Makefile`、`pyproject.toml`
+- 修改：项目级维护文档
+
+### 验证
+
+```bash
+make test
+# 133 passed, 2 deselected, 1 warning
+make db-integration-test
+# no DB URL: 2 skipped
+```
 
 ---
 

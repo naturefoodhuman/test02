@@ -6,12 +6,21 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.app.camera.sleep_session import SleepSessionRecord, SleepSessionState
 from server.app.common.errors import NotFoundError
 from server.app.models import SleepSession as ORMSleepSession
+
+
+def _parse_datetime(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    parsed = datetime.fromisoformat(value)
+    return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
 
 class SQLAlchemySleepSessionRepository:
@@ -25,8 +34,8 @@ class SQLAlchemySleepSessionRepository:
                 baby_id=record.baby_id,
                 family_id=record.family_id,
                 state=record.state.value,
-                started_at=record.started_at,
-                ended_at=record.ended_at,
+                started_at=_parse_datetime(record.started_at),
+                ended_at=_parse_datetime(record.ended_at),
                 roi_config=record.roi_config,
             )
         )

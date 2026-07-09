@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 16:05:00
+创建时间（北京时间）：2026-07-09 16:45:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -37,6 +37,23 @@
 
 
 
+
+
+---
+
+## [第 121 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 集成验收增强**：新增 `make db-integration-test`，用于真实 PostgreSQL transaction 级验证 DB repository adapters、EvidencePolicy activation 与 audit_log immutability。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make test
+# 133 passed, 2 deselected, 1 warning
+make db-integration-test
+# no DB URL: 2 skipped; with PARENTING_DATABASE__URL on Mac should run real integration tests
+```
 
 ---
 
