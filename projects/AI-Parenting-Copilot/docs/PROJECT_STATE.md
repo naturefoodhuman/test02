@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 16:55:00
+创建时间（北京时间）：2026-07-09 17:15:00
 -->
 
 
@@ -856,7 +856,10 @@ python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 
 - Alembic upgrade head（基于 `PARENTING_DATABASE__URL`）。
 - Auth/Event/State/Alert/Delivery/Media/SleepSession repository adapters 在 PostgreSQL transaction 中 CRUD。
+- Auth DB device/list/get-by-display-name。
+- Event DB idempotent upsert/correction/soft delete。
 - EvidencePolicy activation。
+- observation_event PG `events.changed` NOTIFY trigger emits event_id/baby_id/operation。
 - audit_log UPDATE 被 DB trigger 拒绝。
 
 默认 `make test` 排除 `integration` marker；无 DB URL 时 `make db-integration-test` 自动 skip。

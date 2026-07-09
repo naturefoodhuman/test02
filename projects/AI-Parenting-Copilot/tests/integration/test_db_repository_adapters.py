@@ -9,6 +9,7 @@ for Mac/Docker validation after `make infra-up` and `make db-migrate`.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import subprocess
@@ -16,6 +17,7 @@ from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from pathlib import Path
 
+import asyncpg
 import pytest
 import pytest_asyncio
 from sqlalchemy import text
@@ -27,13 +29,17 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from server.app.auth.domain.models import Family, Role, User
+from server.app.auth.domain.models import Device, DeviceKind, Family, Role, User
 from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.camera.sleep_session import SleepSessionRecord
 from server.app.camera.sqlalchemy_sleep_session_repo import SQLAlchemySleepSessionRepository
 from server.app.common.ids import new_ulid
 from server.app.db import normalize_database_url
-from server.app.events.domain.observation_event import EventSource, ObservationEventCreate
+from server.app.events.domain.observation_event import (
+    EventCorrectionRequest,
+    EventSource,
+    ObservationEventCreate,
+)
 from server.app.events.infra.sqlalchemy_repository import SQLAlchemyEventRepository
 from server.app.media.sqlalchemy_media_repo import SQLAlchemyMediaAssetRepository
 from server.app.media.storage import MediaAssetRecord
@@ -54,6 +60,10 @@ def _db_url() -> str:
     if not url:
         pytest.skip("PARENTING_DATABASE__URL not set; skipping PostgreSQL integration tests")
     return normalize_database_url(url)
+
+
+def _asyncpg_url() -> str:
+    return _db_url().replace("postgresql+asyncpg://", "postgresql://")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -105,6 +115,19 @@ async def test_auth_event_state_alert_media_delivery_sleep_repositories(
     session: AsyncSession,
 ) -> None:
     family, user, baby_id = await _seed_family_user_baby(session)
+    auth_repo = SQLAlchemyAuthRepository(session)
+    device = await auth_repo.add_device(
+        Device(
+            id=new_ulid(),
+            family_id=family.id,
+            user_id=user.id,
+            kind=DeviceKind.PHONE,
+            name="Integration phone",
+        )
+    )
+    assert device.kind == DeviceKind.PHONE
+    assert (await auth_repo.get_user_by_display_name(family.id, "Admin")) is not None
+    assert len(await auth_repo.list_family_users(family.id)) == 1
 
     event_repo = SQLAlchemyEventRepository(session)
     now = datetime(2026, 7, 9, tzinfo=UTC)
@@ -137,6 +160,15 @@ async def test_auth_event_state_alert_media_delivery_sleep_repositories(
     assert repeated.event_id == event.event_id
     assert (await event_repo.get(event.event_id)) is not None
     assert len(await event_repo.list_by_baby(baby_id)) == 1
+    corrected = await event_repo.correct(
+        event.event_id,
+        EventCorrectionRequest(normalized_payload={"amount_ml": 100}),
+    )
+    assert corrected.correction_of == event.event_id
+    deleted = await event_repo.soft_delete(event.event_id)
+    assert deleted.is_deleted is True
+    remaining = await event_repo.list_by_baby(baby_id)
+    assert all(row.event_id != event.event_id for row in remaining)
 
     state_repo = SQLAlchemyStateSnapshotRepository(session)
     snapshot = await state_repo.upsert(
@@ -226,3 +258,65 @@ async def test_evidence_policy_repository_and_audit_immutability(engine: AsyncEn
                 )
         finally:
             await transaction.rollback()
+
+
+@pytest.mark.asyncio
+async def test_observation_event_notify_trigger_emits_payload(engine: AsyncEngine) -> None:
+    listener = await asyncpg.connect(_asyncpg_url())
+    received: asyncio.Future[str] = asyncio.get_running_loop().create_future()
+
+    def callback(_connection, _pid, _channel, payload: str) -> None:  # type: ignore[no-untyped-def]
+        if not received.done():
+            received.set_result(payload)
+
+    await listener.add_listener("events.changed", callback)
+    family_id = new_ulid()
+    baby_id = new_ulid()
+    event_id = new_ulid()
+    now = datetime(2026, 7, 9, tzinfo=UTC)
+    async with engine.begin() as connection:
+        await connection.execute(
+            text("INSERT INTO family (id, name, timezone) VALUES (:id, :name, :timezone)"),
+            {"id": family_id, "name": "Notify Family", "timezone": "Asia/Shanghai"},
+        )
+        await connection.execute(
+            text("INSERT INTO baby (id, family_id, name) VALUES (:id, :family_id, :name)"),
+            {"id": baby_id, "family_id": family_id, "name": "Notify Baby"},
+        )
+        await connection.execute(
+            text(
+                """
+                INSERT INTO observation_event (
+                    event_id, baby_id, family_id, event_type, start_time,
+                    client_created_at, raw_input, normalized_payload, source
+                ) VALUES (
+                    :event_id, :baby_id, :family_id, 'feeding', :start_time,
+                    :client_created_at, CAST(:raw_input AS jsonb),
+                    CAST(:normalized_payload AS jsonb), 'manual'
+                )
+                """
+            ),
+            {
+                "event_id": event_id,
+                "baby_id": baby_id,
+                "family_id": family_id,
+                "start_time": now,
+                "client_created_at": now,
+                "raw_input": "{}",
+                "normalized_payload": "{}",
+            },
+        )
+    try:
+        payload = await asyncio.wait_for(received, timeout=3)
+        decoded = json.loads(payload)
+        assert decoded["event_id"] == event_id
+        assert decoded["baby_id"] == baby_id
+        assert decoded["operation"] == "INSERT"
+    finally:
+        await listener.close()
+        async with engine.begin() as connection:
+            await connection.execute(
+                text("DELETE FROM observation_event WHERE event_id=:id"), {"id": event_id}
+            )
+            await connection.execute(text("DELETE FROM baby WHERE id=:id"), {"id": baby_id})
+            await connection.execute(text("DELETE FROM family WHERE id=:id"), {"id": family_id})
