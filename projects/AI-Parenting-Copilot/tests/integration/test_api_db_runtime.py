@@ -18,6 +18,7 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -25,7 +26,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from server.app.auth.domain.models import Family
 from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.common.ids import new_ulid
 from server.app.db import normalize_database_url
@@ -78,109 +78,162 @@ async def session(engine: AsyncEngine) -> AsyncIterator[AsyncSession]:
 
 @pytest.mark.asyncio
 async def test_db_backed_auth_event_alert_state_and_rules_api(
-    session: AsyncSession,
+    engine: AsyncEngine,
     tmp_path: Path,
 ) -> None:
-    family_id = new_ulid()
-    baby_id = new_ulid()
-    family_name = f"DB API Family {family_id}"
-    admin_secret = "secret123"
-    # Seed baby via repository before exercising API-created user/device/event/state.
-    auth_repo = SQLAlchemyAuthRepository(session)
-    await auth_repo.add_family(Family(id=family_id, name=family_name))
-    await auth_repo.add_baby(family_id=family_id, baby_id=baby_id, name="DB Baby")
-    await session.commit()
+    family_id: str | None = None
+    baby_id: str | None = None
+    alert_id: str | None = None
+    integration_rule_version = new_ulid()
 
-    app = create_app()
-    with TestClient(app) as client:
-        init = client.post(
-            "/api/v1/auth/init-family",
-            json={
-                "family_name": f"{family_name} API",
-                "admin_display_name": "DB Admin",
-                "admin_secret": admin_secret,
-            },
-        )
-        assert init.status_code == 200
-        init_payload = init.json()
-        token = init_payload["access_token"]
-
-        device = client.post(
-            "/api/v1/auth/devices/register",
-            headers={"authorization": f"Bearer {token}"},
-            json={"kind": "phone", "name": "DB phone"},
-        )
-        assert device.status_code == 200
-        device_id = device.json()["device_id"]
-
-        now = datetime(2026, 7, 9, tzinfo=UTC).isoformat()
-        event = client.post(
-            "/api/v1/events",
-            json={
-                "event_id": new_ulid(),
-                "baby_id": baby_id,
-                "family_id": family_id,
-                "user_id": init_payload["admin_user_id"],
-                "device_id": device_id,
-                "event_type": "feeding",
-                "start_time": now,
-                "client_created_at": now,
-                "source": "manual",
-                "payload": {"amount_ml": 90},
-            },
-        )
-        assert event.status_code == 200
-        listed = client.get("/api/v1/events", params={"baby_id": baby_id})
-        assert listed.status_code == 200
-        assert listed.json()[0]["event_type"] == "feeding"
-
-        alert = client.post(
-            "/api/v1/alerts",
-            json={"baby_id": baby_id, "family_id": family_id, "level": "red", "type": "triage"},
-        )
-        assert alert.status_code == 200
-        alert_id = alert.json()["id"]
-        ack = client.post(
-            f"/api/v1/alerts/{alert_id}/ack",
-            json={"ack_by": init_payload["admin_user_id"]},
-        )
-        assert ack.status_code == 200
-        assert ack.json()["status"] == "acknowledged"
-
-        rule_pack = tmp_path / "rule.yaml"
-        rule_pack.write_text(
-            "\n".join(
-                [
-                    "policy_type: integration",
-                    "domain: integration",
-                    "region: CN",
-                    f"version: {new_ulid()}",
-                    "effective_from: '2026-07-09'",
-                    "source: integration-test",
-                    "rules: []",
-                ]
+    try:
+        app = create_app()
+        with TestClient(app) as client:
+            init = client.post(
+                "/api/v1/auth/init-family",
+                json={
+                    "family_name": f"DB API Family {new_ulid()}",
+                    "admin_display_name": "DB Admin",
+                    "admin_secret": "secret123",
+                },
             )
-        )
-        activated = client.post(
-            "/api/v1/rules/activate",
-            headers={"x-role": "Admin"},
-            json={"path": str(rule_pack)},
-        )
-        assert activated.status_code == 200
-        assert activated.json()["activated"]["policy_type"] == "integration"
+            assert init.status_code == 200
+            init_payload = init.json()
+            token = init_payload["access_token"]
+            family_id = init_payload["family_id"]
+            admin_user_id = init_payload["admin_user_id"]
 
-    # Seed state snapshot in a separate transaction and validate API reads from DB mode.
-    async with async_sessionmaker(engine, expire_on_commit=False)() as state_session:
-        async with state_session.begin():
-            await SQLAlchemyStateSnapshotRepository(state_session).upsert(
-                DerivedBabyStateSnapshot(
-                    baby_id=baby_id,
-                    family_id=family_id,
-                    snapshot={"feeding_24h_ml": 90},
+            # The Auth API creates family/admin; seed a baby into that same family through
+            # the DB adapter so Events/State APIs can validate real foreign keys.
+            async with async_sessionmaker(engine, expire_on_commit=False)() as seed_session:
+                async with seed_session.begin():
+                    await SQLAlchemyAuthRepository(seed_session).add_baby(
+                        family_id=family_id,
+                        baby_id=(baby_id := new_ulid()),
+                        name="DB Baby",
+                    )
+
+            device = client.post(
+                "/api/v1/auth/devices/register",
+                headers={"authorization": f"Bearer {token}"},
+                json={"kind": "phone", "name": "DB phone"},
+            )
+            assert device.status_code == 200
+            device_id = device.json()["device_id"]
+
+            now = datetime(2026, 7, 9, tzinfo=UTC).isoformat()
+            event = client.post(
+                "/api/v1/events",
+                json={
+                    "event_id": new_ulid(),
+                    "baby_id": baby_id,
+                    "family_id": family_id,
+                    "user_id": admin_user_id,
+                    "device_id": device_id,
+                    "event_type": "feeding",
+                    "start_time": now,
+                    "client_created_at": now,
+                    "source": "manual",
+                    "payload": {"amount_ml": 90},
+                },
+            )
+            assert event.status_code == 200
+            listed = client.get("/api/v1/events", params={"baby_id": baby_id})
+            assert listed.status_code == 200
+            assert listed.json()[0]["event_type"] == "feeding"
+
+            alert = client.post(
+                "/api/v1/alerts",
+                json={"baby_id": baby_id, "family_id": family_id, "level": "red", "type": "triage"},
+            )
+            assert alert.status_code == 200
+            alert_id = alert.json()["id"]
+            ack = client.post(
+                f"/api/v1/alerts/{alert_id}/ack",
+                json={"ack_by": admin_user_id},
+            )
+            assert ack.status_code == 200
+            assert ack.json()["status"] == "acknowledged"
+
+            rule_pack = tmp_path / "rule.yaml"
+            rule_pack.write_text(
+                "\n".join(
+                    [
+                        "policy_type: integration",
+                        "domain: integration",
+                        "region: CN",
+                        f"version: {integration_rule_version}",
+                        "effective_from: '2026-07-09'",
+                        "source: integration-test",
+                        "rules: []",
+                    ]
                 )
             )
-    app = create_app()
-    with TestClient(app) as client:
-        state = client.get(f"/api/v1/babies/{baby_id}/state")
-        assert state.status_code == 200
-        assert state.json()["snapshot"]["feeding_24h_ml"] == 90
+            activated = client.post(
+                "/api/v1/rules/activate",
+                headers={"x-role": "Admin"},
+                json={"path": str(rule_pack)},
+            )
+            assert activated.status_code == 200
+            assert activated.json()["activated"]["policy_type"] == "integration"
+
+        async with async_sessionmaker(engine, expire_on_commit=False)() as state_session:
+            async with state_session.begin():
+                await SQLAlchemyStateSnapshotRepository(state_session).upsert(
+                    DerivedBabyStateSnapshot(
+                        baby_id=baby_id,
+                        family_id=family_id,
+                        snapshot={"feeding_24h_ml": 90},
+                    )
+                )
+        app = create_app()
+        with TestClient(app) as client:
+            state = client.get(f"/api/v1/babies/{baby_id}/state")
+            assert state.status_code == 200
+            assert state.json()["snapshot"]["feeding_24h_ml"] == 90
+    finally:
+        if family_id is not None:
+            async with engine.begin() as connection:
+                await connection.execute(
+                    text(
+                        """
+                        DELETE FROM alert_delivery
+                        WHERE alert_id IN (SELECT id FROM alert WHERE family_id = :family_id)
+                        """
+                    ),
+                    {"family_id": family_id},
+                )
+                for statement in [
+                    "DELETE FROM alert WHERE family_id = :family_id",
+                    "DELETE FROM media_asset WHERE family_id = :family_id",
+                    "DELETE FROM camera_event WHERE session_id IN "
+                    "(SELECT id FROM sleep_session WHERE family_id = :family_id)",
+                    "DELETE FROM sleep_session WHERE family_id = :family_id",
+                    "DELETE FROM derived_baby_state WHERE family_id = :family_id",
+                    "DELETE FROM feeding_log WHERE family_id = :family_id",
+                    "DELETE FROM diaper_log WHERE family_id = :family_id",
+                    "DELETE FROM sleep_log WHERE family_id = :family_id",
+                    "DELETE FROM temperature_log WHERE family_id = :family_id",
+                    "DELETE FROM supplement_log WHERE family_id = :family_id",
+                    "DELETE FROM vaccine_record WHERE family_id = :family_id",
+                    "DELETE FROM medication_log WHERE family_id = :family_id",
+                    "DELETE FROM symptom_event WHERE family_id = :family_id",
+                    "DELETE FROM growth_log WHERE family_id = :family_id",
+                    "DELETE FROM milestone_log WHERE family_id = :family_id",
+                    "DELETE FROM jaundice_photo WHERE family_id = :family_id",
+                    "DELETE FROM solid_food_log WHERE family_id = :family_id",
+                    "DELETE FROM mother_health WHERE family_id = :family_id",
+                    "DELETE FROM observation_event WHERE family_id = :family_id",
+                    "DELETE FROM sensor_event WHERE device_id IN "
+                    "(SELECT id FROM device WHERE family_id = :family_id)",
+                    "DELETE FROM device WHERE family_id = :family_id",
+                    'DELETE FROM "user" WHERE family_id = :family_id',
+                    "DELETE FROM baby WHERE family_id = :family_id",
+                    "DELETE FROM family_knowledge WHERE family_id = :family_id",
+                    "DELETE FROM sync_state WHERE family_id = :family_id",
+                    "DELETE FROM family WHERE id = :family_id",
+                ]:
+                    await connection.execute(text(statement), {"family_id": family_id})
+                await connection.execute(
+                    text("DELETE FROM evidence_policy WHERE policy_type = 'integration'"),
+                )

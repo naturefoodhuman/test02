@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 20:05:00
+创建时间（北京时间）：2026-07-09 21:00:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -45,6 +45,23 @@
 
 
 
+
+
+---
+
+## [第 129 轮] 2026-07-09
+
+### 需求变动
+- **AI Parenting Copilot 验收修复**：修复 DB-backed API runtime integration test 中 transaction teardown 与 pytest fixture engine 误用问题；改为显式使用 AsyncEngine fixture、独立 session seed baby，并在测试后清理 family 相关数据。
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL in sandbox: 5 skipped; user Mac should run real 5 tests
+```
 
 ---
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 20:05:00
+创建时间（北京时间）：2026-07-09 21:00:00
 -->
 
 
@@ -954,3 +954,13 @@ make db-integration-test
 - State API DB mode：读取 `derived_baby_state` snapshot。
 
 `make db-integration-test` 现在无 DB URL 时 5 skipped；用户 Mac DB 环境应执行 5 个真实 integration tests。
+
+
+## 16. DB-backed API runtime test isolation fix
+
+用户 Mac 验收发现 `test_db_backed_auth_event_alert_state_and_rules_api` 在 teardown 阶段尝试 rollback 已关闭 transaction，并且 state snapshot seeding 误用 pytest fixture function `engine`。已修复：
+
+- DB-backed API runtime integration test 改为显式使用 `engine` fixture，不再在外部 fixture transaction 中手动 commit。
+- 测试通过 API 创建 family/admin，再通过独立 DB session 为同一 family seed baby。
+- 测试结束后按 family_id 清理相关 DB 数据，避免污染持久化开发库。
+- State snapshot seeding 使用 `async_sessionmaker(engine, ...)` 的真实 AsyncEngine fixture。

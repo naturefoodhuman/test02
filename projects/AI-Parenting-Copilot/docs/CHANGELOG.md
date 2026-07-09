@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 20:05:00
+创建时间（北京时间）：2026-07-09 21:00:00
 -->
 
 
@@ -44,6 +44,29 @@
 
 
 
+
+
+---
+
+## [第 33 轮] 2026-07-09 — DB-backed API runtime integration isolation fix
+
+### 需求变动
+
+- 修复用户 Mac 上 DB-backed API runtime integration test 的 transaction teardown 与 pytest fixture engine 误用问题。
+
+### 文件影响
+
+- 修改：`tests/integration/test_api_db_runtime.py`
+- 修改：项目级状态/开发日志
+
+### 验证
+
+```bash
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL: 5 skipped
+```
 
 ---
 

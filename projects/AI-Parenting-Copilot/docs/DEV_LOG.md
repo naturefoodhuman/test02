@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 20:05:00
+创建时间（北京时间）：2026-07-09 21:00:00
 -->
 
 
@@ -44,6 +44,32 @@
 
 
 
+
+
+---
+
+## 第 33 轮 · 2026-07-09（DB-backed API runtime integration isolation fix）
+
+**问题**：用户 Mac 执行 `make db-integration-test` 时，`test_db_backed_auth_event_alert_state_and_rules_api` 失败：
+
+- 外层 `session` fixture 内部手动 `commit()` 导致 teardown rollback 已关闭 transaction。
+- state snapshot seeding 误引用 pytest fixture function `engine`，而非 AsyncEngine 实例。
+
+**修复**：
+
+- 测试改为接收 `engine: AsyncEngine` fixture。
+- 通过 API 创建 family/admin 后，用独立 DB session 为同一 family seed baby。
+- 测试结束后按 family_id 清理相关 DB 数据。
+- State snapshot seeding 使用真实 engine 创建 session。
+
+**验证**：
+
+```bash
+make test
+# 137 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL: 5 skipped; user Mac should run real 5 tests
+```
 
 ---
 
