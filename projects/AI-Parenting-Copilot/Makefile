@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -80,6 +80,9 @@ docs-check:
 	@test -f server/app/rule_engine/api/routes.py
 	@test -f server/app/backup/pg_dump_task.py
 	@test -f server/scripts/mock_mmwave_publisher.py
+	@test -f tests/shadow/camera_mmwave_shadow_harness.py
+	@test -f tests/soak/locustfile.py
+	@test -f docs/RELEASE_CHECKLIST_P0.md
 	@test -f tests/fakes.py
 	@test -f firmware/esp32c6/platformio.ini
 	@test -f android/src/features/today/viewModel.ts
@@ -129,6 +132,9 @@ security-test: ensure-dev-deps
 
 e2e-fake-test: ensure-dev-deps
 	@$(PYTHON) -m pytest tests/e2e -q
+
+shadow-test: ensure-dev-deps
+	@$(PYTHON) tests/shadow/camera_mmwave_shadow_harness.py --output runtime/shadow_report.json >/dev/null
 
 backup-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"

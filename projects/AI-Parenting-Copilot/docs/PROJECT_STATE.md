@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 13:40:00
+创建时间（北京时间）：2026-07-09 14:30:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T019 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T013 BLOCKED`、`APC-T014 BLOCKED`、`APC-T015 BLOCKED`、`APC-T016 BLOCKED`、`APC-T017 BLOCKED`、`APC-T053 BLOCKED`、`APC-T058 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T019 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T013 BLOCKED`、`APC-T014 BLOCKED`、`APC-T015 BLOCKED`、`APC-T016 BLOCKED`、`APC-T017 BLOCKED`、`APC-T053 BLOCKED`、`APC-T056 BLOCKED`、`APC-T058 BLOCKED`、`APC-T059 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -747,6 +747,33 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T018/T008` 未 DONE；真实 EvidencePolicy DB persistence、auth dependency 与 audit_log 持久化待验收。
 
+
+### APC-T056 — 实现 MVP E2E：离线 Feeding 记录 → 同步 → 派生态回传
+
+状态：BLOCKED
+
+已完成代码/文档：
+
+- `tests/e2e/test_mvp_feeding_roundtrip.md`：半自动 MVP Feeding Roundtrip checklist。
+- `android/e2e/mvp_feeding.e2e.ts`：Detox placeholder。
+- dev substitute 已由 `tests/test_event_to_state_pipeline.py` 覆盖 server-side Event → Normalization → State。
+
+阻塞原因：前置 `APC-T017/T047/T048/T049/T055` 未 DONE；真实 Android offline/PowerSync/Today E2E 待设备与 DB 环境验收。
+
+### APC-T059 — 建立 Shadow/Soak/Harden 验证与发布检查清单
+
+状态：BLOCKED
+
+已完成代码/文档：
+
+- `tests/shadow/camera_mmwave_shadow_harness.py`：mock camera/mmWave shadow harness，可输出 false_positive_rate。
+- `tests/soak/locustfile.py`：family-scale 1 req/s Locust skeleton，未安装 locust 时仍可静态导入。
+- `docs/RELEASE_CHECKLIST_P0.md`：覆盖 infra、安全、告警、camera/mmWave shadow、Android MVP、备份恢复。
+- `tests/test_shadow_soak_release.py`：shadow harness / locustfile / checklist smoke tests。
+- `make shadow-test`：生成 runtime/shadow_report.json。
+
+阻塞原因：前置 `APC-T039/T054/T057/T058` 未 DONE；真实 7 晚 shadow 数据、soak 趋势与发布前人工 checklist 待执行。
+
 ---
 
 ## 4. 当前未实现
@@ -768,7 +795,7 @@ make lint
 make typecheck
 # Success: no issues found in 120 source files
 make test
-# 125 passed, 1 warning
+# 127 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```
