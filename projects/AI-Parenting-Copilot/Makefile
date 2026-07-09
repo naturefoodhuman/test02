@@ -75,6 +75,9 @@ docs-check:
 	@test -f server/app/normalization/service.py
 	@test -f server/app/state_engine/engine.py
 	@test -f server/app/state_engine/api/routes.py
+	@test -f server/migrations/versions/0002_event_notify_trigger.py
+	@test -f server/app/sync/service/contract_validator.py
+	@test -f server/app/rule_engine/api/routes.py
 	@test -f server/app/backup/pg_dump_task.py
 	@test -f server/scripts/mock_mmwave_publisher.py
 	@test -f tests/fakes.py

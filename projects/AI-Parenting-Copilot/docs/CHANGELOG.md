@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 12:50:00
+创建时间（北京时间）：2026-07-09 13:40:00
 -->
 
 
@@ -32,6 +32,22 @@
 
 
 
+
+
+---
+
+## [第 21 轮] 2026-07-09 — APC-T011/T012/T019 dev 逻辑完成，集成验收 BLOCKED
+
+### 需求变动
+
+- 完成 PG notify trigger migration/static parser、PowerSync contract validator/soft conflict hint、Rules Admin validate/activate dev API。
+
+### 验证
+
+```bash
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# 125 passed, 1 warning
+```
 
 ---
 

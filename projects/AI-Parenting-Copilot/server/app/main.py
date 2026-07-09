@@ -38,6 +38,8 @@ from server.app.observability.metrics import metrics_response, set_app_info
 from server.app.observability.tracing import configure_tracing
 from server.app.orchestrator.api.routes import router as orchestrator_router
 from server.app.orchestrator.orchestrator import Orchestrator
+from server.app.rule_engine.api.routes import router as rules_router
+from server.app.rule_engine.evidence_repo import InMemoryEvidencePolicyRepository
 from server.app.settings import Settings
 from server.app.state_engine.api.routes import router as state_router
 from server.app.state_engine.engine import BabyStateEngine
@@ -81,6 +83,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.normalization_service = NormalizationService(app.state.derived_table_store)
     app.state.state_snapshot_repository = InMemoryStateSnapshotRepository()
     app.state.state_engine = BabyStateEngine(app.state.state_snapshot_repository)
+    app.state.evidence_policy_repo = InMemoryEvidencePolicyRepository()
     app.state.media_storage = MediaStorageService()
     app.state.export_service = ExportService()
     app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
@@ -102,6 +105,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(camera_router)
     app.include_router(media_router)
     app.include_router(state_router)
+    app.include_router(rules_router)
 
     @app.get("/metrics", include_in_schema=False)
     async def metrics() -> object:

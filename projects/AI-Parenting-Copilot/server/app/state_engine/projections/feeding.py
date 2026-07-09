@@ -2,6 +2,7 @@
 # 创建时间（北京时间）：2026-07-09 12:50:00
 
 """Feeding projection."""
+
 from __future__ import annotations
 
 from server.app.normalization.service import NormalizedRecord

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 12:50:00
+创建时间（北京时间）：2026-07-09 13:40:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-08 CST
 **当前阶段**：P0-M0 工程地基
-**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T013 BLOCKED`、`APC-T014 BLOCKED`、`APC-T015 BLOCKED`、`APC-T016 BLOCKED`、`APC-T017 BLOCKED`、`APC-T053 BLOCKED`、`APC-T058 BLOCKED`
+**当前任务状态**：`APC-T001 DONE`、`APC-T002 DONE`、`APC-T003 BLOCKED`、`APC-T004 BLOCKED`、`APC-T005 DONE`、`APC-T006 BLOCKED`、`APC-T007 BLOCKED`、`APC-T008 BLOCKED`、`APC-T009 BLOCKED`、`APC-T010 BLOCKED`、`APC-T018 BLOCKED`、`APC-T019 BLOCKED`、`APC-T020 BLOCKED`、`APC-T021 BLOCKED`、`APC-T022 BLOCKED`、`APC-T023 BLOCKED`、`APC-T024 DONE`、`APC-T025 DONE`、`APC-T026 BLOCKED`、`APC-T027 BLOCKED`、`APC-T028 BLOCKED`、`APC-T029 BLOCKED`、`APC-T030 BLOCKED`、`APC-T031 BLOCKED`、`APC-T032 BLOCKED`、`APC-T033 BLOCKED`、`APC-T034 BLOCKED`、`APC-T035 BLOCKED`、`APC-T036 BLOCKED`、`APC-T037 BLOCKED`、`APC-T038 BLOCKED`、`APC-T039 BLOCKED`、`APC-T040 BLOCKED`、`APC-T041 BLOCKED`、`APC-T042 BLOCKED`、`APC-T043 BLOCKED`、`APC-T044 BLOCKED`、`APC-T054 BLOCKED`、`APC-T055 BLOCKED`、`APC-T057 BLOCKED`、`APC-T045 BLOCKED`、`APC-T046 BLOCKED`、`APC-T047 BLOCKED`、`APC-T048 BLOCKED`、`APC-T049 BLOCKED`、`APC-T050 BLOCKED`、`APC-T051 BLOCKED`、`APC-T052 BLOCKED`、`APC-T013 BLOCKED`、`APC-T014 BLOCKED`、`APC-T015 BLOCKED`、`APC-T016 BLOCKED`、`APC-T017 BLOCKED`、`APC-T053 BLOCKED`、`APC-T058 BLOCKED`
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
 
 ---
@@ -709,6 +709,44 @@ projects/AI-Parenting-Copilot/
 
 阻塞原因：前置 `APC-T010/T014/T016` 未 DONE；真实 PG event bus、PowerSync、DB 派生链路待验收。
 
+
+### APC-T011 — 实现 PG LISTEN/NOTIFY 事件总线与事件变更触发器
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/common/event_bus.py` 增加 PgNotifyPayload、parse_pg_notify_payload、domain_event_from_pg_notify。
+- `server/migrations/versions/0002_event_notify_trigger.py` 增加 observation_event INSERT/UPDATE/DELETE notify trigger。
+- `tests/test_event_bus_notify.py` 覆盖 payload parse 与 migration static checks。
+
+阻塞原因：真实 PostgreSQL LISTEN/NOTIFY worker、at-least-once 消费与启动日志待 Docker/PostgreSQL 环境验收。
+
+### APC-T012 — 实现 PowerSync 适配、同步契约校验与冲突软提示基础
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/sync/service/contract_validator.py`：同步契约字段校验、source/confidence 校验、5 分钟重复 feeding 软提示。
+- `server/app/sync/infra/powersync_config.yaml`：family observation/state stream config skeleton。
+- `tests/test_sync_contract.py` 覆盖缺字段拒绝、合法记录与 duplicate feeding soft hint。
+
+阻塞原因：真实 PowerSync service 读取配置、Android sync 写入与非法事件拦截链路待集成验收。
+
+### APC-T019 — 实现规则 Admin API：validate / activate / audit
+
+状态：BLOCKED
+
+已完成代码/验证：
+
+- `server/app/rule_engine/api/routes.py`：`GET /api/v1/rules/validate`、`POST /api/v1/rules/activate`。
+- Admin gate 使用 dev `x-role: Admin` header。
+- 激活规则包写入 InMemoryEvidencePolicyRepository 并通过 MemoryAuditSink 记录 `rule.activate`。
+- `tests/test_rules_admin_api.py` 覆盖 validate、非 Admin 拒绝、Admin activate 与 audit。
+
+阻塞原因：前置 `APC-T018/T008` 未 DONE；真实 EvidencePolicy DB persistence、auth dependency 与 audit_log 持久化待验收。
+
 ---
 
 ## 4. 当前未实现
@@ -730,7 +768,7 @@ make lint
 make typecheck
 # Success: no issues found in 120 source files
 make test
-# 120 passed, 1 warning
+# 125 passed, 1 warning
 python3 -m uvicorn server.app.main:app --host 127.0.0.1 --port 8765
 # /healthz smoke: HTTP 200
 ```

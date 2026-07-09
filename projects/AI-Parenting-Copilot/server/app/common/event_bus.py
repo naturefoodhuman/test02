@@ -53,3 +53,32 @@ class InMemoryEventBus:
 
         for handler in self._handlers.get(event.name, []):
             await handler(event)
+
+
+@dataclass(frozen=True)
+class PgNotifyPayload:
+    """Payload emitted by PostgreSQL NOTIFY `events.changed`."""
+
+    event_id: str
+    baby_id: str
+    operation: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {"event_id": self.event_id, "baby_id": self.baby_id, "operation": self.operation}
+
+
+def parse_pg_notify_payload(payload: str) -> PgNotifyPayload:
+    """Parse JSON NOTIFY payload from the DB trigger."""
+
+    import json
+
+    raw = json.loads(payload)
+    return PgNotifyPayload(
+        event_id=str(raw["event_id"]),
+        baby_id=str(raw["baby_id"]),
+        operation=str(raw["operation"]),
+    )
+
+
+def domain_event_from_pg_notify(payload: PgNotifyPayload) -> DomainEvent:
+    return DomainEvent(name="events.changed", payload=payload.to_dict())

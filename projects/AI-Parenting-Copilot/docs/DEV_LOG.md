@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 12:50:00
+创建时间（北京时间）：2026-07-09 13:40:00
 -->
 
 
@@ -32,6 +32,24 @@
 
 
 
+
+
+---
+
+## 第 21 轮 · 2026-07-09（APC-T011/T012/T019 PG Notify / Sync Contract / Rules Admin dev）
+
+**状态变更**：
+
+- `APC-T011`：TODO → BLOCKED（notify payload parser + 0002 trigger migration static tests 完成；真实 LISTEN/NOTIFY worker 待验收）
+- `APC-T012`：TODO → BLOCKED（sync contract validator + duplicate soft hint + PowerSync config skeleton 完成；真实 PowerSync 验收待执行）
+- `APC-T019`：TODO → BLOCKED（Rules Admin validate/activate/audit dev API 完成；真实 EvidencePolicy DB/auth/audit 待验收）
+
+**验证**：
+
+```bash
+make docs-check && make lint && make typecheck && make test && make rules-validate
+# 125 passed, 1 warning; rule packs validated
+```
 
 ---
 
