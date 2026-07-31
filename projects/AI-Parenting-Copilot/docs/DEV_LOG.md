@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 21:35:00
+创建时间（北京时间）：2026-07-31 22:28:00
 -->
 
 
@@ -10,11 +10,52 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T008` Auth API/seed DB 双模式、`APC-T010` Events API DB-backed runtime、`APC-T019` Rules Admin DB-backed activation/audit、`APC-T031` Alert API DB-backed audit。
+- **最新完成**：`APC-T011/T013/T014/T015/T016/T017` PG worker、Normalization、State Engine、event→state 链路已通过用户 Mac 复验并标记 DONE。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 PostgreSQL LISTEN/NOTIFY normalization worker、SQLAlchemy derived table store、DB-backed pending event → derived table → state snapshot pipeline；新增 live worker DB smoke target。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `144 passed, 6 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 PowerSync liveness/config probe 与 `make powersync-smoke-test`，用于推进 `APC-T012` 用户 Mac 复验。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `146 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 41 轮 · 2026-07-31（Worker validation accepted + PowerSync smoke target）
+
+**目标**：根据用户“验证通过”结果同步任务状态，并继续推进下一阻塞项 `APC-T012` PowerSync 复验入口。
+
+**完成内容**：
+
+1. 状态解除：
+   - `APC-T011` → DONE
+   - `APC-T013` → DONE
+   - `APC-T014` → DONE
+   - `APC-T015` → DONE
+   - `APC-T016` → DONE
+   - `APC-T017` → DONE
+2. 新增 PowerSync probe：
+   - `server/app/sync/service/powersync_probe.py`
+   - `tests/test_powersync_probe.py`
+   - `tests/integration_powersync/test_powersync_service.py`
+   - `make powersync-smoke-test`
+3. PowerSync smoke 覆盖：
+   - 默认探测 docker compose `.env.example` 暴露的 `http://127.0.0.1:9081/probes/liveness`。
+   - 校验 deploy/app PowerSync sync config 中包含 core tables 与 soft-delete 条件。
+   - 无本地服务的沙盒环境自动 skip；用户 Mac `infra-up` 后预期 liveness test 通过。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+make powersync-smoke-test
+# sandbox: 1 passed, 1 skipped
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 146 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更。
+- 未自研同步引擎；仅新增 PowerSync 服务健康探测与配置静态校验。
 
 ---
 

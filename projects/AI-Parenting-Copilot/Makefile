@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -146,6 +146,9 @@ api-db-smoke-test: ensure-dev-deps
 
 worker-db-smoke-test: ensure-dev-deps
 	@$(PYTHON) -m pytest tests/integration_worker -q
+
+powersync-smoke-test: ensure-dev-deps
+	@$(PYTHON) -m pytest tests/integration_powersync -q
 
 backup-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"

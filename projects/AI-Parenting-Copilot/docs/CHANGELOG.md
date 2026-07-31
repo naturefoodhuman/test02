@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 21:38:00
+创建时间（北京时间）：2026-07-31 22:30:00
 -->
 
 
@@ -11,8 +11,50 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；EvidencePolicy activate 幂等性已修复；新增 live worker smoke，待用户 Mac 复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Worker 链路已通过用户 Mac 复验并解除 `APC-T011/T013/T014/T015/T016/T017` 阻塞；新增 PowerSync smoke target，待用户 Mac 复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 41 轮] 2026-07-31 — Worker validation accepted / PowerSync smoke target
+
+### 需求变动
+
+- 用户确认上一轮 worker/DB/API/test 验证通过。
+- 同步 `APC-T011/T013/T014/T015/T016/T017` 为 DONE。
+- 继续推进 `APC-T012`：新增 PowerSync liveness/config smoke target。
+
+### 文件影响
+
+新增：
+
+- `server/app/sync/service/powersync_probe.py`
+- `tests/test_powersync_probe.py`
+- `tests/integration_powersync/test_powersync_service.py`
+
+修改：
+
+- `Makefile`
+  - 新增 `powersync-smoke-test`。
+- `docs/TASK_BACKLOG.md`
+- `docs/PROJECT_STATE.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+make lint
+make typecheck
+make powersync-smoke-test
+# sandbox: 1 passed, 1 skipped
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 146 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；仅新增 PowerSync 官方服务 liveness/config 验收入口。
 
 ---
 

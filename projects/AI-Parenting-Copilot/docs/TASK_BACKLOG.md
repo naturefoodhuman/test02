@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 21:30:00
+创建时间（北京时间）：2026-07-31 22:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 BLOCKED；APC-T012 BLOCKED；APC-T013 BLOCKED；APC-T014 BLOCKED；APC-T015 BLOCKED；APC-T016 BLOCKED；APC-T017 BLOCKED；APC-T018 DONE；APC-T019 DONE；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 BLOCKED；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -431,7 +431,7 @@
 - **所属 Capability**：C06 同步与事件总线
 - **所属 Story**：S06 PowerSync 写入契约、PG LISTEN/NOTIFY
 - **目标**：实现轻量事件总线，使 observation_event 变更触发 Normalization worker。
-- **状态**：BLOCKED（PG notify payload parser/domain event mapping/0002 trigger migration、PostgresEventNormalizationWorker 与 PendingEventProcessor 已完成；新增 `make worker-db-smoke-test`，等待用户 Mac 真实 LISTEN/NOTIFY worker 复验）
+- **状态**：DONE（PG notify payload parser/domain event mapping/0002 trigger migration、PostgresEventNormalizationWorker、PendingEventProcessor 与 `make worker-db-smoke-test` 已通过用户 Mac 真实 LISTEN/NOTIFY worker 复验）
 - **前置依赖**：APC-T009
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1；`ARCHITECTURE_FINAL.md` §4.1
 - **输出**：PG trigger、LISTEN/NOTIFY 封装、worker 消费基座
@@ -460,7 +460,7 @@
 - **所属 Capability**：C06
 - **所属 Story**：S06
 - **目标**：提供 PowerSync 配置、同步表定义、服务端写入契约校验与基础冲突检测。
-- **状态**：BLOCKED（contract validator/soft duplicate hint/PowerSync stream config/static tests 已完成；真实 PowerSync 启动与服务端写入验收待执行）
+- **状态**：BLOCKED（contract validator/soft duplicate hint/PowerSync stream config/static tests 与 `make powersync-smoke-test` 已完成；真实 PowerSync liveness 需用户 Mac 复验）
 - **前置依赖**：APC-T003, APC-T009
 - **输入**：`ENGINEERING_DESIGN.md` §2 M03、§4、§6.2；`ARCHITECTURE_FINAL.md` §9
 - **输出**：PowerSync schema/config、Sync service、冲突提示表或接口
@@ -491,7 +491,7 @@
 - **所属 Capability**：C07 Normalization
 - **所属 Story**：S07 多源输入归一化为领域派生表
 - **目标**：将 manual/form/voice_text ObservationEvent 归一化为 feeding/diaper/sleep/temperature/supplement 等 P0 派生表。
-- **状态**：BLOCKED（parsers/NormalizationService/in-memory store 与 SQLAlchemyDerivedTableStore 已完成；真实 DB normalization pipeline 待用户 Mac 复验）
+- **状态**：DONE（parsers/NormalizationService/in-memory store 与 SQLAlchemyDerivedTableStore 已完成；DB normalization pipeline 已通过用户 Mac `worker-db-smoke-test`/`api-db-smoke-test` 复验）
 - **前置依赖**：APC-T009, APC-T011
 - **输入**：`ENGINEERING_DESIGN.md` §2 M05、§3 normalization、§7.1
 - **输出**：Normalization parser 与 table writer
@@ -521,7 +521,7 @@
 - **所属 Capability**：C07
 - **所属 Story**：S07
 - **目标**：实现 Normalization 常驻 worker、去重策略、纠错/软删除对派生表的处理。
-- **状态**：BLOCKED（scan_pending/dedup/correction helpers、PendingEventProcessor 与 DB 派生表 upsert 已完成；真实 PG worker 长稳待验收）
+- **状态**：DONE（scan_pending/dedup/correction helpers、PendingEventProcessor、DB 派生表 upsert 与真实 PG worker smoke 已通过；长稳继续纳入后续 soak）
 - **前置依赖**：APC-T013
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1、§12.2
 - **输出**：Normalization worker 与幂等处理逻辑
@@ -552,7 +552,7 @@
 - **所属 Capability**：C08 Baby State Engine
 - **所属 Story**：S08 幂等增量派生 DerivedBabyState
 - **目标**：实现 feeding、diaper、sleep、temperature、supplement P0 派生计算。
-- **状态**：BLOCKED（P0 projection pure functions/tests 已完成；前置 T013 未 DONE，DB 集成待验收）
+- **状态**：DONE（P0 projection pure functions/tests、rolling 24h feeding regression 与 DB state pipeline 复验已通过）
 - **前置依赖**：APC-T013
 - **输入**：`ENGINEERING_DESIGN.md` §2 M06、§3 state_engine；`ARCHITECTURE_FINAL.md` §10.1
 - **输出**：State projection 纯函数
@@ -579,7 +579,7 @@
 - **所属 Capability**：C08
 - **所属 Story**：S08
 - **目标**：实现派生状态重算服务、`derived_baby_state` upsert、`GET /babies/{id}/state`。
-- **状态**：BLOCKED（BabyStateEngine/in-memory snapshot repo/State API 与 PostgreSQL ON CONFLICT upsert/source_event_count 持久化已完成；DB worker smoke 用户复验待执行）
+- **状态**：DONE（BabyStateEngine/in-memory snapshot repo/State API、PostgreSQL ON CONFLICT upsert/source_event_count 持久化与 DB worker smoke 已通过）
 - **前置依赖**：APC-T015, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1
 - **输出**：StateEngine service、snapshot repository、API
@@ -608,7 +608,7 @@
 - **所属 Capability**：C08
 - **所属 Story**：S08
 - **目标**：完成服务端记录路径集成测试：事件写入后自动归一化并生成派生态。
-- **状态**：BLOCKED（dev/in-memory 与 DB-backed PendingEventProcessor event→normalization→state pipeline 已完成；真实 Mac DB/worker 复验待执行）
+- **状态**：DONE（dev/in-memory、DB-backed PendingEventProcessor 与真实 PG worker event→normalization→state pipeline 均已通过用户 Mac 复验）
 - **前置依赖**：APC-T010, APC-T014, APC-T016
 - **输入**：`ENGINEERING_DESIGN.md` §7.1；`ARCHITECTURE_FINAL.md` §4.1
 - **输出**：关键路径集成测试与必要 glue code

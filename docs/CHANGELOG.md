@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 21:42:00
+创建时间（北京时间）：2026-07-31 22:35:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,37 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync smoke target。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
-- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `144 passed, 6 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
+- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `146 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 137 轮] 2026-07-31
+
+### 需求变动
+- **AI Parenting Copilot 验收通过后继续推进**：用户确认 worker/DB/API/test 验证通过；项目级 `APC-T011/T013/T014/T015/T016/T017` 已同步 DONE。
+- **AI Parenting Copilot PowerSync 复验入口**：新增 PowerSync liveness/config probe 与 `make powersync-smoke-test`，用于推进 `APC-T012`。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/sync/service/powersync_probe.py`
+- 新增：`projects/AI-Parenting-Copilot/tests/test_powersync_probe.py`
+- 新增：`projects/AI-Parenting-Copilot/tests/integration_powersync/test_powersync_service.py`
+- 修改：`projects/AI-Parenting-Copilot/Makefile`
+- 修改：项目级 `TASK_BACKLOG` / `PROJECT_STATE` / `DEV_LOG` / `CHANGELOG` / `HANDOFF`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make lint
+make typecheck
+make powersync-smoke-test
+# sandbox: 1 passed, 1 skipped
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 146 passed, 8 deselected, 1 warning
+```
 
 ---
 
