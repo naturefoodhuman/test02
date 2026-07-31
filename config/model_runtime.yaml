@@ -1,7 +1,5 @@
-# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-26 00:00:00
 
-version: "1.0"
+version: "1.1"
 
 # Local model runtime SSOT.
 # Goal: keep startup commands and performance flags configurable instead of
@@ -51,6 +49,14 @@ servers:
       - "off"
       - "--max-tokens"
       - "2048"
+      # ↓↓↓ 新增：SSD Session Cache，冷 prefix 成本尽量变成一次性成本（文档 §14）
+      - "--ssd-session-cache"
+      - "on"
+      - "--ssd-session-cache-dir"
+      - "${HOME}/.mtplx/session_cache/8080"
+      - "--ssd-session-cache-min-prefix-tokens"
+      - "2048"
+
     command_template: "cd {workdir} && nohup uv run mtplx quickstart --model {model} --port {port} {extra_args} > {log_file} 2>&1 &"
     kill_pattern: "mtplx.*8080"
     memory_required_gb: 28
@@ -76,6 +82,13 @@ servers:
       - "off"
       - "--max-tokens"
       - "2048"
+      # ↓↓↓ 新增：独立目录的 SSD Session Cache（与 8080 隔离）
+      - "--ssd-session-cache"
+      - "on"
+      - "--ssd-session-cache-dir"
+      - "${HOME}/.mtplx/session_cache/8082"
+      - "--ssd-session-cache-min-prefix-tokens"
+      - "2048"
     command_template: "cd {workdir} && nohup uv run mtplx quickstart --model {model} --port {port} {extra_args} > {log_file} 2>&1 &"
     kill_pattern: "mtplx.*8082"
     memory_required_gb: 34
@@ -97,3 +110,5 @@ servers:
     command_template: "nohup llama-server -m {model_path} --host 127.0.0.1 --port {port} -c {context_size} -ngl {gpu_layers} {flash_attention_flag} --spec-type {spec_type} --spec-draft-n-max {spec_draft_n_max} {extra_args} > {log_file} 2>&1 &"
     kill_pattern: "llama-server.*8084"
     memory_required_gb: 38
+
+    # 注意：--paged-kv-quantization q8 没有默认加入，按文档§14.7要求，这应该是后续单独 A/B 测试的项，不作为必选项。

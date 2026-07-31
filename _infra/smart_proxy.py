@@ -1,8 +1,5 @@
-# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-25 00:00:00
-
-import sys
 import os
+import sys
 import uvicorn
 import json
 import time
@@ -11,352 +8,1433 @@ import socket
 import logging
 import uuid
 import re
+import hashlib
 import httpx
 import asyncio
+import contextlib
+import yaml
+from collections import deque
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
 from threading import Lock
 
+# ============================================================
+# .env 加载
+# ============================================================
+def _load_dotenv(env_path: str) -> int:
+    if not os.path.exists(env_path):
+        return 0
+    count = 0
+    with open(env_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            k, v = k.strip(), v.strip().strip('"').strip("'")
+            if k and v and k not in os.environ:
+                os.environ[k] = v
+                count += 1
+    return count
+
 FORGE_ROOT = "/Users/naturist/MusicProject/AI-Project-Incubation-Factory"
-sys.path.append(os.path.join(FORGE_ROOT, "_factory/patterns/peer-review/src"))
-from peer_review.llm_client import SERVER_COMMANDS
-from _infra.model_runtime import get_memory_required_gb
+sys.path.insert(0, FORGE_ROOT)
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]: %(message)s')
+_dotenv_loaded = _load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+if not _dotenv_loaded:
+    _dotenv_loaded = _load_dotenv(os.path.join(FORGE_ROOT, ".env"))
+print(f"📦 .env 加载了 {_dotenv_loaded} 个环境变量")
+
+try:
+    from _infra.model_runtime import get_server_commands
+    SERVER_COMMANDS = get_server_commands()
+except Exception as _e:
+    print(f"⚠️ SERVER_COMMANDS 加载失败: {_e}")
+    SERVER_COMMANDS = {}
+
+try:
+    from _infra.model_runtime import get_memory_required_gb
+except ImportError:
+    def get_memory_required_gb(p):
+        return 20
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s]: %(message)s")
 logger = logging.getLogger("SmartProxy")
+app = FastAPI(title="FORGE Smart Proxy v9.0 — Patched Two-Stage Tool Selector")
 
-app = FastAPI(title="FORGE Unified Smart Proxy v4.0")
 
-# 1. 物理 ID 映射表（显示用 + MTPLX 实际模型 ID）
-# 关键修复：MTPLX 需要使用它自己注册的短 ID，而不是长 display_name
-REAL_ID_MAP = {
-    8080: "mtplx-qwen36-27b-optimized-quality",      # ← MTPLX 实际接受的 ID
-    8082: "mtplx-gemma4-optimized-quality",
-    8084: "qwopus-35b-a3b-v1-mtp-gguf-8bit",
-    11434: "deepseek-r1:32b"
-}
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
-# 2. 别名路由表
-MODEL_TO_PORT = {
-    "mtplx-qwen36-27b": 8080,
-    "mtplx-gemma4": 8082,
-    "qwopus-35b": 8084,
-    "local-deepseek-r1": 11434,
-    # Claude Code for VS Code model aliases: all route to the local MTPLX main brain.
-    "claude-3-5-sonnet-20241022": 8080,
-    "claude-3-5-sonnet-latest": 8080,
-    "claude-3-7-sonnet-20250219": 8080,
-    "claude-3-5-haiku-20241022": 8080,
-    "claude-opus-4-8": 8080,
-    "claude-opus-4-1": 8080,
-    "claude-opus-4-1-20250805": 8080,
-    "claude-opus-4-20250514": 8080,
-    "claude-opus-4-0": 8080,
-    "claude-sonnet-4-20250514": 8080,
-    "claude-sonnet-4-5": 8080,
-    "claude-sonnet-4-5-20250929": 8080,
-    # Claude Code for VS Code 2026 UI labels:
-    # Default/Opus: Opus 4.8 (1M context)
-    # Sonnet: Sonnet 4.6 / Sonnet 4.6 (1M context)
-    # Haiku: Haiku 4.5
-    "claude-opus-4-8-1m": 8080,
-    "claude-opus-4-8-1m-20260101": 8080,
-    "claude-opus-4-8-20260101": 8080,
-    "claude-sonnet-4-6": 8080,
-    "claude-sonnet-4-6-1m": 8080,
-    "claude-sonnet-4-6-20260101": 8080,
-    "claude-sonnet-4-6-1m-20260101": 8080,
-    "claude-haiku-4-5": 8080,
-    "claude-haiku-4-5-20260101": 8080,
-}
 
+# ============================================================
+# 配置开关
+# ============================================================
+FORGE_ALLOW_UNKNOWN_MODEL_FALLBACK = _env_bool("FORGE_ALLOW_UNKNOWN_MODEL_FALLBACK", False)
+
+FORGE_LOCAL_FORWARD_TOOLS = _env_bool("FORGE_LOCAL_FORWARD_TOOLS", True)
+FORGE_REMOTE_FORWARD_TOOLS = _env_bool("FORGE_REMOTE_FORWARD_TOOLS", True)
+
+FORGE_LOCAL_DEFAULT_MAX_TOKENS = int(os.getenv("FORGE_LOCAL_DEFAULT_MAX_TOKENS", "1024"))
+FORGE_LOCAL_MAX_TOKENS_CAP = int(os.getenv("FORGE_LOCAL_MAX_TOKENS", "2048"))
+FORGE_REMOTE_MAX_TOKENS_CAP = int(os.getenv("FORGE_REMOTE_MAX_TOKENS", "16384"))
+
+FORGE_SORT_TOOLS_FOR_CACHE = _env_bool("FORGE_SORT_TOOLS_FOR_CACHE", True)
+FORGE_COUNT_TOKENS_DIVISOR = int(os.getenv("FORGE_COUNT_TOKENS_DIVISOR", "4"))
+
+FORGE_TOOL_SELECTION_ENABLED = _env_bool("FORGE_TOOL_SELECTION_ENABLED", True)
+FORGE_TOOL_SELECTION_THRESHOLD = int(os.getenv("FORGE_TOOL_SELECTION_THRESHOLD", "8"))
+FORGE_TOOL_SELECTION_MAX = int(os.getenv("FORGE_TOOL_SELECTION_MAX", "8"))
+FORGE_TOOL_SELECTION_DESC_MAX = int(os.getenv("FORGE_TOOL_SELECTION_DESC_MAX", "100"))
+FORGE_TOOL_SELECTION_CACHE_SIZE = int(os.getenv("FORGE_TOOL_SELECTION_CACHE_SIZE", "1000"))
+FORGE_TOOL_SELECTION_TIMEOUT_S = float(os.getenv("FORGE_TOOL_SELECTION_TIMEOUT_S", "20"))
+FORGE_TOOL_SELECTION_MAX_TOKENS = int(os.getenv("FORGE_TOOL_SELECTION_MAX_TOKENS", "150"))
+FORGE_TOOL_SELECTION_INTENT_MAX_CHARS = int(os.getenv("FORGE_TOOL_SELECTION_INTENT_MAX_CHARS", "2000"))
+FORGE_TOOL_SCHEMA_BYTE_BUDGET = int(os.getenv("FORGE_TOOL_SCHEMA_BYTE_BUDGET", "32768"))
+FORGE_TOOL_SELECTOR_POLICY_VERSION = os.getenv("FORGE_TOOL_SELECTOR_POLICY_VERSION", "v2")
+
+FORGE_CORE_TOOLS = [
+    t.strip() for t in os.getenv(
+        "FORGE_CORE_TOOLS", "Read,Bash,Edit,Grep,Glob,LS"
+    ).split(",") if t.strip()
+]
+
+FORGE_SERIALIZE_LOCAL_PORTS = _env_bool("FORGE_SERIALIZE_LOCAL_PORTS", True)
+
+FORGE_LOCAL_RETRY_COUNT = int(os.getenv("FORGE_LOCAL_RETRY_COUNT", "0"))
+FORGE_REMOTE_RETRY_COUNT = int(os.getenv("FORGE_REMOTE_RETRY_COUNT", "2"))
+RETRYABLE_STATUS_CODES = {502, 503, 504}
+
+FORGE_STREAM_PING_INTERVAL_SECONDS = float(os.getenv("FORGE_STREAM_PING_INTERVAL_SECONDS", "10"))
+
+_SYSTEM_REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.DOTALL)
+_WORD_RE = re.compile(r"[a-zA-Z0-9_]+")
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m|\[[0-9;]*m")
 
 
-def normalize_model_name(model_name: str) -> str:
-    """Strip terminal ANSI fragments and normalize Claude Code aliases."""
-    cleaned = ANSI_RE.sub("", str(model_name or "")).strip()
-    # If Claude Code introduces a new Claude alias, default it to the local main brain
-    # rather than failing with a remote model access error.
+# ============================================================
+# 工具选择 LRU 缓存
+# ============================================================
+class ToolSelectionCache:
+    def __init__(self, max_size=1000):
+        self.max_size = max_size
+        self.cache = {}
+        self.order = deque()
+        self.lock = asyncio.Lock()
+        self.hits = 0
+        self.misses = 0
+
+    async def get(self, key):
+        async with self.lock:
+            if key in self.cache:
+                self.order.remove(key)
+                self.order.append(key)
+                self.hits += 1
+                return self.cache[key]
+            self.misses += 1
+            return None
+
+    async def put(self, key, value):
+        async with self.lock:
+            if key in self.cache:
+                self.order.remove(key)
+            elif len(self.cache) >= self.max_size:
+                oldest = self.order.popleft()
+                del self.cache[oldest]
+            self.cache[key] = value
+            self.order.append(key)
+
+    def stats(self):
+        return {"size": len(self.cache), "max_size": self.max_size,
+                "hits": self.hits, "misses": self.misses}
+
+
+tool_selection_cache = ToolSelectionCache(max_size=FORGE_TOOL_SELECTION_CACHE_SIZE)
+
+_last_reduction_info: dict = {}
+_last_reduction_lock = Lock()
+
+
+def _record_reduction(info: dict):
+    with _last_reduction_lock:
+        _last_reduction_info.clear()
+        _last_reduction_info.update(info)
+
+
+# single-flight：同 key 并发请求只跑一次阶段1
+_stage1_inflight: dict = {}
+_stage1_inflight_guard = asyncio.Lock()
+
+
+async def _get_inflight_lock(key: str) -> asyncio.Lock:
+    async with _stage1_inflight_guard:
+        lock = _stage1_inflight.get(key)
+        if lock is None:
+            lock = asyncio.Lock()
+            _stage1_inflight[key] = lock
+        return lock
+
+
+async def _release_inflight_lock(key: str):
+    async with _stage1_inflight_guard:
+        _stage1_inflight.pop(key, None)
+
+
+# ============================================================
+# RPM 限流
+# ============================================================
+class RPMGuard:
+    def __init__(self, max_rpm=35):
+        self.max_rpm = max_rpm
+        self.windows = {}
+        self._lock = asyncio.Lock()
+
+    async def acquire(self, key="default"):
+        async with self._lock:
+            now = time.time()
+            if key not in self.windows:
+                self.windows[key] = deque()
+            win = self.windows[key]
+            while win and win[0] < now - 60:
+                win.popleft()
+            waited = 0.0
+            if len(win) >= self.max_rpm:
+                wt = win[0] + 60 - now + 0.5
+                if wt > 0:
+                    await asyncio.sleep(wt)
+                    waited = wt
+                    now = time.time()
+                    while win and win[0] < now - 60:
+                        win.popleft()
+            win.append(time.time())
+            return waited
+
+    def stats(self):
+        return {
+            "max_rpm": self.max_rpm,
+            "active_keys": {
+                k: len([t for t in v if t >= time.time() - 60])
+                for k, v in self.windows.items()
+            },
+        }
+
+
+rpm_guard = RPMGuard(max_rpm=int(os.getenv("FORGE_RPM_MAX", "35")))
+
+
+# ============================================================
+# 活跃请求追踪
+# ============================================================
+class ActiveTracker:
+    def __init__(self):
+        self.requests = {}
+        self._lock = asyncio.Lock()
+        self.total_requests = 0
+        self.total_errors = 0
+
+    async def start(self, rid, model, target, is_remote):
+        async with self._lock:
+            self.requests[rid] = {
+                "id": rid, "model": model, "target": target, "is_remote": is_remote,
+                "status": "waiting", "bytes": 0, "start": time.time(),
+                "last": time.time(), "chunks": 0,
+            }
+            self.total_requests += 1
+
+    async def update(self, rid, **kw):
+        async with self._lock:
+            if rid in self.requests:
+                self.requests[rid].update(kw)
+
+    async def heartbeat(self, rid, delta=0):
+        async with self._lock:
+            if rid in self.requests:
+                r = self.requests[rid]
+                r["bytes"] += delta
+                r["chunks"] += 1
+                r["last"] = time.time()
+                if r["status"] != "done" and r["status"] != "error":
+                    r["status"] = "generating"
+
+    async def finish(self, rid, success=True):
+        async with self._lock:
+            if rid in self.requests:
+                self.requests[rid]["status"] = "done" if success else "error"
+            if not success:
+                self.total_errors += 1
+
+    async def remove(self, rid):
+        async with self._lock:
+            self.requests.pop(rid, None)
+
+    async def snapshot(self):
+        async with self._lock:
+            now = time.time()
+            out = []
+            for r in self.requests.values():
+                elapsed = now - r["start"]
+                idle = now - r["last"]
+                status = r["status"]
+                if status == "generating" and idle > 30:
+                    status = "stalled?"
+                out.append({
+                    "id": r["id"][:12], "model": r["model"], "target": r["target"],
+                    "is_remote": r["is_remote"], "status": status,
+                    "elapsed_s": round(elapsed, 1), "bytes": r["bytes"],
+                    "chunks": r["chunks"], "idle_s": round(idle, 1),
+                })
+            return out
+
+
+tracker = ActiveTracker()
+
+
+# ============================================================
+# 本地端口串行化（防止并发请求把 SessionBank/前缀缓存挤爆）
+# ============================================================
+_port_locks: dict[int, asyncio.Lock] = {}
+
+
+def _get_port_lock(port: int) -> asyncio.Lock:
+    if port not in _port_locks:
+        _port_locks[port] = asyncio.Lock()
+    return _port_locks[port]
+
+
+class _NullContext:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *a):
+        return False
+
+
+def _local_port_guard(port):
+    if FORGE_SERIALIZE_LOCAL_PORTS and port is not None:
+        return _get_port_lock(port)
+    return _NullContext()
+
+
+# ============================================================
+# 路由表加载
+# ============================================================
+LITELLM_CONFIG_PATH = os.path.join(FORGE_ROOT, "_infra", "litellm-config.yaml")
+
+
+def _fallback_routes():
+    return {
+        "mtplx-qwen36-27b": 8080, "claude-3-5-sonnet-20241022": 8080,
+        "claude-opus-4-8": 8080, "claude-haiku-4-5": 8080,
+    }, {}
+
+
+def load_routes_from_litellm():
+    if not os.path.exists(LITELLM_CONFIG_PATH):
+        logger.warning(f"⚠️ LiteLLM config 不存在: {LITELLM_CONFIG_PATH}")
+        return _fallback_routes()
+    try:
+        with open(LITELLM_CONFIG_PATH, "r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f) or {}
+        M, R = {}, {}
+        for e in cfg.get("model_list", []):
+            mn = e.get("model_name")
+            if not mn:
+                continue
+            p = e.get("litellm_params", {}) or {}
+            base = p.get("api_base", "") or ""
+            if "127.0.0.1" in base or "localhost" in base:
+                try:
+                    M[mn] = int(base.split(":")[-1].split("/")[0])
+                except Exception:
+                    logger.warning(f"⚠️ 无法从 {base} 提取端口，跳过 {mn}")
+            else:
+                ref = str(p.get("api_key", ""))
+                env = ref.replace("os.environ/", "").strip("${}")
+                R[mn] = {
+                    "api_base": base.rstrip("/"),
+                    "model": p.get("model", "").replace("openai/", ""),
+                    "api_key_env": env,
+                    "max_tokens": p.get("max_tokens", 16384),
+                }
+        logger.info(f"📋 路由表加载完成: {len(M)} 本地, {len(R)} 远程")
+        return M, R
+    except Exception as ex:
+        logger.error(f"litellm parse fail {ex}")
+        return _fallback_routes()
+
+
+MODEL_TO_PORT, REMOTE_ROUTES = load_routes_from_litellm()
+
+REAL_ID_MAP = {
+    8080: "mtplx-qwen36-27b-optimized-quality",
+    8082: "mtplx-gemma4-optimized-quality",
+    8084: "qwopus-35b-a3b-v1-mtp-gguf-8bit",
+    11434: "deepseek-r1:32b",
+}
+
+
+def normalize_model_name(s):
+    return ANSI_RE.sub("", str(s or "")).strip()
+
+
+# ============================================================
+# Anthropic <-> OpenAI 转换
+# ============================================================
+def _to_anthropic_tool_id(raw):
+    if not raw:
+        return f"toolu_{uuid.uuid4().hex[:12]}"
+    raw = str(raw)
+    return raw if raw.startswith("toolu_") else f"toolu_{raw}"
+
+
+def _extract_anthropic_text(c):
+    if isinstance(c, str):
+        return c
+    if isinstance(c, list):
+        return "".join(b.get("text", "") if isinstance(b, dict) else str(b) for b in c)
+    return str(c or "")
+
+
+def _bounded_max_tokens(v, default, cap):
+    try:
+        p = int(v)
+    except Exception:
+        p = default
+    return max(1, min(p, cap))
+
+
+def _anthropic_tools_to_openai(tools: list, sort_for_cache: bool = True) -> list:
+    """Anthropic tools -> OpenAI function tools。
+    绝不截断 description/parameters（文档 §9.9）：已选中的工具必须保持完整 schema。
+    体积控制只能通过“减少工具数量”和“字节预算丢弃低优先级工具”实现，见 _apply_schema_byte_budget。
+    """
+    out = []
+    for t in tools:
+        if not isinstance(t, dict):
+            continue
+        out.append({
+            "type": "function",
+            "function": {
+                "name": t.get("name", ""),
+                "description": t.get("description", ""),
+                "parameters": t.get("input_schema", {"type": "object", "properties": {}}),
+            },
+        })
+    if sort_for_cache:
+        out.sort(key=lambda x: x.get("function", {}).get("name", ""))
+    return out
+
+
+def _anthropic_tool_choice_to_openai(tc):
+    if not tc:
+        return None
+    if isinstance(tc, str):
+        return tc
+    if isinstance(tc, dict):
+        tp = tc.get("type", "auto")
+        if tp == "auto":
+            return "auto"
+        if tp == "any":
+            return "required"
+        if tp == "none":
+            return "none"
+        if tp == "tool":
+            return {"type": "function", "function": {"name": tc.get("name", "")}}
+    return None
+
+
+def _convert_anthropic_messages_to_openai(messages: list) -> list:
+    o = []
+    for m in messages or []:
+        role = m.get("role", "user")
+        content = m.get("content", "")
+        if role == "user" and isinstance(content, list):
+            txt, trs = [], []
+            for b in content:
+                if isinstance(b, dict) and b.get("type") == "tool_result":
+                    trs.append(b)
+                elif isinstance(b, dict) and b.get("type") == "text":
+                    txt.append(b.get("text", ""))
+                elif isinstance(b, dict):
+                    txt.append(str(b.get("text", "")))
+            for tr in trs:
+                c = tr.get("content", "")
+                if isinstance(c, list):
+                    c = "\n".join(x.get("text", "") if isinstance(x, dict) else str(x) for x in c)
+                o.append({"role": "tool", "tool_call_id": tr.get("tool_use_id", ""), "content": str(c)})
+            if txt:
+                o.append({"role": "user", "content": "\n".join(txt)})
+        elif role == "assistant" and isinstance(content, list):
+            txt, tcs = [], []
+            for b in content:
+                if isinstance(b, dict) and b.get("type") == "tool_use":
+                    tcs.append({
+                        "id": b.get("id") or f"call_{uuid.uuid4().hex[:8]}",
+                        "type": "function",
+                        "function": {
+                            "name": b.get("name", ""),
+                            "arguments": json.dumps(b.get("input", {}), ensure_ascii=False),
+                        },
+                    })
+                elif isinstance(b, dict) and b.get("type") == "text":
+                    txt.append(b.get("text", ""))
+                elif isinstance(b, dict):
+                    txt.append(str(b))
+            msg = {"role": "assistant", "content": "\n".join(txt) if txt else None}
+            if tcs:
+                msg["tool_calls"] = tcs
+            o.append(msg)
+        else:
+            if isinstance(content, list):
+                content = _extract_anthropic_text(content)
+            o.append({"role": role, "content": content})
+    return o
+
+
+def _openai_tool_calls_to_anthropic(tcs: list) -> list:
+    blocks = []
+    for tc in tcs or []:
+        if not isinstance(tc, dict):
+            continue
+        f = tc.get("function", {}) or {}
+        try:
+            args = json.loads(f.get("arguments", "{}") or "{}")
+        except Exception:
+            args = {"raw": f.get("arguments", "")}
+        blocks.append({
+            "type": "tool_use",
+            "id": _to_anthropic_tool_id(tc.get("id") or ""),
+            "name": f.get("name", ""),
+            "input": args,
+        })
+    return blocks
+
+
+def _anthropic_sse(ev, p) -> bytes:
+    return f"event: {ev}\ndata: {json.dumps(p, ensure_ascii=False)}\n\n".encode("utf-8")
+
+
+def _json_bytes(v) -> int:
+    try:
+        return len(json.dumps(v, ensure_ascii=False).encode("utf-8"))
+    except Exception:
+        return 0
+
+
+# ============================================================
+# 意图提取 / 工具历史 / 启发式兜底 / 字节预算
+# ============================================================
+def _clean_user_intent(text: str) -> str:
+    if not text:
+        return ""
+    cleaned = _SYSTEM_REMINDER_RE.sub("", text).strip()
+    if len(cleaned) > FORGE_TOOL_SELECTION_INTENT_MAX_CHARS:
+        cleaned = cleaned[:FORGE_TOOL_SELECTION_INTENT_MAX_CHARS]
     return cleaned
 
 
-def _extract_anthropic_text(content) -> str:
-    """Convert Anthropic content blocks to plain text for OpenAI-compatible backends."""
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        parts = []
+def _latest_user_text(messages: list) -> str:
+    """从最后一个含真实文本的 user 回合提取意图；
+    纯 tool_result 回合（无 text block）自然被跳过，继续向前查找（文档 §9.3/§9.4）。
+    """
+    if not isinstance(messages, list):
+        return ""
+    for msg in reversed(messages):
+        if not isinstance(msg, dict) or msg.get("role") != "user":
+            continue
+        content = msg.get("content", "")
+        if isinstance(content, str) and content.strip():
+            return _clean_user_intent(content)
+        if isinstance(content, list):
+            parts = [b.get("text", "") for b in content
+                     if isinstance(b, dict) and b.get("type") == "text" and b.get("text", "").strip()]
+            if parts:
+                return _clean_user_intent("\n".join(parts))
+            # 纯 tool_result（parts 为空）：不 return，继续向前找
+    return ""
+
+
+def _extract_used_tool_names(messages: list) -> set:
+    """扫描历史 assistant 消息，收集已调用过的工具名，
+    保证工具闭环不因 tool_result 回合而被裁掉（文档 §9.4）。
+    """
+    used = set()
+    if not isinstance(messages, list):
+        return used
+    for msg in messages:
+        if not isinstance(msg, dict) or msg.get("role") != "assistant":
+            continue
+        content = msg.get("content")
+        if not isinstance(content, list):
+            continue
         for block in content:
-            if isinstance(block, dict):
-                if block.get("type") == "text":
-                    parts.append(str(block.get("text", "")))
-                elif "text" in block:
-                    parts.append(str(block.get("text", "")))
-            else:
-                parts.append(str(block))
-        return "".join(parts)
-    return str(content or "")
+            if isinstance(block, dict) and block.get("type") == "tool_use" and block.get("name"):
+                used.add(block["name"])
+    return used
 
 
-def _bounded_max_tokens(value, default: int = 1024, cap: int | None = None) -> int:
-    """Bound Claude Code max_tokens so local models do not generate forever."""
-    cap = cap or int(os.getenv("FORGE_CLAUDE_CODE_MAX_TOKENS", "1024"))
+def _heuristic_rank_tools(user_text: str, tools: list, exclude: set) -> list:
+    """selector 失败时的确定性关键词打分兜底（文档 §9.8）。"""
+    words = set(w.lower() for w in _WORD_RE.findall(user_text or "") if len(w) > 2)
+    scored = []
+    for t in tools:
+        if not isinstance(t, dict):
+            continue
+        name = t.get("name", "")
+        if not name or name in exclude:
+            continue
+        haystack = (name + " " + str(t.get("description", ""))).lower()
+        score = sum(1 for w in words if w in haystack)
+        scored.append((score, name))
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    return [name for score, name in scored if score > 0]
+
+
+def _apply_schema_byte_budget(ordered_names: list, tools_by_name: dict, mandatory: set) -> list:
+    """数量上限之外的字节预算控制（文档 §9.9）。
+    mandatory 工具即使很大也保留；预算不足时按 ordered_names 的优先级顺序
+    丢弃低优先级候选工具（不截断内容）。
+    """
+    if FORGE_TOOL_SCHEMA_BYTE_BUDGET <= 0:
+        return ordered_names
+    kept, total = [], 0
+    for name in ordered_names:
+        if name in mandatory:
+            kept.append(name)
+            total += _json_bytes(tools_by_name.get(name, {}))
+    for name in ordered_names:
+        if name in mandatory:
+            continue
+        size = _json_bytes(tools_by_name.get(name, {}))
+        if total + size > FORGE_TOOL_SCHEMA_BYTE_BUDGET:
+            continue
+        kept.append(name)
+        total += size
+    return kept
+
+
+# ============================================================
+# 两阶段工具选择
+# ============================================================
+_selector_http_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(
+        connect=10.0, read=FORGE_TOOL_SELECTION_TIMEOUT_S, write=10.0, pool=10.0
+    )
+)
+
+
+async def _select_tools_stage1(user_text, tools, target_port, real_model_id):
+    """阶段1：极小 prompt 让模型选相关工具名。失败返回 None（由调用方走启发式兜底）。"""
+    sorted_tools = sorted(
+        [t for t in tools if isinstance(t, dict) and t.get("name")],
+        key=lambda x: x.get("name", "")
+    )
+    tool_lines = []
+    for t in sorted_tools:
+        name = t.get("name", "")
+        desc = str(t.get("description", "")).replace("\n", " ")[:FORGE_TOOL_SELECTION_DESC_MAX]
+        tool_lines.append(f"- {name}: {desc}")
+
+    prompt = (
+        "You are a strict tool router. Based on the user's request, select the tools needed.\n"
+        f"Choose up to {FORGE_TOOL_SELECTION_MAX} tools. If none are needed, return an empty list.\n"
+        'Reply ONLY with JSON: {"tools": ["Name1","Name2"]}\n\n'
+        "TOOLS:\n" + "\n".join(tool_lines) +
+        f"\n\nUSER REQUEST:\n{user_text}\n"
+    )
+    url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
+    payload = {
+        "model": real_model_id,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": FORGE_TOOL_SELECTION_MAX_TOKENS,
+        "temperature": 0.0,
+        "stream": False,
+    }
     try:
-        parsed = int(value)
-    except Exception:
-        parsed = default
-    return max(1, min(parsed, cap))
+        async with _local_port_guard(target_port):
+            resp = await _selector_http_client.post(url, json=payload)
+        if resp.status_code != 200:
+            logger.warning(f"🎯 stage1 selector HTTP {resp.status_code}")
+            return None
+        content = (resp.json().get("choices", [{}])[0]
+                   .get("message", {}).get("content", "")) or ""
+        selected = None
+        try:
+            selected = json.loads(content).get("tools")
+        except json.JSONDecodeError:
+            m = re.search(r"\{.*\}", content, re.DOTALL)
+            if m:
+                try:
+                    selected = json.loads(m.group()).get("tools")
+                except json.JSONDecodeError:
+                    return None
+        if not isinstance(selected, list):
+            return None
+        valid = {t.get("name") for t in tools if isinstance(t, dict)}
+        return [s for s in selected if s in valid]
+    except (httpx.TimeoutException, httpx.ConnectError) as e:
+        logger.warning(f"🎯 stage1 network error: {e}")
+        return None
+    except Exception as e:
+        logger.warning(f"🎯 stage1 unknown error: {e}")
+        return None
 
 
-def _anthropic_sse(event: str, payload: dict) -> bytes:
-    return f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
+async def _apply_tool_selection(data: dict, target_port: int, real_model_id: str) -> dict:
+    """两阶段工具筛选，严格优先级（文档 §9.7）：
+       1. 强制 tool_choice 指定的工具
+       2. 当前会话工具闭环已使用过的工具（tool_result 回合不能丢失，§9.4）
+       3. Core Tools（配置顺序）
+       4. Selector 选中的工具，或 selector 失败时的确定性启发式兜底（§9.8）
+       始终 len(final) <= FORGE_TOOL_SELECTION_MAX，从不回退全量。
+    """
+    tools = data.get("tools") or []
+    if not isinstance(tools, list) or len(tools) <= FORGE_TOOL_SELECTION_THRESHOLD:
+        return data
 
-# 显存管理
+    valid_names = {t.get("name") for t in tools if isinstance(t, dict) and t.get("name")}
+    tools_by_name = {t.get("name"): t for t in tools if isinstance(t, dict) and t.get("name")}
+    used_tools = _extract_used_tool_names(data.get("messages", [])) & valid_names
+    core_valid = [n for n in FORGE_CORE_TOOLS if n in valid_names]
+
+    tool_choice = data.get("tool_choice")
+    mandatory = set(used_tools)
+    skip_selector = False
+    mode = "stage1"
+
+    if isinstance(tool_choice, dict) and tool_choice.get("type") == "tool":
+        forced_name = tool_choice.get("name", "")
+        skip_selector = True
+        if forced_name in valid_names:
+            mandatory.add(forced_name)
+            mode = "forced_tool_choice"
+        else:
+            mode = "forced_tool_choice_not_found_fallback_core"
+
+    ordered = sorted(mandatory)
+    for n in core_valid:
+        if n not in ordered:
+            ordered.append(n)
+
+    selected = []
+    if not skip_selector:
+        user_text = _latest_user_text(data.get("messages", []))
+        if user_text:
+            catalog_hash = hashlib.sha256(
+                json.dumps(tools, ensure_ascii=False, sort_keys=True).encode("utf-8")
+            ).hexdigest()[:20]
+            cache_key = hashlib.sha256(
+                f"{FORGE_TOOL_SELECTOR_POLICY_VERSION}|{real_model_id}|{user_text}|{catalog_hash}".encode("utf-8")
+            ).hexdigest()
+
+            selected = await tool_selection_cache.get(cache_key)
+            cache_hit = selected is not None
+
+            if selected is None:
+                lock = await _get_inflight_lock(cache_key)
+                async with lock:
+                    selected = await tool_selection_cache.get(cache_key)
+                    if selected is None:
+                        selected = await _select_tools_stage1(user_text, tools, target_port, real_model_id)
+                        if selected is None:
+                            selected = _heuristic_rank_tools(user_text, tools, exclude=set(ordered))
+                            mode = "heuristic_fallback"
+                            logger.warning(f"🎯 selector 失败，启发式兜底: {selected[:FORGE_TOOL_SELECTION_MAX]}")
+                        else:
+                            await tool_selection_cache.put(cache_key, selected)
+                await _release_inflight_lock(cache_key)
+            else:
+                mode = "cache"
+
+            logger.info(f"🎯 工具选择 mode={mode} selected={selected}")
+
+    for n in selected:
+        if len(ordered) >= FORGE_TOOL_SELECTION_MAX:
+            break
+        if n in valid_names and n not in ordered:
+            ordered.append(n)
+
+    final_names = ordered[:FORGE_TOOL_SELECTION_MAX]
+    final_names = _apply_schema_byte_budget(final_names, tools_by_name, mandatory)
+
+    if not final_names:
+        final_names = core_valid[:FORGE_TOOL_SELECTION_MAX] or sorted(mandatory)[:FORGE_TOOL_SELECTION_MAX]
+
+    filtered = [tools_by_name[n] for n in final_names if n in tools_by_name]
+    filtered.sort(key=lambda x: x.get("name", ""))
+
+    logger.info(f"🪚 tool reduction: {len(tools)} -> {len(filtered)} (mode={mode}, names={final_names})")
+    _record_reduction({
+        "ts": time.time(), "original": len(tools), "final": len(filtered),
+        "selected": final_names, "mode": mode,
+    })
+
+    data = dict(data)
+    data["tools"] = filtered
+    return data
+
+
+# ============================================================
+# 显存 / 后端生命周期管理
+# ============================================================
 VRAM_LIMIT = 48
-MODEL_VRAM = {8080: get_memory_required_gb(8080), 8082: get_memory_required_gb(8082), 8084: get_memory_required_gb(8084), 11434: 20}
+MODEL_VRAM = {8080: get_memory_required_gb(8080), 8082: get_memory_required_gb(8082),
+              8084: get_memory_required_gb(8084), 11434: 20}
 active_servers = {}
 vram_lock = Lock()
 http_client = httpx.AsyncClient(
     timeout=httpx.Timeout(connect=30.0, read=600.0, write=30.0, pool=30.0),
-    limits=httpx.Limits(max_keepalive_connections=5)
+    limits=httpx.Limits(max_keepalive_connections=10),
 )
 
-def is_listening(port: int):
+
+def is_listening(p) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(0.5)
-        return s.connect_ex(("127.0.0.1", port)) == 0
+        return s.connect_ex(("127.0.0.1", p)) == 0
 
-def ensure_server(port: int):
+
+def ensure_server(port: int) -> bool:
+    """同步函数，会阻塞最长 ~60s。调用方必须用 asyncio.to_thread 包装（Patch H），
+    否则会阻塞整个事件循环，让并发请求全部卡住。"""
     with vram_lock:
         if is_listening(port):
             active_servers[port] = time.time()
             return True
-        if port not in SERVER_COMMANDS: return False
-        
-        # 显存回收
-        current = sum(MODEL_VRAM.get(p, 20) for p in active_servers if is_listening(p))
-        while current + MODEL_VRAM.get(port, 20) > VRAM_LIMIT:
-            oldest = min([p for p in active_servers if is_listening(p)], key=lambda x: active_servers[x])
+        if port not in SERVER_COMMANDS:
+            return False
+        cur = sum(MODEL_VRAM.get(p, 20) for p in active_servers if is_listening(p))
+        while cur + MODEL_VRAM.get(port, 20) > VRAM_LIMIT:
+            listening = [p for p in active_servers if is_listening(p)]
+            if not listening:
+                break
+            oldest = min(listening, key=lambda x: active_servers[x])
             logger.info(f"⚠️ 卸载离线模型释放显存 (Port {oldest})")
             subprocess.run(f"pkill -9 -f '.*{oldest}'", shell=True)
-            del active_servers[oldest]
-            current = sum(MODEL_VRAM.get(p, 20) for p in active_servers if is_listening(p))
+            active_servers.pop(oldest, None)
+            cur = sum(MODEL_VRAM.get(p, 20) for p in active_servers if is_listening(p))
 
         logger.info(f"🚀 拉起真机模型 (Port {port})...")
-        script = f'tell application "Terminal" to do script "{SERVER_COMMANDS[port]}"'
-        subprocess.run(["osascript", "-e", script])
-        
-        start_ts = time.time()
-        while time.time() - start_ts < 120:
+        subprocess.run(["osascript", "-e",
+                        f'tell application "Terminal" to do script "{SERVER_COMMANDS[port]}"'])
+        st = time.time()
+        while time.time() - st < 60:
             if is_listening(port):
-                try:
-                    # 必须确认 API 握手成功
-                    check_url = f"http://127.0.0.1:{port}/v1/models"
-                    if port == 11434: check_url = "http://127.0.0.1:11434/"
-                    with httpx.Client() as client:
-                        if client.get(check_url, timeout=2).status_code in [200, 404]:
-                            logger.info(f"✅ 后端 {port} 响应就绪")
-                            active_servers[port] = time.time()
-                            time.sleep(5) # 显存稳定缓冲
-                            return True
-                except: pass
-            time.sleep(5)
+                active_servers[port] = time.time()
+                time.sleep(3)
+                return True
+            time.sleep(2)
         return False
 
+
+# ============================================================
+# 非流式请求转发（含重试策略，Patch B，抽成独立函数便于单测）
+# ============================================================
+async def _forward_with_retries(target_url: str, forward_payload: dict, headers: dict,
+                                 is_remote: bool, target_port):
+    max_attempts = max(1, (FORGE_REMOTE_RETRY_COUNT if is_remote else FORGE_LOCAL_RETRY_COUNT) + 1)
+    last_exception = None
+    resp = None
+
+    for attempt in range(max_attempts):
+        try:
+            port_ctx = _local_port_guard(target_port) if (not is_remote) else _NullContext()
+            async with port_ctx:
+                resp = await http_client.post(target_url, json=forward_payload, headers=headers)
+
+            if resp.status_code == 200:
+                return resp, None
+
+            err_body = resp.text[:500] if hasattr(resp, "text") else ""
+            last_exception = f"HTTP {resp.status_code}: {err_body}"
+
+            if resp.status_code not in RETRYABLE_STATUS_CODES:
+                logger.warning(f"❌ 不可重试状态码 {resp.status_code}，立即失败")
+                break
+
+            logger.warning(f"⚠️ 可重试状态码 {resp.status_code}，第 {attempt + 1}/{max_attempts} 次")
+            if attempt < max_attempts - 1:
+                await asyncio.sleep(min(1.5 * (attempt + 1), 5))
+
+        except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError) as e:
+            last_exception = f"connect_error: {e}"
+            resp = None
+            logger.warning(f"⚠️ 连接异常，第 {attempt + 1}/{max_attempts} 次: {e}")
+            if attempt < max_attempts - 1:
+                await asyncio.sleep(min(1.5 * (attempt + 1), 5))
+        except Exception as e:
+            last_exception = str(e)
+            resp = None
+            logger.warning(f"❌ 非连接类异常，不重试: {e}")
+            break
+
+    return resp, last_exception
+
+
+# ============================================================
+# 通用 ping 包装器：用于阶段1工具选择也能被 SSE ping 覆盖（Patch G）
+# ============================================================
+async def _run_with_ping(coro, ping_interval: float):
+    task = asyncio.ensure_future(coro)
+    try:
+        while True:
+            done, _ = await asyncio.wait({task}, timeout=ping_interval)
+            if task in done:
+                try:
+                    yield ("result", task.result())
+                except Exception as e:
+                    yield ("exception", e)
+                return
+            yield ("ping", None)
+    finally:
+        if not task.done():
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+
+# ============================================================
+# 流式后端读取生产者（Patch D：后台任务 + 队列，避免阻塞 ping）
+# ============================================================
+async def _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue: asyncio.Queue):
+    try:
+        async with port_ctx:
+            async with http_client.stream("POST", target_url, json=forward_payload, headers=headers) as resp:
+                if resp.status_code != 200:
+                    err_body = (await resp.aread()).decode("utf-8", errors="ignore")
+                    await queue.put(("http_error", f"{resp.status_code}: {err_body}"))
+                    return
+                async for line in resp.aiter_lines():
+                    if line:
+                        await queue.put(("line", line))
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        await queue.put(("exception", str(e)))
+    finally:
+        await queue.put(("eof", None))
+
+
+# ============================================================
+# 监控端点
+# ============================================================
+@app.get("/_forge/status")
+async def forge_status():
+    active = await tracker.snapshot()
+    with _last_reduction_lock:
+        last_reduction = dict(_last_reduction_info)
+    return JSONResponse({
+        "proxy": "FORGE Smart Proxy v9.0-patched",
+        "active_requests": len(active),
+        "requests": active,
+        "total_requests": tracker.total_requests,
+        "total_errors": tracker.total_errors,
+        "rpm_guard": rpm_guard.stats(),
+        "local_models": dict(MODEL_TO_PORT),
+        "remote_models": list(REMOTE_ROUTES.keys()),
+        "tool_selection": {
+            "enabled": FORGE_TOOL_SELECTION_ENABLED,
+            "threshold": FORGE_TOOL_SELECTION_THRESHOLD,
+            "max": FORGE_TOOL_SELECTION_MAX,
+            "core_tools": FORGE_CORE_TOOLS,
+            "schema_byte_budget": FORGE_TOOL_SCHEMA_BYTE_BUDGET,
+            "policy_version": FORGE_TOOL_SELECTOR_POLICY_VERSION,
+            "cache": tool_selection_cache.stats(),
+            "last_reduction": last_reduction,
+        },
+        "retry": {
+            "local_retry_count": FORGE_LOCAL_RETRY_COUNT,
+            "remote_retry_count": FORGE_REMOTE_RETRY_COUNT,
+        },
+        "routing": {
+            "allow_unknown_model_fallback": FORGE_ALLOW_UNKNOWN_MODEL_FALLBACK,
+        },
+        "serialize_local_ports": FORGE_SERIALIZE_LOCAL_PORTS,
+    })
+
+
+@app.get("/_forge/health")
+async def forge_health():
+    return JSONResponse({"status": "ok", "active": len(tracker.requests)})
+
+
+# ============================================================
+# 主入口
+# ============================================================
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def smart_gateway(request: Request, path: str):
+    if request.method == "GET":
+        return JSONResponse({"status": "ok", "proxy": "v9.0-patched"})
+
     body = await request.body()
-    try: data = json.loads(body) if body else {}
-    except: data = {}
-    
+    try:
+        data = json.loads(body) if body else {}
+    except Exception:
+        data = {}
+
+    norm = "/" + path.strip("/")
+
+    # ── 硬约束1：count_tokens 永不进入模型推理，且在路由/ensure_server之前处理 ──
+    if norm.endswith("/messages/count_tokens"):
+        est = _json_bytes(data) // FORGE_COUNT_TOKENS_DIVISOR if data else 1
+        logger.info(f"🧮 count_tokens 估算 {est}（绕过模型推理）")
+        return JSONResponse({"input_tokens": max(1, est)})
+
+    is_anthropic = norm.endswith("/v1/messages") or norm.endswith("/messages")
     model_name = normalize_model_name(data.get("model", ""))
-    target_port = MODEL_TO_PORT.get(model_name, 8080 if model_name.startswith("claude-") else 8080)
-    is_anthropic = "messages" in path
+    wants_stream = bool(data.get("stream", False))
+    request_id = uuid.uuid4().hex[:12]
+	
 
-    if not ensure_server(target_port): raise HTTPException(status_code=504, detail="Backend Timeout")
-    active_servers[target_port] = time.time()
+    # ---- Patch(addendum): 固定原始工具数，供后续 remote_full / tool_choice_none 的
+    # 可观测性记录使用。必须在任何 tools 字段可能被本地分支改写之前取值。
+    _orig_tools_raw = data.get("tools")
+    original_tool_count = len(_orig_tools_raw) if isinstance(_orig_tools_raw, list) else 0
 
-    # 【关键修复】使用 MTPLX 实际注册的 model id（社区最佳实践）
-    # 不要用 display_name，直接用启动时显示的短 ID
-    real_model_id = REAL_ID_MAP.get(target_port, model_name)
+    remote_route = REMOTE_ROUTES.get(model_name)
+    is_remote = remote_route is not None
+    target_port = None
 
-    # 构造 forward_payload（保留原始请求结构，减少转换风险）
-    if is_anthropic:
-        logger.info(f"🔄 协议转换: Anthropic -> OpenAI (Target: {real_model_id})")
-        msgs = []
-        if "system" in data:
-            msgs.append({"role": "system", "content": data["system"]})
-        for m in data.get("messages", []):
-            content = _extract_anthropic_text(m.get("content", ""))
-            msgs.append({"role": m.get("role", "user"), "content": content})
-        wants_stream = bool(data.get("stream", False))
-        forward_payload = {
-            "model": real_model_id,
-            "messages": msgs,
-            "temperature": data.get("temperature", 0.3),
-            "top_p": data.get("top_p", 0.9),
-            "stream": wants_stream,
-            "max_tokens": _bounded_max_tokens(data.get("max_tokens", 1024)),
-        }
+    # ── 路由决策 ──
+    if is_remote:
+        api_key = os.environ.get(remote_route["api_key_env"], "")
+        if not api_key:
+            raise HTTPException(503, f"API key {remote_route['api_key_env']} empty")
+        await rpm_guard.acquire(remote_route["api_key_env"])
+        target_url = f"{remote_route['api_base']}/chat/completions"
+        remote_model = remote_route["model"]
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+        await tracker.start(request_id, model_name, remote_model, True)
     else:
-        # OpenAI 格式：直接使用客户端传来的 model（或映射后的真实 ID）
+        target_port = MODEL_TO_PORT.get(model_name)
+        if target_port is None:
+            if FORGE_ALLOW_UNKNOWN_MODEL_FALLBACK:
+                target_port = 8080
+                logger.warning(f"⚠️ 未知模型 '{model_name}' 回退到 8080（环境变量允许）")
+            else:
+                logger.error(f"❌ 未知模型 '{model_name}'，拒绝静默路由（文档 §3.3）")
+                raise HTTPException(status_code=404, detail=f"Unknown model: {model_name}")
+        # Patch H: ensure_server 是阻塞同步函数，必须放线程池，否则冷启动期间整个事件循环被卡死
+        if not await asyncio.to_thread(ensure_server, target_port):
+            raise HTTPException(504, "Backend Timeout")
+        active_servers[target_port] = time.time()
+        target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
+        remote_model = REAL_ID_MAP.get(target_port, model_name)
+        headers = {"Content-Type": "application/json"}
+        await tracker.start(request_id, model_name, f"local:{target_port}", False)
+
+    # ── 工具选择决策（仅本地 + Anthropic）──
+    needs_deferred_tool_selection = False
+    if is_anthropic and not is_remote:
+        tool_choice_raw = data.get("tool_choice")
+        if isinstance(tool_choice_raw, dict) and tool_choice_raw.get("type") == "none":
+            # 本回合显式禁止工具：不转发 schema，避免无意义 prefill（文档 §9.5）
+            data = dict(data)
+            data["tools"] = []
+        elif FORGE_TOOL_SELECTION_ENABLED:
+            tools_in = data.get("tools") or []
+            large_tool_set = isinstance(tools_in, list) and len(tools_in) > FORGE_TOOL_SELECTION_THRESHOLD
+            if wants_stream and large_tool_set:
+                # 流式 + 大工具集：把选择推迟到生成器内部执行，以便用 ping 覆盖这段等待（Patch G）
+                needs_deferred_tool_selection = True
+            else:
+                data = await _apply_tool_selection(data, target_port, remote_model)
+
+    stream_source_data = data  # 供生成器闭包内的延迟工具选择使用
+
+    # ── 构造 forward_payload ──
+    if is_anthropic:
+        msgs = _convert_anthropic_messages_to_openai(data.get("messages", []))
+        sys_prompt = data.get("system", "")
+        if sys_prompt:
+            if isinstance(sys_prompt, list):
+                sys_prompt = "\n".join(
+                    b.get("text", "") if isinstance(b, dict) else str(b) for b in sys_prompt)
+            msgs.insert(0, {"role": "system", "content": str(sys_prompt)})
+
+        default_max = remote_route.get("max_tokens", 16384) if is_remote else FORGE_LOCAL_DEFAULT_MAX_TOKENS
+        cap = FORGE_REMOTE_MAX_TOKENS_CAP if is_remote else FORGE_LOCAL_MAX_TOKENS_CAP
+
+        forward_payload = {
+            "model": remote_model,
+            "messages": msgs,
+            "temperature": data.get("temperature", 0.6),
+            "top_p": data.get("top_p", 0.95),
+            "stream": wants_stream,
+            "max_tokens": _bounded_max_tokens(data.get("max_tokens", default_max), default_max, cap),
+        }
+        if data.get("stop_sequences"):
+            forward_payload["stop"] = data.get("stop_sequences")
+
+        tools = data.get("tools") or []
+        tools_fwd = False
+        if tools and not needs_deferred_tool_selection:
+            should = (is_remote and FORGE_REMOTE_FORWARD_TOOLS) or \
+                     ((not is_remote) and FORGE_LOCAL_FORWARD_TOOLS)
+            if should:
+                forward_payload["tools"] = _anthropic_tools_to_openai(
+                    tools, sort_for_cache=FORGE_SORT_TOOLS_FOR_CACHE
+                )
+                tools_fwd = True
+        if data.get("tool_choice") and tools_fwd:
+            oc = _anthropic_tool_choice_to_openai(data.get("tool_choice"))
+            if oc:
+                forward_payload["tool_choice"] = oc
+		
+		# ---- Patch(addendum): 补齐 §18/§20.5/§9.5 要求的可观测性 ----
+        # _apply_tool_selection() 只在"本地 + 非强制tool_choice"路径下被调用并写入
+        # _last_reduction_info，导致远程全量转发、以及 tool_choice=none 显式关闭
+        # 工具这两种分支此前完全不可观测（/_forge/status 拿不到 selection_mode）。
+        # 这里只补记录，不改变任何转发行为。
+        tool_choice_val = data.get("tool_choice")
+        if is_remote:
+            _record_reduction({
+                "ts": time.time(),
+                "original": original_tool_count,
+                "final": len(tools) if tools_fwd else 0,
+                "selected": sorted(
+                    t.get("name", "") for t in tools if isinstance(t, dict)
+                ) if tools_fwd else [],
+                "mode": "remote_full" if tools_fwd else "remote_no_tools",
+            })
+        elif isinstance(tool_choice_val, dict) and tool_choice_val.get("type") == "none":
+            _record_reduction({
+                "ts": time.time(),
+                "original": original_tool_count,
+                "final": 0,
+                "selected": [],
+                "mode": "tool_choice_none",
+            })
+		
+		# 补齐完毕
+		
+        logger.info(
+            f"📏 [{request_id}] model={model_name} remote={is_remote} "
+            f"deferred={needs_deferred_tool_selection} "
+            f"tools_in_payload={len(forward_payload.get('tools', []))} body_bytes={len(body)}"
+        )
+    else:
         forward_payload = data.copy() if isinstance(data, dict) else {}
-        forward_payload["model"] = real_model_id
-        # 确保必要字段存在（MTPLX 严格模式）
+        forward_payload["model"] = remote_model
         forward_payload.setdefault("temperature", 0.6)
         forward_payload.setdefault("top_p", 0.95)
         forward_payload.setdefault("stream", False)
-        forward_payload["max_tokens"] = _bounded_max_tokens(forward_payload.get("max_tokens", 1024))
+        cap = FORGE_REMOTE_MAX_TOKENS_CAP if is_remote else FORGE_LOCAL_MAX_TOKENS_CAP
+        def_max = remote_route.get("max_tokens", 16384) if is_remote else FORGE_LOCAL_DEFAULT_MAX_TOKENS
+        forward_payload["max_tokens"] = _bounded_max_tokens(
+            forward_payload.get("max_tokens", def_max), def_max, cap)
 
-    # 执行转发（带重试）
-    target_url = f"http://127.0.0.1:{target_port}/v1/chat/completions"
-
-    # Claude Code for VS Code typically requests Anthropic streaming. Convert
-    # OpenAI-compatible backend SSE chunks into Anthropic Messages SSE events so
-    # the VS Code UI receives incremental tokens instead of waiting for a full
-    # local-model completion.
+    # ============ 流式响应 ============
     if is_anthropic and forward_payload.get("stream"):
+        await tracker.update(request_id, status="connecting")
+
         async def anthropic_event_stream():
             msg_id = f"msg_{uuid.uuid4().hex}"
+            est_in = max(1, _json_bytes(stream_source_data.get("messages", [])) // 4)
             yield _anthropic_sse("message_start", {
                 "type": "message_start",
                 "message": {
-                    "id": msg_id,
-                    "type": "message",
-                    "role": "assistant",
-                    "model": model_name,
-                    "content": [],
-                    "stop_reason": None,
-                    "stop_sequence": None,
-                    "usage": {"input_tokens": 0, "output_tokens": 0},
+                    "id": msg_id, "type": "message", "role": "assistant", "model": model_name,
+                    "content": [], "stop_reason": None, "stop_sequence": None,
+                    "usage": {"input_tokens": est_in, "output_tokens": 0},
                 },
             })
-            yield _anthropic_sse("content_block_start", {
-                "type": "content_block_start",
-                "index": 0,
-                "content_block": {"type": "text", "text": ""},
-            })
 
-            emitted = False
-            raw_parts: list[str] = []
+            # ── 延迟工具选择：全程用 ping 覆盖，避免冷启动期间客户端裸等（Patch G）──
+            if needs_deferred_tool_selection:
+                async for kind, payload in _run_with_ping(
+                    _apply_tool_selection(stream_source_data, target_port, remote_model),
+                    FORGE_STREAM_PING_INTERVAL_SECONDS,
+                ):
+                    if kind == "ping":
+                        yield _anthropic_sse("ping", {"type": "ping"})
+                        await tracker.heartbeat(request_id, 0)
+                    elif kind == "exception":
+                        logger.warning(f"⚠️ 阶段1工具选择异常（理论上已被内部兜底吸收）: {payload}")
+                    elif kind == "result":
+                        resolved = payload
+                        r_tools = resolved.get("tools") or []
+                        if r_tools:
+                            forward_payload["tools"] = _anthropic_tools_to_openai(
+                                r_tools, sort_for_cache=FORGE_SORT_TOOLS_FOR_CACHE
+                            )
+                            rc = resolved.get("tool_choice")
+                            if rc:
+                                oc = _anthropic_tool_choice_to_openai(rc)
+                                if oc:
+                                    forward_payload["tool_choice"] = oc
+
+            raw_lines = []
+            tool_calls_data = {}
+            emitted_text = False
+            text_content = ""
+            finish_reason = None
+            usage_output = 0
+            stream_error = None
+
+            queue = asyncio.Queue()
+            port_ctx = _local_port_guard(target_port) if (not is_remote) else _NullContext()
+            producer = asyncio.create_task(
+                _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue)
+            )
+
             try:
-                # Prefer true backend streaming. Some MTPLX builds return OpenAI
-                # SSE chunks; others ignore stream=true and return a full JSON
-                # response. We support both: emit content_block_delta for SSE
-                # chunks as they arrive, or parse the final JSON fallback.
-                async with http_client.stream("POST", target_url, json=forward_payload) as resp:
-                    if resp.status_code != 200:
-                        err = (await resp.aread()).decode("utf-8", errors="ignore")
-                        yield _anthropic_sse("error", {
-                            "type": "error",
-                            "error": {"type": "api_error", "message": err},
-                        })
-                        return
-                    async for line in resp.aiter_lines():
-                        if line:
-                            raw_parts.append(line)
-                        if not line or not line.startswith("data:"):
-                            continue
-                        raw = line[5:].strip()
-                        if raw == "[DONE]":
-                            break
-                        try:
-                            chunk = json.loads(raw)
-                        except Exception:
-                            continue
-                        for choice in chunk.get("choices", []):
-                            delta = choice.get("delta", {}) or {}
-                            msg = choice.get("message", {}) or {}
-                            text = delta.get("content") or msg.get("content")
-                            if text:
-                                emitted = True
-                                yield _anthropic_sse("content_block_delta", {
-                                    "type": "content_block_delta",
-                                    "index": 0,
-                                    "delta": {"type": "text_delta", "text": str(text)},
-                                })
+                await tracker.update(request_id, status="generating")
 
-                if not emitted:
-                    raw_text = "\n".join(raw_parts).strip()
-                    # Fallback: backend returned complete OpenAI JSON even though
-                    # stream=true was requested.
-                    if raw_text.startswith("data:"):
-                        raw_text = "\n".join(
-                            line[5:].strip() for line in raw_text.splitlines()
-                            if line.startswith("data:") and line[5:].strip() != "[DONE]"
-                        )
+                while True:
                     try:
-                        data_json = json.loads(raw_text) if raw_text else {}
+                        kind, item = await asyncio.wait_for(
+                            queue.get(), timeout=FORGE_STREAM_PING_INTERVAL_SECONDS
+                        )
+                    except asyncio.TimeoutError:
+                        yield _anthropic_sse("ping", {"type": "ping"})
+                        await tracker.heartbeat(request_id, 0)
+                        continue
+
+                    if kind == "eof":
+                        break
+                    if kind in ("http_error", "exception"):
+                        stream_error = item
+                        break
+
+                    line = item
+                    raw_lines.append(line)
+                    await tracker.heartbeat(request_id, len(line.encode("utf-8", "ignore")))
+                    if not line.startswith("data:"):
+                        continue
+                    raw = line[5:].strip()
+                    if raw == "[DONE]":
+                        continue
+                    try:
+                        chunk = json.loads(raw)
                     except Exception:
-                        data_json = {}
-                    text = ""
-                    for choice in data_json.get("choices", []):
-                        msg = choice.get("message", {}) or {}
+                        continue
+
+                    usage_chunk = chunk.get("usage")
+                    if isinstance(usage_chunk, dict):
+                        usage_output = usage_chunk.get("completion_tokens", usage_output)
+
+                    for choice in chunk.get("choices", []):
+                        fr = choice.get("finish_reason")
+                        if fr:
+                            finish_reason = fr
                         delta = choice.get("delta", {}) or {}
-                        text += str(msg.get("content") or delta.get("content") or "")
-                    if text:
-                        emitted = True
-                        yield _anthropic_sse("content_block_delta", {
-                            "type": "content_block_delta",
-                            "index": 0,
-                            "delta": {"type": "text_delta", "text": text},
+
+                        text = delta.get("content")
+                        if text:
+                            if not emitted_text:
+                                yield _anthropic_sse("content_block_start", {
+                                    "type": "content_block_start", "index": 0,
+                                    "content_block": {"type": "text", "text": ""},
+                                })
+                                emitted_text = True
+                            text_content += text
+                            yield _anthropic_sse("content_block_delta", {
+                                "type": "content_block_delta", "index": 0,
+                                "delta": {"type": "text_delta", "text": text},
+                            })
+
+                        tc_list = delta.get("tool_calls")
+                        if tc_list:
+                            for tc in tc_list:
+                                idx = tc.get("index", 0)
+                                func = tc.get("function", {}) or {}
+                                if idx not in tool_calls_data:
+                                    raw_id = tc.get("id") or f"call_{uuid.uuid4().hex[:8]}"
+                                    tool_calls_data[idx] = {
+                                        "id": _to_anthropic_tool_id(raw_id),
+                                        "name": "", "arguments": "",
+                                    }
+                                entry = tool_calls_data[idx]
+                                if tc.get("id"):
+                                    entry["id"] = _to_anthropic_tool_id(tc["id"])
+                                entry["name"] += str(func.get("name") or "")
+                                entry["arguments"] += str(func.get("arguments") or "")
+
+                if stream_error:
+                    logger.error(f"❌ 后端流式错误: {stream_error}")
+                    if not emitted_text and not tool_calls_data:
+                        yield _anthropic_sse("error", {
+                            "type": "error", "error": {"type": "api_error", "message": str(stream_error)},
                         })
+                        await tracker.finish(request_id, success=False)
+                        return
+                    # 已经向客户端发送过内容：不允许透明重试，只能尽量收尾（文档 §12）
+                    finish_reason = finish_reason or "error"
+
+                # fallback：后端未走真正 SSE，返回一次性完整 JSON（文档 §11.6）
+                if not emitted_text and not tool_calls_data and raw_lines and not stream_error:
+                    merged = "\n".join(raw_lines).strip()
+                    parsed = None
+                    try:
+                        parsed = json.loads(merged)
+                    except Exception:
+                        merged2 = "\n".join(
+                            l[5:].strip() for l in raw_lines
+                            if l.startswith("data:") and l[5:].strip() != "[DONE]"
+                        )
+                        try:
+                            parsed = json.loads(merged2) if merged2 else None
+                        except Exception:
+                            parsed = None
+                    if isinstance(parsed, dict):
+                        usage_p = parsed.get("usage", {}) or {}
+                        usage_output = usage_p.get("completion_tokens", usage_output)
+                        for choice in parsed.get("choices", []):
+                            msg = choice.get("message", {}) or {}
+                            fr = choice.get("finish_reason")
+                            if fr:
+                                finish_reason = fr
+                            if msg.get("content"):
+                                text_content += str(msg["content"])
+                            for i, tc in enumerate(msg.get("tool_calls") or []):
+                                func = tc.get("function", {}) or {}
+                                raw_id = tc.get("id") or f"call_{uuid.uuid4().hex[:8]}"
+                                tool_calls_data[i] = {
+                                    "id": _to_anthropic_tool_id(raw_id),
+                                    "name": func.get("name", ""),
+                                    "arguments": func.get("arguments", "") or "",
+                                }
+                        if text_content and not emitted_text:
+                            yield _anthropic_sse("content_block_start", {
+                                "type": "content_block_start", "index": 0,
+                                "content_block": {"type": "text", "text": ""},
+                            })
+                            yield _anthropic_sse("content_block_delta", {
+                                "type": "content_block_delta", "index": 0,
+                                "delta": {"type": "text_delta", "text": text_content},
+                            })
+                            emitted_text = True
+
+                if emitted_text:
+                    yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
+
+                content_index = 1 if emitted_text else 0
+                for idx in sorted(tool_calls_data.keys()):
+                    tc = tool_calls_data[idx]
+                    try:
+                        arguments = json.loads(tc["arguments"] or "{}")
+                    except Exception:
+                        arguments = {"raw": tc["arguments"]}
+                    yield _anthropic_sse("content_block_start", {
+                        "type": "content_block_start", "index": content_index,
+                        "content_block": {"type": "tool_use", "id": tc["id"], "name": tc["name"], "input": {}},
+                    })
+                    yield _anthropic_sse("content_block_delta", {
+                        "type": "content_block_delta", "index": content_index,
+                        "delta": {"type": "input_json_delta", "partial_json": json.dumps(arguments, ensure_ascii=False)},
+                    })
+                    yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": content_index})
+                    content_index += 1
+
+                # usage 兜底估算（文档 §11.9）：后端不提供时不能永远为 0
+                if usage_output <= 0:
+                    approx_chars = len(text_content) + sum(
+                        len(tc.get("arguments", "")) for tc in tool_calls_data.values()
+                    )
+                    if approx_chars > 0:
+                        usage_output = max(1, approx_chars // 4)
+
+                stop_reason = (
+                    "tool_use" if (finish_reason == "tool_calls" or tool_calls_data)
+                    else "max_tokens" if finish_reason == "length"
+                    else "end_turn"
+                )
+                yield _anthropic_sse("message_delta", {
+                    "type": "message_delta",
+                    "delta": {"stop_reason": stop_reason, "stop_sequence": None},
+                    "usage": {"output_tokens": int(usage_output or 0)},
+                })
+                yield _anthropic_sse("message_stop", {"type": "message_stop"})
+
+                await tracker.finish(request_id, success=True)
+
             except asyncio.CancelledError:
-                logger.warning("Claude Code client cancelled request", model=model_name, target=real_model_id)
+                logger.warning(f"客户端断开连接: model={model_name}")
+                await tracker.finish(request_id, success=False)
                 raise
             except Exception as exc:
+                logger.error(f"❌ 流式请求异常: {exc}")
+                await tracker.finish(request_id, success=False)
                 yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": str(exc)}})
-                return
-
-            if not emitted:
-                logger.warning("Anthropic stream wrapper emitted no text", model=model_name, target=real_model_id)
-            yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
-            yield _anthropic_sse("message_delta", {
-                "type": "message_delta",
-                "delta": {"stop_reason": "end_turn", "stop_sequence": None},
-                "usage": {"output_tokens": 0},
-            })
-            yield _anthropic_sse("message_stop", {"type": "message_stop"})
+            finally:
+                if not producer.done():
+                    producer.cancel()
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await producer
+                await asyncio.sleep(0.1)
+                await tracker.remove(request_id)
 
         return StreamingResponse(
-            anthropic_event_stream(),
-            media_type="text/event-stream",
+            anthropic_event_stream(), media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
         )
 
-    last_exception = None
-    
-    for attempt in range(3):  # 最多重试 3 次
-        try:
-            resp = await http_client.post(target_url, json=forward_payload)
-            if resp.status_code == 200:
-                res_json = resp.json()
-                
-                if is_anthropic:
-                    ans = res_json['choices'][0]['message']['content']
-                    return JSONResponse({
-                        "id": f"msg_{uuid.uuid4().hex}", 
-                        "type": "message", 
-                        "role": "assistant", 
-                        "model": model_name, 
-                        "content": [{"type": "text", "text": ans}], 
-                        "stop_reason": "end_turn", 
-                        "usage": {"input_tokens": 0, "output_tokens": 0}
-                    })
-                return JSONResponse(res_json)
-            else:
-                logger.warning(f"⚠️ 后端返回 {resp.status_code}，第 {attempt+1} 次尝试")
-                last_exception = f"HTTP {resp.status_code}"
-                
-        except Exception as e:
-            last_exception = str(e)
-            logger.warning(f"⚠️ 第 {attempt+1} 次转发失败: {e}")
-            if attempt < 2:
-                await asyncio.sleep(2)  # 等待 2 秒后重试
-    
-    logger.error(f"❌ 转发最终失败（已重试3次）: {last_exception}")
-    raise HTTPException(status_code=504, detail=f"Backend timeout after 3 attempts: {last_exception}")
+    # ============ 非流式响应 ============
+    resp, last_exception = await _forward_with_retries(
+        target_url, forward_payload, headers, is_remote, target_port
+    )
+
+    if resp is None or resp.status_code != 200:
+        logger.error(f"❌ 转发最终失败: {last_exception}")
+        await tracker.finish(request_id, success=False)
+        await tracker.remove(request_id)
+        raise HTTPException(status_code=504, detail=f"Backend failed: {last_exception}")
+
+    res_json = resp.json()
+
+    if not is_anthropic:
+        await tracker.finish(request_id, success=True)
+        await tracker.remove(request_id)
+        return JSONResponse(res_json)
+
+    choice = res_json.get("choices", [{}])[0]
+    message = choice.get("message", {}) or {}
+    usage = res_json.get("usage", {}) or {}
+    openai_content = message.get("content") or ""
+    openai_tool_calls = message.get("tool_calls")
+    openai_finish = choice.get("finish_reason", "stop")
+
+    anthropic_content = []
+    if openai_content:
+        anthropic_content.append({"type": "text", "text": str(openai_content)})
+    if openai_tool_calls:
+        anthropic_content.extend(_openai_tool_calls_to_anthropic(openai_tool_calls))
+
+    if openai_finish == "tool_calls" or openai_tool_calls:
+        stop_reason = "tool_use"
+    elif openai_finish == "length":
+        stop_reason = "max_tokens"
+    else:
+        stop_reason = "end_turn"
+
+    input_tokens = int(usage.get("prompt_tokens", 0) or 0)
+    output_tokens = int(usage.get("completion_tokens", 0) or 0)
+
+    # usage 兜底估算（文档 §11.9）
+    if input_tokens <= 0:
+        input_tokens = max(1, _json_bytes(forward_payload.get("messages", [])) // 4)
+    if output_tokens <= 0:
+        out_text = str(openai_content or "")
+        out_text += "".join(
+            (tc.get("function", {}) or {}).get("arguments", "")
+            for tc in (openai_tool_calls or []) if isinstance(tc, dict)
+        )
+        if out_text:
+            output_tokens = max(1, len(out_text) // 4)
+
+    await tracker.finish(request_id, success=True)
+    await tracker.remove(request_id)
+
+    return JSONResponse({
+        "id": f"msg_{uuid.uuid4().hex}", "type": "message", "role": "assistant",
+        "model": model_name, "content": anthropic_content, "stop_reason": stop_reason,
+        "usage": {"input_tokens": input_tokens, "output_tokens": output_tokens},
+    })
+
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=4000, log_level="error")
+    uvicorn.run(app, host="0.0.0.0", port=4000, log_level="info")

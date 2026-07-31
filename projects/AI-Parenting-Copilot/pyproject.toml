@@ -27,6 +27,7 @@ dependencies = [
   "aiomqtt>=2.3",
   "Pillow>=10.0",
   "cryptography>=42.0",
+  "sqlalchemy[asyncio]", 
 ]
 
 [project.optional-dependencies]

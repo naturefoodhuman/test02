@@ -11,7 +11,7 @@ models:
     model_id: Qwen3.6-27B-MTPLX-Optimized-Quality
     base_url: http://localhost:4000/v1
     type: local
-    memory_required_gb: 20
+    memory_required_gb: 40
     tools: [file_read, file_write, shell_exec, list_directory]
     max_agent_turns: 15
 
@@ -22,7 +22,7 @@ models:
     model_id: Gemma4-MTPLX-Optimized-Quality
     base_url: http://localhost:4000/v1
     type: local
-    memory_required_gb: 16
+    memory_required_gb: 36
     tools: [file_read, file_write, shell_exec, list_directory]
     max_agent_turns: 10
     
@@ -45,7 +45,7 @@ models:
     model_id: deepseek-r1:32b
     base_url: http://localhost:4000/v1
     type: local
-    memory_required_gb: 20
+    memory_required_gb: 36
     tools: [file_read, file_write, shell_exec, list_directory]
     max_agent_turns: 15
 
@@ -60,7 +60,7 @@ models:
     tools: [file_read, file_write, shell_exec, list_directory]
     max_agent_turns: 15
 
-  # ── API 模型：直接访问官方，不经过本地代理 ──
+  # ── 商业API 模型：直接访问官方，不经过本地代理 ──
   deepseek-pro:
     display_name: "DeepSeek V4 Pro"
     provider: deepseek
@@ -79,6 +79,16 @@ models:
     model_id: deepseek-ai/DeepSeek-V4-Flash
     base_url: https://integrate.api.nvidia.com/v1
     api_key: ${DEEPSEEK_API_KEY}
+    type: api
+    tools: [file_read, file_write, shell_exec, list_directory]
+    max_agent_turns: 20
+
+  glm:
+    display_name: "glm-5.2"
+    backend: litellm
+    model_id: openai/z-ai/glm-5.2
+    base_url: https://integrate.api.nvidia.com/v1
+    api_key: ${GLM_API_KEY}
     type: api
     tools: [file_read, file_write, shell_exec, list_directory]
     max_agent_turns: 20

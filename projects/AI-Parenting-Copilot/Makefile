@@ -124,7 +124,7 @@ infra-logs:
 	@docker compose --env-file $(DEPLOY_ENV) -f deploy/docker-compose.yml logs -f
 
 db-migrate: ensure-dev-deps
-	@$(PYTHON) -m alembic -c alembic.ini upgrade head
+	@uv run python -m alembic -c alembic.ini upgrade head
 
 db-current: ensure-dev-deps
 	@$(PYTHON) -m alembic -c alembic.ini current

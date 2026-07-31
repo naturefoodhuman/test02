@@ -1,5 +1,3 @@
-# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-# 创建时间（北京时间）：2026-06-26 00:00:00
 
 """Local model runtime configuration helper.
 
@@ -27,9 +25,21 @@ CONFIG_PATH = ROOT / "config" / "model_runtime.yaml"
 
 
 def _expand(value: Any, context: dict[str, str] | None = None) -> Any:
+    """递归展开 ${HOME}/${server_dir} 等占位符。
+    修复点（文档 §14.4）：原实现只处理字符串，导致 extra_args 列表里的
+    ${HOME} 无法展开。这里改为递归处理 list/dict，字符串仍走原逻辑。
+    """
+    context = context or {}
+
+    if isinstance(value, list):
+        return [_expand(item, context) for item in value]
+
+    if isinstance(value, dict):
+        return {key: _expand(item, context) for key, item in value.items()}
+
     if not isinstance(value, str):
         return value
-    context = context or {}
+
     out = value.replace("${HOME}", str(Path.home()))
     for key, val in context.items():
         out = out.replace("${" + key + "}", val)
@@ -62,6 +72,7 @@ def get_server_config(port: int) -> dict[str, Any]:
     context = {"server_dir": str(cfg["server_dir"])}
     out: dict[str, Any] = {}
     for key, value in raw.items():
+        # 现在 extra_args（list）也会被递归展开，不再需要绝对路径规避
         out[key] = _expand(value, context)
     out["port"] = port
     return out

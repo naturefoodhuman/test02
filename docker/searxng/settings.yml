@@ -13,7 +13,6 @@ use_default_settings:
       - mojeek
       - qwant
       - wikipedia
-      - wikidata
       - duckduckgo
       - github
       - gitlab
@@ -36,6 +35,12 @@ general:
   instance_name: "FORGE Resilient Search"
   enable_metrics: true
 
+# 直连场景 (127.0.0.1:8090 无反向代理) 下彻底禁用限流与 botdetection,
+# 消除 "X-Forwarded-For nor X-Real-IP header is set!" 警告。
+# limiter 已在 server 段关闭,这里再显式禁用 botdetection 模块加载。
+limiter: false
+botdetection: false
+
 search:
   safe_search: 0
   autocomplete: ""
@@ -50,6 +55,8 @@ server:
   limiter: false
   image_proxy: false
   http_protocol_version: "1.1"
+  # 新增:直连场景下禁用 botdetection 的 IP 信任检查
+  public_instance: false
 
 outgoing:
   request_timeout: 10.0
@@ -85,9 +92,9 @@ engines:
     timeout: 10.0
     weight: 3
 
-  - name: wikidata
-    disabled: false
-    timeout: 10.0
+  # wikidata 引擎已移除:其启动期 SPARQL 探测 (query.wikidata.org) 在代理环境下
+  # 持续返回 403,导致 init failed 并把整个引擎挂起 180s。功能与 wikipedia 高度
+  # 重叠,移除对搜索体验影响极小。如需恢复,需先确保代理出口 IP 不被 wikidata 风控。
 
   # ---- Academic / research ----
   - name: arxiv

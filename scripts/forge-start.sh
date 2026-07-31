@@ -1,9 +1,7 @@
-#!/bin/bash
-# 创建/修改该文件的LLM大模型：Claude Sonnet 4.5 (via Arena.ai Agent Mode)
-# 创建时间（北京时间）：2026-06-25 00:00:00
 
-# FORGE 智能启动脚本 v3.0 (自检并释放显存版)
-# 职责：冷启动各端口模型进行可用性校验，成功后立即释放显存，实现“按需动态加载”基础。
+#!/bin/bash
+# FORGE 智能启动脚本 v3.1 (自检并释放显存版 + SSD Cache 目录预建)
+# 职责：冷启动各端口模型进行可用性校验，成功后立即释放显存，实现"按需动态加载"基础。
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -12,6 +10,10 @@ NC='\033[0m'
 
 FORGE_ROOT="/Users/naturist/MusicProject/AI-Project-Incubation-Factory"
 SERVER_DIR="/Users/naturist/LocalAI/servers"
+
+# 确保 MTPLX SSD Session Cache 目录存在，避免因目录不存在导致启动失败（文档 §14.6）
+mkdir -p "$HOME/.mtplx/session_cache/8080"
+mkdir -p "$HOME/.mtplx/session_cache/8082"
 
 echo -e "${BLUE}🚀 正在执行 FORGE 全量环境自检 (全端口冷启动校验)...${NC}"
 
@@ -63,7 +65,7 @@ check_and_unload() {
     local kill_pattern=$4
 
     echo -e "${BLUE}📡 正在自检 $name (Port $port)...${NC}"
-    
+
     # 1. 如果已运行，先停掉以进行纯净冷启动校验
     if is_listening "$port"; then
         pkill -f "$kill_pattern"
@@ -72,7 +74,7 @@ check_and_unload() {
 
     # 2. 启动
     eval "$cmd"
-    
+
     # 3. 等待就绪
     echo -n "   ⏳ 加载权重中"
     SUCCESS=false
@@ -137,4 +139,4 @@ echo -e "${BLUE}🚀 启动智能看门人 (4000)...${NC}"
 nohup python3 _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
 
 echo -e "${GREEN}✅ 环境自检与智能网关部署完成！${NC}"
-echo -e "${BLUE}💡 系统现已准备好进行“按需加载”运行。${NC}"
+echo -e "${BLUE}💡 系统现已准备好进行"按需加载"运行。${NC}"
