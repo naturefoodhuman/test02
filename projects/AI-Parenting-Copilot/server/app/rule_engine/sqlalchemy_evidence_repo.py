@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 16:05:00
+# 创建时间（北京时间）：2026-07-31 20:55:00
 
 
 """SQLAlchemy EvidencePolicy repository adapter."""
@@ -28,16 +28,41 @@ class SQLAlchemyEvidencePolicyRepository:
         self.session = session
 
     async def activate(self, pack: RulePack) -> EvidencePolicyRecord:
-        current = await self.session.scalar(
+        existing = await self.session.scalar(
+            select(ORMEvidencePolicy).where(
+                ORMEvidencePolicy.policy_type == pack.policy_type,
+                ORMEvidencePolicy.region == pack.region,
+                ORMEvidencePolicy.version == pack.version,
+            )
+        )
+        if existing is not None and existing.effective_to is None:
+            return self._to_record(existing)
+
+        now = utc_now()
+        current_rows = await self.session.scalars(
             select(ORMEvidencePolicy).where(
                 ORMEvidencePolicy.policy_type == pack.policy_type,
                 ORMEvidencePolicy.region == pack.region,
                 ORMEvidencePolicy.effective_to.is_(None),
             )
         )
-        if current is not None:
-            current.effective_to = utc_now()
+        for current in current_rows:
+            if current.version != pack.version:
+                current.effective_to = now
+                current.updated_at = now
         effective_from = _parse_datetime(pack.effective_from)
+        rule_text = pack.model_dump_json(exclude={"hash"})
+        policy_hash = pack.compute_hash()
+        if existing is not None:
+            existing.effective_from = effective_from
+            existing.effective_to = None
+            existing.source = pack.source
+            existing.rule_text = rule_text
+            existing.display_text = pack.source
+            existing.hash = policy_hash
+            existing.updated_at = now
+            await self.session.flush()
+            return self._to_record(existing)
         row = ORMEvidencePolicy(
             id=new_ulid(),
             policy_type=pack.policy_type,
@@ -45,9 +70,9 @@ class SQLAlchemyEvidencePolicyRepository:
             version=pack.version,
             effective_from=effective_from,
             source=pack.source,
-            rule_text=pack.model_dump_json(exclude={"hash"}),
+            rule_text=rule_text,
             display_text=pack.source,
-            hash=pack.compute_hash(),
+            hash=policy_hash,
         )
         self.session.add(row)
         await self.session.flush()

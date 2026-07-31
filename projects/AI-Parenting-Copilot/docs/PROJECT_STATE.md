@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 20:22:00
+创建时间（北京时间）：2026-07-31 20:58:00
 -->
 
 
@@ -29,6 +29,13 @@
 - `server/scripts/seed_family.py` 从纯 in-memory 升级为双模式：无 DB URL 时输出 dev seed；有 `--database-url` 或 `PARENTING_DATABASE__URL` 时通过 SQLAlchemy Auth adapter 持久化 family/admin/baby。
 - 清理 `pyproject.toml` 中重复的 `sqlalchemy[asyncio]` 依赖，保留 `sqlalchemy[asyncio]>=2.0`。
 
+
+
+### 本轮 DB 集成回归修复（EvidencePolicy idempotency）
+
+- 用户 Mac `make db-integration-test` 暴露 `evidence_policy(policy_type, region, version)` 重复激活同一规则包时唯一键冲突。
+- 修复 `server/app/rule_engine/sqlalchemy_evidence_repo.py`：`activate()` 对同一 `policy_type/region/version` 改为幂等返回/复活已有记录；仅在新版本激活时关闭其他 current 版本。
+- 扩展 `tests/integration/test_db_repository_adapters.py`：同一 medication rule pack 连续 activate 两次应返回同一 hash，并保持 current 可读。
 
 ### 继续开发进展（PG worker / Normalization / State）
 

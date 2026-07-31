@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 16:45:00
+# 创建时间（北京时间）：2026-07-31 20:55:00
 
 """PostgreSQL integration tests for SQLAlchemy repository adapters.
 
@@ -243,8 +243,10 @@ async def test_evidence_policy_repository_and_audit_immutability(engine: AsyncEn
             repo = SQLAlchemyEvidencePolicyRepository(session)
             pack = load_rule_pack(Path("config/rules/medication/base.yaml"))
             record = await repo.activate(pack)
+            repeated = await repo.activate(pack)
             current = await repo.get_current("medication", "CN")
             assert current is not None
+            assert repeated.hash == record.hash
             assert current.hash == record.hash
 
             audit_service = AuditService(

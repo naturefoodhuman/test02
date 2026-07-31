@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 20:20:00
+创建时间（北京时间）：2026-07-31 21:06:00
 -->
 
 # TASK_BACKLOG.md
@@ -669,7 +669,7 @@
 - **所属 Capability**：C09
 - **所属 Story**：S09
 - **目标**：提供规则包验证、激活与审计记录能力。
-- **状态**：DONE（Rules Admin validate/activate/admin gate、in-memory audit 与 DB-backed EvidencePolicy/audit smoke 已验证）
+- **状态**：DONE（Rules Admin validate/activate/admin gate、EvidencePolicy activate 幂等性、in-memory audit 与 DB-backed EvidencePolicy/audit smoke 已验证）
 - **前置依赖**：APC-T018, APC-T008
 - **输入**：`ENGINEERING_DESIGN.md` §13.2；`ARCHITECTURE_FINAL.md` §18、§19
 - **输出**：Rules Admin API

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 20:30:00
+创建时间（北京时间）：2026-07-31 21:03:00
 -->
 
 
@@ -110,12 +110,14 @@ make shadow-test
 make rules-validate
 ```
 
-用户 Mac 最近已验收：
+用户 Mac 最近已验收/反馈：
 
 ```bash
 export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+make api-db-smoke-test
+# 1 passed, 1 warning
 make db-integration-test
-# 5 passed, 1 warning in 3.97s
+# 修复前曾因 evidence_policy duplicate unique 失败；已在当前代码修复 activate 幂等性，需用户复验
 ```
 
 ---
@@ -124,7 +126,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Mac 复验 `APC-T011/T013/T014/T016/T017` 新增链路：PG LISTEN worker + pending event scan + Normalization DB writer + State DB upsert pipeline。
+1. 让用户 Mac 先复验 `make db-integration-test`（EvidencePolicy duplicate 修复）和 `make api-db-smoke-test`，再复验 `APC-T011/T013/T014/T016/T017` 新增链路：PG LISTEN worker + pending event scan + Normalization DB writer + State DB upsert pipeline。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。
