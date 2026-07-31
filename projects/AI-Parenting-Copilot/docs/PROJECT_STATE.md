@@ -1,13 +1,13 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 19:25:00
+创建时间（北京时间）：2026-07-31 20:22:00
 -->
 
 
 # PROJECT_STATE —— AI Parenting Copilot 当前状态 SSOT
 
 **更新日期**：2026-07-31 CST
-**当前阶段**：P0-M1 DB-backed API runtime hardening + Android/native/worker 继续开发
+**当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
 **当前任务状态**：新增确认 `APC-T008/T010/T019/T031 DONE`；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准；仍 BLOCKED 的任务主要等待 PowerSync/PG worker/真实设备/Android toolchain/NAS/医学规则审查等验收。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
@@ -29,6 +29,15 @@
 - `server/scripts/seed_family.py` 从纯 in-memory 升级为双模式：无 DB URL 时输出 dev seed；有 `--database-url` 或 `PARENTING_DATABASE__URL` 时通过 SQLAlchemy Auth adapter 持久化 family/admin/baby。
 - 清理 `pyproject.toml` 中重复的 `sqlalchemy[asyncio]` 依赖，保留 `sqlalchemy[asyncio]>=2.0`。
 
+
+### 继续开发进展（PG worker / Normalization / State）
+
+- 新增 `server/app/normalization/sqlalchemy_store.py`：P0 derived tables（feeding/diaper/sleep/temperature/supplement）SQLAlchemy upsert/read，按 `event_id` 做 PostgreSQL `ON CONFLICT` 幂等写入。
+- 新增 `server/app/normalization/worker.py`：`PendingEventProcessor`、`process_pending_events()`、`PostgresEventNormalizationWorker`；支持 `events.changed` LISTEN/NOTIFY 后 drain pending events。
+- `server/app/main.py` 在 DB mode 下注册 `PostgresEventNormalizationWorker` 到既有 `WorkerRegistry`。
+- `server/app/state_engine/sqlalchemy_snapshot_repo.py` 改为 PostgreSQL `ON CONFLICT` upsert，避免 worker 并发时 `derived_baby_state` 主键冲突。
+- `tests/integration/test_api_db_runtime.py` 扩展 DB-backed event→normalization→state smoke；无 DB URL 沙盒仍按 integration skip。
+
 ### 本轮状态变更
 
 - `APC-T008`：BLOCKED → DONE（Auth API、设备注册、seed_family DB/in-memory 双模式、DB-backed smoke 验收）
@@ -40,7 +49,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 140 passed, 5 deselected, 1 warning（新增 seed tests 后全量为 142 passed）
+# 144 passed, 5 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

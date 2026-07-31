@@ -30,6 +30,7 @@ from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.common.ids import new_ulid
 from server.app.db import normalize_database_url
 from server.app.main import create_app
+from server.app.normalization.worker import PendingEventProcessor
 from server.app.state_engine.snapshot_repo import DerivedBabyStateSnapshot
 from server.app.state_engine.sqlalchemy_snapshot_repo import SQLAlchemyStateSnapshotRepository
 
@@ -141,6 +142,13 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             listed = client.get("/api/v1/events", params={"baby_id": baby_id})
             assert listed.status_code == 200
             assert listed.json()[0]["event_type"] == "feeding"
+
+            async with async_sessionmaker(engine, expire_on_commit=False)() as worker_session:
+                async with worker_session.begin():
+                    await PendingEventProcessor(worker_session).process_pending()
+            state_from_pipeline = client.get(f"/api/v1/babies/{baby_id}/state")
+            assert state_from_pipeline.status_code == 200
+            assert state_from_pipeline.json()["snapshot"]["feeding_24h_ml"] == 90
 
             alert = client.post(
                 "/api/v1/alerts",

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 19:30:00
+创建时间（北京时间）：2026-07-31 20:25:00
 -->
 
 
@@ -12,8 +12,61 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T008` Auth API/seed DB 双模式、`APC-T010` Events API DB-backed runtime、`APC-T019` Rules Admin DB-backed activation/audit、`APC-T031` Alert API DB-backed audit。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `142 passed, 5 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 PostgreSQL LISTEN/NOTIFY normalization worker、SQLAlchemy derived table store、DB-backed pending event → derived table → state snapshot pipeline。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `144 passed, 5 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 38 轮 · 2026-07-31（PG worker + DB normalization/state pipeline）
+
+**目标**：继续推进 `APC-T011/T013/T014/T016/T017`，补齐真实 PostgreSQL 事件变更后将 pending ObservationEvent 归一化并写入 DerivedBabyState 的服务端链路。
+
+**完成内容**：
+
+1. 新增 DB derived table store：
+   - `server/app/normalization/sqlalchemy_store.py`
+   - 支持 feeding/diaper/sleep/temperature/supplement P0 derived tables。
+   - 按 `event_id` 使用 PostgreSQL `ON CONFLICT` 幂等 upsert，支持并发 worker/手动 drain。
+2. 新增 normalization/state worker primitives：
+   - `PendingEventProcessor`：扫描 `processing_status=pending` 的 `observation_event`，调用 `NormalizationService`，写 derived table，并重算 state。
+   - `process_pending_events()`：事务化 drain 一批 pending events。
+   - `PostgresEventNormalizationWorker`：订阅 `events.changed` channel，收到 NOTIFY 后 drain pending events。
+3. FastAPI DB mode 集成：
+   - `server/app/main.py` 在 DB session factory 存在时将 `PostgresEventNormalizationWorker` 注册到既有 `WorkerRegistry`。
+4. State snapshot DB upsert 并发安全：
+   - `SQLAlchemyStateSnapshotRepository.upsert()` 改用 PostgreSQL `ON CONFLICT`，避免 worker 并发写入 primary key 冲突。
+5. 测试增强：
+   - `tests/test_normalization_worker.py` 增加 derived typed-column 映射与 asyncpg URL regression。
+   - `tests/integration/test_api_db_runtime.py` 扩展 DB-backed event→normalization→state smoke；沙盒无 DB 时保持 skip，用户 Mac 需复验。
+
+**状态同步**：
+
+- `APC-T011/T013/T014/T016/T017` 仍保持 `BLOCKED`，但状态说明已更新为“实现完成，等待用户 Mac DB/worker 复验”。
+
+**验证**：
+
+```bash
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 144 passed, 5 deselected, 1 warning
+make db-integration-test
+# sandbox no DB URL: 5 skipped, 1 warning
+make api-db-smoke-test
+# sandbox no DB URL: 1 skipped, 1 warning
+make lint
+make typecheck
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+make docs-check
+```
+
+**架构影响**：
+
+- 无新基础设施。
+- 复用既有 PostgreSQL trigger channel `events.changed`、WorkerRegistry、NormalizationService、StateEngine 与 SQLAlchemy repository 边界。
+- 未改变 Rule Engine / Model Gateway / Privacy / Notification Orchestrator 边界。
 
 ---
 

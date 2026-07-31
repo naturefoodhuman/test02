@@ -31,6 +31,7 @@ from server.app.health.monitor import DeviceHealthMonitor
 from server.app.media.api.routes import router as media_router
 from server.app.media.storage import MediaStorageService
 from server.app.normalization.service import InMemoryDerivedTableStore, NormalizationService
+from server.app.normalization.worker import PostgresEventNormalizationWorker
 from server.app.notification.alert_repo import InMemoryAlertRepository
 from server.app.notification.api.routes import router as alert_router
 from server.app.observability.audit import MemoryAuditSink
@@ -55,6 +56,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     configure_tracing(container.settings)
     db_engine = create_optional_engine(container.settings)
     db_session_factory = create_session_factory(db_engine) if db_engine is not None else None
+    if db_session_factory is not None and container.settings.database.url:
+        container.worker_registry.register(
+            PostgresEventNormalizationWorker(
+                database_url=container.settings.database.url,
+                session_factory=db_session_factory,
+            )
+        )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 19:35:00
+创建时间（北京时间）：2026-07-31 20:28:00
 -->
 
 
@@ -11,8 +11,57 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现，待用户 Mac 复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 38 轮] 2026-07-31 — PG worker / DB normalization-state pipeline
+
+### 需求变动
+
+- 继续推进项目完成度：在已通过 DB-backed API smoke 的基础上，实现真实 PostgreSQL 事件变更后的 pending event drain、P0 derived table DB 写入和 DerivedBabyState DB upsert。
+
+### 文件影响
+
+新增：
+
+- `server/app/normalization/sqlalchemy_store.py`
+- `server/app/normalization/worker.py`
+
+修改：
+
+- `server/app/main.py`
+- `server/app/state_engine/sqlalchemy_snapshot_repo.py`
+- `tests/test_normalization_worker.py`
+- `tests/integration/test_api_db_runtime.py`
+- `docs/TASK_BACKLOG.md`
+- `docs/PROJECT_STATE.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 144 passed, 5 deselected, 1 warning
+make db-integration-test
+# sandbox no DB URL: 5 skipped
+make api-db-smoke-test
+# sandbox no DB URL: 1 skipped
+make lint
+make typecheck
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+make docs-check
+```
+
+### 架构影响
+
+- 无架构变更；复用既有 `events.changed` PG notify trigger、WorkerRegistry、NormalizationService、BabyStateEngine 与 SQLAlchemy repository 边界。
+- `APC-T011/T013/T014/T016/T017` 保持 BLOCKED，等待用户 Mac DB/worker 复验后再按 DoD 解除。
 
 ---
 

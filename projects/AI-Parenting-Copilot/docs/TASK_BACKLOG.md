@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 19:20:00
+创建时间（北京时间）：2026-07-31 20:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -431,7 +431,7 @@
 - **所属 Capability**：C06 同步与事件总线
 - **所属 Story**：S06 PowerSync 写入契约、PG LISTEN/NOTIFY
 - **目标**：实现轻量事件总线，使 observation_event 变更触发 Normalization worker。
-- **状态**：BLOCKED（PG notify payload parser/domain event mapping/0002 trigger migration/static tests 已完成；真实 PG LISTEN/NOTIFY worker 验收待执行）
+- **状态**：BLOCKED（PG notify payload parser/domain event mapping/0002 trigger migration、PostgresEventNormalizationWorker 与 PendingEventProcessor 已完成；用户 Mac DB runtime 复验待执行）
 - **前置依赖**：APC-T009
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1；`ARCHITECTURE_FINAL.md` §4.1
 - **输出**：PG trigger、LISTEN/NOTIFY 封装、worker 消费基座
@@ -491,7 +491,7 @@
 - **所属 Capability**：C07 Normalization
 - **所属 Story**：S07 多源输入归一化为领域派生表
 - **目标**：将 manual/form/voice_text ObservationEvent 归一化为 feeding/diaper/sleep/temperature/supplement 等 P0 派生表。
-- **状态**：BLOCKED（parsers/NormalizationService/in-memory derived store/tests 已完成；前置 T011 与 DB 派生表写入待验收）
+- **状态**：BLOCKED（parsers/NormalizationService/in-memory store 与 SQLAlchemyDerivedTableStore 已完成；真实 DB normalization pipeline 待用户 Mac 复验）
 - **前置依赖**：APC-T009, APC-T011
 - **输入**：`ENGINEERING_DESIGN.md` §2 M05、§3 normalization、§7.1
 - **输出**：Normalization parser 与 table writer
@@ -521,7 +521,7 @@
 - **所属 Capability**：C07
 - **所属 Story**：S07
 - **目标**：实现 Normalization 常驻 worker、去重策略、纠错/软删除对派生表的处理。
-- **状态**：BLOCKED（scan_pending/dedup/correction helpers/tests 已完成；真实 event_bus worker 与 DB 派生表待验收）
+- **状态**：BLOCKED（scan_pending/dedup/correction helpers、PendingEventProcessor 与 DB 派生表 upsert 已完成；真实 PG worker 长稳待验收）
 - **前置依赖**：APC-T013
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1、§12.2
 - **输出**：Normalization worker 与幂等处理逻辑
@@ -579,7 +579,7 @@
 - **所属 Capability**：C08
 - **所属 Story**：S08
 - **目标**：实现派生状态重算服务、`derived_baby_state` upsert、`GET /babies/{id}/state`。
-- **状态**：BLOCKED（BabyStateEngine/in-memory snapshot repo/State API/tests 已完成；前置 T015/T006 未 DONE，DB upsert 待验收）
+- **状态**：BLOCKED（BabyStateEngine/in-memory snapshot repo/State API 与 PostgreSQL ON CONFLICT upsert 已完成；DB pipeline 用户复验待执行）
 - **前置依赖**：APC-T015, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1
 - **输出**：StateEngine service、snapshot repository、API
@@ -608,7 +608,7 @@
 - **所属 Capability**：C08
 - **所属 Story**：S08
 - **目标**：完成服务端记录路径集成测试：事件写入后自动归一化并生成派生态。
-- **状态**：BLOCKED（dev/in-memory event→normalization→state integration test 已完成；前置 T010/T014/T016 未 DONE，真实 event bus/DB 待验收）
+- **状态**：BLOCKED（dev/in-memory 与 DB-backed PendingEventProcessor event→normalization→state pipeline 已完成；真实 Mac DB/worker 复验待执行）
 - **前置依赖**：APC-T010, APC-T014, APC-T016
 - **输入**：`ENGINEERING_DESIGN.md` §7.1；`ARCHITECTURE_FINAL.md` §4.1
 - **输出**：关键路径集成测试与必要 glue code

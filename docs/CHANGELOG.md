@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 19:45:00
+创建时间（北京时间）：2026-07-31 20:32:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,39 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
-- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `142 passed, 5 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
+- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `144 passed, 5 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 134 轮] 2026-07-31
+
+### 需求变动
+- **AI Parenting Copilot 继续开发**：实现 PostgreSQL `events.changed` LISTEN/NOTIFY worker、pending ObservationEvent drain、P0 derived tables SQLAlchemy upsert/read、DerivedBabyState PostgreSQL `ON CONFLICT` upsert，并扩展 DB-backed API integration smoke。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/normalization/sqlalchemy_store.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/normalization/worker.py`
+- 修改：`projects/AI-Parenting-Copilot/server/app/main.py`
+- 修改：`projects/AI-Parenting-Copilot/server/app/state_engine/sqlalchemy_snapshot_repo.py`
+- 修改：`projects/AI-Parenting-Copilot/tests/test_normalization_worker.py`
+- 修改：`projects/AI-Parenting-Copilot/tests/integration/test_api_db_runtime.py`
+- 修改：项目级 `TASK_BACKLOG` / `PROJECT_STATE` / `DEV_LOG` / `CHANGELOG` / `HANDOFF`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 144 passed, 5 deselected, 1 warning
+make db-integration-test
+# sandbox no DB URL: 5 skipped
+make api-db-smoke-test
+# sandbox no DB URL: 1 skipped
+make lint && make typecheck && make security-test && make e2e-fake-test && make shadow-test && make rules-validate && make docs-check
+```
 
 ---
 

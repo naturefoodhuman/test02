@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.app.common.clock import utc_now
@@ -29,20 +30,22 @@ class SQLAlchemyStateSnapshotRepository:
         self.session = session
 
     async def upsert(self, snapshot: DerivedBabyStateSnapshot) -> DerivedBabyStateSnapshot:
-        row = await self.session.scalar(
-            select(ORMDerivedBabyState).where(ORMDerivedBabyState.baby_id == snapshot.baby_id)
+        computed_at = _parse_computed_at(snapshot.computed_at)
+        stmt = pg_insert(ORMDerivedBabyState).values(
+            baby_id=snapshot.baby_id,
+            family_id=snapshot.family_id,
+            snapshot=snapshot.snapshot,
+            computed_at=computed_at,
+        ).on_conflict_do_update(
+            index_elements=[ORMDerivedBabyState.baby_id],
+            set_={
+                "family_id": snapshot.family_id,
+                "snapshot": snapshot.snapshot,
+                "computed_at": computed_at,
+                "updated_at": utc_now(),
+            },
         )
-        if row is None:
-            row = ORMDerivedBabyState(
-                baby_id=snapshot.baby_id,
-                family_id=snapshot.family_id,
-                snapshot=snapshot.snapshot,
-                computed_at=_parse_computed_at(snapshot.computed_at),
-            )
-            self.session.add(row)
-        else:
-            row.snapshot = snapshot.snapshot
-            row.computed_at = _parse_computed_at(snapshot.computed_at)
+        await self.session.execute(stmt)
         await self.session.flush()
         return snapshot
 
