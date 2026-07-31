@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 22:20:00
+创建时间（北京时间）：2026-07-31 19:35:00
 -->
 
 
@@ -10,44 +10,67 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T049` Today、`APC-T050` Timeline、`APC-T051` Alert Center、`APC-T052` Notification、`APC-T053` Sleep Session Android TS view models/flows。
-- **当前状态**：项目骨架、API 壳、可观测性、模型网关、隐私适配、auth、events、rule engine、copilot/orchestrator、alert/notification/health/scheduler、camera/sleep/mmWave/media/export dev 链路已推进；基础设施/schema/audit/DB 持久化待 Docker/PostgreSQL 验收。
-- **下一任务**：继续 Backup dev/runbook 或 Android shell skeleton。
+- **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行。
+- **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
 
+---
 
+## [第 37 轮] 2026-07-31 — DB env test isolation / seed_family DB mode
 
+### 需求变动
 
+- 用户验证 `make db-integration-test` 已通过 `5 passed`，随后发现 `make test` 在同一 shell 里因 `PARENTING_DATABASE__URL` 遗留而误走 DB-backed repositories。
+- 继续开发：将 Auth/Event/Rules/Alert DB-backed runtime smoke 验收结果同步到任务状态，并补齐 seed_family DB 持久化入口。
 
+### 文件影响
 
+修改：
 
+- `Makefile`
+  - `test` target 显式 unset `PARENTING_DATABASE__URL` / `PARENTING_DATABASE_URL`。
+  - `install-dev` 改为 uv-first：`uv pip install --python $(PYTHON) -e ".[dev]"`。
+  - 新增 `api-db-smoke-test` target。
+- `pyproject.toml`
+  - 删除重复 `sqlalchemy[asyncio]`，保留 `sqlalchemy[asyncio]>=2.0`。
+- `server/scripts/seed_family.py`
+  - 从 in-memory only 升级为 in-memory + DB-backed 双模式。
+- `docs/TASK_BACKLOG.md`
+  - `APC-T008/T010/T019/T031` 标记为 DONE。
+- `docs/PROJECT_STATE.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
 
+新增：
 
+- `tests/conftest.py`
+  - 非 `integration` 测试自动隔离 DB 环境变量。
+- `tests/test_seed_family.py`
+  - 覆盖 seed_family 默认 in-memory 与 `--no-baby`。
 
+### 验证
 
+```bash
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 142 passed, 5 deselected, 1 warning
+make lint
+make typecheck
+make db-integration-test
+# sandbox no DB URL: 5 skipped
+make api-db-smoke-test
+# sandbox no DB URL: 1 skipped
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+make docs-check
+```
 
+### 架构影响
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- 无架构边界变更。
+- DB 覆盖仍通过 `integration` marker；unit/dev tests 保持 in-memory/dev-mock。
+- 未新增基础设施或绕过既有 Auth/Repository/Audit/Rule Engine 边界。
 
 ---
 

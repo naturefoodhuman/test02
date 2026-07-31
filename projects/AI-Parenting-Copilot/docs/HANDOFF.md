@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:40:00
+创建时间（北京时间）：2026-07-31 19:40:00
 -->
 
 
@@ -50,11 +50,11 @@ projects/AI-Parenting-Copilot/android/
 
 ---
 
-## 2. 当前真实状态（截至 2026-07-09）
+## 2. 当前真实状态（截至 2026-07-31）
 
 ### 已可标记 DONE
 
-用户 Mac 已验收 `make db-integration-test` 早期 4/4 通过，随后新增 API runtime integration 仍待用户复验。当前可确认 DONE：
+用户 Mac 已验收 `make db-integration-test`：`5 passed, 1 warning in 3.97s`。本轮修复 `make test` 在 DB env 遗留时的隔离问题后，以下可确认 DONE：
 
 - `APC-T001` 项目骨架
 - `APC-T002` FastAPI 应用壳 / Settings / DI / common
@@ -63,40 +63,45 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T005` 日志 / metrics / tracing / health
 - `APC-T006` audit service / decorator / audit_log immutability 基础
 - `APC-T007` Auth/RBAC/JWT + SQLAlchemy adapter 基础
+- `APC-T008` Auth API / 设备注册 / seed_family DB+in-memory 双模式
 - `APC-T009` ObservationEvent 契约 + SQLAlchemy adapter 基础
+- `APC-T010` Events API create/list/correct/delete + audit + DB-backed smoke
 - `APC-T018` Rule Engine kernel / loader / registry / EvidencePolicy adapter 基础
+- `APC-T019` Rules Admin validate/activate/admin gate + DB-backed EvidencePolicy/audit smoke
 - `APC-T024` Model Gateway Smart Proxy client / routing / FakeModelClient
 - `APC-T025` Privacy Gateway adapter / PII / canary / media outbound block
+- `APC-T031` Alert Repository/API create/list/ack/feedback + SQLAlchemy/audit smoke
 
 ### 代码基本完成但仍 BLOCKED 的大类
 
 这些已有 dev/in-memory/static/fake 或 adapter 代码和测试，但还没满足完整 DoD：
 
-- API runtime DB wiring：已新增 request-level DB session middleware 和 API DB integration harness；最新用户验收还未复跑修复后的 `make db-integration-test`。
-- Auth API / Events API / Rules Admin / Alert API：已有 DB-mode adapter 切换，仍需用户复验。
-- PG NOTIFY / PowerSync：trigger/config/contract validator 已有，真实 worker/PowerSync 行为待验收。
-- Normalization / State Engine：in-memory event→normalization→state dev pipeline 已有，DB worker/upsert 待验收。
-- Rule domains：Medication/Triage/Threshold/Vaccine/Growth pure rules + golden tests 已有；生产医学/疫苗/WHO 表审查待完成。
-- Memory / Copilots / Orchestrator / Dose Interceptor：pure/dev API 已有；真实 memory/RAG/audit integration 待完成。
-- Notification / Alert / Escalation / Health / Scheduler：dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
-- Camera / mmWave / Media / Export / Backup / Firmware：mock/dev/skeleton 已有；真实 RTSP/ISAPI/Fregata/MQTT/PlatformIO/NAS 待验收。
-- Android：TS view models/static flows + native skeleton 已有；真实 RN/Gradle/APK/device/Notifee/FCM/op-sqlite/PowerSync 待验收。
+- `APC-T011` / `APC-T013` / `APC-T016` / `APC-T017`：PG NOTIFY trigger 已验收，但真实 LISTEN worker、Normalization DB writer、State DB pipeline 自动化仍需继续实现/验收。
+- `APC-T012`：PowerSync contract/config 已有，真实 PowerSync 写入/同步行为待验收。
+- `APC-T020`-`APC-T023`：Medication/Triage/Threshold/Vaccine/Growth pure rules + golden tests 已有；生产医学/疫苗/WHO 表审查待完成。
+- `APC-T026`-`APC-T030`：Memory / Copilots / Orchestrator / Dose Interceptor pure/dev API 已有；真实 memory/RAG/audit integration 待完成。
+- `APC-T032`-`APC-T036`：Notification/Escalation/Health/Scheduler dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
+- `APC-T037`-`APC-T044`：Camera / mmWave / Media / Export / Backup / Firmware mock/dev/skeleton 已有；真实 RTSP/ISAPI/Fregata/MQTT/PlatformIO/NAS 待验收。
+- `APC-T045`-`APC-T053`：Android TS view models/static flows + native skeleton 已有；真实 RN/Gradle/APK/device/Notifee/FCM/op-sqlite/PowerSync 待验收。
+- `APC-T054`-`APC-T059`：DevOps/fake/security/e2e/shadow/soak/release checklist 已有；完整真机/真实设备/长稳验证待完成。
 
 ---
 
 ## 3. 最新验证基线
 
-沙盒验证（无外部 DB URL）：
+沙盒验证：
 
 ```bash
 cd projects/AI-Parenting-Copilot
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 142 passed, 5 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
-make test
-# 137 passed, 5 deselected, 1 warning
 make db-integration-test
-# no DB URL: 5 skipped
+# sandbox no DB URL: 5 skipped, 1 warning
+make api-db-smoke-test
+# sandbox no DB URL: 1 skipped, 1 warning
 make security-test
 # 5 passed
 make e2e-fake-test
@@ -105,50 +110,26 @@ make shadow-test
 make rules-validate
 ```
 
-用户 Mac 最近已验收过：
+用户 Mac 最近已验收：
 
 ```bash
 export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
-make infra-up
-make db-migrate
-make db-current
 make db-integration-test
-# 曾通过 4 passed；之后新增 API runtime integration 修复，需复验到 5 passed。
+# 5 passed, 1 warning in 3.97s
 ```
 
 ---
 
 ## 4. 当前最高优先级
 
-### 立即需要用户复验
+继续开发，不等待重设计：
 
-本轮最后修复了 API DB runtime integration 的 transaction isolation / audit wiring。下一 Agent 应要求用户运行：
+1. `APC-T011/T013/T016/T017`：实现真实 PG LISTEN worker + pending event scan + Normalization DB writer + State DB upsert pipeline，并扩展 DB integration。
+2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
+3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
+4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。
 
-```bash
-cd /Users/naturist/MusicProject/AI-Project-Incubation-Factory/projects/AI-Parenting-Copilot
-export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
-make infra-up
-make db-migrate
-make db-current
-make db-integration-test
-```
-
-预期：
-
-```text
-5 passed
-```
-
-若通过，可考虑解除更多 DB-backed API runtime / audit 相关 BLOCKED；若失败，先修失败。
-
-### 如继续开发且暂不等复验
-
-优先做：
-
-1. DB-backed API smoke target：`make api-db-smoke-test`，覆盖真实 HTTP + DB 的 auth/event/alert/rule/state。
-2. Android Gradle wrapper / RN bridge / native modules（需要 Android toolchain，可能很快需要用户验收）。
-3. PowerSync real config validation / worker wiring（需要真实 PowerSync）。
-4. FCM/Notifee/FullScreenIntent native implementation（需要 Firebase/Android device）。
+若用户继续粘贴验证失败，先修失败，再继续上述队列。
 
 ---
 

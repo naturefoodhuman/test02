@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 22:20:00
+创建时间（北京时间）：2026-07-31 19:45:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -10,45 +10,50 @@
 
 ## Latest Change Index
 
-- **当前状态 SSOT**：`docs/PROJECT_STATE.md`
-- **最新完成模块**：AI Parenting Copilot APC-T049/T050/T051/T052/T053 Android feature view models/flows；集成任务待验收
+- **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
+- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `142 passed, 5 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
+---
 
+## [第 133 轮] 2026-07-31
 
+### 需求变动
+- **AI Parenting Copilot 验收修复与继续开发**：用户确认 `make db-integration-test` 已在 Mac/PostgreSQL 环境通过 `5 passed`；修复随后 `make test` 因 shell 遗留 `PARENTING_DATABASE__URL` 误切 DB repo 的失败。
+- **AI Parenting Copilot DB runtime 完成度推进**：新增 `make api-db-smoke-test`；`seed_family.py` 支持 in-memory 与 DB-backed 持久化双模式；同步 `APC-T008/T010/T019/T031` 为 DONE。
 
+### 文件影响
+- 修改：`projects/AI-Parenting-Copilot/Makefile`
+- 修改：`projects/AI-Parenting-Copilot/pyproject.toml`
+- 修改：`projects/AI-Parenting-Copilot/server/scripts/seed_family.py`
+- 新增：`projects/AI-Parenting-Copilot/tests/conftest.py`
+- 新增：`projects/AI-Parenting-Copilot/tests/test_seed_family.py`
+- 修改：`projects/AI-Parenting-Copilot/docs/TASK_BACKLOG.md`
+- 修改：`projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`
+- 修改：`projects/AI-Parenting-Copilot/docs/DEV_LOG.md`
+- 修改：`projects/AI-Parenting-Copilot/docs/CHANGELOG.md`
+- 修改：`projects/AI-Parenting-Copilot/docs/HANDOFF.md`
+- 修改：`docs/CHANGELOG.md`
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 142 passed, 5 deselected, 1 warning
+make lint
+make typecheck
+make db-integration-test
+# sandbox no DB URL: 5 skipped
+make api-db-smoke-test
+# sandbox no DB URL: 1 skipped
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+make docs-check
+```
 
 ---
 

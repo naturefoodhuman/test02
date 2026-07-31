@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 22:20:00
+创建时间（北京时间）：2026-07-31 19:30:00
 -->
 
 
@@ -10,44 +10,76 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T054` dev/launchd runbooks、`APC-T055` fixtures/fakes、`APC-T057` fake red alert E2E、`APC-T058` security regression suite；均因前置/真实设备/DB/Android 验收 BLOCKED
-- **当前测试基线**：`make docs-check && make lint && make typecheck && make test` → `104 passed, 1 warning`；`make security-test` → `5 passed`；`make e2e-fake-test` → `1 passed`; `make rules-validate` 通过；root docs-check Blockers 0
-- **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，仅在 uv 不存在时 fallback 到 pip/ensurepip。
+- **最新完成**：`APC-T008` Auth API/seed DB 双模式、`APC-T010` Events API DB-backed runtime、`APC-T019` Rules Admin DB-backed activation/audit、`APC-T031` Alert API DB-backed audit。
+- **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `142 passed, 5 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
 
+---
 
+## 第 37 轮 · 2026-07-31（DB env test isolation + seed_family DB mode）
 
+**目标**：修复用户在 `make db-integration-test` 后继续执行 `make test` 时，由 shell 中遗留 `PARENTING_DATABASE__URL` 导致 unit/dev tests 误走 PostgreSQL repo 的问题，并继续推进 DB-backed API runtime 完成度。
 
+**用户验证输入**：
 
+```bash
+export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+make db-integration-test
+# 5 passed, 1 warning in 3.97s
+make test
+# 修复前 5 failed：unit tests 误切 DB repo，触发 baby FK 与 dev-mock health 断言失败
+```
 
+**完成内容**：
 
+1. 测试隔离：
+   - `Makefile test` 显式 `env -u PARENTING_DATABASE__URL -u PARENTING_DATABASE_URL`。
+   - 新增 `tests/conftest.py`：非 `integration` 测试自动删除 DB env，直接 `pytest -m "not integration"` 也保持 dev-mock。
+2. DB smoke 可执行入口：
+   - 新增 `make api-db-smoke-test`，单独运行 `tests/integration/test_api_db_runtime.py`。
+3. seed_family 完整化：
+   - `server/scripts/seed_family.py` 支持 in-memory 与 DB-backed 双模式。
+   - 有 `--database-url` 或 `PARENTING_DATABASE__URL` 时通过 `SQLAlchemyAuthRepository` 持久化 family/admin/baby。
+   - 新增 `tests/test_seed_family.py` 覆盖默认 in-memory 与 `--no-baby`。
+4. 依赖清理：
+   - `install-dev` 改为 `uv pip install --python $(PYTHON) -e ".[dev]"`。
+   - `pyproject.toml` 去除重复 `sqlalchemy[asyncio]`，保留 `sqlalchemy[asyncio]>=2.0`。
 
+**状态变更**：
 
+- `APC-T008`：BLOCKED → DONE
+- `APC-T010`：BLOCKED/缺失状态 → DONE
+- `APC-T019`：BLOCKED → DONE
+- `APC-T031`：BLOCKED → DONE
 
+**验证**：
 
+```bash
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 142 passed, 5 deselected, 1 warning
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 153 source files
+make db-integration-test
+# sandbox no DB URL: 5 skipped, 1 warning
+make api-db-smoke-test
+# sandbox no DB URL: 1 skipped, 1 warning
+make security-test
+# 5 passed
+make e2e-fake-test
+# 1 passed
+make shadow-test
+make rules-validate
+make docs-check
+```
 
+**架构影响**：
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- 无架构变更。
+- 未引入新基础设施。
+- 测试策略更符合既有边界：unit/dev tests 使用 in-memory，DB coverage 仅在 `integration` marker 下运行。
 
 ---
 

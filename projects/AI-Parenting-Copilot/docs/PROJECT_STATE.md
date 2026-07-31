@@ -1,15 +1,58 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 22:20:00
+创建时间（北京时间）：2026-07-31 19:25:00
 -->
 
 
 # PROJECT_STATE —— AI Parenting Copilot 当前状态 SSOT
 
-**更新日期**：2026-07-08 CST
-**当前阶段**：P0-M0 工程地基
-**当前任务状态**：核心 DB 验收通过：`APC-T003/T004/T006/T007/T009/T018 DONE`；仍 BLOCKED：`APC-T008/T010/T011/T012/T013/T014/T015/T016/T017/T019+` 等待后续真实链路/设备/Android 验收
-**状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。
+**更新日期**：2026-07-31 CST
+**当前阶段**：P0-M1 DB-backed API runtime hardening + Android/native/worker 继续开发
+**当前任务状态**：新增确认 `APC-T008/T010/T019/T031 DONE`；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准；仍 BLOCKED 的任务主要等待 PowerSync/PG worker/真实设备/Android toolchain/NAS/医学规则审查等验收。
+**状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
+
+---
+
+## 0. 2026-07-31 当前验证基线与本轮进展
+
+### 用户 Mac 验收
+
+- `make db-integration-test` 在用户 Mac + PostgreSQL 环境已通过：`5 passed, 1 warning in 3.97s`。
+- 该结果确认 DB-backed Auth/Event/Alert/Rules/State API smoke、repository adapter、audit 写入与 migration head 可运行。
+
+### 本轮修复
+
+- 修复 `make test` 在 shell 中保留 `PARENTING_DATABASE__URL` 时误切换到 PostgreSQL repo 的问题：
+  - `Makefile test` 显式 `env -u PARENTING_DATABASE__URL -u PARENTING_DATABASE_URL`。
+  - `tests/conftest.py` 对非 `integration` 测试自动隔离 DB env，直接运行 pytest 也保持 dev-mock。
+- 新增 `make api-db-smoke-test`，可单独运行 DB-backed API runtime smoke：`tests/integration/test_api_db_runtime.py`。
+- `server/scripts/seed_family.py` 从纯 in-memory 升级为双模式：无 DB URL 时输出 dev seed；有 `--database-url` 或 `PARENTING_DATABASE__URL` 时通过 SQLAlchemy Auth adapter 持久化 family/admin/baby。
+- 清理 `pyproject.toml` 中重复的 `sqlalchemy[asyncio]` 依赖，保留 `sqlalchemy[asyncio]>=2.0`。
+
+### 本轮状态变更
+
+- `APC-T008`：BLOCKED → DONE（Auth API、设备注册、seed_family DB/in-memory 双模式、DB-backed smoke 验收）
+- `APC-T010`：BLOCKED/缺失状态 → DONE（Events API dev + DB-backed adapter/audit smoke 验收）
+- `APC-T019`：BLOCKED → DONE（Rules Admin validate/activate/admin gate + DB-backed EvidencePolicy/audit smoke 验收）
+- `APC-T031`：BLOCKED → DONE（Alert create/list/ack/feedback + SQLAlchemy repo/audit smoke 验收）
+
+### 沙盒验证
+
+```bash
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 140 passed, 5 deselected, 1 warning（新增 seed tests 后全量为 142 passed）
+make lint
+make typecheck
+make db-integration-test
+# 无 DB URL：5 skipped
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+make docs-check
+make api-db-smoke-test
+# 无 DB URL：1 skipped
+```
 
 ---
 
