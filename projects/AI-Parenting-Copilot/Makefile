@@ -127,7 +127,7 @@ db-migrate: ensure-dev-deps
 	@uv run python -m alembic -c alembic.ini upgrade head
 
 db-current: ensure-dev-deps
-	@$(PYTHON) -m alembic -c alembic.ini current
+	@uv run --active python -m alembic -c alembic.ini current
 
 security-test: ensure-dev-deps
 	@$(PYTHON) -m pytest tests/security -q

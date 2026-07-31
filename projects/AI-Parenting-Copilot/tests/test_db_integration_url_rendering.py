@@ -2,6 +2,7 @@
 # 创建时间（北京时间）：2026-07-09 18:30:00
 
 """Regression tests for DB integration URL rendering."""
+
 from __future__ import annotations
 
 from tests.integration.test_db_repository_adapters import _temp_database_urls

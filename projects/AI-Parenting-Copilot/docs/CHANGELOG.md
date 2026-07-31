@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:40:00
+创建时间（北京时间）：2026-07-09 22:20:00
 -->
 
 
@@ -47,6 +47,29 @@
 
 
 
+
+
+---
+
+## [第 36 轮] 2026-07-09 — User-reported bugfixes
+
+### 需求变动
+
+- 处理用户指出的 Makefile/pyproject/feeding projection/voice parser/orchestrator/rule-pack path/request audit 问题。
+
+### 文件影响
+
+- 修改：`Makefile`
+- 修改：`pyproject.toml`
+- 修改：feeding projection、voice parser、orchestrator、P0 rule copilots、request audit helper
+- 修改/新增：相关 regression tests
+
+### 验证
+
+```bash
+make docs-check && make lint && make typecheck && make test && make security-test && make e2e-fake-test && make shadow-test && make rules-validate
+# 140 passed, 5 deselected, 1 warning; security/e2e/shadow/rules checks passed.
+```
 
 ---
 

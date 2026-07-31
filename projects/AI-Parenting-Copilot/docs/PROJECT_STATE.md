@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:40:00
+创建时间（北京时间）：2026-07-09 22:20:00
 -->
 
 
@@ -989,3 +989,18 @@ make db-integration-test
 - DB integration harness 最新目标是 `make db-integration-test` = `5 passed`。
 - 当前最新修复为 request-level DB audit wiring 和 API DB runtime integration isolation。
 - 下一 Agent 应先复验用户 Mac 上 `make db-integration-test` 结果，再决定是否解除更多 BLOCKED。
+
+
+## 19. User-reported bugfix round
+
+用户指出并已处理的问题：
+
+- `Makefile` Alembic targets 改为 uv-first：`uv run --active python -m alembic ...`。
+- `pyproject.toml` SQLAlchemy dependency 改为 `sqlalchemy[asyncio]>=2.0`。
+- `project_feeding` 现在按真实 rolling 24h window 统计，不再对全部 feeding 记录求和。
+- `voice.py` P0 parser 支持更多常见中文顺序：如 `80 毫升奶`、`奶 80 毫升`、`体温 39.5 ℃`。
+- Orchestrator 不再重复构造相同 `CopilotRequest`。
+- Vaccine/Growth/Medication Copilot 改为 lazy-load rule packs，并基于文件所在位置解析项目根绝对路径，避免从仓库根运行 pytest 时因相对路径出错，也避免构造 Orchestrator 时立即做 rule-pack I/O。
+- `request_audit.py` 语法修正并保持 DB/dev audit fallback 正常。
+
+验证：`make test` → `140 passed, 5 deselected, 1 warning`。

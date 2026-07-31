@@ -7,6 +7,7 @@ If a SQLAlchemy session is attached to request.state, audit records are inserted
 `audit_log` in the same request transaction. Otherwise the helper falls back to the
 in-memory AuditSink used by dev tests.
 """
+
 from __future__ import annotations
 
 from typing import Any

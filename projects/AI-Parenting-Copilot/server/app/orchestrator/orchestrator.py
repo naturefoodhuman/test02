@@ -72,25 +72,15 @@ class Orchestrator:
         intent = request.intent or self.intent_router.route(request.text)
         memory = self.context_builder.build(baby_id=request.baby_id, family_id=request.family_id)
         if intent in {"record", "proactive", "family_memory", "vaccine", "growth", "medication"}:
-            copilot = self.registry.select(
-                CopilotRequest(
-                    text=request.text,
-                    intent=intent,
-                    baby_id=request.baby_id,
-                    family_id=request.family_id,
-                    context=request.context,
-                )
+            copilot_request = CopilotRequest(
+                text=request.text,
+                intent=intent,
+                baby_id=request.baby_id,
+                family_id=request.family_id,
+                context=request.context,
             )
-            response = await copilot.handle(
-                CopilotRequest(
-                    text=request.text,
-                    intent=intent,
-                    baby_id=request.baby_id,
-                    family_id=request.family_id,
-                    context=request.context,
-                ),
-                memory,
-            )
+            copilot = self.registry.select(copilot_request)
+            response = await copilot.handle(copilot_request, memory)
             return OrchestratorResponse(
                 intent=intent,
                 copilot_response=response,

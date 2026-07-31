@@ -49,3 +49,33 @@ def test_state_engine_projection_is_order_independent() -> None:
     assert first.snapshot["temperature_max_24h_c"] == 37.8
     assert first.snapshot["diaper_wet_24h"] == 1
     assert first.snapshot["feeding_24h_ml"] == second.snapshot["feeding_24h_ml"]
+
+
+def test_feeding_projection_uses_rolling_24h_window() -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from server.app.state_engine.projections.feeding import project_feeding
+
+    now = datetime(2026, 7, 9, 12, 0, tzinfo=UTC)
+    recent = NormalizedRecord(
+        event_id="recent",
+        baby_id="baby-1",
+        family_id="family-1",
+        record_type="feeding",
+        payload={"amount_ml": 90, "fed_at": (now - timedelta(hours=2)).isoformat()},
+        confidence=1.0,
+    )
+    old = NormalizedRecord(
+        event_id="old",
+        baby_id="baby-1",
+        family_id="family-1",
+        record_type="feeding",
+        payload={"amount_ml": 120, "fed_at": (now - timedelta(hours=25)).isoformat()},
+        confidence=1.0,
+    )
+
+    projection = project_feeding([recent, old], now=now)
+
+    assert projection["feeding_24h_ml"] == 90
+    assert projection["feeding_24h_count"] == 1
+    assert projection["last_feeding_at"] == recent.payload["fed_at"]

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 21:40:00
+创建时间（北京时间）：2026-07-09 22:20:00
 -->
 
 
@@ -47,6 +47,46 @@
 
 
 
+
+
+---
+
+## 第 36 轮 · 2026-07-09（User-reported bugfixes）
+
+**目标**：处理用户指出的疑似 bug，并继续保持验证绿灯。
+
+**修复内容**：
+
+1. `Makefile` Alembic targets 改为 `uv run --active python -m alembic ...`，避免直接依赖 venv pip/python 行为。
+2. `pyproject.toml` SQLAlchemy dependency 改为 `sqlalchemy[asyncio]>=2.0`。
+3. `project_feeding` 修复 rolling 24h window 统计 bug。
+4. `voice.py` P0 parser 增强中文喂奶/体温常见顺序和空格处理。
+5. Orchestrator 复用单个 `CopilotRequest`，去除重复构造。
+6. Vaccine/Growth/Medication Copilots 改为 lazy rule-pack loading + absolute project-root path，避免 import/constructor 阶段相对路径 I/O 副作用。
+7. `request_audit.py` 修复 audit fallback record 构造语法。
+
+**新增/增强测试**：
+
+- feeding 24h window regression。
+- voice parser common word-order regression。
+- rule copilot absolute path/lazy loading regression。
+- db integration URL rendering/audit tests 继续保留。
+
+**验证**：
+
+```bash
+make docs-check
+make lint
+make typecheck
+make test
+# 140 passed, 5 deselected, 1 warning
+make db-integration-test
+# no DB URL: 5 skipped
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+```
 
 ---
 

@@ -14,15 +14,23 @@ from server.app.rule_engine.domain.models import RuleInput
 from server.app.rule_engine.domains.vaccine import VaccineRuleModule
 from server.app.rule_engine.loader import load_rule_pack
 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
 
 class VaccinePlannerCopilot:
     name = "vaccine_planner"
     safety_level = "medium"
 
     def __init__(self, module: VaccineRuleModule | None = None) -> None:
-        self.module = module or VaccineRuleModule(
-            load_rule_pack(Path("config/rules/vaccine/cn-nip-2024.yaml"))
-        )
+        self._module = module
+
+    @property
+    def module(self) -> VaccineRuleModule:
+        if self._module is None:
+            self._module = VaccineRuleModule(
+                load_rule_pack(PROJECT_ROOT / "config/rules/vaccine/cn-nip-2024.yaml")
+            )
+        return self._module
 
     def can_handle(self, request: CopilotRequest) -> bool:
         return request.intent == "vaccine"

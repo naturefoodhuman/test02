@@ -121,3 +121,20 @@ def test_registry_contains_p0_copilots() -> None:
         "proactive",
         "vaccine_planner",
     ]
+
+
+@pytest.mark.asyncio
+async def test_rule_copilots_load_rule_packs_from_absolute_project_root(monkeypatch) -> None:
+    from pathlib import Path
+
+    monkeypatch.chdir(Path(__file__).resolve().parents[3])
+    response = await VaccinePlannerCopilot().handle(
+        CopilotRequest(
+            text="疫苗计划",
+            intent="vaccine",
+            context={"rule_input": {"birth_date": "2026-07-09", "as_of": "2026-07-09"}},
+        ),
+        MemorySnapshot(),
+    )
+
+    assert response.payload["rule_result"]["reason_code"] == "vaccine_plan_generated"

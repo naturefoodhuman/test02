@@ -17,15 +17,23 @@ from server.app.rule_engine.domain.models import RuleInput
 from server.app.rule_engine.domains.medication import MedicationRuleModule
 from server.app.rule_engine.loader import load_rule_pack
 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
 
 class MedicationSafetyCopilot:
     name = "medication_safety"
     safety_level = "high"
 
     def __init__(self, module: MedicationRuleModule | None = None) -> None:
-        self.module = module or MedicationRuleModule(
-            load_rule_pack(Path("config/rules/medication/base.yaml"))
-        )
+        self._module = module
+
+    @property
+    def module(self) -> MedicationRuleModule:
+        if self._module is None:
+            self._module = MedicationRuleModule(
+                load_rule_pack(PROJECT_ROOT / "config/rules/medication/base.yaml")
+            )
+        return self._module
 
     def can_handle(self, request: CopilotRequest) -> bool:
         return request.intent == "medication"

@@ -14,15 +14,23 @@ from server.app.rule_engine.domain.models import RuleInput
 from server.app.rule_engine.domains.growth import GrowthRuleModule
 from server.app.rule_engine.loader import load_rule_pack
 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
 
 class GrowthMilestoneCopilot:
     name = "growth_milestone"
     safety_level = "low"
 
     def __init__(self, module: GrowthRuleModule | None = None) -> None:
-        self.module = module or GrowthRuleModule(
-            load_rule_pack(Path("config/rules/growth/who-0-5.yaml"))
-        )
+        self._module = module
+
+    @property
+    def module(self) -> GrowthRuleModule:
+        if self._module is None:
+            self._module = GrowthRuleModule(
+                load_rule_pack(PROJECT_ROOT / "config/rules/growth/who-0-5.yaml")
+            )
+        return self._module
 
     def can_handle(self, request: CopilotRequest) -> bool:
         return request.intent == "growth"

@@ -46,3 +46,9 @@ def test_normalization_service_writes_derived_record_with_event_lineage() -> Non
     assert record.event_id == event.event_id
     assert record.record_type == "feeding"
     assert event.processing_status == "normalized"
+
+
+def test_voice_text_parser_supports_common_word_orders_and_spaces() -> None:
+    assert parse_voice_text("80 毫升奶")[:2] == ("feeding", {"amount_ml": 80.0})
+    assert parse_voice_text("奶 80 毫升")[:2] == ("feeding", {"amount_ml": 80.0})
+    assert parse_voice_text("体温 39.5 ℃")[:2] == ("temperature", {"value_c": 39.5})

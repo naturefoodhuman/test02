@@ -37,8 +37,6 @@ def _event_repo(request: Request) -> EventRepository:
     return cast(EventRepository, repo)
 
 
-
-
 @router.post("", response_model=ObservationEvent)
 async def create_event(payload: ObservationEventCreate, request: Request) -> ObservationEvent:
     event = await _event_repo(request).upsert(payload)
