@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 21:02:00
+创建时间（北京时间）：2026-07-31 21:38:00
 -->
 
 
@@ -11,8 +11,48 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；EvidencePolicy activate 幂等性已修复，待用户 Mac 复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；EvidencePolicy activate 幂等性已修复；新增 live worker smoke，待用户 Mac 复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 40 轮] 2026-07-31 — Live PG worker DB smoke
+
+### 需求变动
+
+- 继续推进 `APC-T011/T014/T017`：新增真实 FastAPI lifespan + `PostgresEventNormalizationWorker` + PostgreSQL `events.changed` NOTIFY 的独立 DB smoke target。
+
+### 文件影响
+
+新增：
+
+- `tests/integration_worker/test_event_normalization_worker.py`
+
+修改：
+
+- `Makefile`
+  - 新增 `worker-db-smoke-test`。
+- `server/app/state_engine/sqlalchemy_snapshot_repo.py`
+  - DB snapshot upsert 持久化 `source_event_count`。
+- `docs/TASK_BACKLOG.md`
+- `docs/PROJECT_STATE.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+make lint
+make typecheck
+make worker-db-smoke-test
+# sandbox no DB URL: 1 skipped
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 144 passed, 6 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；仅新增真实 worker smoke 验收入口。
 
 ---
 

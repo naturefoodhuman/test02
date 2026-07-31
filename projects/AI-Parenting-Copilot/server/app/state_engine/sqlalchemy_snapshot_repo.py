@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 16:05:00
+# 创建时间（北京时间）：2026-07-31 21:25:00
 
 
 """SQLAlchemy DerivedBabyState snapshot repository."""
@@ -31,16 +31,18 @@ class SQLAlchemyStateSnapshotRepository:
 
     async def upsert(self, snapshot: DerivedBabyStateSnapshot) -> DerivedBabyStateSnapshot:
         computed_at = _parse_computed_at(snapshot.computed_at)
+        snapshot_payload = dict(snapshot.snapshot)
+        snapshot_payload["source_event_count"] = snapshot.source_event_count
         stmt = pg_insert(ORMDerivedBabyState).values(
             baby_id=snapshot.baby_id,
             family_id=snapshot.family_id,
-            snapshot=snapshot.snapshot,
+            snapshot=snapshot_payload,
             computed_at=computed_at,
         ).on_conflict_do_update(
             index_elements=[ORMDerivedBabyState.baby_id],
             set_={
                 "family_id": snapshot.family_id,
-                "snapshot": snapshot.snapshot,
+                "snapshot": snapshot_payload,
                 "computed_at": computed_at,
                 "updated_at": utc_now(),
             },

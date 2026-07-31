@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 21:06:00
+创建时间（北京时间）：2026-07-31 21:30:00
 -->
 
 # TASK_BACKLOG.md
@@ -431,7 +431,7 @@
 - **所属 Capability**：C06 同步与事件总线
 - **所属 Story**：S06 PowerSync 写入契约、PG LISTEN/NOTIFY
 - **目标**：实现轻量事件总线，使 observation_event 变更触发 Normalization worker。
-- **状态**：BLOCKED（PG notify payload parser/domain event mapping/0002 trigger migration、PostgresEventNormalizationWorker 与 PendingEventProcessor 已完成；用户 Mac DB runtime 复验待执行）
+- **状态**：BLOCKED（PG notify payload parser/domain event mapping/0002 trigger migration、PostgresEventNormalizationWorker 与 PendingEventProcessor 已完成；新增 `make worker-db-smoke-test`，等待用户 Mac 真实 LISTEN/NOTIFY worker 复验）
 - **前置依赖**：APC-T009
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1；`ARCHITECTURE_FINAL.md` §4.1
 - **输出**：PG trigger、LISTEN/NOTIFY 封装、worker 消费基座
@@ -579,7 +579,7 @@
 - **所属 Capability**：C08
 - **所属 Story**：S08
 - **目标**：实现派生状态重算服务、`derived_baby_state` upsert、`GET /babies/{id}/state`。
-- **状态**：BLOCKED（BabyStateEngine/in-memory snapshot repo/State API 与 PostgreSQL ON CONFLICT upsert 已完成；DB pipeline 用户复验待执行）
+- **状态**：BLOCKED（BabyStateEngine/in-memory snapshot repo/State API 与 PostgreSQL ON CONFLICT upsert/source_event_count 持久化已完成；DB worker smoke 用户复验待执行）
 - **前置依赖**：APC-T015, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §6.3、§7.1
 - **输出**：StateEngine service、snapshot repository、API

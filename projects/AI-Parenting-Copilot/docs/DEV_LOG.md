@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 21:00:00
+创建时间（北京时间）：2026-07-31 21:35:00
 -->
 
 
@@ -12,9 +12,44 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T008` Auth API/seed DB 双模式、`APC-T010` Events API DB-backed runtime、`APC-T019` Rules Admin DB-backed activation/audit、`APC-T031` Alert API DB-backed audit。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 PostgreSQL LISTEN/NOTIFY normalization worker、SQLAlchemy derived table store、DB-backed pending event → derived table → state snapshot pipeline。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `144 passed, 5 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 PostgreSQL LISTEN/NOTIFY normalization worker、SQLAlchemy derived table store、DB-backed pending event → derived table → state snapshot pipeline；新增 live worker DB smoke target。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `144 passed, 6 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 40 轮 · 2026-07-31（Live worker DB smoke target）
+
+**目标**：在用户已确认 `db-integration-test` / `api-db-smoke-test` / `make test` 通过后，继续推进真实 PG LISTEN/NOTIFY worker 验收闭环，避免只验证手动 `PendingEventProcessor`。
+
+**完成内容**：
+
+1. 新增独立 worker smoke：
+   - `tests/integration_worker/test_event_normalization_worker.py`
+   - 真实 DB 环境下启动 FastAPI app，让 lifespan 注册并启动 `PostgresEventNormalizationWorker`。
+   - API 写入 feeding event 后，等待 worker 通过 `events.changed` NOTIFY 自动归一化并生成 `/api/v1/babies/{baby_id}/state`。
+   - 校验 `processing_status=normalized` 与 state `feeding_24h_ml=111`。
+2. 新增 Makefile target：
+   - `make worker-db-smoke-test`
+   - 与 `make db-integration-test` 分离，避免常规 DB adapter suite 变慢或被异步 worker 时序影响。
+3. 修复 DB state source count 持久化：
+   - `SQLAlchemyStateSnapshotRepository.upsert()` 将 `source_event_count` 写入 snapshot JSON，DB API 读取时不再丢失。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+make worker-db-smoke-test
+# sandbox no DB URL: 1 skipped, 1 warning
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 144 passed, 6 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更。
+- worker smoke 复用既有 FastAPI lifespan / WorkerRegistry / PostgreSQL trigger / NormalizationService / StateEngine。
 
 ---
 

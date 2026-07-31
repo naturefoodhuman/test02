@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 20:58:00
+创建时间（北京时间）：2026-07-31 21:32:00
 -->
 
 
@@ -31,6 +31,13 @@
 
 
 
+
+### 继续开发进展（live worker smoke）
+
+- 新增 `make worker-db-smoke-test`，运行 `tests/integration_worker/test_event_normalization_worker.py`，用于用户 Mac 上验证真实 `events.changed` LISTEN/NOTIFY worker 能把 API 写入的 feeding event 自动归一化并写入 `DerivedBabyState`。
+- `SQLAlchemyStateSnapshotRepository.upsert()` 现在会将 `source_event_count` 同步持久化到 `derived_baby_state.snapshot`，DB API 读取时不再丢失来源事件数量。
+- 普通 `make test` 因新增 integration worker smoke 现在为 `144 passed, 6 deselected, 1 warning`；worker smoke 单独执行，避免常规 DB repository suite 变慢/变脆。
+
 ### 本轮 DB 集成回归修复（EvidencePolicy idempotency）
 
 - 用户 Mac `make db-integration-test` 暴露 `evidence_policy(policy_type, region, version)` 重复激活同一规则包时唯一键冲突。
@@ -56,7 +63,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 144 passed, 5 deselected, 1 warning
+# 144 passed, 6 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test
