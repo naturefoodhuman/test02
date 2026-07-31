@@ -58,8 +58,7 @@ requires-dist = [
     { name = "python-ulid", specifier = ">=3.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
-    { name = "sqlalchemy", specifier = ">=2.0" },
-    { name = "sqlalchemy", extras = ["asyncio"] },
+    { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "structlog", specifier = ">=24.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
 ]
