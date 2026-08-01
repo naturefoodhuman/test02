@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 00:37:00
+创建时间（北京时间）：2026-08-01 01:30:00
 -->
 
 
@@ -81,6 +81,7 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T020`-`APC-T023`：Medication/Triage/Threshold/Vaccine/Growth pure rules + golden tests 已有；生产医学/疫苗/WHO 表审查待完成。
 - `APC-T026`-`APC-T028`：SQLAlchemyMemoryStore、LocalRAG adapter、Logger shared parser 与 Orchestrator DB memory injection 已通过用户 Mac 复验，已 DONE。
 - `APC-T029`：Dose Interceptor 已新增 SQLAlchemyAuditSink 与 API DB smoke 覆盖；需要用户 Mac `api-db-smoke-test` 复验后解除。
+- `APC-T032/T033`：safe notification adapters、alert dispatch API 与 DB delivery receipts 已完成；需要用户 Mac `api-db-smoke-test` 复验，真实 FCM/TTS/设备凭证仍待接入。
 - `APC-T030`：P0 Copilots pure/dev API 已有；等待 T029 与 Vaccine/Growth 生产审查相关阻塞。
 - `APC-T032`-`APC-T036`：Notification/Escalation/Health/Scheduler dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
 - `APC-T037`-`APC-T044`：Camera / mmWave / Media / Export / Backup / Firmware mock/dev/skeleton 已有；真实 RTSP/ISAPI/Fregata/MQTT/PlatformIO/NAS 待验收。
@@ -96,7 +97,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 148 passed, 8 deselected, 1 warning
+# 150 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
@@ -128,7 +129,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Mac 复验 `make api-db-smoke-test` 与 `make test`，确认 Dose Interceptor DB audit；若通过，可解除 `APC-T029` 的主要验收阻塞。
+1. 让用户 Mac 复验 `make api-db-smoke-test` 与 `make test`，确认 Dose Interceptor DB audit + Notification DB delivery dispatch；若通过，可解除 `APC-T029`，并推进 `APC-T032/T033` 状态。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。
@@ -195,3 +196,12 @@ uv pip install --python <venv-python> -e .[dev]
 ```
 
 JSON / JSONL 使用 `_forge_trace` 字段。
+
+---
+
+## 8. 上下文/项目规模管理
+
+- 每轮优先小批量 commit + push，保证远端 main 始终可恢复。
+- 每轮更新 `docs/HANDOFF.md` / `docs/DEV_LOG.md` / `docs/PROJECT_STATE.md` / `docs/TASK_BACKLOG.md`，降低后续 Agent 对长对话上下文的依赖。
+- 避免一次性读取全项目大文件；继续按任务读取相关模块与测试。
+- 若上下文接近上限，先提交并更新 HANDOFF，再继续。

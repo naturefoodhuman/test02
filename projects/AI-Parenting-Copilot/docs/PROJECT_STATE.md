@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 00:30:00
+创建时间（北京时间）：2026-08-01 01:22:00
 -->
 
 
@@ -34,6 +34,13 @@
 
 
 
+
+
+### 继续开发进展（Notification channels / DB delivery）
+
+- 新增安全默认 notification adapters：`FCMChannel`、`MacSpeakerChannel`、`AppFullscreenChannel`、`CameraSpeakerChannel` 与 `build_default_channels()`。
+- 新增 `POST /api/v1/alerts/{alert_id}/dispatch`：按 alert level 扇出默认通道，并在 DB mode 下通过 `SQLAlchemyDeliveryRepository` 写入 `alert_delivery`。
+- `tests/integration/test_api_db_runtime.py` 扩展 alert dispatch → delivery receipts → audit smoke；下一步需用户 Mac `make api-db-smoke-test` 复验后推进 `APC-T032/T033` 状态。
 
 ### 继续开发进展（Dose Interceptor DB audit）
 
@@ -87,7 +94,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 148 passed, 8 deselected, 1 warning
+# 150 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 00:40:00
+创建时间（北京时间）：2026-08-01 01:32:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,34 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
-- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `148 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
+- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `150 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 141 轮] 2026-08-01
+
+### 需求变动
+- **AI Parenting Copilot 通知链路推进**：新增 safe FCM/Mac/App/Camera notification adapters、alert dispatch API 与 DB `alert_delivery` 持久化，推进 `APC-T032/T033`。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/notification/channels/fcm.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/notification/channels/mac_speaker.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/notification/channels/app_fullscreen.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/notification/channels/camera_speaker.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/notification/channel_factory.py`
+- 修改：notification API/orchestrator/main/tests/project docs
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make lint
+make typecheck
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 150 passed, 8 deselected, 1 warning
+```
 
 ---
 

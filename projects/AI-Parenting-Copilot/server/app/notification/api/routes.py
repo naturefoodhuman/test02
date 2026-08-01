@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 05:55:00
+# 创建时间（北京时间）：2026-08-01 01:02:00
 
 
 """Alert API routes for dev/in-memory mode."""
@@ -18,7 +18,12 @@ from server.app.notification.alert_repo import (
     FeedbackRequest,
     InMemoryAlertRepository,
 )
+from server.app.notification.channel_factory import build_default_channels
+from server.app.notification.channels.base import DeliveryReceipt
+from server.app.notification.delivery_repo import InMemoryDeliveryRepository
+from server.app.notification.orchestrator import NotificationOrchestrator
 from server.app.notification.sqlalchemy_alert_repo import SQLAlchemyAlertRepository
+from server.app.notification.sqlalchemy_delivery_repo import SQLAlchemyDeliveryRepository
 from server.app.observability.request_audit import record_request_audit
 
 router = APIRouter(prefix="/api/v1/alerts", tags=["alerts"])
@@ -38,6 +43,20 @@ def _repo(request: Request) -> InMemoryAlertRepository | SQLAlchemyAlertReposito
     return cast(InMemoryAlertRepository, repo)
 
 
+def _delivery_repo(request: Request) -> InMemoryDeliveryRepository | SQLAlchemyDeliveryRepository:
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return SQLAlchemyDeliveryRepository(db_session)
+    repo = getattr(request.app.state, "notification_delivery_repo", None)
+    if repo is None:
+        raise AppError(
+            "Delivery repository is not configured",
+            code="DELIVERY_REPO_UNAVAILABLE",
+            status_code=500,
+        )
+    return cast(InMemoryDeliveryRepository, repo)
+
+
 @router.post("", response_model=AlertRecord)
 async def create_alert(payload: CreateAlertRequest, request: Request) -> AlertRecord:
     alert = await _repo(request).create(payload)
@@ -54,6 +73,24 @@ async def create_alert(payload: CreateAlertRequest, request: Request) -> AlertRe
 @router.get("", response_model=list[AlertRecord])
 async def list_alerts(request: Request, family_id: str | None = None) -> list[AlertRecord]:
     return await _repo(request).list_active(family_id=family_id)
+
+
+@router.post("/{alert_id}/dispatch", response_model=list[DeliveryReceipt])
+async def dispatch_alert(alert_id: str, request: Request) -> list[DeliveryReceipt]:
+    alert = await _repo(request).get(alert_id)
+    orchestrator = NotificationOrchestrator(
+        build_default_channels(include_camera=True),
+        delivery_repo=_delivery_repo(request),
+    )
+    receipts = await orchestrator.dispatch(alert)
+    await record_request_audit(
+        request,
+        action="alert.dispatch",
+        resource=f"alert:{alert_id}",
+        after={"receipts": [receipt.model_dump(mode="json") for receipt in receipts]},
+        db_only=True,
+    )
+    return receipts
 
 
 @router.get("/{alert_id}", response_model=AlertRecord)

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-08 22:55:00
+# 创建时间（北京时间）：2026-08-01 01:10:00
 
 
 """FastAPI application shell for AI Parenting Copilot."""
@@ -34,6 +34,7 @@ from server.app.normalization.service import InMemoryDerivedTableStore, Normaliz
 from server.app.normalization.worker import PostgresEventNormalizationWorker
 from server.app.notification.alert_repo import InMemoryAlertRepository
 from server.app.notification.api.routes import router as alert_router
+from server.app.notification.delivery_repo import InMemoryDeliveryRepository
 from server.app.observability.audit import MemoryAuditSink
 from server.app.observability.logger import configure_logging
 from server.app.observability.metrics import metrics_response, set_app_info
@@ -91,6 +92,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.db_session_factory = db_session_factory
     app.state.audit_sink = MemoryAuditSink()
     app.state.alert_repository = InMemoryAlertRepository(app.state.audit_sink)
+    app.state.notification_delivery_repo = InMemoryDeliveryRepository()
     app.state.device_health_monitor = DeviceHealthMonitor([], app.state.alert_repository)
     app.state.sleep_session_repository = InMemorySleepSessionRepository(app.state.audit_sink)
     app.state.event_repository = InMemoryEventRepository()

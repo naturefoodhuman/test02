@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 05:55:00
+# 创建时间（北京时间）：2026-08-01 01:10:00
 
 
 """Notification Orchestrator fan-out logic."""
@@ -7,10 +7,17 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Protocol
 
 from server.app.notification.alert_repo import AlertLevel, AlertRecord
 from server.app.notification.channels.base import DeliveryReceipt, NotificationChannel
 from server.app.notification.delivery_repo import InMemoryDeliveryRepository
+
+
+class DeliveryRepository(Protocol):
+    async def add(self, receipt: DeliveryReceipt) -> DeliveryReceipt: ...
+
+    async def list_by_alert(self, alert_id: str) -> list[DeliveryReceipt]: ...
 
 
 class NotificationOrchestrator:
@@ -22,7 +29,7 @@ class NotificationOrchestrator:
     def __init__(
         self,
         channels: list[NotificationChannel],
-        delivery_repo: InMemoryDeliveryRepository | None = None,
+        delivery_repo: DeliveryRepository | None = None,
     ) -> None:
         self.channels = {channel.name: channel for channel in channels}
         self.delivery_repo = delivery_repo or InMemoryDeliveryRepository()

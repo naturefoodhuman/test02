@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 00:32:00
+创建时间（北京时间）：2026-08-01 01:25:00
 -->
 
 
@@ -12,9 +12,46 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T020/T021/T026/T027/T028` 已根据用户复验与前置解除标记 DONE；`APC-T029` 已接入真实 DB audit，等待用户复验。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 SQLAlchemyAuditSink，DoseInterceptor 可写真实 audit_log；API DB smoke 覆盖 dose_intercept audit。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `148 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 SQLAlchemyAuditSink，DoseInterceptor 可写真实 audit_log；新增 notification dry-run adapters、alert dispatch API 与 DB delivery receipts。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `150 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 45 轮 · 2026-08-01（Notification adapters + DB delivery dispatch）
+
+**目标**：继续推进 `APC-T032/T033`，在无真实 FCM/TTS 凭证的前提下补齐安全默认通道 adapter、dispatch API 与 DB delivery receipt 持久化。
+
+**完成内容**：
+
+1. Notification adapters：
+   - `server/app/notification/channels/fcm.py`
+   - `server/app/notification/channels/mac_speaker.py`
+   - `server/app/notification/channels/app_fullscreen.py`
+   - `server/app/notification/channels/camera_speaker.py`
+   - `server/app/notification/channel_factory.py`
+2. Alert dispatch API：
+   - `POST /api/v1/alerts/{alert_id}/dispatch`
+   - DB mode 使用 `SQLAlchemyDeliveryRepository` 写入 `alert_delivery`。
+   - Dev mode 使用 `InMemoryDeliveryRepository`。
+3. Tests：
+   - FCM trigger payload 只含 `alert_id/level/type`，不含 evidence/recommended_action。
+   - Default channels safe dry-run regression。
+   - API DB smoke 扩展 red alert dispatch → 4 channel receipts + `alert.dispatch` audit。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_notification_channels.py tests/test_notification_orchestrator.py tests/test_alert_api.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 150 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T032/T033` 仍保持 BLOCKED，等待用户 Mac `api-db-smoke-test` 复验与真实 FCM/TTS/设备凭证接入。
 
 ---
 

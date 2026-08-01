@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 00:20:00
+创建时间（北京时间）：2026-08-01 01:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -1049,7 +1049,7 @@
 - **所属 Capability**：C14 Notification Orchestrator
 - **所属 Story**：S14 多通道扇出、送达凭证、升级状态机
 - **目标**：实现通知通道协议和 P0 通道适配。
-- **状态**：BLOCKED（NotificationChannel/Fake channels/config/tests 已完成；前置 T031 未 DONE，真实 FCM/TTS 待接入）
+- **状态**：BLOCKED（NotificationChannel/Fake channels/config/tests 与安全 dry-run FCM/Mac/App/Camera adapters 已完成；真实 FCM 凭证/TTS/设备通道待接入）
 - **前置依赖**：APC-T031
 - **输入**：`ENGINEERING_DESIGN.md` §5.6、§7.2、§13.3
 - **输出**：NotificationChannel 实现与 Fake 通道
@@ -1079,7 +1079,7 @@
 - **所属 Capability**：C14
 - **所属 Story**：S14
 - **目标**：实现按告警等级选择通道、并发扇出、记录 alert_delivery。
-- **状态**：BLOCKED（NotificationOrchestrator fan-out/in-memory delivery receipts/tests 已完成；前置 T032 未 DONE，DB delivery repo 待验收）
+- **状态**：BLOCKED（NotificationOrchestrator fan-out、DB delivery repo、`POST /alerts/{id}/dispatch` 与 API DB smoke 已完成；等待用户 Mac `api-db-smoke-test` 复验及真实通道接入）
 - **前置依赖**：APC-T032
 - **输入**：`ARCHITECTURE_FINAL.md` §14.4；`ENGINEERING_DESIGN.md` §7.2
 - **输出**：Notification orchestrator

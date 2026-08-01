@@ -183,6 +183,14 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             )
             assert alert.status_code == 200
             alert_id = alert.json()["id"]
+            dispatch = client.post(f"/api/v1/alerts/{alert_id}/dispatch")
+            assert dispatch.status_code == 200
+            assert {receipt["channel"] for receipt in dispatch.json()} == {
+                "fcm",
+                "mac_speaker",
+                "app_fullscreen",
+                "camera_speaker",
+            }
             ack = client.post(
                 f"/api/v1/alerts/{alert_id}/ack",
                 json={"ack_by": admin_user_id},
@@ -249,6 +257,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 "auth.init_family",
                 "event.upsert",
                 "alert.create",
+                "alert.dispatch",
                 "rule.activate",
                 "dose_intercept",
             }.issubset(audit_actions)

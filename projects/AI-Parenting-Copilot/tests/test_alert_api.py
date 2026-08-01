@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 05:55:00
+# 创建时间（北京时间）：2026-08-01 01:10:00
 
 """APC-T031 Alert API dev tests."""
 
@@ -30,6 +30,15 @@ def test_alert_create_list_ack_feedback_with_audit() -> None:
         listed = client.get("/api/v1/alerts", params={"family_id": "family-1"})
         assert listed.status_code == 200
         assert listed.json()[0]["id"] == alert_id
+
+        dispatched = client.post(f"/api/v1/alerts/{alert_id}/dispatch")
+        assert dispatched.status_code == 200
+        assert {receipt["channel"] for receipt in dispatched.json()} == {
+            "fcm",
+            "mac_speaker",
+            "app_fullscreen",
+            "camera_speaker",
+        }
 
         acked = client.post(
             f"/api/v1/alerts/{alert_id}/ack",
