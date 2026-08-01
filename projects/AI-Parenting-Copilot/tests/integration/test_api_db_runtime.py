@@ -281,6 +281,20 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             camera_events = client.get(f"/api/v1/sleep-sessions/{sleep_id}/camera-events")
             assert camera_events.status_code == 200
             assert camera_events.json()[0]["kind"] == "face_covered"
+            fusion = client.post(
+                "/api/v1/camera-fusion/evaluate",
+                json={
+                    "camera_id": camera_device_id,
+                    "session_id": sleep_id,
+                    "sleep_session_active": True,
+                    "camera_kind": "prone",
+                    "camera_confidence": 0.88,
+                    "mmwave_abnormal_event": "apnea_candidate",
+                },
+            )
+            assert fusion.status_code == 200
+            assert fusion.json()["decision"]["alert_level"] == "shadow"
+            assert fusion.json()["camera_event"]["kind"] == "prone"
             end = client.post(f"/api/v1/sleep-sessions/{sleep_id}/end")
             assert end.status_code == 200
             assert end.json()["state"] == "ended"
@@ -387,6 +401,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 "export.summary",
                 "mmwave.frame_ingest",
                 "camera_event.create",
+                "camera.fusion_evaluate",
                 "rule.activate",
                 "dose_intercept",
             }.issubset(audit_actions)

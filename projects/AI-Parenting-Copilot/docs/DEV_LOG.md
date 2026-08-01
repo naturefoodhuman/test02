@@ -18,6 +18,37 @@
 
 ---
 
+## 第 63 轮 · 2026-08-01（Camera fusion API + clip plan）
+
+**目标**：继续推进 `APC-T039`，把 pure FusionStateMachine/ClipRecorder 推进到 API + DB smoke。
+
+**完成内容**：
+
+1. Camera fusion API：
+   - `POST /api/v1/camera-fusion/evaluate`
+   - 输入 sleep active、camera kind/confidence、mmWave abnormal event。
+   - 输出 decision、clip_plan、camera_event。
+2. Shadow camera event：
+   - 多信号 shadow candidate 自动写 `camera_event`。
+   - `ClipRecorder` 生成 `runtime/media/clips/<session_id>.mp4` plan。
+3. Tests：
+   - `tests/test_camera_adapters.py` 覆盖 fusion API dev path。
+   - `tests/integration/test_api_db_runtime.py` 覆盖 DB fusion/audit path。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_camera_adapters.py tests/test_camera_shadow_pipeline.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 169 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T039` 仍保持 BLOCKED，等待真实 VLM/media/device shadow 验收。
+
+---
+
 ## 第 62 轮 · 2026-08-01（Dev E2E substitutes + security status）
 
 **目标**：补强 E2E 自动化替代测试，减少后续手工验证压力，并根据已通过的 security/db audit 前置解除 `APC-T058`。

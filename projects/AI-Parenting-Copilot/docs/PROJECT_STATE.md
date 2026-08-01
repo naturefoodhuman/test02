@@ -67,6 +67,13 @@
 - 新增 native `SleepSessionActivity`，可调用 `/api/v1/sleep-sessions` 启动会话。
 - `MainActivity` 改为核心功能 launcher：Today / Quick Record / Timeline / Alert Center / Sleep Session / Pending Sync / API Settings / Critical Alert Demo。
 
+
+### 继续开发进展（Camera fusion API / clip plan）
+
+- 新增 `POST /api/v1/camera-fusion/evaluate`，封装 `FusionStateMachine`，输出 shadow decision。
+- 多信号 shadow candidate 会创建 `camera_event`，并通过 `ClipRecorder` 生成 clip plan path。
+- Dev mode 和 DB mode 均支持；API DB smoke 增加 fusion evaluate / camera_event / audit 覆盖。
+
 ### 继续开发进展（Android background drain / mmWave list API）
 
 - 新增 Android native `BackgroundDrainJobService`、`BackgroundDrainScheduler`、`BootReceiver`、`ApiSettingsStore`、`ApiSettingsActivity`，使用 JobScheduler 定时/手动 drain pending events 与 local alert acks。

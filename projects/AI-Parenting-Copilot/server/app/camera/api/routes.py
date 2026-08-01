@@ -10,6 +10,8 @@ from typing import cast
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
+from server.app.camera.clip_recorder import ClipPlan, ClipRecorder
+from server.app.camera.fusion import FusionInput, FusionStateMachine
 from server.app.camera.roi import ROIConfig
 from server.app.camera.rtsp_client import MockRTSPSnapshotClient
 from server.app.camera.sleep_session import InMemorySleepSessionRepository, SleepSessionRecord
@@ -39,6 +41,22 @@ class CreateCameraEventRequest(BaseModel):
     clip_path: str | None = None
 
 
+class FusionEvaluateRequest(BaseModel):
+    camera_id: str | None = None
+    session_id: str | None = None
+    sleep_session_active: bool = True
+    camera_kind: str | None = None
+    camera_confidence: float | None = None
+    mmwave_abnormal_event: str | None = None
+    parent_present: bool = False
+
+
+class FusionEvaluateResponse(BaseModel):
+    decision: dict[str, object]
+    clip_plan: dict[str, object] | None = None
+    camera_event: CameraEventRecord | None = None
+
+
 def _repo(request: Request) -> InMemorySleepSessionRepository | SQLAlchemySleepSessionRepository:
     db_session = getattr(request.state, "db_session", None)
     if db_session is not None:
@@ -59,6 +77,14 @@ def _dev_camera_events(request: Request) -> list[CameraEventRecord]:
         records = []
         request.app.state.camera_event_records = records
     return cast(list[CameraEventRecord], records)
+
+
+async def _store_camera_event(request: Request, record: CameraEventRecord) -> CameraEventRecord:
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return await SQLAlchemyCameraEventRepository(db_session).add(record)
+    _dev_camera_events(request).append(record)
+    return record
 
 
 @router.post("/sleep-sessions", response_model=SleepSessionRecord)
@@ -134,12 +160,7 @@ async def create_camera_event(
     payload: CreateCameraEventRequest,
     request: Request,
 ) -> CameraEventRecord:
-    record = CameraEventRecord(**payload.model_dump())
-    db_session = getattr(request.state, "db_session", None)
-    if db_session is not None:
-        record = await SQLAlchemyCameraEventRepository(db_session).add(record)
-    else:
-        _dev_camera_events(request).append(record)
+    record = await _store_camera_event(request, CameraEventRecord(**payload.model_dump()))
     await record_request_audit(
         request,
         action="camera_event.create",
@@ -159,6 +180,69 @@ async def list_camera_events_by_session(
     if db_session is not None:
         return await SQLAlchemyCameraEventRepository(db_session).list_by_session(session_id)
     return [record for record in _dev_camera_events(request) if record.session_id == session_id]
+
+
+@router.post("/camera-fusion/evaluate", response_model=FusionEvaluateResponse)
+async def evaluate_camera_fusion(
+    payload: FusionEvaluateRequest,
+    request: Request,
+) -> FusionEvaluateResponse:
+    decision = FusionStateMachine().evaluate(
+        FusionInput(
+            sleep_session_active=payload.sleep_session_active,
+            camera_kind=payload.camera_kind,
+            camera_confidence=payload.camera_confidence,
+            mmwave_abnormal_event=payload.mmwave_abnormal_event,
+            parent_present=payload.parent_present,
+        )
+    )
+    clip_plan: ClipPlan | None = None
+    camera_event: CameraEventRecord | None = None
+    if decision.shadow_event and payload.camera_id is not None:
+        event_kind = payload.camera_kind or decision.reason_code
+        if decision.alert_level == "shadow" and payload.session_id is not None:
+            clip_plan = ClipRecorder().plan_clip(event_id=payload.session_id)
+        camera_event = await _store_camera_event(
+            request,
+            CameraEventRecord(
+                camera_id=payload.camera_id,
+                session_id=payload.session_id,
+                ts=utc_now().isoformat(),
+                kind=event_kind,
+                confidence=payload.camera_confidence,
+                clip_path=clip_plan.path if clip_plan is not None else None,
+            ),
+        )
+    await record_request_audit(
+        request,
+        action="camera.fusion_evaluate",
+        resource=f"sleep_session:{payload.session_id or 'none'}",
+        after={
+            "decision": {
+                "shadow_event": decision.shadow_event,
+                "reason_code": decision.reason_code,
+                "evidence": decision.evidence,
+                "alert_level": decision.alert_level,
+            },
+            "camera_event_id": camera_event.id if camera_event is not None else None,
+        },
+        db_only=True,
+    )
+    return FusionEvaluateResponse(
+        decision={
+            "shadow_event": decision.shadow_event,
+            "reason_code": decision.reason_code,
+            "evidence": decision.evidence,
+            "alert_level": decision.alert_level,
+        },
+        clip_plan=None if clip_plan is None else {
+            "event_id": clip_plan.event_id,
+            "pre_seconds": clip_plan.pre_seconds,
+            "post_seconds": clip_plan.post_seconds,
+            "path": clip_plan.path,
+        },
+        camera_event=camera_event,
+    )
 
 
 @router.get("/cameras/{camera_id}/snapshot")

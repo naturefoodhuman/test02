@@ -60,3 +60,26 @@ def test_camera_event_api_dev_store_by_session() -> None:
     assert created.json()["kind"] == "face_covered"
     assert listed.status_code == 200
     assert listed.json()[0]["id"] == created.json()["id"]
+
+
+def test_camera_fusion_api_creates_shadow_camera_event() -> None:
+    app = create_app(Settings(env="test"))
+    with TestClient(app) as client:
+        fused = client.post(
+            "/api/v1/camera-fusion/evaluate",
+            json={
+                "camera_id": "camera-dev",
+                "session_id": "sleep-1",
+                "sleep_session_active": True,
+                "camera_kind": "face_covered",
+                "camera_confidence": 0.91,
+                "mmwave_abnormal_event": "apnea_candidate",
+            },
+        )
+        listed = client.get("/api/v1/sleep-sessions/sleep-1/camera-events")
+
+    assert fused.status_code == 200
+    assert fused.json()["decision"]["reason_code"] == "multi_signal_shadow_candidate"
+    assert fused.json()["clip_plan"]["path"].endswith("sleep-1.mp4")
+    assert fused.json()["camera_event"]["kind"] == "face_covered"
+    assert listed.json()[0]["id"] == fused.json()["camera_event"]["id"]
