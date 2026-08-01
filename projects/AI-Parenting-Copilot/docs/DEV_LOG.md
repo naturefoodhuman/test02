@@ -18,6 +18,37 @@
 
 ---
 
+## 第 52 轮 · 2026-08-01（FastAPI local API runbook / smoke targets）
+
+**目标**：修复用户指出的 FastAPI 服务启动说明缺失问题，并提供可自动验证的 API health smoke。
+
+**完成内容**：
+
+1. 新增 `docs/RUNBOOK_LOCAL_API.md`：
+   - Terminal 1：`make infra-up` / `make db-migrate`。
+   - Terminal 2：`make run-api` 前台启动 uvicorn。
+   - Terminal 3：`make api-health-smoke` 或 curl。
+   - 常见错误解释：`curl: (7)` 表示服务未启动。
+2. Makefile：
+   - `make run-api` alias。
+   - `make api-health-smoke`：检查一个已经运行在 8000 的服务；不可达时打印明确启动步骤。
+   - `make api-server-smoke-test`：临时启动 uvicorn 到 8766，检查 health endpoints 后自动关闭。
+3. `server/scripts/run_dev.sh`：
+   - 输出 DB/PowerSync env 与 API URL。
+   - 提示另开终端执行 `make api-health-smoke`。
+   - 仅在 DB URL 存在时自动 `db-migrate`。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+make api-server-smoke-test
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+```
+
+---
+
 ## 第 51 轮 · 2026-08-01（System health probes / check API）
 
 **目标**：继续推进 `APC-T035`，从 MockHealthProbe 扩展为真实服务探针和系统健康检查 API。

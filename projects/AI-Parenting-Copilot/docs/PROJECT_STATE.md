@@ -42,6 +42,14 @@
 
 
 
+
+### 运维说明修复（FastAPI 启动）
+
+- 补充 `docs/RUNBOOK_LOCAL_API.md`，明确三终端启动/验证流程：infra、FastAPI、curl/health smoke。
+- 新增/完善 Make targets：`make run-api`、`make api-health-smoke`、`make api-server-smoke-test`。
+- `server/scripts/run_dev.sh` 启动时打印 DB/PowerSync env、API URL、下一步 health smoke 提示；仅在 DB URL 存在时自动迁移。
+- 该修复回应用户 curl 8000 失败场景：curl 前必须在单独终端启动 `make run-api`。
+
 ### 继续开发进展（Health probes / system health check）
 
 - 新增 `server/app/health/probes/`：Database, TCP, HTTP, PowerSync health probes。

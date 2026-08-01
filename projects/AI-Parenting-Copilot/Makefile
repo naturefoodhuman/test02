@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test android-native-build clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-api run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -36,6 +36,7 @@ docs-check:
 	@test -f docs/DEV_LOG.md
 	@test -f docs/CHANGELOG.md
 	@test -f docs/HANDOFF.md
+	@test -f docs/RUNBOOK_LOCAL_API.md
 	@test -f docs/ADR/ADR-001-project-bootstrap.md
 	@test -f server/app/main.py
 	@test -f server/app/settings.py
@@ -99,6 +100,8 @@ docs-check:
 	@test -f server/app/camera/fusion.py
 	@test -f server/app/camera/vlm_dispatcher.py
 	@test -f server/scripts/ensure_dev_deps.py
+	@test -f server/scripts/api_health_smoke.py
+	@test -f server/scripts/api_server_smoke.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py
@@ -153,13 +156,21 @@ worker-db-smoke-test: ensure-dev-deps
 powersync-smoke-test: ensure-dev-deps
 	@$(PYTHON) -m pytest tests/integration_powersync -q
 
+api-health-smoke: ensure-dev-deps
+	@$(PYTHON) server/scripts/api_health_smoke.py --base-url http://127.0.0.1:8000
+
+api-server-smoke-test: ensure-dev-deps
+	@$(PYTHON) server/scripts/api_server_smoke.py --port 8766
+
 android-native-build:
 	@cd android/android && ./gradlew assembleDebug
 
 backup-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"
-run-dev: ensure-dev-deps
-	@$(PYTHON) -m uvicorn server.app.main:app --reload --host 127.0.0.1 --port 8000
+run-api: run-dev
+
+run-dev:
+	@bash server/scripts/run_dev.sh
 
 clean:
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

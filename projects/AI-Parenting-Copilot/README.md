@@ -48,8 +48,42 @@ make typecheck
 make test
 ```
 
-说明：`APC-T001` 阶段尚未引入完整服务端依赖；`lint` / `typecheck` 会在本地安装
-`ruff` / `mypy` 时执行正式检查，否则给出明确跳过提示并保持骨架验证可运行。
+## 启动 FastAPI 服务
+
+完整 runbook：`docs/RUNBOOK_LOCAL_API.md`。
+
+最常用方式需要两个终端：
+
+```bash
+# Terminal 1：基础设施
+cd projects/AI-Parenting-Copilot
+export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+export PARENTING_POWERSYNC__URL="http://127.0.0.1:9081"
+make infra-up
+make db-migrate
+make db-current
+
+# Terminal 2：FastAPI 前台服务
+cd projects/AI-Parenting-Copilot
+export PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting"
+export PARENTING_POWERSYNC__URL="http://127.0.0.1:9081"
+make run-api
+```
+
+服务启动后，在第三个终端验证：
+
+```bash
+make api-health-smoke
+# 或 curl http://127.0.0.1:8000/healthz
+```
+
+如果只想自动启动并检查一次：
+
+```bash
+make api-server-smoke-test
+```
+
+说明：项目依赖安装遵循 uv-first；`ensure-dev-deps` 会优先 `uv pip install --python <venv-python> -e .[dev]`。
 
 ## 架构保护
 

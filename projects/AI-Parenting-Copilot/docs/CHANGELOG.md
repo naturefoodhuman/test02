@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 10:52:00
+创建时间（北京时间）：2026-08-01 11:30:00
 -->
 
 
@@ -11,8 +11,41 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write 与 system health real probes 待复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes 与 FastAPI local API runbook/smoke targets 待复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 52 轮] 2026-08-01 — FastAPI local API runbook / smoke targets
+
+### 需求变动
+
+- 用户指出直接 curl 8000 失败，因为此前未说明 FastAPI 需要先独立启动。
+- 新增清晰启动 runbook 与 smoke targets。
+
+### 文件影响
+
+新增：
+
+- `docs/RUNBOOK_LOCAL_API.md`
+- `server/scripts/api_health_smoke.py`
+- `server/scripts/api_server_smoke.py`
+
+修改：
+
+- `Makefile`
+- `README.md`
+- `server/scripts/run_dev.sh`
+- project docs
+
+### 验证
+
+```bash
+make lint
+make typecheck
+make api-server-smoke-test
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+```
 
 ---
 

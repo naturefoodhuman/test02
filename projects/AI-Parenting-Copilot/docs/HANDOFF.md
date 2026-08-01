@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 10:55:00
+创建时间（北京时间）：2026-08-01 11:32:00
 -->
 
 
@@ -133,7 +133,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户复验 `POST /api/v1/system/health/check` 或运行服务后检查 `/api/v1/system/health`，以及 Android `cd android/android && ./gradlew assembleDebug`；通过后推进 `APC-T035/T046/T047/T048` 状态。
+1. 如果要 curl API，先在单独终端运行 `make run-api`。可用 `make api-server-smoke-test` 自动启动/检查/关闭，或 `make api-health-smoke` 检查 8000 上已运行服务。然后让用户复验 `/api/v1/system/health/check` 与 Android `./gradlew assembleDebug`。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。
@@ -209,3 +209,6 @@ JSON / JSONL 使用 `_forge_trace` 字段。
 - 每轮更新 `docs/HANDOFF.md` / `docs/DEV_LOG.md` / `docs/PROJECT_STATE.md` / `docs/TASK_BACKLOG.md`，降低后续 Agent 对长对话上下文的依赖。
 - 避免一次性读取全项目大文件；继续按任务读取相关模块与测试。
 - 若上下文接近上限，先提交并更新 HANDOFF，再继续。
+
+
+本地 FastAPI 启动 runbook：`docs/RUNBOOK_LOCAL_API.md`。
