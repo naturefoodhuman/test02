@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 02:58:00
+创建时间（北京时间）：2026-08-02 03:40:00
 -->
 
 
@@ -106,7 +106,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck

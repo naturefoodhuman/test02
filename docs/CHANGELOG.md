@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 03:00:00
+创建时间（北京时间）：2026-08-02 03:42:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,9 +11,9 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API；Android native core screens；Dev E2E substitutes / APC-T058 accepted；Camera fusion API / clip plan；mmWave live MQTT worker；Android TS API client/view model helpers。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API；Android native core screens；Dev E2E substitutes / APC-T058 accepted；Camera fusion API / clip plan；mmWave live MQTT worker；Android TS API client/view model helpers；Camera VLM shadow API。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
-- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `176 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
+- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `178 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
@@ -31,7 +31,7 @@
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -53,7 +53,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_mmwave_ingest_service.py tests/test_mmwave_api.py tests/test_mmwave_parser.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -72,7 +72,25 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_camera_adapters.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
+```
+
+---
+
+## [第 172 轮] 2026-08-02
+
+### 需求变动
+- **AI Parenting Copilot Camera/VLM 推进**：新增 Camera VLM shadow dispatch API，VLM 仍保持 shadow-mode 且只使用注入 Model Gateway client。
+
+### 文件影响
+- 修改：camera API, camera shadow tests, project docs, root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_camera_shadow_pipeline.py tests/test_camera_adapters.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -90,7 +108,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_features.py tests/test_android_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -108,7 +126,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_orchestrator.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -126,7 +144,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_health_api_probes.py tests/test_health_probes.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -146,7 +164,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_rules_admin_api.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -184,7 +202,7 @@ python3 -m pytest tests/test_rules_admin_api.py tests/test_medication_rules.py t
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_family_knowledge_api.py tests/test_memory_store.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -214,7 +232,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_sync_state_api.py tests/test_android_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -233,7 +251,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -251,7 +269,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -271,7 +289,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 make e2e-fake-test
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -290,7 +308,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -310,7 +328,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_mmwave_api.py tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -331,7 +349,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -351,7 +369,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_android_skeleton.py tests/test_android_features.py tests/test_android_native_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -371,7 +389,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_mmwave_api.py tests/test_camera_adapters.py tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -391,7 +409,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -414,7 +432,7 @@ cd projects/AI-Parenting-Copilot
 make lint
 make typecheck
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---

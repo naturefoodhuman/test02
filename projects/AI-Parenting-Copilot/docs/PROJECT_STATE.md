@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 02:52:00
+创建时间（北京时间）：2026-08-02 03:32:00
 -->
 
 
@@ -115,6 +115,13 @@
 - `/api/v1/system/health/check` 在 DB mode 现在使用 `SQLAlchemyAlertRepository` 生成 gray device/service alerts，而不是只写 in-memory repo。
 - health check 本身写 `system.health_check` audit；API DB smoke 覆盖 offline probe → DB gray alert。
 
+
+
+### 继续开发进展（Camera VLM shadow API）
+
+- 新增 `POST /api/v1/camera-vlm/shadow`，封装 `VLMDispatcher`，可用 app.state 注入的 Model Gateway/FakeModelClient 执行 shadow dispatch。
+- 支持 dry-run（`dispatch=false`）避免没有模型客户端时失败。
+- Mutating dispatch 写 `camera.vlm_shadow_dispatch` audit（DB mode）。
 
 ### 继续开发进展（Android TS API client / feature flows）
 

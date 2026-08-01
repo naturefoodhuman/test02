@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 02:56:00
+创建时间（北京时间）：2026-08-02 03:38:00
 -->
 
 
@@ -39,7 +39,7 @@
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -69,7 +69,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_mmwave_ingest_service.py tests/test_mmwave_api.py tests/test_mmwave_parser.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -98,7 +98,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_camera_adapters.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -138,7 +138,35 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
-## [第 74 轮] 2026-08-02 — Android TS API client / feature flows
+## [第 75 轮] 2026-08-02 — Camera VLM shadow API
+
+### 需求变动
+
+- 继续推进 `APC-T039`：新增 Camera VLM shadow dispatch API，连接 VLMDispatcher 与可注入 Model Gateway/FakeModelClient。
+
+### 文件影响
+
+修改：
+
+- `server/app/camera/api/routes.py`
+- `tests/test_camera_shadow_pipeline.py`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_camera_shadow_pipeline.py tests/test_camera_adapters.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 178 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；VLM remains shadow-mode and uses injected Model Gateway client only.
+
+---
+
+## [第 74 轮] 2026-08-02 — Android TS API client / feature flows; Camera VLM shadow API
 
 ### 需求变动
 
@@ -162,7 +190,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_features.py tests/test_android_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -187,7 +215,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_orchestrator.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -213,7 +241,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_health_api_probes.py tests/test_health_probes.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -243,7 +271,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_rules_admin_api.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -293,7 +321,7 @@ python3 -m pytest tests/test_rules_admin_api.py tests/test_medication_rules.py t
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -324,7 +352,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_family_knowledge_api.py tests/test_memory_store.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -358,7 +386,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_sync_state_api.py tests/test_android_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -388,7 +416,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -414,7 +442,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -446,7 +474,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -485,7 +513,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_mmwave_api.py tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -520,7 +548,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -553,7 +581,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_skeleton.py tests/test_android_features.py tests/test_android_native_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -589,7 +617,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_mmwave_api.py tests/test_camera_adapters.py tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -622,7 +650,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -661,7 +689,7 @@ make typecheck
 python3 -m pytest tests/test_scheduler_worker.py tests/test_scheduler_api.py tests/test_backup_tasks.py -q
 make restore-dry-run
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响

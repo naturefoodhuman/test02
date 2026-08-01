@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 02:54:00
+创建时间（北京时间）：2026-08-02 03:35:00
 -->
 
 
@@ -15,6 +15,31 @@
 - **最新继续开发**：新增 Android native critical alert/full-screen/quick-record fallback；新增 Android Gradle bootstrap；新增 Android Keystore/session + native SQLite pending event store；新增 system health real probes/check API。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `161 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 75 轮 · 2026-08-02（Camera VLM shadow API）
+
+**目标**：继续推进 Camera shadow pipeline，将 VLMDispatcher 从纯 service/test 推进到 API smoke，同时保持 shadow-mode 安全边界。
+
+**完成内容**：
+
+1. 新增 `POST /api/v1/camera-vlm/shadow`：
+   - 输入 image_base64 / prompt / media_type / dispatch flag。
+   - 使用注入的 `app.state.model_client` 调用 `VLMDispatcher`。
+   - 无 model client 或 `dispatch=false` 时安全 dry-run，返回 `dispatched=false`。
+2. Audit：
+   - 写 `camera.vlm_shadow_dispatch`（DB mode）。
+3. Tests：
+   - `tests/test_camera_shadow_pipeline.py` 覆盖 fake model dispatch 与 dry-run。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_camera_shadow_pipeline.py tests/test_camera_adapters.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 178 passed, 8 deselected, 1 warning
+```
 
 ---
 
@@ -36,7 +61,7 @@
 ```bash
 python3 -m pytest tests/test_android_features.py tests/test_android_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -66,7 +91,7 @@ make lint
 make typecheck
 python3 -m pytest tests/test_orchestrator.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 176 passed, 8 deselected, 1 warning
+# 178 passed, 8 deselected, 1 warning
 ```
 
 ---

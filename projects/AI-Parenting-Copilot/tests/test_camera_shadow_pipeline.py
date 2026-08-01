@@ -64,3 +64,41 @@ async def test_vlm_dispatcher_uses_injected_model_gateway_client() -> None:
     assert result.dispatched is True
     assert result.mode == "shadow"
     assert result.response_text == "shadow ok"
+
+
+def test_camera_vlm_shadow_api_uses_optional_model_client() -> None:
+    from fastapi.testclient import TestClient
+
+    from server.app.main import create_app
+    from server.app.settings import Settings
+
+    app = create_app(Settings(env="test"))
+    app.state.model_client = FakeVisionClient()
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/camera-vlm/shadow",
+            json={"image_base64": "ZmFrZQ==", "prompt": "check"},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["mode"] == "shadow"
+    assert response.json()["dispatched"] is True
+    assert response.json()["response_text"] == "shadow ok"
+
+
+def test_camera_vlm_shadow_api_can_dry_run_without_model_client() -> None:
+    from fastapi.testclient import TestClient
+
+    from server.app.main import create_app
+    from server.app.settings import Settings
+
+    app = create_app(Settings(env="test"))
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/camera-vlm/shadow",
+            json={"image_base64": "ZmFrZQ==", "dispatch": False},
+        )
+
+    assert response.status_code == 200
+    assert response.json()["mode"] == "shadow"
+    assert response.json()["dispatched"] is False

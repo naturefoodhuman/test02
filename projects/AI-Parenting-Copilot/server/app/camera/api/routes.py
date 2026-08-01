@@ -20,6 +20,7 @@ from server.app.camera.sqlalchemy_camera_event_repo import (
     SQLAlchemyCameraEventRepository,
 )
 from server.app.camera.sqlalchemy_sleep_session_repo import SQLAlchemySleepSessionRepository
+from server.app.camera.vlm_dispatcher import VLMDispatcher
 from server.app.common.clock import utc_now
 from server.app.common.errors import AppError
 from server.app.observability.request_audit import record_request_audit
@@ -55,6 +56,20 @@ class FusionEvaluateResponse(BaseModel):
     decision: dict[str, object]
     clip_plan: dict[str, object] | None = None
     camera_event: CameraEventRecord | None = None
+
+
+class VLMShadowDispatchRequest(BaseModel):
+    image_base64: str
+    prompt: str = "Analyze this nursery image in shadow mode. Do not alert."
+    media_type: str = "image/jpeg"
+    plan_key: str | None = None
+    dispatch: bool = True
+
+
+class VLMShadowDispatchResponse(BaseModel):
+    mode: str
+    dispatched: bool
+    response_text: str | None = None
 
 
 def _repo(request: Request) -> InMemorySleepSessionRepository | SQLAlchemySleepSessionRepository:
@@ -242,6 +257,35 @@ async def evaluate_camera_fusion(
             "path": clip_plan.path,
         },
         camera_event=camera_event,
+    )
+
+
+@router.post("/camera-vlm/shadow", response_model=VLMShadowDispatchResponse)
+async def dispatch_camera_vlm_shadow(
+    payload: VLMShadowDispatchRequest,
+    request: Request,
+) -> VLMShadowDispatchResponse:
+    model_client = getattr(request.app.state, "model_client", None) if payload.dispatch else None
+    result = await VLMDispatcher(model_client, shadow_mode=True).dispatch(
+        image_base64=payload.image_base64,
+        prompt=payload.prompt,
+    )
+    await record_request_audit(
+        request,
+        action="camera.vlm_shadow_dispatch",
+        resource="camera_vlm:shadow",
+        after={
+            "mode": result.mode,
+            "dispatched": result.dispatched,
+            "media_type": payload.media_type,
+            "plan_key": payload.plan_key,
+        },
+        db_only=True,
+    )
+    return VLMShadowDispatchResponse(
+        mode=result.mode,
+        dispatched=result.dispatched,
+        response_text=result.response_text,
     )
 
 
