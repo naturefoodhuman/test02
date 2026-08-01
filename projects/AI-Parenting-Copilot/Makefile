@@ -79,6 +79,7 @@ docs-check:
 	@test -f server/app/state_engine/api/routes.py
 	@test -f server/migrations/versions/0002_event_notify_trigger.py
 	@test -f server/app/sync/service/contract_validator.py
+	@test -f server/app/sync/api/routes.py
 	@test -f server/app/mmwave/api/routes.py
 	@test -f server/app/rule_engine/api/routes.py
 	@test -f server/app/scheduler/api/routes.py

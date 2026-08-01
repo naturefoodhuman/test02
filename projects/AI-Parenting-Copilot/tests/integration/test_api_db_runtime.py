@@ -156,6 +156,12 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             )
             assert mmwave_device.status_code == 200
             mmwave_device_id = mmwave_device.json()["device_id"]
+            heartbeat = client.post(
+                "/api/v1/sync/heartbeat",
+                json={"client_id": device_id, "family_id": family_id, "pending_count": 0},
+            )
+            assert heartbeat.status_code == 200
+            assert heartbeat.json()["client_id"] == device_id
 
             now = datetime.now(UTC).replace(microsecond=0).isoformat()
             event = client.post(
@@ -362,6 +368,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         SELECT action FROM audit_log
                         WHERE resource IN (
                             :family_resource,
+                            :sync_resource,
                             :event_resource,
                             :alert_resource,
                             :sleep_resource,
@@ -376,6 +383,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                     ),
                     {
                         "family_resource": f"family:{family_id}",
+                        "sync_resource": f"sync_state:{device_id}",
                         "event_resource": f"observation_event:{event.json()['event_id']}",
                         "alert_resource": f"alert:{alert_id}",
                         "sleep_resource": f"sleep_session:{sleep_id}",
@@ -390,6 +398,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             )
             assert {
                 "auth.init_family",
+                "sync.heartbeat",
                 "event.upsert",
                 "alert.create",
                 "alert.dispatch",

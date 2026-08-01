@@ -59,6 +59,7 @@ def test_sync_schema_contains_offline_pending_contract_fields() -> None:
     assert "pending_sync: true" in store
     assert "drainPendingEvents" in drain
     assert "/api/v1/events" in drain
+    assert "/api/v1/sync/heartbeat" in drain
     assert "markSynced" in drain
 
 

@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 15:20:00
+// 创建时间（北京时间）：2026-08-01 21:12:00
 
 import { ApiClient } from '../api/client';
 import { LocalObservationEvent } from './schema';
@@ -20,9 +20,24 @@ export function toServerObservationEvent(event: LocalObservationEvent): Omit<Loc
   return { ...payload, correction_of: null, is_deleted: false };
 }
 
+export async function reportSyncHeartbeat(
+  api: ApiClient,
+  clientId: string,
+  familyId: string | undefined,
+  pendingCount: number,
+): Promise<void> {
+  await api.post('/api/v1/sync/heartbeat', {
+    client_id: clientId,
+    family_id: familyId,
+    pending_count: pendingCount,
+  });
+}
+
 export async function drainPendingEvents(
   bridge: NativeLocalEventBridge,
   api: ApiClient,
+  clientId?: string,
+  familyId?: string,
 ): Promise<PendingSyncDrainResult> {
   const pending = await bridge.pending();
   const result: PendingSyncDrainResult = { attempted: pending.length, synced: 0, failed: 0, failedEventIds: [] };
@@ -40,6 +55,9 @@ export async function drainPendingEvents(
       result.failed += 1;
       result.failedEventIds.push(event.event_id);
     }
+  }
+  if (clientId) {
+    await reportSyncHeartbeat(api, clientId, familyId, result.failed);
   }
   return result;
 }

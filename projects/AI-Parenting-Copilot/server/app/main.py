@@ -61,6 +61,8 @@ from server.app.settings import Settings
 from server.app.state_engine.api.routes import router as state_router
 from server.app.state_engine.engine import BabyStateEngine
 from server.app.state_engine.snapshot_repo import InMemoryStateSnapshotRepository
+from server.app.sync.api.routes import router as sync_router
+from server.app.sync.state_repo import InMemorySyncStateRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -160,6 +162,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.evidence_policy_repo = InMemoryEvidencePolicyRepository()
     app.state.media_storage = MediaStorageService()
     app.state.export_service = ExportService()
+    app.state.sync_state_repository = InMemorySyncStateRepository()
     app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
     app.state.auth_service = AuthService(
         InMemoryAuthRepository(),
@@ -175,6 +178,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(auth_router)
     app.include_router(events_router)
     app.include_router(orchestrator_router)
+    app.include_router(sync_router)
     app.include_router(alert_router)
     app.include_router(camera_router)
     app.include_router(media_router)

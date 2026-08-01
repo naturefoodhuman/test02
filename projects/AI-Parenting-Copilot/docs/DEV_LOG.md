@@ -18,6 +18,38 @@
 
 ---
 
+## 第 68 轮 · 2026-08-01（Sync heartbeat API / Android pending report）
+
+**目标**：继续推进 Android pending_sync 可观测性，补齐服务端 sync_state heartbeat API。
+
+**完成内容**：
+
+1. Sync state repositories：
+   - `server/app/sync/state_repo.py`
+   - `server/app/sync/sqlalchemy_state_repo.py`
+2. Sync API：
+   - `POST /api/v1/sync/heartbeat`
+   - `GET /api/v1/sync/state/{client_id}`
+   - Mutating heartbeat 写 `sync.heartbeat` audit。
+3. App wiring：
+   - FastAPI dev mode 注入 `InMemorySyncStateRepository`。
+   - DB mode 自动使用 `SQLAlchemySyncStateRepository`。
+4. Android：
+   - `pending_sync_drain.ts` drain 后可调用 `/api/v1/sync/heartbeat` 上报 pending count。
+5. Tests：
+   - `tests/test_sync_state_api.py`。
+   - API DB smoke 覆盖 sync heartbeat。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_sync_state_api.py tests/test_android_skeleton.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 172 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## 第 67 轮 · 2026-08-01（Android native login + save/drain）
 
 **目标**：继续推进 `APC-T046/T047/T048`，让 native Android fallback 可以完成登录、设备注册、token 加密保存，并让 Quick Record 使用 session 上下文。
