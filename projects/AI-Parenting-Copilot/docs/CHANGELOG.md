@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 01:28:00
+创建时间（北京时间）：2026-08-01 02:38:00
 -->
 
 
@@ -11,8 +11,42 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator 已根据用户复验解除 `APC-T026/T027/T028` 阻塞；新增 Dose Interceptor DB audit 与 Notification DB delivery dispatch，待用户 Mac `api-db-smoke-test` 复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator 与 Dose Interceptor DB audit 已根据用户复验解除 `APC-T026/T027/T028/T029` 阻塞；新增 Notification cancel receipts，待用户 Mac `api-db-smoke-test` 复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 46 轮] 2026-08-01 — Notification cancel receipts / APC-T029 accepted
+
+### 需求变动
+
+- 用户确认 Dose Interceptor DB audit 所在 `api-db-smoke-test` 与 `make test` 复验通过，`APC-T029` 标记为 DONE。
+- 继续推进 `APC-T033/T034`：ack 后 channel cancel，持久化 cancelled delivery receipts，并暴露 deliveries 查询 API。
+
+### 文件影响
+
+修改：
+
+- `server/app/notification/orchestrator.py`
+- `server/app/notification/api/routes.py`
+- `tests/test_notification_orchestrator.py`
+- `tests/test_alert_api.py`
+- `tests/integration/test_api_db_runtime.py`
+- project docs
+
+### 验证
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_notification_orchestrator.py tests/test_alert_api.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 151 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；ack cancel 仍通过 NotificationOrchestrator，不绕过告警/通知边界。
 
 ---
 

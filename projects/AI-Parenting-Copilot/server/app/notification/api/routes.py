@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 01:02:00
+# 创建时间（北京时间）：2026-08-01 02:12:00
 
 
 """Alert API routes for dev/in-memory mode."""
@@ -93,6 +93,11 @@ async def dispatch_alert(alert_id: str, request: Request) -> list[DeliveryReceip
     return receipts
 
 
+@router.get("/{alert_id}/deliveries", response_model=list[DeliveryReceipt])
+async def list_deliveries(alert_id: str, request: Request) -> list[DeliveryReceipt]:
+    return await _delivery_repo(request).list_by_alert(alert_id)
+
+
 @router.get("/{alert_id}", response_model=AlertRecord)
 async def get_alert(alert_id: str, request: Request) -> AlertRecord:
     return await _repo(request).get(alert_id)
@@ -101,11 +106,22 @@ async def get_alert(alert_id: str, request: Request) -> AlertRecord:
 @router.post("/{alert_id}/ack", response_model=AlertRecord)
 async def ack_alert(alert_id: str, payload: AckAlertRequest, request: Request) -> AlertRecord:
     alert = await _repo(request).ack(alert_id, payload)
+    cancel_receipts = await NotificationOrchestrator(
+        build_default_channels(include_camera=True),
+        delivery_repo=_delivery_repo(request),
+    ).cancel(alert)
     await record_request_audit(
         request,
         action="alert.ack",
         resource=f"alert:{alert_id}",
         after=alert.model_dump(mode="json"),
+        db_only=True,
+    )
+    await record_request_audit(
+        request,
+        action="alert.cancel_channels",
+        resource=f"alert:{alert_id}",
+        after={"receipts": [receipt.model_dump(mode="json") for receipt in cancel_receipts]},
         db_only=True,
     )
     return alert

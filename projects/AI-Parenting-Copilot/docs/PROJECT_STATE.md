@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-01 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增确认 `APC-T020/T021/T026/T027/T028 DONE`；`APC-T029` 已接入 DB audit，等待用户 Mac `api-db-smoke-test` 复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：新增确认 `APC-T029 DONE`；`APC-T032/T033/T034` 已推进到 safe channel/dispatch/cancel DB smoke，等待用户 Mac 复验与真实通道凭证；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -35,6 +35,14 @@
 
 
 
+
+
+### 继续开发进展（Notification cancel / escalation support）
+
+- `NotificationOrchestrator.cancel()` 已实现 channel cancel 并写入 cancellation delivery receipts。
+- `POST /api/v1/alerts/{alert_id}/ack` 现在会在 ack 后调用 channel cancel，并写入 `alert.cancel_channels` audit。
+- 新增 `GET /api/v1/alerts/{alert_id}/deliveries`，便于 App/测试读取 delivery/cancel receipts。
+- 根据用户上一轮本地复验通过，`APC-T029` 已标记 DONE。
 
 ### 继续开发进展（Notification channels / DB delivery）
 
@@ -94,7 +102,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 150 passed, 8 deselected, 1 warning
+# 151 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

@@ -197,6 +197,9 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             )
             assert ack.status_code == 200
             assert ack.json()["status"] == "acknowledged"
+            deliveries = client.get(f"/api/v1/alerts/{alert_id}/deliveries")
+            assert deliveries.status_code == 200
+            assert "cancelled" in {receipt["status"] for receipt in deliveries.json()}
 
             rule_pack = tmp_path / "rule.yaml"
             rule_pack.write_text(
@@ -258,6 +261,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 "event.upsert",
                 "alert.create",
                 "alert.dispatch",
+                "alert.cancel_channels",
                 "rule.activate",
                 "dose_intercept",
             }.issubset(audit_actions)

@@ -10,11 +10,45 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T020/T021/T026/T027/T028` 已根据用户复验与前置解除标记 DONE；`APC-T029` 已接入真实 DB audit，等待用户复验。
+- **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 SQLAlchemyAuditSink，DoseInterceptor 可写真实 audit_log；新增 notification dry-run adapters、alert dispatch API 与 DB delivery receipts。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `150 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 SQLAlchemyAuditSink，DoseInterceptor 可写真实 audit_log；新增 notification dry-run adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack channel cancellation receipts。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `151 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 46 轮 · 2026-08-01（Notification cancel receipts + APC-T029 accepted）
+
+**目标**：根据用户本地复验通过结果解除 `APC-T029`，并继续推进 `APC-T033/T034` 的 ack 后 cancel 与 delivery receipt 闭环。
+
+**完成内容**：
+
+1. 状态同步：
+   - `APC-T029`：BLOCKED → DONE
+2. Notification cancel：
+   - `NotificationOrchestrator.cancel(alert)` 调用所有适用通道的 `cancel()` 并持久化 `status=cancelled` delivery receipts。
+   - `POST /api/v1/alerts/{alert_id}/ack` ack 后自动 cancel channels。
+   - 新增 `GET /api/v1/alerts/{alert_id}/deliveries`。
+   - DB mode 写入 `alert.cancel_channels` audit。
+3. 测试增强：
+   - Unit：cancel 写入 channel cancellation receipts。
+   - API dev：dispatch + ack + deliveries 包含 cancelled。
+   - API DB smoke：dispatch/ack/deliveries/audit 包含 `alert.cancel_channels`。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_notification_orchestrator.py tests/test_alert_api.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 151 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T033/T034` 仍保持 BLOCKED，等待用户 Mac `api-db-smoke-test` 复验和真实 FCM/TTS/设备通道接入。
 
 ---
 

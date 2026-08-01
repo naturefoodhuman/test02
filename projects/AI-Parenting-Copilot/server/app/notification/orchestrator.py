@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 01:10:00
+# 创建时间（北京时间）：2026-08-01 02:10:00
 
 
 """Notification Orchestrator fan-out logic."""
@@ -54,3 +54,21 @@ class NotificationOrchestrator:
         for receipt in receipts:
             await self.delivery_repo.add(receipt)
         return list(receipts)
+
+    async def cancel(self, alert: AlertRecord) -> list[DeliveryReceipt]:
+        """Cancel active local/fallback channels and persist cancellation receipts."""
+
+        receipts: list[DeliveryReceipt] = []
+        for channel in self.channels_for(alert):
+            cancel = getattr(channel, "cancel", None)
+            if cancel is not None:
+                await cancel(alert)
+            receipt = DeliveryReceipt(
+                alert_id=alert.id,
+                channel=channel.name,
+                status="cancelled",
+                receipt={"reason": "alert_acknowledged"},
+            )
+            await self.delivery_repo.add(receipt)
+            receipts.append(receipt)
+        return receipts
