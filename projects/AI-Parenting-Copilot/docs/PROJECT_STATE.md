@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-01 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增确认 `APC-T032/T033/T034 DONE`；新增 Android native Gradle bootstrap `gradlew` 修复用户本地缺失问题；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：新增确认 `APC-T045 DONE`；新增 Android Keystore SecureSessionStore 与 native SQLite pending event store，待用户 Mac `assembleDebug` 复验后推进 `APC-T046/T047`；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -38,6 +38,13 @@
 
 
 
+
+
+### 继续开发进展（Android auth/session + local sync native skeleton）
+
+- 新增 Android Keystore-backed `SecureSessionStore.kt` 与 TS `native_secure_session.ts` bridge contract，推进 `APC-T046`。
+- 新增 native SQLite `LocalEventStore.kt` / `LocalObservationEvent.kt` 与 TS `native_sqlite_bridge.ts`，支持 local pending event insert/pending/markSynced，推进 `APC-T047`。
+- 根据用户已确认 `./gradlew assembleDebug BUILD SUCCESSFUL`，`APC-T045` 已标记 DONE；新增 native files 仍需下一轮用户 Android build 复验。
 
 ### 继续开发进展（Android Gradle bootstrap）
 
@@ -118,7 +125,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 152 passed, 8 deselected, 1 warning
+# 154 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

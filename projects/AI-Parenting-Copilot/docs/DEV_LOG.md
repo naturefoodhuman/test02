@@ -12,9 +12,48 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android native critical alert full-screen fallback skeleton；新增 Android Gradle bootstrap `gradlew` 与 `make android-native-build`，修复用户本地 `./gradlew` 缺失。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `152 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 Android native critical alert full-screen fallback skeleton；新增 Android Gradle bootstrap；新增 Android Keystore secure session store 与 native SQLite pending event store。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `154 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 49 轮 · 2026-08-01（Android secure session + native pending event store）
+
+**目标**：在用户确认 `assembleDebug` 成功后，解除 `APC-T045` 并继续推进 `APC-T046/T047` 的 native auth/session 与 local pending event store。
+
+**完成内容**：
+
+1. 状态同步：
+   - `APC-T045` → DONE
+2. Native secure session：
+   - `SecureSessionStore.kt`：Android Keystore AES/GCM encrypted token storage，保存 family/user/baby/device/role metadata。
+   - `native_secure_session.ts`：RN bridge contract。
+3. Native pending event store：
+   - `LocalObservationEvent.kt`。
+   - `LocalEventStore.kt`：SQLiteOpenHelper table `observation_event_local`，支持 insertPending / pending / markSynced / pendingCount。
+   - `native_sqlite_bridge.ts`：RN bridge contract。
+4. Static tests：
+   - Android native skeleton tests 增加 Keystore、SQLite pending_sync 和 TS bridge 断言。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 154 passed, 8 deselected, 1 warning
+```
+
+**用户下一步**：
+
+```bash
+cd projects/AI-Parenting-Copilot/android/android
+./gradlew assembleDebug
+```
+
+若通过，可推进 `APC-T046/T047` 状态；若失败，先修 native compile。
 
 ---
 

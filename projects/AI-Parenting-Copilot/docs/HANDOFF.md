@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 04:20:00
+创建时间（北京时间）：2026-08-01 05:10:00
 -->
 
 
@@ -82,7 +82,9 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T026`-`APC-T028`：SQLAlchemyMemoryStore、LocalRAG adapter、Logger shared parser 与 Orchestrator DB memory injection 已通过用户 Mac 复验，已 DONE。
 - `APC-T029`：Dose Interceptor SQLAlchemyAuditSink 与 API DB smoke 已通过用户复验，已 DONE。
 - `APC-T032/T033/T034`：safe notification adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack cancel receipts 已通过用户 Mac 复验，已 DONE；真实 FCM/TTS/设备凭证转入 Android/device 后续验收。
-- `APC-T045/T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 与 Gradle bootstrap `gradlew` 已完成；需要 Android SDK/toolchain 执行 `./gradlew assembleDebug` 与真机/FCM/Notifee permission 验收。
+- `APC-T045`：Android native Gradle build 已由用户验证通过，已 DONE。
+- `APC-T046/T047`：Android Keystore secure session store、native SQLite pending event store 与 TS bridge contracts 已完成；需要用户执行 `./gradlew assembleDebug` 复验新增 native files。
+- `APC-T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 已完成；需要真机/FCM/Notifee permission 验收。
 - `APC-T030`：P0 Copilots pure/dev API 已有；等待 T029 与 Vaccine/Growth 生产审查相关阻塞。
 - `APC-T032`-`APC-T036`：Notification/Escalation/Health/Scheduler dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
 - `APC-T037`-`APC-T044`：Camera / mmWave / Media / Export / Backup / Firmware mock/dev/skeleton 已有；真实 RTSP/ISAPI/Fregata/MQTT/PlatformIO/NAS 待验收。
@@ -98,7 +100,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 152 passed, 8 deselected, 1 warning
+# 154 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
@@ -130,7 +132,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Android toolchain 环境复验 `cd android/android && ./gradlew assembleDebug`；若通过，可推进 `APC-T045/T052` 状态。若失败，优先修 Gradle/Android SDK/build 配置。
+1. 让用户 Android toolchain 环境复验 `cd android/android && ./gradlew assembleDebug`；这轮新增了 SecureSessionStore/LocalEventStore native files，若通过，可推进 `APC-T046/T047` 状态。若失败，优先修 Kotlin/Android compile。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。

@@ -59,3 +59,33 @@ def test_android_native_fullscreen_alert_files_exist_and_are_trigger_only() -> N
     assert ".CriticalAlertActivity" in manifest
     assert ".AlertActionReceiver" in manifest
     assert "shouldUseFullScreen" in bridge
+
+
+def test_android_native_local_event_store_supports_pending_sync_contract() -> None:
+    base = ANDROID / "app/src/main/java/com/aiparentingcopilot"
+    event = (base / "LocalObservationEvent.kt").read_text()
+    store = (base / "LocalEventStore.kt").read_text()
+    bridge = Path("android/src/sync/native_sqlite_bridge.ts").read_text()
+
+    assert "pendingSync" in event
+    assert "SQLiteOpenHelper" in store
+    assert "observation_event_local" in store
+    assert "insertPending" in store
+    assert "markSynced" in store
+    assert "pending_sync" in store
+    assert "NativeLocalEventBridge" in bridge
+    assert "pendingSyncCount" in bridge
+
+
+def test_android_native_secure_session_store_uses_keystore() -> None:
+    base = ANDROID / "app/src/main/java/com/aiparentingcopilot"
+    secure = (base / "SecureSessionStore.kt").read_text()
+    bridge = Path("android/src/features/auth/native_secure_session.ts").read_text()
+
+    assert "AndroidKeyStore" in secure
+    assert "AES/GCM/NoPadding" in secure
+    assert "accessToken" in secure
+    assert "clear()" in secure
+    assert "NativeSecureSessionBridge" in bridge
+    assert "persistSession" in bridge
+    assert "restoreSession" in bridge

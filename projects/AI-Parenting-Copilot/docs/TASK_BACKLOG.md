@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 DONE；APC-T033 DONE；APC-T034 DONE；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 DONE；APC-T033 DONE；APC-T034 DONE；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 DONE；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -1445,7 +1445,7 @@
 - **所属 Capability**：C19 Android 基础与同步
 - **所属 Story**：S19 RN Android-only 壳、Auth、PowerSync、离线写入
 - **目标**：创建 Android-only React Native 应用基础壳，接入导航、主题、API client。
-- **状态**：BLOCKED（Android RN source skeleton/API client/theme/navigation/static tests 与 native Gradle bootstrap `gradlew` 已完成；`assembleDebug` 待 Android SDK/toolchain 验收）
+- **状态**：DONE（Android RN source skeleton/API client/theme/navigation/static tests、native Gradle bootstrap、Huawei mirror mainland build config 与用户 Mac `assembleDebug` 验收已通过）
 - **前置依赖**：APC-T001, APC-T008
 - **输入**：`ENGINEERING_DESIGN.md` §2 安卓端模块、§3；`ARCHITECTURE_FINAL.md` §3.2
 - **输出**：可运行 Android App skeleton
@@ -1474,7 +1474,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现登录、token 保存、家庭/宝宝上下文、设备注册。
-- **状态**：BLOCKED（session reducer/authService TS flow/static tests 已完成；安全存储/native integration 与前置 T045/T008 待验收）
+- **状态**：BLOCKED（session reducer/authService TS flow/static tests 与 Android Keystore-backed SecureSessionStore/native bridge 已完成；新增 native code 待用户 Mac `assembleDebug`/device 复验）
 - **前置依赖**：APC-T045, APC-T008
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§19
 - **输出**：Android Auth feature
@@ -1503,7 +1503,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现 Android 本地 SQLite、PowerSync client、ObservationEvent 本地写入与 pending_sync 标记。
-- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests 已完成；op-sqlite/PowerSync native integration 与前置 T012/T046 待验收）
+- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store 与 TS native bridge 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
 - **前置依赖**：APC-T012, APC-T046
 - **输入**：`ENGINEERING_DESIGN.md` §1.2 Android、§7.1；`ARCHITECTURE_FINAL.md` §9
 - **输出**：Android Sync module
