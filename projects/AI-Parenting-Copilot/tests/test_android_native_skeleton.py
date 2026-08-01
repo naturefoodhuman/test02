@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 20:12:00
+# 创建时间（北京时间）：2026-08-01 22:55:00
 
 """Android native skeleton static tests."""
 
@@ -124,12 +124,14 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     timeline = (base / "TimelineActivity.kt").read_text()
     alert_center = (base / "AlertCenterActivity.kt").read_text()
     sleep = (base / "SleepSessionActivity.kt").read_text()
+    rules = (base / "RuleEvaluationActivity.kt").read_text()
 
     assert "ApiSettingsActivity::class.java" in main
     assert "TodayActivity::class.java" in main
     assert "TimelineActivity::class.java" in main
     assert "AlertCenterActivity::class.java" in main
     assert "SleepSessionActivity::class.java" in main
+    assert "RuleEvaluationActivity::class.java" in main
     assert "Refresh server health" in today
     assert "/api/v1/system/health" in today
     assert "Refresh server timeline" in timeline
@@ -144,6 +146,9 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "/roi" in sleep
     assert "/camera-events" in sleep
     assert "postSessionAction" in sleep
+    assert "/api/v1/rules/evaluate/" in rules
+    assert "No LLM dose/triage generation" in rules
+    assert "Medication safety" in rules
     assert ".TodayActivity" in manifest
     assert ".AlertCenterActivity" in manifest
 

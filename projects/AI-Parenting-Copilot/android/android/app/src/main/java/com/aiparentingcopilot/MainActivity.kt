@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 20:10:00
+// 创建时间（北京时间）：2026-08-01 22:50:00
 
 package com.aiparentingcopilot
 
@@ -31,6 +31,7 @@ class MainActivity : Activity() {
         addButton(layout, "Timeline", TimelineActivity::class.java)
         addButton(layout, "Alert Center", AlertCenterActivity::class.java)
         addButton(layout, "Sleep Session", SleepSessionActivity::class.java)
+        addButton(layout, "Rule Engine", RuleEvaluationActivity::class.java)
         addButton(layout, "Pending Sync", PendingEventsActivity::class.java)
         addButton(layout, "API Settings / Drain", ApiSettingsActivity::class.java)
         val alertDemo = Button(this).apply {

@@ -77,6 +77,26 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
+## [第 168 轮] 2026-08-02
+
+### 需求变动
+- **AI Parenting Copilot Android Rule Engine 推进**：新增 native RuleEvaluationActivity 与 TS rule evaluation helper，App 可直接调用 Rule Engine API 获取 medication/triage/vaccine/growth 结构化结果。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/android/android/app/src/main/java/com/aiparentingcopilot/RuleEvaluationActivity.kt`
+- 新增：`projects/AI-Parenting-Copilot/android/src/features/rules/ruleEvaluation.ts`
+- 修改：Android manifest/main/static tests/project docs/root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_rules_admin_api.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 174 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## [第 167 轮] 2026-08-01
 
 ### 需求变动

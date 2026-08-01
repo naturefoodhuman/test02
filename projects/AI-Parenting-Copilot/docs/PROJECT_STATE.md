@@ -108,6 +108,14 @@
 
 
 
+
+### 继续开发进展（Android Rule Engine screen）
+
+- 新增 `RuleEvaluationActivity`，native Android fallback 可直接调用 `/api/v1/rules/evaluate/{domain}`。
+- 支持 medication / triage / vaccine / growth 示例按钮；界面明确“Rule Engine only. No LLM dose/triage generation.”。
+- 新增 `android/src/features/rules/ruleEvaluation.ts`，为 RN/TS 层提供 rule evaluate client 和 summaries。
+- `MainActivity` 增加 Rule Engine 入口；static tests 覆盖 rule API routes 与 no-LLM safety statement。
+
 ### 继续开发进展（Rule evaluation API）
 
 - 新增 `POST /api/v1/rules/evaluate/{domain}`，覆盖 medication、triage、thresholds、vaccine、growth。

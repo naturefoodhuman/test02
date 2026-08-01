@@ -18,6 +18,36 @@
 
 ---
 
+## 第 71 轮 · 2026-08-02（Android Rule Engine screen）
+
+**目标**：继续推进 Android 与 Rule Engine 联动，让家长端/真机 fallback 可直接触发 P0 规则评估，避免 LLM 生成医疗/剂量输出。
+
+**完成内容**：
+
+1. Android native screen：
+   - `RuleEvaluationActivity.kt`。
+   - Buttons: Medication safety / Triage fever / Vaccine plan / Growth check。
+   - Calls `/api/v1/rules/evaluate/{domain}` through `NativeApiClient`。
+   - UI 明确：Rule Engine only，No LLM dose/triage generation。
+2. RN/TS helper：
+   - `android/src/features/rules/ruleEvaluation.ts`。
+   - `evaluateRuleDomain()` plus summary helpers。
+3. App wiring：
+   - MainActivity adds Rule Engine entry。
+   - Manifest registers RuleEvaluationActivity。
+4. Tests：
+   - Native skeleton static tests cover RuleEvaluationActivity and safety statement。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_rules_admin_api.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 174 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## 第 70 轮 · 2026-08-01（Rule evaluation API）
 
 **目标**：继续推进 Rule Engine 对 App/Copilot 的服务端可调用接口，避免客户端或 Copilot 绕过 Rule Engine。

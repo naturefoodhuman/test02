@@ -219,3 +219,5 @@ JSON / JSONL 使用 `_forge_trace` 字段。
 本地 FastAPI 启动 runbook：`docs/RUNBOOK_LOCAL_API.md`。
 
 - Rule evaluation API: `POST /api/v1/rules/evaluate/{domain}` for medication/triage/thresholds/vaccine/growth.
+
+- Android Rule Engine screen: `RuleEvaluationActivity` calls `/api/v1/rules/evaluate/{domain}` and must remain Rule-Engine-only for dose/triage outputs.
