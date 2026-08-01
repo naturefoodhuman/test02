@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 14:35:00
+# 创建时间（北京时间）：2026-08-01 16:40:00
 
 """mmWave frame ingestion API."""
 
@@ -23,6 +23,14 @@ from server.app.mmwave.sqlalchemy_sensor_event_repo import (
 from server.app.observability.request_audit import record_request_audit
 
 router = APIRouter(prefix="/api/v1/mmwave", tags=["mmwave"])
+
+
+def _dev_sensor_events(request: Request) -> list[SensorEventRecord]:
+    records = getattr(request.app.state, "mmwave_sensor_events", None)
+    if records is None:
+        records = []
+        request.app.state.mmwave_sensor_events = records
+    return records
 
 
 class MMWaveFrameIngestRequest(BaseModel):
@@ -54,6 +62,7 @@ async def ingest_mmwave_frame(
             signal_type=candidate.signal_type,
             payload=candidate.payload,
         )
+        _dev_sensor_events(request).append(sensor_event)
     observation_event_id: str | None = None
     if db_session is not None and payload.baby_id and payload.family_id:
         observation = await SQLAlchemyEventRepository(db_session).upsert(
@@ -78,3 +87,20 @@ async def ingest_mmwave_frame(
         sensor_event=sensor_event,
         observation_event_id=observation_event_id,
     )
+
+
+@router.get("/devices/{device_id}/events", response_model=list[SensorEventRecord])
+async def list_mmwave_sensor_events(
+    device_id: str,
+    request: Request,
+    limit: int = 100,
+) -> list[SensorEventRecord]:
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return await SQLAlchemySensorEventRepository(db_session).list_by_device(
+            device_id,
+            limit=limit,
+        )
+    return [
+        record for record in _dev_sensor_events(request) if record.device_id == device_id
+    ][:limit]

@@ -195,6 +195,9 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert mmwave.status_code == 200
             assert mmwave.json()["sensor_event"]["signal_type"] == "apnea_candidate"
             assert mmwave.json()["observation_event_id"] is not None
+            listed_mmwave = client.get(f"/api/v1/mmwave/devices/{mmwave_device_id}/events")
+            assert listed_mmwave.status_code == 200
+            assert listed_mmwave.json()[0]["signal_type"] == "apnea_candidate"
 
             async with async_sessionmaker(engine, expire_on_commit=False)() as worker_session:
                 async with worker_session.begin():

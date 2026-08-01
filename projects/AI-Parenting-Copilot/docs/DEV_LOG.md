@@ -18,6 +18,42 @@
 
 ---
 
+## 第 60 轮 · 2026-08-01（Android background drain / mmWave events list）
+
+**目标**：继续加速推进 Android 离线同步闭环和 mmWave API 可观测性。
+
+**完成内容**：
+
+1. Android background drain：
+   - `NativeApiClient.kt` 保持 native fallback POST client。
+   - 新增 `ApiSettingsStore.kt` / `ApiSettingsActivity.kt`：配置 API base URL，查看 last drain summary，手动 trigger drain。
+   - 新增 `BackgroundDrainScheduler.kt` / `BackgroundDrainJobService.kt`：JobScheduler 定期 drain pending events 和 alert ack actions。
+   - 新增 `BootReceiver.kt`：开机恢复 periodic drain。
+   - `MainApplication` 自动 schedule periodic drain。
+   - `MainActivity` 增加 API Settings / Drain 入口。
+2. mmWave list API：
+   - `GET /api/v1/mmwave/devices/{device_id}/events`，支持 dev in-memory 和 DB repository。
+   - API DB smoke 增加 mmWave list 断言。
+3. Tests：
+   - Android native skeleton static tests 覆盖 JobService/JobScheduler/BootReceiver/API settings。
+   - mmWave API test 覆盖 ingest 后 list。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_mmwave_api.py tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
+
+**用户下一步（非阻塞本轮）**：
+
+```bash
+cd android/android && ./gradlew assembleDebug
+```
+
+---
+
 ## 第 59 轮 · 2026-08-01（Android native API drains）
 
 **目标**：继续推进 Android 离线记录与告警确认闭环，从 TS bridge contract 进一步推进到 native fallback screens 可调用的 Kotlin drainers。

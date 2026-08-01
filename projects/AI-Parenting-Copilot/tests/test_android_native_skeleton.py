@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 16:05:00
+# 创建时间（北京时间）：2026-08-01 16:35:00
 
 """Android native skeleton static tests."""
 
@@ -90,6 +90,12 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "QuickRecordActivity::class.java" in main
     assert "LocalEventStore" in quick and "insertPending" in quick
     assert "Pending sync:" in quick
+    background = (base / "BackgroundDrainJobService.kt").read_text()
+    scheduler = (base / "BackgroundDrainScheduler.kt").read_text()
+    settings = (base / "ApiSettingsStore.kt").read_text()
+    settings_activity = (base / "ApiSettingsActivity.kt").read_text()
+    boot = (base / "BootReceiver.kt").read_text()
+
     assert "Pending sync events" in pending
     assert "PendingSyncDrainer" in pending
     assert "postJson" in native_api
@@ -97,6 +103,15 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "markSynced" in pending_drainer
     assert "/api/v1/alerts/" in alert_drainer
     assert "drainLocalActions" in alert_receiver
+    assert "JobService" in background
+    assert "JobScheduler" in scheduler
+    assert "schedulePeriodic" in scheduler
+    assert "api_base_url" in settings
+    assert "Trigger drain now" in settings_activity
+    assert "BOOT_COMPLETED" in boot
+    assert "BackgroundDrainJobService" in manifest
+    assert "BootReceiver" in manifest
+    assert "ApiSettingsActivity::class.java" in main
 
 
 def test_android_native_secure_session_store_uses_keystore() -> None:

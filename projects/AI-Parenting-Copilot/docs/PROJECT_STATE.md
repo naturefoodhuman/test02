@@ -50,6 +50,13 @@
 
 
 
+
+### 继续开发进展（Android background drain / mmWave list API）
+
+- 新增 Android native `BackgroundDrainJobService`、`BackgroundDrainScheduler`、`BootReceiver`、`ApiSettingsStore`、`ApiSettingsActivity`，使用 JobScheduler 定时/手动 drain pending events 与 local alert acks。
+- `MainApplication` 自动 schedule periodic drain；`MainActivity` 提供 API Settings / Drain 入口。
+- `GET /api/v1/mmwave/devices/{device_id}/events` 支持查询 sensor events，dev/DB mode 均可用。
+
 ### 继续开发进展（Android native API drains）
 
 - 新增 `NativeApiClient.kt`，为 native fallback screens 提供最小 POST JSON client。

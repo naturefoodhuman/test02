@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 09:37:00
+// 创建时间（北京时间）：2026-08-01 16:26:00
 
 package com.aiparentingcopilot
 
@@ -43,10 +43,15 @@ class MainActivity : Activity() {
                 startActivity(intent)
             }
         }
+        val apiSettings = Button(this).apply {
+            text = "API Settings / Drain"
+            setOnClickListener { startActivity(Intent(this@MainActivity, ApiSettingsActivity::class.java)) }
+        }
         layout.addView(title)
         layout.addView(quickRecord)
         layout.addView(pending)
         layout.addView(alertDemo)
+        layout.addView(apiSettings)
         setContentView(layout)
     }
 }

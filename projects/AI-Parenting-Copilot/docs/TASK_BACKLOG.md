@@ -1291,7 +1291,7 @@
 - **所属 Capability**：C17 mmWave & Firmware
 - **所属 Story**：S17 MQTT 雷达接入与 ESP32C6 固件
 - **目标**：订阅 `baby/radar/telemetry`，解析雷达 JSON，写入 sensor_event / observation_event。
-- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest API 与 DB/API smoke 已完成；真实 MQTT ingest 待验收）
+- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest/list API 与 DB/API smoke 已完成；真实 MQTT ingest 待验收）
 - **前置依赖**：APC-T003, APC-T009, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M12、§7.5；`ARCHITECTURE_FINAL.md` §13
 - **输出**：mmWave adapter
@@ -1503,7 +1503,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现 Android 本地 SQLite、PowerSync client、ObservationEvent 本地写入与 pending_sync 标记。
-- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert、TS/native pending sync drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
+- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert、TS/native pending sync drain、JobScheduler background drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
 - **前置依赖**：APC-T012, APC-T046
 - **输入**：`ENGINEERING_DESIGN.md` §1.2 Android、§7.1；`ARCHITECTURE_FINAL.md` §9
 - **输出**：Android Sync module
