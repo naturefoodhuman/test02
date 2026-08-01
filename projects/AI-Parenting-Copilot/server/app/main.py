@@ -34,6 +34,7 @@ from server.app.health.monitor import DeviceHealthMonitor, HealthProbe
 from server.app.health.probes import DatabaseHealthProbe, PowerSyncHealthProbe, TCPPortHealthProbe
 from server.app.media.api.routes import router as media_router
 from server.app.media.storage import MediaStorageService
+from server.app.mmwave.api.routes import router as mmwave_router
 from server.app.normalization.service import InMemoryDerivedTableStore, NormalizationService
 from server.app.normalization.worker import PostgresEventNormalizationWorker
 from server.app.notification.alert_repo import InMemoryAlertRepository
@@ -177,6 +178,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(alert_router)
     app.include_router(camera_router)
     app.include_router(media_router)
+    app.include_router(mmwave_router)
     app.include_router(export_router)
     app.include_router(state_router)
     app.include_router(rules_router)

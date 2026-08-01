@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 14:08:00
+创建时间（北京时间）：2026-08-01 15:02:00
 -->
 
 
@@ -11,8 +11,44 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke；`APC-T035` 已通过用户复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke、Camera/mmWave ingest APIs；`APC-T035` 已通过用户复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 57 轮] 2026-08-01 — Camera/mmWave ingest APIs
+
+### 需求变动
+
+- 继续推进 `APC-T038/T039/T040`：新增 mmWave frame ingest API、camera event create/list API，并扩展 API DB smoke。
+
+### 文件影响
+
+新增：
+
+- `server/app/mmwave/api/__init__.py`
+- `server/app/mmwave/api/routes.py`
+- `tests/test_mmwave_api.py`
+
+修改：
+
+- `server/app/camera/api/routes.py`
+- `server/app/main.py`
+- `tests/test_camera_adapters.py`
+- `tests/integration/test_api_db_runtime.py`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_mmwave_api.py tests/test_camera_adapters.py tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；API 只补齐既有 parser/mapper/repository 到 DB 的路径。
 
 ---
 
@@ -40,7 +76,7 @@
 ```bash
 python3 -m pytest tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 164 passed, 8 deselected, 1 warning
+# 166 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -79,7 +115,7 @@ make typecheck
 python3 -m pytest tests/test_scheduler_worker.py tests/test_scheduler_api.py tests/test_backup_tasks.py -q
 make restore-dry-run
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 164 passed, 8 deselected, 1 warning
+# 166 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响

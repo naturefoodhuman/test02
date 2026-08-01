@@ -39,3 +39,24 @@ def test_camera_snapshot_api_returns_png() -> None:
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/png"
     assert response.content.startswith(b"\x89PNG")
+
+
+def test_camera_event_api_dev_store_by_session() -> None:
+    app = create_app(Settings(env="test"))
+    with TestClient(app) as client:
+        created = client.post(
+            "/api/v1/camera-events",
+            json={
+                "camera_id": "camera-dev",
+                "session_id": "sleep-1",
+                "ts": "2026-08-01T00:00:00Z",
+                "kind": "face_covered",
+                "confidence": 0.91,
+            },
+        )
+        listed = client.get("/api/v1/sleep-sessions/sleep-1/camera-events")
+
+    assert created.status_code == 200
+    assert created.json()["kind"] == "face_covered"
+    assert listed.status_code == 200
+    assert listed.json()[0]["id"] == created.json()["id"]

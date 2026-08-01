@@ -1233,7 +1233,7 @@
 - **所属 Capability**：C16
 - **所属 Story**：S16
 - **目标**：实现摄像头接入适配层，支持 dev mock snapshot 与真实 RTSP/ISAPI/Fregata 配置。
-- **状态**：BLOCKED（devices.yaml/mock snapshot API/adapter placeholders、SQLAlchemyCameraEventRepository 与 DB repo smoke 已完成；真实 RTSP/ISAPI/Fregata 待设备验收）
+- **状态**：BLOCKED（devices.yaml/mock snapshot API/adapter placeholders、SQLAlchemyCameraEventRepository、camera-events API 与 DB/API smoke 已完成；真实 RTSP/ISAPI/Fregata 待设备验收）
 - **前置依赖**：APC-T037, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M11、§7.5；`ARCHITECTURE_FINAL.md` §12
 - **输出**：Camera adapters
@@ -1262,7 +1262,7 @@
 - **所属 Capability**：C16
 - **所属 Story**：S16
 - **目标**：实现事件片段记录、摄像头/mmWave 融合状态机与 VLM 调度影子模式。
-- **状态**：BLOCKED（Clip plan/FusionStateMachine/VLMDispatcher shadow tests、camera_event DB repo smoke 已完成；真实 VLM/media/device shadow 待验收）
+- **状态**：BLOCKED（Clip plan/FusionStateMachine/VLMDispatcher shadow tests、camera_event API/DB smoke 已完成；真实 VLM/media/device shadow 待验收）
 - **前置依赖**：APC-T021, APC-T038, APC-T040
 - **输入**：`ENGINEERING_DESIGN.md` §7.5；`ARCHITECTURE_FINAL.md` §12.3、§13.2
 - **输出**：Camera safety shadow pipeline
@@ -1291,7 +1291,7 @@
 - **所属 Capability**：C17 mmWave & Firmware
 - **所属 Story**：S17 MQTT 雷达接入与 ESP32C6 固件
 - **目标**：订阅 `baby/radar/telemetry`，解析雷达 JSON，写入 sensor_event / observation_event。
-- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository 与 DB repo smoke 已完成；真实 MQTT ingest 待验收）
+- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest API 与 DB/API smoke 已完成；真实 MQTT ingest 待验收）
 - **前置依赖**：APC-T003, APC-T009, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M12、§7.5；`ARCHITECTURE_FINAL.md` §13
 - **输出**：mmWave adapter

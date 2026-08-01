@@ -18,6 +18,41 @@
 
 ---
 
+## 第 57 轮 · 2026-08-01（Camera/mmWave ingest APIs）
+
+**目标**：继续推进 `APC-T038/T039/T040`，从 DB repository smoke 继续推进到 API ingest 层。
+
+**完成内容**：
+
+1. mmWave ingest API：
+   - `server/app/mmwave/api/routes.py`
+   - `POST /api/v1/mmwave/frames`：parse radar frame → sensor event → DB repository；传入 baby/family 时创建 sensor ObservationEvent。
+   - 写 `mmwave.frame_ingest` audit。
+2. Camera event API：
+   - `POST /api/v1/camera-events`
+   - `GET /api/v1/sleep-sessions/{session_id}/camera-events`
+   - DB mode 写 `camera_event`，dev mode 写 app.state in-memory records。
+   - 写 `camera_event.create` audit。
+3. API DB smoke：
+   - `tests/integration/test_api_db_runtime.py` 扩展 mmWave frame ingest、sensor observation、camera event create/list。
+4. Unit/dev API tests：
+   - `tests/test_mmwave_api.py`
+   - `tests/test_camera_adapters.py` 扩展 camera event route。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_mmwave_api.py tests/test_camera_adapters.py tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T038/T039/T040` 仍保持 BLOCKED，等待真实 camera/mmWave hardware/MQTT/VLM 验收。
+
+---
+
 ## 第 56 轮 · 2026-08-01（Camera/mmWave DB repository smoke）
 
 **目标**：继续推进 `APC-T038/T039/T040`，将 camera/mmWave 从 pure/static/mock 推进到 SQLAlchemy repository DB smoke。

@@ -142,6 +142,20 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             )
             assert device.status_code == 200
             device_id = device.json()["device_id"]
+            camera_device = client.post(
+                "/api/v1/auth/devices/register",
+                headers={"authorization": f"Bearer {token}"},
+                json={"kind": "camera", "name": "DB camera"},
+            )
+            assert camera_device.status_code == 200
+            camera_device_id = camera_device.json()["device_id"]
+            mmwave_device = client.post(
+                "/api/v1/auth/devices/register",
+                headers={"authorization": f"Bearer {token}"},
+                json={"kind": "mmwave", "name": "DB mmWave"},
+            )
+            assert mmwave_device.status_code == 200
+            mmwave_device_id = mmwave_device.json()["device_id"]
 
             now = datetime.now(UTC).replace(microsecond=0).isoformat()
             event = client.post(
@@ -163,6 +177,24 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             listed = client.get("/api/v1/events", params={"baby_id": baby_id})
             assert listed.status_code == 200
             assert listed.json()[0]["event_type"] == "feeding"
+
+            mmwave = client.post(
+                "/api/v1/mmwave/frames",
+                json={
+                    "baby_id": baby_id,
+                    "family_id": family_id,
+                    "frame": {
+                        "device_id": mmwave_device_id,
+                        "timestamp": now,
+                        "presence": True,
+                        "state": "moving",
+                        "abnormal_event": "apnea_candidate",
+                    },
+                },
+            )
+            assert mmwave.status_code == 200
+            assert mmwave.json()["sensor_event"]["signal_type"] == "apnea_candidate"
+            assert mmwave.json()["observation_event_id"] is not None
 
             async with async_sessionmaker(engine, expire_on_commit=False)() as worker_session:
                 async with worker_session.begin():
@@ -231,6 +263,21 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert pause.json()["state"] == "paused"
             resume = client.post(f"/api/v1/sleep-sessions/{sleep_id}/resume")
             assert resume.status_code == 200
+            camera_event = client.post(
+                "/api/v1/camera-events",
+                json={
+                    "camera_id": camera_device_id,
+                    "session_id": sleep_id,
+                    "ts": now,
+                    "kind": "face_covered",
+                    "confidence": 0.91,
+                    "clip_path": "runtime/media/clips/db-smoke.mp4",
+                },
+            )
+            assert camera_event.status_code == 200
+            camera_events = client.get(f"/api/v1/sleep-sessions/{sleep_id}/camera-events")
+            assert camera_events.status_code == 200
+            assert camera_events.json()[0]["kind"] == "face_covered"
             end = client.post(f"/api/v1/sleep-sessions/{sleep_id}/end")
             assert end.status_code == 200
             assert end.json()["state"] == "ended"
@@ -303,6 +350,8 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                             :sleep_resource,
                             :media_resource,
                             :export_resource,
+                            :sensor_resource,
+                            :camera_resource,
                             :rule_resource,
                             :dose_resource
                         )
@@ -315,6 +364,8 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         "sleep_resource": f"sleep_session:{sleep_id}",
                         "media_resource": f"media_asset:{media_id}",
                         "export_resource": f"export:{export_id}",
+                        "sensor_resource": f"sensor_event:{mmwave.json()['sensor_event']['id']}",
+                        "camera_resource": f"camera_event:{camera_event.json()['id']}",
                         "rule_resource": f"evidence_policy:integration:{integration_rule_version}",
                         "dose_resource": "copilot_output",
                     },
@@ -331,6 +382,8 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 "sleep_session.end",
                 "media.upload",
                 "export.summary",
+                "mmwave.frame_ingest",
+                "camera_event.create",
                 "rule.activate",
                 "dose_intercept",
             }.issubset(audit_actions)

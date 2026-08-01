@@ -47,6 +47,13 @@
 
 
 
+
+### 继续开发进展（Camera/mmWave ingest APIs）
+
+- 新增 `server/app/mmwave/api/routes.py`：`POST /api/v1/mmwave/frames`，解析 radar frame，写入 `sensor_event`，可选生成 sensor `ObservationEvent`，并写 `mmwave.frame_ingest` audit。
+- Camera API 新增 `POST /api/v1/camera-events` 与 `GET /api/v1/sleep-sessions/{session_id}/camera-events`，DB mode 写入 `camera_event` 并写 `camera_event.create` audit。
+- `tests/integration/test_api_db_runtime.py` 扩展 mmWave ingest + camera event API DB smoke；`tests/test_mmwave_api.py` / `tests/test_camera_adapters.py` 覆盖 dev route。
+
 ### 继续开发进展（Camera/mmWave DB repositories）
 
 - 新增 `SQLAlchemySensorEventRepository`，支持 mmWave `SensorEventCandidate` 写入 `sensor_event` 并按 device 查询。
