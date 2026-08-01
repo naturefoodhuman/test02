@@ -13,8 +13,44 @@
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
 - **最新继续开发**：新增 Android native critical alert/full-screen/quick-record fallback；新增 Android Gradle bootstrap；新增 Android Keystore/session + native SQLite pending event store；新增 system health real probes/check API。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `157 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `159 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 53 轮 · 2026-08-01（Scheduler API + APC-T035 accepted）
+
+**目标**：根据用户 `make api-health-smoke` 真实环境通过解除 `APC-T035`，并继续推进 `APC-T036` 的可操作 API。
+
+**完成内容**：
+
+1. 状态同步：
+   - `APC-T035`：BLOCKED → DONE
+2. Scheduler API：
+   - `GET /api/v1/scheduler/jobs`
+   - `POST /api/v1/scheduler/jobs/{job_name}/trigger`
+   - `POST /api/v1/scheduler/trigger-all`
+3. App wiring：
+   - 初始化 `SchedulerRunner`。
+   - 注册 `MorningBriefJob`、`SupplementReminderJob`、`HealthCheckJob`、`VaccineDueJob`。
+4. Audit：
+   - 手动 trigger 写入 `scheduler.trigger` / `scheduler.trigger_all` audit。
+5. Tests：
+   - `tests/test_scheduler_api.py` 覆盖 job list/trigger/trigger-all/404。
+
+**验证**：
+
+```bash
+python3 -m ruff check server/app/main.py server/app/scheduler/api/routes.py tests/test_scheduler_api.py
+python3 -m pytest tests/test_scheduler_api.py tests/test_scheduler_jobs.py -q
+python3 -m mypy server/app
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 159 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T036` 仍保持 BLOCKED，等待 T022 生产规则审查与长期 worker/定时运行验收。
 
 ---
 

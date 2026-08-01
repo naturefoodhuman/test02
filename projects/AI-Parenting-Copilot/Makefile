@@ -79,6 +79,7 @@ docs-check:
 	@test -f server/migrations/versions/0002_event_notify_trigger.py
 	@test -f server/app/sync/service/contract_validator.py
 	@test -f server/app/rule_engine/api/routes.py
+	@test -f server/app/scheduler/api/routes.py
 	@test -f server/app/backup/pg_dump_task.py
 	@test -f server/scripts/mock_mmwave_publisher.py
 	@test -f tests/shadow/camera_mmwave_shadow_harness.py

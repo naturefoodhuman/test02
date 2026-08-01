@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-01 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增 Health real probes/system check API；`APC-T035` 代码推进但等待用户 Mac 真实环境复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：新增确认 `APC-T035 DONE`；Scheduler API trigger/list 已完成，`APC-T036` 仍等待 T022 生产规则审查与长期 worker；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -42,6 +42,14 @@
 
 
 
+
+
+### 继续开发进展（Scheduler API）
+
+- 新增 `server/app/scheduler/api/routes.py`，提供 `GET /api/v1/scheduler/jobs`、`POST /api/v1/scheduler/jobs/{job}/trigger`、`POST /api/v1/scheduler/trigger-all`。
+- FastAPI app 现在初始化 `SchedulerRunner`，注册 morning brief、supplement、health check、vaccine due jobs。
+- Scheduler API 触发会写 audit（DB mode 使用 request audit，dev mode 使用 MemoryAuditSink）。
+- 根据用户 `make api-health-smoke` 真实环境通过，`APC-T035` 标记 DONE。
 
 ### 运维说明修复（FastAPI 启动）
 
@@ -150,7 +158,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 157 passed, 8 deselected, 1 warning
+# 159 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

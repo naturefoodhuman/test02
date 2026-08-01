@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 11:35:00
+创建时间（北京时间）：2026-08-01 11:52:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,32 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
-- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `157 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
+- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `159 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 149 轮] 2026-08-01
+
+### 需求变动
+- **AI Parenting Copilot 验收状态同步**：用户确认 FastAPI health smoke 真实环境通过，`APC-T035` 标记为 DONE。
+- **AI Parenting Copilot Scheduler 推进**：新增 Scheduler API job list/trigger/trigger-all 与 audit，推进 `APC-T036`。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/scheduler/api/routes.py`
+- 新增：`projects/AI-Parenting-Copilot/tests/test_scheduler_api.py`
+- 修改：`projects/AI-Parenting-Copilot/server/app/main.py`
+- 修改：project docs / root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_scheduler_api.py tests/test_scheduler_jobs.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 159 passed, 8 deselected, 1 warning
+```
 
 ---
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 11:30:00
+创建时间（北京时间）：2026-08-01 11:48:00
 -->
 
 
@@ -11,8 +11,43 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes 与 FastAPI local API runbook/smoke targets 待复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets 与 Scheduler API；`APC-T035` 已通过用户复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 53 轮] 2026-08-01 — Scheduler API / APC-T035 accepted
+
+### 需求变动
+
+- 用户确认 FastAPI health smoke 真实环境通过，`APC-T035` 标记为 DONE。
+- 继续推进 `APC-T036`：新增 Scheduler API 手动触发与 audit。
+
+### 文件影响
+
+新增：
+
+- `server/app/scheduler/api/__init__.py`
+- `server/app/scheduler/api/routes.py`
+- `tests/test_scheduler_api.py`
+
+修改：
+
+- `server/app/main.py`
+- `Makefile`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_scheduler_api.py tests/test_scheduler_jobs.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 159 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；Scheduler API 是现有 manual SchedulerRunner 的操作入口，不引入新调度基础设施。
 
 ---
 

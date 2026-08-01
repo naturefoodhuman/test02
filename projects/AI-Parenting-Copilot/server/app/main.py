@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import cast
 
 from fastapi import FastAPI
@@ -43,11 +45,21 @@ from server.app.observability.tracing import configure_tracing
 from server.app.orchestrator.api.routes import router as orchestrator_router
 from server.app.orchestrator.orchestrator import Orchestrator
 from server.app.rule_engine.api.routes import router as rules_router
+from server.app.rule_engine.domains.vaccine import VaccineRuleModule
 from server.app.rule_engine.evidence_repo import InMemoryEvidencePolicyRepository
+from server.app.rule_engine.loader import load_rule_pack
+from server.app.scheduler.api.routes import router as scheduler_router
+from server.app.scheduler.jobs.health_check import HealthCheckJob
+from server.app.scheduler.jobs.morning_brief import MorningBriefJob
+from server.app.scheduler.jobs.supplement import SupplementReminderJob
+from server.app.scheduler.jobs.vaccine_due import VaccineDueJob
+from server.app.scheduler.runner import SchedulerRunner
 from server.app.settings import Settings
 from server.app.state_engine.api.routes import router as state_router
 from server.app.state_engine.engine import BabyStateEngine
 from server.app.state_engine.snapshot_repo import InMemoryStateSnapshotRepository
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -106,6 +118,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if container.settings.powersync.url:
         health_probes.append(PowerSyncHealthProbe(container.settings.powersync.url))
     app.state.device_health_monitor = DeviceHealthMonitor(health_probes, app.state.alert_repository)
+    scheduler_runner = SchedulerRunner()
+    scheduler_runner.register(MorningBriefJob())
+    scheduler_runner.register(SupplementReminderJob())
+    scheduler_runner.register(
+        HealthCheckJob(
+            app.state.device_health_monitor,
+            family_id="dev-family",
+            baby_id="dev-baby",
+        )
+    )
+    vaccine_module = VaccineRuleModule(
+        load_rule_pack(PROJECT_ROOT / "config/rules/vaccine/cn-nip-2024.yaml")
+    )
+    scheduler_runner.register(
+        VaccineDueJob(
+            vaccine_module,
+            {
+                "birth_date": date.today().isoformat(),
+                "as_of": datetime.now(UTC).date().isoformat(),
+            },
+        )
+    )
+    app.state.scheduler_runner = scheduler_runner
     app.state.sleep_session_repository = InMemorySleepSessionRepository(app.state.audit_sink)
     app.state.event_repository = InMemoryEventRepository()
     app.state.derived_table_store = InMemoryDerivedTableStore()
@@ -135,6 +170,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(media_router)
     app.include_router(state_router)
     app.include_router(rules_router)
+    app.include_router(scheduler_router)
 
     @app.middleware("http")
     async def db_session_middleware(request, call_next):  # type: ignore[no-untyped-def]
