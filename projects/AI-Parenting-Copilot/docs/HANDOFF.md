@@ -106,7 +106,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 174 passed, 8 deselected, 1 warning
+# 176 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
@@ -223,3 +223,5 @@ JSON / JSONL 使用 `_forge_trace` 字段。
 - Android Rule Engine screen: `RuleEvaluationActivity` calls `/api/v1/rules/evaluate/{domain}` and must remain Rule-Engine-only for dose/triage outputs.
 
 - Health DB mode: `/api/v1/system/health/check` persists gray alerts via `SQLAlchemyAlertRepository` and audits `system.health_check`.
+
+- Copilot confirm APIs: `POST /api/v1/copilot/record-candidates/confirm` and `/api/v1/copilot/family-memory/confirm` write DB/dev stores and audit.

@@ -18,6 +18,36 @@
 
 ---
 
+## 第 73 轮 · 2026-08-02（Copilot confirmation APIs）
+
+**目标**：补齐 Copilot 输出候选后的确认落库路径，推进 `APC-T027/T028/T030` 的实际 App/API 闭环。
+
+**完成内容**：
+
+1. Record candidate confirm：
+   - `POST /api/v1/copilot/record-candidates/confirm`。
+   - 将 Logger/QuickRecord candidate 转为 `ObservationEvent`。
+   - 写 `copilot.record_confirm` audit。
+2. Family memory confirm：
+   - `POST /api/v1/copilot/family-memory/confirm`。
+   - 写 FamilyKnowledge repository。
+   - 写 `copilot.family_memory_confirm` audit。
+3. Tests：
+   - `tests/test_orchestrator.py` 覆盖两个 confirm endpoint。
+   - `tests/integration/test_api_db_runtime.py` 覆盖 DB smoke。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_orchestrator.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 176 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## 第 72 轮 · 2026-08-02（Health DB gray alert persistence）
 
 **目标**：补强 `APC-T035`，让真实 DB mode 的 health check 产生持久化 gray alert，并审计 health check。

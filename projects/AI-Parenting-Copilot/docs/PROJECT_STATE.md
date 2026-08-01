@@ -122,6 +122,13 @@
 - 新增 `android/src/features/rules/ruleEvaluation.ts`，为 RN/TS 层提供 rule evaluate client 和 summaries。
 - `MainActivity` 增加 Rule Engine 入口；static tests 覆盖 rule API routes 与 no-LLM safety statement。
 
+
+### 继续开发进展（Copilot confirmation APIs）
+
+- 新增 `POST /api/v1/copilot/record-candidates/confirm`，把 Logger/Quick Record candidate 转为 `ObservationEvent` 并写 `copilot.record_confirm` audit。
+- 新增 `POST /api/v1/copilot/family-memory/confirm`，把 FamilyMemory candidate 写入 FamilyKnowledge 并写 `copilot.family_memory_confirm` audit。
+- Dev tests 覆盖 record confirm / family memory confirm；API DB smoke 覆盖这两个 endpoint。
+
 ### 继续开发进展（Rule evaluation API）
 
 - 新增 `POST /api/v1/rules/evaluate/{domain}`，覆盖 medication、triage、thresholds、vaccine、growth。

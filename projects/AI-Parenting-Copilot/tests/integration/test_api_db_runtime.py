@@ -131,6 +131,15 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 },
             )
             assert memory_upsert.status_code == 200
+            copilot_memory = client.post(
+                "/api/v1/copilot/family-memory/confirm",
+                json={
+                    "family_id": family_id,
+                    "key": "correction.milk_unit",
+                    "value": {"value": "ml"},
+                },
+            )
+            assert copilot_memory.status_code == 200
 
             device = client.post(
                 "/api/v1/auth/devices/register",
@@ -180,6 +189,18 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             listed = client.get("/api/v1/events", params={"baby_id": baby_id})
             assert listed.status_code == 200
             assert listed.json()[0]["event_type"] == "feeding"
+            copilot_confirmed = client.post(
+                "/api/v1/copilot/record-candidates/confirm",
+                json={
+                    "baby_id": baby_id,
+                    "family_id": family_id,
+                    "event_type": "diaper",
+                    "normalized_payload": {"diaper_type": "wet"},
+                    "confidence": 0.75,
+                    "raw_text": "换了尿布",
+                },
+            )
+            assert copilot_confirmed.status_code == 200
 
             mmwave = client.post(
                 "/api/v1/mmwave/frames",
