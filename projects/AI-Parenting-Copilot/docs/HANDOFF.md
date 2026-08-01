@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 10:00:00
+创建时间（北京时间）：2026-08-01 10:55:00
 -->
 
 
@@ -83,6 +83,7 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T029`：Dose Interceptor SQLAlchemyAuditSink 与 API DB smoke 已通过用户复验，已 DONE。
 - `APC-T032/T033/T034`：safe notification adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack cancel receipts 已通过用户 Mac 复验，已 DONE；真实 FCM/TTS/设备凭证转入 Android/device 后续验收。
 - `APC-T045`：Android native Gradle build 已由用户验证通过，已 DONE。
+- `APC-T035`：DB/TCP/HTTP/PowerSync real probes 与 `/api/v1/system/health/check` 已完成；需要用户 Mac 真实环境复验。
 - `APC-T046/T047/T048`：Android Keystore secure session store、native SQLite pending event store、TS bridge contracts、QuickRecordActivity 与 PendingEventsActivity 已完成；需要用户执行 `./gradlew assembleDebug` 复验新增 native files。
 - `APC-T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 已完成；需要真机/FCM/Notifee permission 验收。
 - `APC-T030`：P0 Copilots pure/dev API 已有；等待 T029 与 Vaccine/Growth 生产审查相关阻塞。
@@ -100,7 +101,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 154 passed, 8 deselected, 1 warning
+# 157 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
@@ -132,7 +133,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Android toolchain 环境复验 `cd android/android && ./gradlew assembleDebug`；这轮新增了 QuickRecordActivity/PendingEventsActivity native files，若通过，可推进 `APC-T046/T047/T048` 状态。若失败，优先修 Kotlin/Android compile。
+1. 让用户复验 `POST /api/v1/system/health/check` 或运行服务后检查 `/api/v1/system/health`，以及 Android `cd android/android && ./gradlew assembleDebug`；通过后推进 `APC-T035/T046/T047/T048` 状态。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。

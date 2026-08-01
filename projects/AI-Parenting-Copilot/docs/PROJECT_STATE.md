@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-01 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增确认 `APC-T045 DONE`；新增 Android Keystore SecureSessionStore 与 native SQLite pending event store，待用户 Mac `assembleDebug` 复验后推进 `APC-T046/T047`；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：新增 Health real probes/system check API；`APC-T035` 代码推进但等待用户 Mac 真实环境复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -40,6 +40,15 @@
 
 
 
+
+
+### 继续开发进展（Health probes / system health check）
+
+- 新增 `server/app/health/probes/`：Database, TCP, HTTP, PowerSync health probes。
+- FastAPI app DB mode 会注册 database probe；默认注册 MQTT TCP probe；配置 `PARENTING_POWERSYNC__URL` 时注册 PowerSync probe。
+- `/api/v1/system/health` 现在返回 latest device/service health snapshot，并在有 offline probe 时返回 degraded。
+- 新增 `POST /api/v1/system/health/check` 可手动运行 probes，并沿用 DeviceHealthMonitor 生成 gray alert。
+- 新增 tests：`tests/test_health_probes.py`, `tests/test_health_api_probes.py`。
 
 ### 继续开发进展（Android Quick Record native offline write）
 
@@ -133,7 +142,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 154 passed, 8 deselected, 1 warning
+# 157 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

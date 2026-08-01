@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 01:10:00
+# 创建时间（北京时间）：2026-08-01 10:30:00
 
 
 """FastAPI application shell for AI Parenting Copilot."""
@@ -27,7 +27,8 @@ from server.app.export.service import ExportService
 from server.app.gateway.exception_handlers import register_exception_handlers
 from server.app.gateway.middleware.logging import RequestLoggingMiddleware
 from server.app.health.api import router as health_router
-from server.app.health.monitor import DeviceHealthMonitor
+from server.app.health.monitor import DeviceHealthMonitor, HealthProbe
+from server.app.health.probes import DatabaseHealthProbe, PowerSyncHealthProbe, TCPPortHealthProbe
 from server.app.media.api.routes import router as media_router
 from server.app.media.storage import MediaStorageService
 from server.app.normalization.service import InMemoryDerivedTableStore, NormalizationService
@@ -93,7 +94,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.audit_sink = MemoryAuditSink()
     app.state.alert_repository = InMemoryAlertRepository(app.state.audit_sink)
     app.state.notification_delivery_repo = InMemoryDeliveryRepository()
-    app.state.device_health_monitor = DeviceHealthMonitor([], app.state.alert_repository)
+    health_probes: list[HealthProbe] = [
+        TCPPortHealthProbe(
+            "mqtt",
+            container.settings.mqtt.host,
+            container.settings.mqtt.port,
+        )
+    ]
+    if db_engine is not None:
+        health_probes.append(DatabaseHealthProbe(db_engine))
+    if container.settings.powersync.url:
+        health_probes.append(PowerSyncHealthProbe(container.settings.powersync.url))
+    app.state.device_health_monitor = DeviceHealthMonitor(health_probes, app.state.alert_repository)
     app.state.sleep_session_repository = InMemorySleepSessionRepository(app.state.audit_sink)
     app.state.event_repository = InMemoryEventRepository()
     app.state.derived_table_store = InMemoryDerivedTableStore()

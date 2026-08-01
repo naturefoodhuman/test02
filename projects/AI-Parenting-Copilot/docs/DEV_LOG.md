@@ -12,9 +12,47 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android native critical alert full-screen fallback skeleton；新增 Android Gradle bootstrap；新增 Android Keystore secure session store、native SQLite pending event store 与 native Quick Record offline write。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `154 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 Android native critical alert/full-screen/quick-record fallback；新增 Android Gradle bootstrap；新增 Android Keystore/session + native SQLite pending event store；新增 system health real probes/check API。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `157 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 51 轮 · 2026-08-01（System health probes / check API）
+
+**目标**：继续推进 `APC-T035`，从 MockHealthProbe 扩展为真实服务探针和系统健康检查 API。
+
+**完成内容**：
+
+1. Real probes：
+   - `server/app/health/probes/db.py`：SQLAlchemy `SELECT 1` database probe。
+   - `server/app/health/probes/tcp.py`：TCP port probe，用于 MQTT/设备端口。
+   - `server/app/health/probes/http.py`：HTTP endpoint probe。
+   - `server/app/health/probes/powersync.py`：复用 `probe_powersync()` 的 PowerSync liveness probe。
+2. App wiring：
+   - 默认注册 MQTT TCP probe。
+   - DB mode 注册 database probe。
+   - `PARENTING_POWERSYNC__URL` 存在时注册 PowerSync probe。
+3. API：
+   - `/api/v1/system/health` 返回 latest `device_health` snapshot 和 degraded 状态。
+   - `POST /api/v1/system/health/check` 手动运行 probes，offline 时沿用 DeviceHealthMonitor 生成 gray alert。
+4. Tests：
+   - `tests/test_health_probes.py`
+   - `tests/test_health_api_probes.py`
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_health_probes.py tests/test_health_api_probes.py tests/test_app_health_observability.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 157 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T035` 仍保持 BLOCKED，等待用户 Mac 真实 `system/health/check` 环境复验后解除。
 
 ---
 
