@@ -52,6 +52,13 @@
 
 
 
+
+### 继续开发进展（E2E / Security hardening）
+
+- 新增 dev MVP feeding roundtrip E2E substitute：Events API → Normalization → State API。
+- 新增 red alert API E2E substitute：create → dispatch → ack → cancel receipts → feedback，并修复 dev mode dispatch/cancel audit 记录。
+- 根据安全/DB audit 前置与用户验证，`APC-T058` 已标记 DONE。
+
 ### 继续开发进展（Android native core screens）
 
 - 新增 native `TodayActivity`，展示 pending sync 和 last drain summary，并提供 Quick Record/Pending Sync 入口。

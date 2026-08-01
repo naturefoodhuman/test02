@@ -88,7 +88,6 @@ async def dispatch_alert(alert_id: str, request: Request) -> list[DeliveryReceip
         action="alert.dispatch",
         resource=f"alert:{alert_id}",
         after={"receipts": [receipt.model_dump(mode="json") for receipt in receipts]},
-        db_only=True,
     )
     return receipts
 
@@ -122,7 +121,6 @@ async def ack_alert(alert_id: str, payload: AckAlertRequest, request: Request) -
         action="alert.cancel_channels",
         resource=f"alert:{alert_id}",
         after={"receipts": [receipt.model_dump(mode="json") for receipt in cancel_receipts]},
-        db_only=True,
     )
     return alert
 

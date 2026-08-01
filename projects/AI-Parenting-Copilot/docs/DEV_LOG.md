@@ -18,6 +18,34 @@
 
 ---
 
+## 第 62 轮 · 2026-08-01（Dev E2E substitutes + security status）
+
+**目标**：补强 E2E 自动化替代测试，减少后续手工验证压力，并根据已通过的 security/db audit 前置解除 `APC-T058`。
+
+**完成内容**：
+
+1. MVP feeding dev E2E substitute：
+   - `tests/e2e/test_mvp_feeding_dev_roundtrip.py`
+   - API event write → normalization → DerivedBabyState API。
+2. Red alert API E2E substitute：
+   - `tests/e2e/test_red_alert_api_flow.py`
+   - Alert create → dispatch → ack → cancel delivery receipts → feedback。
+3. Audit correctness fix：
+   - `alert.dispatch` / `alert.cancel_channels` 在 dev MemoryAuditSink 也记录，满足 mutating operation audit rule。
+4. 状态同步：
+   - `APC-T058` → DONE。
+
+**验证**：
+
+```bash
+make e2e-fake-test
+# 3 passed
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 168 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## 第 61 轮 · 2026-08-01（Android native core screens）
 
 **目标**：继续推进 Android P0 UI，从单一 shell 页面扩展到 Today/Timeline/Alert/Sleep Session native fallback screens，提升真机可验收面积。

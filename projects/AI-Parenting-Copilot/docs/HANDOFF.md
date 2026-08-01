@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 17:50:00
+创建时间（北京时间）：2026-08-01 18:20:00
 -->
 
 
@@ -82,6 +82,7 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T026`-`APC-T028`：SQLAlchemyMemoryStore、LocalRAG adapter、Logger shared parser 与 Orchestrator DB memory injection 已通过用户 Mac 复验，已 DONE。
 - `APC-T029`：Dose Interceptor SQLAlchemyAuditSink 与 API DB smoke 已通过用户复验，已 DONE。
 - `APC-T032/T033/T034`：safe notification adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack cancel receipts 已通过用户 Mac 复验，已 DONE；真实 FCM/TTS/设备凭证转入 Android/device 后续验收。
+- `APC-T058`：security regression suite + DB audit immutability 已通过，已 DONE。
 - `APC-T045`：Android native Gradle build 已由用户验证通过，已 DONE。
 - `APC-T035`：DB/TCP/HTTP/PowerSync real probes 与 `/api/v1/system/health/check` 已通过用户 Mac 真实环境复验，已 DONE。
 - `APC-T036`：Scheduler API manual trigger/list 与 PeriodicSchedulerWorker 已完成；仍等待 T022 生产规则审查与长期运行验收。
@@ -105,7 +106,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 166 passed, 8 deselected, 1 warning
+# 168 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
