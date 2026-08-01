@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 16:35:00
+# 创建时间（北京时间）：2026-08-01 17:28:00
 
 """Android native skeleton static tests."""
 
@@ -111,7 +111,22 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "BOOT_COMPLETED" in boot
     assert "BackgroundDrainJobService" in manifest
     assert "BootReceiver" in manifest
+    today = (base / "TodayActivity.kt").read_text()
+    timeline = (base / "TimelineActivity.kt").read_text()
+    alert_center = (base / "AlertCenterActivity.kt").read_text()
+    sleep = (base / "SleepSessionActivity.kt").read_text()
+
     assert "ApiSettingsActivity::class.java" in main
+    assert "TodayActivity::class.java" in main
+    assert "TimelineActivity::class.java" in main
+    assert "AlertCenterActivity::class.java" in main
+    assert "SleepSessionActivity::class.java" in main
+    assert "Pending sync:" in today
+    assert "LocalEventStore" in timeline
+    assert "AlertAckDrainer" in alert_center
+    assert "/api/v1/sleep-sessions" in sleep
+    assert ".TodayActivity" in manifest
+    assert ".AlertCenterActivity" in manifest
 
 
 def test_android_native_secure_session_store_uses_keystore() -> None:

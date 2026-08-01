@@ -18,6 +18,42 @@
 
 ---
 
+## 第 61 轮 · 2026-08-01（Android native core screens）
+
+**目标**：继续推进 Android P0 UI，从单一 shell 页面扩展到 Today/Timeline/Alert/Sleep Session native fallback screens，提升真机可验收面积。
+
+**完成内容**：
+
+1. Native screens：
+   - `TodayActivity.kt`：pending sync / last drain summary / navigation。
+   - `TimelineActivity.kt`：local pending events timeline。
+   - `AlertCenterActivity.kt`：local alert ack action drain。
+   - `SleepSessionActivity.kt`：calls `/api/v1/sleep-sessions` through NativeApiClient。
+2. MainActivity launcher：
+   - Today / Quick Record / Timeline / Alert Center / Sleep Session / Pending Sync / API Settings / Critical Alert Demo。
+3. Manifest：
+   - 注册 Today/Timeline/AlertCenter/SleepSession activities。
+4. Static tests：
+   - `tests/test_android_native_skeleton.py` 覆盖新 screens 和 navigation targets。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
+
+**用户下一步（非阻塞本轮）**：
+
+```bash
+cd android/android && ./gradlew assembleDebug
+```
+
+---
+
 ## 第 60 轮 · 2026-08-01（Android background drain / mmWave events list）
 
 **目标**：继续加速推进 Android 离线同步闭环和 mmWave API 可观测性。

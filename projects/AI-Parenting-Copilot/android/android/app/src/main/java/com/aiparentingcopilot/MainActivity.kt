@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 16:26:00
+// 创建时间（北京时间）：2026-08-01 17:26:00
 
 package com.aiparentingcopilot
 
@@ -24,14 +24,14 @@ class MainActivity : Activity() {
             textSize = 22f
             gravity = Gravity.CENTER
         }
-        val quickRecord = Button(this).apply {
-            text = "Quick Record"
-            setOnClickListener { startActivity(Intent(this@MainActivity, QuickRecordActivity::class.java)) }
-        }
-        val pending = Button(this).apply {
-            text = "Pending Sync"
-            setOnClickListener { startActivity(Intent(this@MainActivity, PendingEventsActivity::class.java)) }
-        }
+        layout.addView(title)
+        addButton(layout, "Today", TodayActivity::class.java)
+        addButton(layout, "Quick Record", QuickRecordActivity::class.java)
+        addButton(layout, "Timeline", TimelineActivity::class.java)
+        addButton(layout, "Alert Center", AlertCenterActivity::class.java)
+        addButton(layout, "Sleep Session", SleepSessionActivity::class.java)
+        addButton(layout, "Pending Sync", PendingEventsActivity::class.java)
+        addButton(layout, "API Settings / Drain", ApiSettingsActivity::class.java)
         val alertDemo = Button(this).apply {
             text = "Critical Alert Demo"
             setOnClickListener {
@@ -43,15 +43,16 @@ class MainActivity : Activity() {
                 startActivity(intent)
             }
         }
-        val apiSettings = Button(this).apply {
-            text = "API Settings / Drain"
-            setOnClickListener { startActivity(Intent(this@MainActivity, ApiSettingsActivity::class.java)) }
-        }
-        layout.addView(title)
-        layout.addView(quickRecord)
-        layout.addView(pending)
         layout.addView(alertDemo)
-        layout.addView(apiSettings)
         setContentView(layout)
+    }
+
+    private fun addButton(layout: LinearLayout, label: String, target: Class<out Activity>) {
+        layout.addView(
+            Button(this).apply {
+                text = label
+                setOnClickListener { startActivity(Intent(this@MainActivity, target)) }
+            },
+        )
     }
 }

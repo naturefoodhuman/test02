@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 17:05:00
+创建时间（北京时间）：2026-08-01 17:50:00
 -->
 
 
@@ -88,7 +88,7 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T037/T042/T043`：Sleep/Media/Export DB API + audit smoke 已完成；需要用户 Mac `api-db-smoke-test` 复验后解除主要阻塞。
 - `APC-T038/T039/T040`：camera_event/sensor_event SQLAlchemy repositories、mmWave ingest API、camera event API + DB/API smoke 已完成；真实 RTSP/ISAPI/Fregata/MQTT/VLM/device 验收仍待。
 - `APC-T044`：backup/restore dry-run planner + restore runbook 已完成；仍等待真实 NAS/restore drill。
-- `APC-T046/T047/T048`：Android Keystore secure session store、native SQLite pending event store、TS/native/background drainers、QuickRecordActivity、PendingEventsActivity、ApiSettingsActivity 与 pending sync drain 已完成；需要用户执行 `./gradlew assembleDebug` 复验新增 native/TS flows。
+- `APC-T046/T047/T048`：Android Keystore secure session store、native SQLite pending event store、TS/native/background drainers、Today/QuickRecord/Timeline/AlertCenter/SleepSession/PendingEvents/ApiSettings activities 与 pending sync drain 已完成；需要用户执行 `./gradlew assembleDebug` 复验新增 native/TS flows。
 - `APC-T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 已完成；需要真机/FCM/Notifee permission 验收。
 - `APC-T030`：P0 Copilots pure/dev API 已有；等待 T029 与 Vaccine/Growth 生产审查相关阻塞。
 - `APC-T032`-`APC-T036`：Notification/Escalation/Health/Scheduler dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。

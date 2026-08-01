@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 17:08:00
+创建时间（北京时间）：2026-08-01 17:52:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,29 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API；Android native core screens。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `166 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 157 轮] 2026-08-01
+
+### 需求变动
+- **AI Parenting Copilot Android UI 推进**：新增 Today/Timeline/Alert Center/Sleep Session native fallback screens，并扩展 MainActivity launcher。
+
+### 文件影响
+- 新增：Android TodayActivity / TimelineActivity / AlertCenterActivity / SleepSessionActivity
+- 修改：MainActivity / AndroidManifest / static tests / project docs / root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
 
 ---
 

@@ -51,6 +51,15 @@
 
 
 
+
+### 继续开发进展（Android native core screens）
+
+- 新增 native `TodayActivity`，展示 pending sync 和 last drain summary，并提供 Quick Record/Pending Sync 入口。
+- 新增 native `TimelineActivity`，展示本地 pending events。
+- 新增 native `AlertCenterActivity`，可触发 `AlertAckDrainer` drain local alert ack actions。
+- 新增 native `SleepSessionActivity`，可调用 `/api/v1/sleep-sessions` 启动会话。
+- `MainActivity` 改为核心功能 launcher：Today / Quick Record / Timeline / Alert Center / Sleep Session / Pending Sync / API Settings / Critical Alert Demo。
+
 ### 继续开发进展（Android background drain / mmWave list API）
 
 - 新增 Android native `BackgroundDrainJobService`、`BackgroundDrainScheduler`、`BootReceiver`、`ApiSettingsStore`、`ApiSettingsActivity`，使用 JobScheduler 定时/手动 drain pending events 与 local alert acks。
