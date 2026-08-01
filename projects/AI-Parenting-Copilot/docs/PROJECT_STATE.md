@@ -37,6 +37,14 @@
 
 
 
+
+### 继续开发进展（Android native critical alert）
+
+- 新增 Android native trigger-only alert payload、full-screen critical alert activity、local alert action receiver、notification channel helper。
+- Android manifest 注册 `CriticalAlertActivity` 和 `AlertActionReceiver`，并在 `MainApplication` 启动时创建 notification channels。
+- 新增 TS `native_bridge.ts`，定义 full-screen/ack fallback bridge contract。
+- Static tests 覆盖 native files、trigger-only payload、showWhenLocked/turnScreenOn、IMPORTANCE_HIGH 与 bridge routing。
+
 ### 继续开发进展（Notification cancel / escalation support）
 
 - `NotificationOrchestrator.cancel()` 已实现 channel cancel 并写入 cancellation delivery receipts。
@@ -102,7 +110,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 151 passed, 8 deselected, 1 warning
+# 152 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

@@ -12,9 +12,43 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 SQLAlchemyAuditSink，DoseInterceptor 可写真实 audit_log；新增 notification dry-run adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack channel cancellation receipts。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `151 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 SQLAlchemyAuditSink，DoseInterceptor 可写真实 audit_log；新增 notification dry-run adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack channel cancellation receipts；新增 Android native critical alert full-screen fallback skeleton。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `152 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 47 轮 · 2026-08-01（Android native critical alert fallback）
+
+**目标**：继续推进 Android 告警端能力，在 TS 静态逻辑基础上补齐 native full-screen fallback skeleton，为后续真机/Notifee/FCM 验收做准备。
+
+**完成内容**：
+
+1. Native Kotlin files：
+   - `AlertPayload.kt`：trigger-only payload，仅 `alert_id/level/type`。
+   - `CriticalAlertActivity.kt`：showWhenLocked/turnScreenOn full-screen alert UI，只展示 trigger metadata，不展示 evidence。
+   - `AlertActionReceiver.kt`：记录本地 ack/dismiss action，供后续 sync/API drain。
+   - `NotificationHelper.kt`：创建 critical/default channels，构建 fullScreen PendingIntent。
+2. Android Manifest：
+   - 注册 `CriticalAlertActivity` 与 `AlertActionReceiver`。
+3. TS bridge contract：
+   - `android/src/notification/native_bridge.ts`。
+4. Static tests：
+   - `tests/test_android_native_skeleton.py` 扩展 native full-screen files / trigger-only / channel importance / bridge 断言。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 152 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T052` 继续 BLOCKED，等待真实 Android toolchain/device/FCM/Notifee permission 验收。
 
 ---
 

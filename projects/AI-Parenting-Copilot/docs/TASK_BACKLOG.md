@@ -1643,7 +1643,7 @@
 - **所属 Capability**：C21 Android 告警与睡眠会话
 - **所属 Story**：S21 FCM/Notifee/FullScreenIntent、Sleep Session UI
 - **目标**：实现 Android 高优先级告警接收与强提醒能力。
-- **状态**：BLOCKED（FCM payload parser/notifee channel config/fullscreen guide/local fallback/work manager static tests 已完成；前置 T034/T051 与 native integration 待验收）
+- **状态**：BLOCKED（FCM payload parser/notifee channel config/fullscreen guide/local fallback/work manager static tests 与 native full-screen Activity/Receiver/NotificationHelper 已完成；前置 T034/T051 与真机 permission/device validation 待验收）
 - **前置依赖**：APC-T034, APC-T051
 - **输入**：`ARCHITECTURE_FINAL.md` §14.5；`ENGINEERING_DESIGN.md` Android A08/A09
 - **输出**：Android notification/background module
