@@ -34,6 +34,8 @@ from server.app.health.monitor import DeviceHealthMonitor, HealthProbe
 from server.app.health.probes import DatabaseHealthProbe, PowerSyncHealthProbe, TCPPortHealthProbe
 from server.app.media.api.routes import router as media_router
 from server.app.media.storage import MediaStorageService
+from server.app.memory.api.routes import router as memory_router
+from server.app.memory.family_knowledge_repo import InMemoryFamilyKnowledgeRepository
 from server.app.mmwave.api.routes import router as mmwave_router
 from server.app.normalization.service import InMemoryDerivedTableStore, NormalizationService
 from server.app.normalization.worker import PostgresEventNormalizationWorker
@@ -163,6 +165,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.media_storage = MediaStorageService()
     app.state.export_service = ExportService()
     app.state.sync_state_repository = InMemorySyncStateRepository()
+    app.state.family_knowledge_repository = InMemoryFamilyKnowledgeRepository()
     app.state.orchestrator = Orchestrator(audit_sink=app.state.audit_sink)
     app.state.auth_service = AuthService(
         InMemoryAuthRepository(),
@@ -182,6 +185,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(alert_router)
     app.include_router(camera_router)
     app.include_router(media_router)
+    app.include_router(memory_router)
     app.include_router(mmwave_router)
     app.include_router(export_router)
     app.include_router(state_router)

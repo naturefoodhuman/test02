@@ -106,6 +106,14 @@
 - Dev mode 和 DB mode 均支持；API DB smoke 增加 fusion evaluate / camera_event / audit 覆盖。
 
 
+
+### 继续开发进展（Family Knowledge API）
+
+- 新增 FamilyKnowledge in-memory + SQLAlchemy repositories，支持 upsert/list。
+- 新增 `POST /api/v1/family-knowledge` 与 `GET /api/v1/family-knowledge/{family_id}`，mutating upsert 写 `family_knowledge.upsert` audit。
+- API DB smoke 使用 FamilyKnowledge API 替代手写 SQL seed，并验证 audit action。
+- Android/Orchestrator Memory 已可通过该 API 持久化家庭偏好/纠错记忆。
+
 ### 继续开发进展（Sync heartbeat API）
 
 - 新增 `SyncStateRecord` / `SyncHeartbeatRequest` / in-memory + SQLAlchemy sync_state repositories。

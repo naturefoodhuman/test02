@@ -987,7 +987,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 P0 所需低/中安全 Copilot 外壳，调用 Rule Engine 并生成结构化解释。
-- **状态**：BLOCKED（P0 Copilot wrappers/tests 已完成；前置 T020/T022/T023/T028/T029 未 DONE，DB/Memory/audit 集成待验收）
+- **状态**：BLOCKED（P0 Copilot wrappers/tests、FamilyKnowledge API/DB persistence/audit 已完成；T022/T023 生产规则审查与完整 P0 Copilot DB smoke 待验收）
 - **前置依赖**：APC-T020, APC-T022, APC-T023, APC-T028, APC-T029
 - **输入**：`ARCHITECTURE_FINAL.md` §11.4、§26.1
 - **输出**：P0 Copilot 实现与单测

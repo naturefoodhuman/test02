@@ -18,6 +18,37 @@
 
 ---
 
+## 第 69 轮 · 2026-08-01（Family Knowledge API / memory persistence）
+
+**目标**：继续推进 `APC-T030` 的 FamilyMemory 持久化和 DB audit，补齐家庭偏好/纠错记忆的 API。
+
+**完成内容**：
+
+1. Repositories：
+   - `server/app/memory/family_knowledge_repo.py`
+   - In-memory + SQLAlchemy implementation。
+   - Upsert 同 key 会 version+1。
+2. API：
+   - `POST /api/v1/family-knowledge`
+   - `GET /api/v1/family-knowledge/{family_id}`
+   - upsert 写 `family_knowledge.upsert` audit。
+3. FastAPI wiring：
+   - dev mode 注入 `InMemoryFamilyKnowledgeRepository`。
+   - DB mode route 使用 `SQLAlchemyFamilyKnowledgeRepository`。
+4. Tests：
+   - `tests/test_family_knowledge_api.py`。
+   - API DB smoke 改用 FamilyKnowledge API 并校验 audit。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_family_knowledge_api.py tests/test_memory_store.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 173 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## 第 68 轮 · 2026-08-01（Sync heartbeat API / Android pending report）
 
 **目标**：继续推进 Android pending_sync 可观测性，补齐服务端 sync_state heartbeat API。

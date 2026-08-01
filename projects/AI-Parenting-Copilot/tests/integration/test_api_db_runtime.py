@@ -120,20 +120,16 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         baby_id=(baby_id := new_ulid()),
                         name="DB Baby",
                     )
-                    await seed_session.execute(
-                        text(
-                            """
-                            INSERT INTO family_knowledge (id, family_id, key, value)
-                            VALUES (:id, :family_id, :key, CAST(:value AS jsonb))
-                            """
-                        ),
-                        {
-                            "id": new_ulid(),
-                            "family_id": family_id,
-                            "key": "sleep.preference",
-                            "value": '{"value":"white_noise"}',
-                        },
-                    )
+
+            memory_upsert = client.post(
+                "/api/v1/family-knowledge",
+                json={
+                    "family_id": family_id,
+                    "key": "sleep.preference",
+                    "value": {"value": "white_noise"},
+                },
+            )
+            assert memory_upsert.status_code == 200
 
             device = client.post(
                 "/api/v1/auth/devices/register",
@@ -369,6 +365,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         WHERE resource IN (
                             :family_resource,
                             :sync_resource,
+                            :memory_resource,
                             :event_resource,
                             :alert_resource,
                             :sleep_resource,
@@ -384,6 +381,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                     {
                         "family_resource": f"family:{family_id}",
                         "sync_resource": f"sync_state:{device_id}",
+                        "memory_resource": f"family_knowledge:{family_id}:sleep.preference",
                         "event_resource": f"observation_event:{event.json()['event_id']}",
                         "alert_resource": f"alert:{alert_id}",
                         "sleep_resource": f"sleep_session:{sleep_id}",
@@ -399,6 +397,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert {
                 "auth.init_family",
                 "sync.heartbeat",
+                "family_knowledge.upsert",
                 "event.upsert",
                 "alert.create",
                 "alert.dispatch",

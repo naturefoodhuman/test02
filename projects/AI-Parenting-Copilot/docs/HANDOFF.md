@@ -106,7 +106,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 172 passed, 8 deselected, 1 warning
+# 173 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
