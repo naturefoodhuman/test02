@@ -11,7 +11,7 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke、Camera/mmWave ingest/list APIs、Camera fusion API/clip plan、mmWave live MQTT worker、Android TS/native/background pending sync/alert ack drains、Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API、dev E2E substitutes；`APC-T035` 已通过用户复验，`APC-T058` 已 DONE。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke、Camera/mmWave ingest/list APIs、Camera fusion API/clip plan、mmWave live MQTT worker、Android TS/native/background pending sync/alert ack drains、Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API; Rule evaluation API、dev E2E substitutes；`APC-T035` 已通过用户复验，`APC-T058` 已 DONE。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
 
 ---
@@ -39,7 +39,7 @@
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -69,7 +69,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_mmwave_ingest_service.py tests/test_mmwave_api.py tests/test_mmwave_parser.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -98,7 +98,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_camera_adapters.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -138,6 +138,33 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
+## [第 70 轮] 2026-08-01 — Rule evaluation API
+
+### 需求变动
+
+- 继续推进 Rule Engine 服务化：新增 `POST /api/v1/rules/evaluate/{domain}`，覆盖 P0 rule domains。
+
+### 文件影响
+
+修改：
+
+- `server/app/rule_engine/api/routes.py`
+- `tests/test_rules_admin_api.py`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_rules_admin_api.py tests/test_medication_rules.py tests/test_triage_threshold_rules.py tests/test_vaccine_rules.py tests/test_growth_rules.py -q
+# 10 passed
+```
+
+### 架构影响
+
+- 无架构变更；该 API 明确强化“剂量/阈值/医疗判断只由 Rule Engine 产出”。
+
+---
+
 ## [第 69 轮] 2026-08-01 — Android Login nullable compile fix
 
 ### 需求变动
@@ -156,7 +183,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -187,12 +214,12 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_family_knowledge_api.py tests/test_memory_store.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ---
 
-## [第 68 轮] 2026-08-01 — Sync heartbeat API; Family Knowledge API / Android pending report
+## [第 68 轮] 2026-08-01 — Sync heartbeat API; Family Knowledge API; Rule evaluation API / Android pending report
 
 ### 需求变动
 
@@ -221,7 +248,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_sync_state_api.py tests/test_android_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -251,7 +278,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -277,12 +304,12 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ---
 
-## [第 61 轮] 2026-08-01 — Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API
+## [第 61 轮] 2026-08-01 — Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API; Rule evaluation API
 
 ### 需求变动
 
@@ -309,7 +336,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -348,7 +375,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_mmwave_api.py tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -383,7 +410,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -416,7 +443,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_skeleton.py tests/test_android_features.py tests/test_android_native_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -452,7 +479,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_mmwave_api.py tests/test_camera_adapters.py tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -485,7 +512,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响
@@ -524,7 +551,7 @@ make typecheck
 python3 -m pytest tests/test_scheduler_worker.py tests/test_scheduler_api.py tests/test_backup_tasks.py -q
 make restore-dry-run
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ### 架构影响

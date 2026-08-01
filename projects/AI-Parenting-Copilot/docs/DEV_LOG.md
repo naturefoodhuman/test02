@@ -18,6 +18,30 @@
 
 ---
 
+## 第 70 轮 · 2026-08-01（Rule evaluation API）
+
+**目标**：继续推进 Rule Engine 对 App/Copilot 的服务端可调用接口，避免客户端或 Copilot 绕过 Rule Engine。
+
+**完成内容**：
+
+1. 新增 `POST /api/v1/rules/evaluate/{domain}`：
+   - medication
+   - triage
+   - thresholds
+   - vaccine
+   - growth
+2. API 只调用对应 RuleModule，不经 LLM。
+3. Tests 覆盖 P0 domains 的 rule evaluation API。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_rules_admin_api.py tests/test_medication_rules.py tests/test_triage_threshold_rules.py tests/test_vaccine_rules.py tests/test_growth_rules.py -q
+# 10 passed
+```
+
+---
+
 ## 第 69 轮 · 2026-08-01（Family Knowledge API / memory persistence）
 
 **目标**：继续推进 `APC-T030` 的 FamilyMemory 持久化和 DB audit，补齐家庭偏好/纠错记忆的 API。
@@ -44,7 +68,7 @@
 ```bash
 python3 -m pytest tests/test_family_knowledge_api.py tests/test_memory_store.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 ```
 
 ---

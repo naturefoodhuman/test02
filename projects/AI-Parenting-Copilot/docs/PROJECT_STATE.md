@@ -107,6 +107,13 @@
 
 
 
+
+### 继续开发进展（Rule evaluation API）
+
+- 新增 `POST /api/v1/rules/evaluate/{domain}`，覆盖 medication、triage、thresholds、vaccine、growth。
+- 该 API 只调用 Rule Engine，不经 LLM，不生成非规则医疗结论。
+- Static/API tests 覆盖 P0 rule domain evaluation，方便 Android/Copilot 后续直接获取结构化规则结果。
+
 ### 继续开发进展（Family Knowledge API）
 
 - 新增 FamilyKnowledge in-memory + SQLAlchemy repositories，支持 upsert/list。

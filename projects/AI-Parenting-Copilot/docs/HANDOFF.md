@@ -106,7 +106,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 173 passed, 8 deselected, 1 warning
+# 174 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
@@ -217,3 +217,5 @@ JSON / JSONL 使用 `_forge_trace` 字段。
 
 
 本地 FastAPI 启动 runbook：`docs/RUNBOOK_LOCAL_API.md`。
+
+- Rule evaluation API: `POST /api/v1/rules/evaluate/{domain}` for medication/triage/thresholds/vaccine/growth.

@@ -759,7 +759,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现中国疫苗规则 P0：计划、逾期、已完成记录与 EvidencePolicy 版本化。
-- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests 已完成；前置 T018 与生产规则审查未完成）
+- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests 与 `/api/v1/rules/evaluate/vaccine` 已完成；生产规则审查未完成）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4；`ENGINEERING_DESIGN.md` §13.2
 - **输出**：Vaccine RuleModule、规则包、golden tests
@@ -786,7 +786,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现 WHO 0–5 岁基础生长百分位计算与趋势提示规则。
-- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests 已完成；前置 T018 与完整 WHO 表验收未完成）
+- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests 与 `/api/v1/rules/evaluate/growth` 已完成；完整 WHO 表验收未完成）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4
 - **输出**：Growth RuleModule、WHO 配置、golden tests
