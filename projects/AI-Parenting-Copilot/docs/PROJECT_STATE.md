@@ -60,6 +60,13 @@
 - 根据安全/DB audit 前置与用户验证，`APC-T058` 已标记 DONE。
 
 
+
+### 继续开发进展（Android native screen actions）
+
+- `AlertCenterActivity` 新增 server alerts refresh 后的 useful feedback 提交，调用 `/api/v1/alerts/{id}/feedback`。
+- `SleepSessionActivity` 新增 ROI 保存和 camera events 查询，调用 `/api/v1/sleep-sessions/{id}/roi` 与 `/api/v1/sleep-sessions/{id}/camera-events`。
+- `NativeApiClient` 新增 PUT JSON result 支持。
+
 ### 继续开发进展（Android native screens server refresh）
 
 - `NativeApiClient` 新增 GET JSON 与 POST result body，native screens 可读取服务端 JSON。

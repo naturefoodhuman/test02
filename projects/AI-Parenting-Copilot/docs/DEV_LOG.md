@@ -18,6 +18,33 @@
 
 ---
 
+## 第 66 轮 · 2026-08-01（Android native screen actions）
+
+**目标**：继续推进 Android native fallback screens，不只读服务端数据，也能执行核心动作。
+
+**完成内容**：
+
+1. `NativeApiClient` 新增 `putJsonResult()`。
+2. `AlertCenterActivity`：
+   - refresh alerts 后解析第一条 alert id。
+   - 新增 “Submit useful feedback” 调用 `/api/v1/alerts/{id}/feedback`。
+3. `SleepSessionActivity`：
+   - 新增 “Save default ROI” 调用 `PUT /api/v1/sleep-sessions/{id}/roi`。
+   - 新增 “Refresh camera events” 调用 `GET /api/v1/sleep-sessions/{id}/camera-events`。
+4. Static tests 覆盖 feedback/ROI/camera-events API route strings。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 171 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## 第 65 轮 · 2026-08-01（Android native screens server refresh）
 
 **目标**：继续推进 Android native fallback screens，从纯本地展示升级为可直接读服务端 API。

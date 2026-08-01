@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 19:29:00
+// 创建时间（北京时间）：2026-08-01 19:07:00
 
 package com.aiparentingcopilot
 
@@ -45,6 +45,14 @@ class SleepSessionActivity : Activity() {
             text = "Resume"
             setOnClickListener { postSessionAction("resume") }
         }
+        val saveRoi = Button(this).apply {
+            text = "Save default ROI"
+            setOnClickListener { saveDefaultRoi() }
+        }
+        val cameraEvents = Button(this).apply {
+            text = "Refresh camera events"
+            setOnClickListener { refreshCameraEvents() }
+        }
         val end = Button(this).apply {
             text = "End"
             setOnClickListener { postSessionAction("end") }
@@ -54,6 +62,8 @@ class SleepSessionActivity : Activity() {
         layout.addView(start)
         layout.addView(pause)
         layout.addView(resume)
+        layout.addView(saveRoi)
+        layout.addView(cameraEvents)
         layout.addView(end)
         setContentView(layout)
     }
@@ -71,6 +81,36 @@ class SleepSessionActivity : Activity() {
                 .postJsonResult("/api/v1/sleep-sessions", body)
             sessionId = Regex("\"id\"\\s*:\\s*\"([^\"]+)\"").find(result.body)?.groupValues?.get(1)
             runOnUiThread { status.text = "start status=${result.statusCode} session=${sessionId ?: "?"}" }
+        }.start()
+    }
+
+    private fun saveDefaultRoi() {
+        val id = sessionId ?: return
+        status.text = "Saving ROI..."
+        Thread {
+            val settings = ApiSettingsStore(this)
+            val session = SecureSessionStore(this).load()
+            val body = JSONObject()
+                .put("x", 0.1)
+                .put("y", 0.2)
+                .put("width", 0.5)
+                .put("height", 0.4)
+                .toString()
+            val result = NativeApiClient(settings.baseUrl(), session?.accessToken)
+                .putJsonResult("/api/v1/sleep-sessions/$id/roi", body)
+            runOnUiThread { status.text = "roi status=${result.statusCode}" }
+        }.start()
+    }
+
+    private fun refreshCameraEvents() {
+        val id = sessionId ?: return
+        status.text = "Refreshing camera events..."
+        Thread {
+            val settings = ApiSettingsStore(this)
+            val session = SecureSessionStore(this).load()
+            val result = NativeApiClient(settings.baseUrl(), session?.accessToken)
+                .getJson("/api/v1/sleep-sessions/$id/camera-events")
+            runOnUiThread { status.text = "camera-events=${result.statusCode}\n${result.body.take(300)}" }
         }.start()
     }
 

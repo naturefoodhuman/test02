@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 17:28:00
+# 创建时间（北京时间）：2026-08-01 19:10:00
 
 """Android native skeleton static tests."""
 
@@ -126,9 +126,14 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "Refresh server timeline" in timeline
     assert "/api/v1/events?baby_id=" in timeline
     assert "Refresh server alerts" in alert_center
+    assert "Submit useful feedback" in alert_center
     assert "AlertAckDrainer" in alert_center
     assert "/api/v1/alerts?family_id=" in alert_center
+    assert "/feedback" in alert_center
     assert "/api/v1/sleep-sessions" in sleep
+    assert "putJsonResult" in sleep
+    assert "/roi" in sleep
+    assert "/camera-events" in sleep
     assert "postSessionAction" in sleep
     assert ".TodayActivity" in manifest
     assert ".AlertCenterActivity" in manifest

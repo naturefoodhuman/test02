@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 19:28:00
+// 创建时间（北京时间）：2026-08-01 19:06:00
 
 package com.aiparentingcopilot
 
@@ -9,10 +9,13 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import org.json.JSONArray
+import org.json.JSONObject
 
-/** Native Alert Center fallback for server alert list and local ack action drain. */
+/** Native Alert Center fallback for server alert list, feedback, and local ack drain. */
 class AlertCenterActivity : Activity() {
     private lateinit var summary: TextView
+    private var firstAlertId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +38,10 @@ class AlertCenterActivity : Activity() {
             text = "Refresh server alerts"
             setOnClickListener { refreshAlerts() }
         }
+        val feedback = Button(this).apply {
+            text = "Submit useful feedback"
+            setOnClickListener { submitFeedback() }
+        }
         val drain = Button(this).apply {
             text = "Drain alert ack actions"
             setOnClickListener { drainAlertActions() }
@@ -42,6 +49,7 @@ class AlertCenterActivity : Activity() {
         layout.addView(title)
         layout.addView(summary)
         layout.addView(refresh)
+        layout.addView(feedback)
         layout.addView(drain)
         setContentView(layout)
     }
@@ -54,7 +62,24 @@ class AlertCenterActivity : Activity() {
         Thread {
             val result = NativeApiClient(settings.baseUrl(), session?.accessToken)
                 .getJson("/api/v1/alerts?family_id=$familyId")
+            firstAlertId = parseFirstAlertId(result.body)
             runOnUiThread { summary.text = "alerts=${result.statusCode}\n${result.body.take(400)}" }
+        }.start()
+    }
+
+    private fun submitFeedback() {
+        val alertId = firstAlertId ?: return
+        summary.text = "Submitting feedback..."
+        Thread {
+            val settings = ApiSettingsStore(this)
+            val session = SecureSessionStore(this).load()
+            val body = JSONObject()
+                .put("feedback", "useful")
+                .put("note", "native-feedback")
+                .toString()
+            val result = NativeApiClient(settings.baseUrl(), session?.accessToken)
+                .postJsonResult("/api/v1/alerts/$alertId/feedback", body)
+            runOnUiThread { summary.text = "feedback=${result.statusCode}" }
         }.start()
     }
 
@@ -75,5 +100,14 @@ class AlertCenterActivity : Activity() {
             ).drain()
             runOnUiThread { summary.text = "acked=${result.succeeded} failed=${result.failed}" }
         }.start()
+    }
+
+    private fun parseFirstAlertId(body: String): String? {
+        return try {
+            val array = JSONArray(body)
+            if (array.length() == 0) null else array.getJSONObject(0).optString("id")
+        } catch (_: Exception) {
+            null
+        }
     }
 }

@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 19:25:00
+// 创建时间（北京时间）：2026-08-01 19:05:00
 
 package com.aiparentingcopilot
 
@@ -21,7 +21,15 @@ class NativeApiClient(
     }
 
     fun postJsonResult(path: String, json: String): NativeHttpResult {
-        val connection = open(path, "POST").apply { doOutput = true }
+        return writeJson(path, "POST", json)
+    }
+
+    fun putJsonResult(path: String, json: String): NativeHttpResult {
+        return writeJson(path, "PUT", json)
+    }
+
+    private fun writeJson(path: String, method: String, json: String): NativeHttpResult {
+        val connection = open(path, method).apply { doOutput = true }
         connection.outputStream.use { output -> output.write(json.toByteArray(Charsets.UTF_8)) }
         return readResult(connection)
     }
