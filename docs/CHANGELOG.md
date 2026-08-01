@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 22:35:00
+创建时间（北京时间）：2026-07-31 23:38:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,39 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync smoke target。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync smoke target；DB-backed Memory/Orchestrator context。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
-- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `146 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
+- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `148 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 138 轮] 2026-07-31
+
+### 需求变动
+- **AI Parenting Copilot 继续开发**：新增 SQLAlchemy-backed M1-M5 MemorySnapshot、Local RAG 薄适配、Orchestrator DB memory injection，并让 Logger Copilot 复用 Normalization voice parser。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/server/app/memory/local_rag.py`
+- 新增：`projects/AI-Parenting-Copilot/server/app/memory/sqlalchemy_store.py`
+- 修改：`projects/AI-Parenting-Copilot/server/app/copilots/logger_copilot.py`
+- 修改：`projects/AI-Parenting-Copilot/server/app/orchestrator/context_builder.py`
+- 修改：`projects/AI-Parenting-Copilot/server/app/orchestrator/orchestrator.py`
+- 修改：`projects/AI-Parenting-Copilot/server/app/orchestrator/api/routes.py`
+- 修改：`projects/AI-Parenting-Copilot/tests/test_memory_store.py`
+- 修改：`projects/AI-Parenting-Copilot/tests/test_logger_copilot.py`
+- 修改：`projects/AI-Parenting-Copilot/tests/integration/test_api_db_runtime.py`
+- 修改：项目级维护文档与根 `docs/CHANGELOG.md`
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+make lint
+make typecheck
+python3 -m pytest tests/test_memory_store.py tests/test_logger_copilot.py tests/test_orchestrator.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 148 passed, 8 deselected, 1 warning
+```
 
 ---
 

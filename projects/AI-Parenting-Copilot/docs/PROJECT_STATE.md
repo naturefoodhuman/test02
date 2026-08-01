@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 22:25:00
+创建时间（北京时间）：2026-07-31 23:28:00
 -->
 
 
@@ -32,6 +32,15 @@
 
 
 
+
+
+### 继续开发进展（Memory / Orchestrator）
+
+- 新增 `server/app/memory/sqlalchemy_store.py`：从 PostgreSQL 构建 M1-M5 MemorySnapshot，包含 baby hard facts、family_knowledge、DerivedBabyState baseline、近 72h short context、当前 EvidencePolicy rule versions。
+- 新增 `server/app/memory/local_rag.py`：薄适配工厂 Local RAG store/search 结果，不复制工厂实现。
+- `ContextBuilder` 支持 async memory store；Orchestrator DB mode 通过 API route 注入 `SQLAlchemyMemoryStore`。
+- `LoggerCopilot` 复用 Normalization voice parser，Quick Record 候选与后台归一化保持一致。
+- `tests/integration/test_api_db_runtime.py` 扩展 DB memory smoke；下一轮需用户 Mac `make api-db-smoke-test` 复验。
 
 ### 用户 Mac worker 链路验收通过
 
@@ -70,7 +79,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 146 passed, 8 deselected, 1 warning
+# 148 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

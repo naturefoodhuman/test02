@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 22:20:00
+创建时间（北京时间）：2026-07-31 23:25:00
 -->
 
 # TASK_BACKLOG.md
@@ -871,7 +871,7 @@
 - **所属 Capability**：C11
 - **所属 Story**：S11
 - **目标**：实现五层记忆读取与上下文快照生成，M5 复用工厂 Local RAG。
-- **状态**：BLOCKED（M1-M5 snapshot/in-memory MemoryStore 已完成；State Engine 与 Local RAG 真实适配待前置解除）
+- **状态**：BLOCKED（M1-M5 in-memory + SQLAlchemyMemoryStore、DB hard facts/family prefs/state/72h context 与 LocalRAGMemoryAdapter 已完成；用户 Mac `api-db-smoke-test` 复验待执行）
 - **前置依赖**：APC-T016, APC-T025
 - **输入**：`ENGINEERING_DESIGN.md` §5.9；`ARCHITECTURE_FINAL.md` §6.5
 - **输出**：MemoryStore、MemorySnapshot、injector
@@ -898,7 +898,7 @@
 - **所属 Capability**：C12 Orchestrator & Copilots
 - **所属 Story**：S12 意图路由、上下文注入、Dose Interceptor、P0 Copilots
 - **目标**：实现 DomainCopilot 协议、注册表与 P0 Logger Copilot。
-- **状态**：BLOCKED（Copilot base/registry/logger regex parser/tests 已完成；前置 T026 未 DONE，LLM ModelClient 注入待后续）
+- **状态**：BLOCKED（Copilot base/registry/logger parser/tests 已完成；Logger 已复用 Normalization voice parser；前置 T026 用户 DB 复验待执行）
 - **前置依赖**：APC-T024, APC-T026
 - **输入**：`ENGINEERING_DESIGN.md` §5.4、§13.1；`ARCHITECTURE_FINAL.md` §11.4
 - **输出**：Copilot 抽象、Registry、Logger Copilot
@@ -927,7 +927,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 `/api/v1/copilot/query` 主编排链路。
-- **状态**：BLOCKED（IntentRouter/ContextBuilder/OutputGuard/Orchestrator dev API 已完成；T027/T006 未 DONE，Memory/DB/audit 集成待验收）
+- **状态**：BLOCKED（IntentRouter/ContextBuilder/OutputGuard/Orchestrator dev API 已完成；DB mode 已注入 SQLAlchemyMemoryStore；用户 Mac `api-db-smoke-test` 复验待执行）
 - **前置依赖**：APC-T027, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §5.5、§7.3；`ARCHITECTURE_FINAL.md` §11.2
 - **输出**：Orchestrator service 与 API

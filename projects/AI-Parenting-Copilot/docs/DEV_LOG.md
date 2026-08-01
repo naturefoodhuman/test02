@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 22:28:00
+创建时间（北京时间）：2026-07-31 23:30:00
 -->
 
 
@@ -12,9 +12,51 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T011/T013/T014/T015/T016/T017` PG worker、Normalization、State Engine、event→state 链路已通过用户 Mac 复验并标记 DONE。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 PowerSync liveness/config probe 与 `make powersync-smoke-test`，用于推进 `APC-T012` 用户 Mac 复验。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `146 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 SQLAlchemyMemoryStore、LocalRAGMemoryAdapter、Orchestrator DB memory 注入，并让 LoggerCopilot 复用 Normalization voice parser。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `148 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 42 轮 · 2026-07-31（DB-backed Memory / Orchestrator context）
+
+**目标**：继续推进 `APC-T026/T027/T028`，把 Copilot context 从纯 in-memory 扩展为 PostgreSQL-backed M1-M5 memory snapshot，并修正 Logger Copilot 与 Normalization parser 不一致的问题。
+
+**完成内容**：
+
+1. DB-backed MemoryStore：
+   - `server/app/memory/sqlalchemy_store.py`
+   - M1 hard facts：baby profile、age_days、weight、sex、vaccine_region、allergies。
+   - M2 family prefs：`family_knowledge`。
+   - M3 behavior baseline：`derived_baby_state.snapshot`。
+   - M4 short context：近 72h event count/type summary。
+   - M5 correction memory：`family_knowledge` correction 前缀 + optional Local RAG。
+2. Local RAG thin adapter：
+   - `server/app/memory/local_rag.py`
+   - 接受工厂 `_infra.network.local_rag.RAGStore` 兼容 search store，不复制实现。
+3. Orchestrator DB memory 注入：
+   - `ContextBuilder` 支持 sync/async memory store。
+   - `/api/v1/copilot/query` DB mode 下使用 `SQLAlchemyMemoryStore`。
+4. Logger parser 一致性：
+   - `LoggerCopilot` 复用 `normalization.parsers.voice.parse_voice_text()`，支持“奶 80 毫升”等常见顺序。
+5. 测试增强：
+   - `tests/test_memory_store.py` 增加 Local RAG adapter regression。
+   - `tests/test_logger_copilot.py` 增加 parser word order regression。
+   - `tests/integration/test_api_db_runtime.py` 增加 DB memory snapshot smoke。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_memory_store.py tests/test_logger_copilot.py tests/test_orchestrator.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 148 passed, 8 deselected, 1 warning
+```
+
+**状态同步**：
+
+- `APC-T026/T027/T028` 保持 BLOCKED，说明已更新为“实现完成，等待用户 Mac DB/API smoke 复验”。
 
 ---
 

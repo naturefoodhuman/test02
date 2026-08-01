@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 04:25:00
+# 创建时间（北京时间）：2026-07-31 23:20:00
 
 
 """APC-T027 Logger Copilot tests."""
@@ -26,6 +26,18 @@ async def test_logger_copilot_parses_chinese_feeding_candidate() -> None:
     assert candidate["event_type"] == "feeding"
     assert candidate["normalized_payload"] == {"amount_ml": 90.0}
     assert response.requires_confirmation is True
+
+
+@pytest.mark.asyncio
+async def test_logger_copilot_reuses_common_voice_parser_word_orders() -> None:
+    response = await LoggerCopilot().handle(
+        CopilotRequest(text="奶 80 毫升", intent="record", baby_id="baby-1"),
+        MemorySnapshot(baby_id="baby-1"),
+    )
+
+    candidate = response.payload["record_candidate"]
+    assert candidate["event_type"] == "feeding"
+    assert candidate["normalized_payload"] == {"amount_ml": 80.0}
 
 
 @pytest.mark.asyncio

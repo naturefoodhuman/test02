@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 19:30:00
+# 创建时间（北京时间）：2026-07-31 23:20:00
 
 """DB-backed FastAPI runtime smoke tests.
 
@@ -30,6 +30,7 @@ from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.common.ids import new_ulid
 from server.app.db import normalize_database_url
 from server.app.main import create_app
+from server.app.memory.sqlalchemy_store import SQLAlchemyMemoryStore
 from server.app.normalization.worker import PendingEventProcessor
 from server.app.state_engine.snapshot_repo import DerivedBabyStateSnapshot
 from server.app.state_engine.sqlalchemy_snapshot_repo import SQLAlchemyStateSnapshotRepository
@@ -113,6 +114,20 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         baby_id=(baby_id := new_ulid()),
                         name="DB Baby",
                     )
+                    await seed_session.execute(
+                        text(
+                            """
+                            INSERT INTO family_knowledge (id, family_id, key, value)
+                            VALUES (:id, :family_id, :key, CAST(:value AS jsonb))
+                            """
+                        ),
+                        {
+                            "id": new_ulid(),
+                            "family_id": family_id,
+                            "key": "sleep.preference",
+                            "value": '{"value":"white_noise"}',
+                        },
+                    )
 
             device = client.post(
                 "/api/v1/auth/devices/register",
@@ -122,7 +137,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert device.status_code == 200
             device_id = device.json()["device_id"]
 
-            now = datetime(2026, 7, 9, tzinfo=UTC).isoformat()
+            now = datetime.now(UTC).replace(microsecond=0).isoformat()
             event = client.post(
                 "/api/v1/events",
                 json={
@@ -149,6 +164,16 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             state_from_pipeline = client.get(f"/api/v1/babies/{baby_id}/state")
             assert state_from_pipeline.status_code == 200
             assert state_from_pipeline.json()["snapshot"]["feeding_24h_ml"] == 90
+
+            async with async_sessionmaker(engine, expire_on_commit=False)() as memory_session:
+                memory = await SQLAlchemyMemoryStore(memory_session).build_snapshot(
+                    baby_id=baby_id,
+                    family_id=family_id,
+                )
+            assert memory.hard_facts["name"] == "DB Baby"
+            assert memory.family_preferences["sleep.preference"] == {"value": "white_noise"}
+            assert memory.behavior_baseline["feeding_24h_ml"] == 90
+            assert memory.short_context["event_type_counts"] == {"feeding": 1}
 
             alert = client.post(
                 "/api/v1/alerts",

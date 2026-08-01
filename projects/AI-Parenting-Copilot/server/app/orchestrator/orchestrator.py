@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 04:25:00
+# 创建时间（北京时间）：2026-07-31 23:20:00
 
 
 """AI Orchestrator façade."""
@@ -20,9 +20,8 @@ from server.app.copilots.logger_copilot import LoggerCopilot
 from server.app.copilots.medication_safety import MedicationSafetyCopilot
 from server.app.copilots.proactive_copilot import ProactiveCopilot
 from server.app.copilots.vaccine_planner import VaccinePlannerCopilot
-from server.app.memory.injector import MemoryStore
 from server.app.observability.audit import AuditSink
-from server.app.orchestrator.context_builder import ContextBuilder
+from server.app.orchestrator.context_builder import ContextBuilder, ContextMemoryStore
 from server.app.orchestrator.intent_router import IntentRouter
 from server.app.orchestrator.output_guard import OutputGuard
 
@@ -48,7 +47,7 @@ class Orchestrator:
         self,
         *,
         registry: CopilotRegistry | None = None,
-        memory_store: MemoryStore | None = None,
+        memory_store: ContextMemoryStore | None = None,
         audit_sink: AuditSink | None = None,
     ) -> None:
         self.intent_router = IntentRouter()
@@ -70,7 +69,10 @@ class Orchestrator:
 
     async def handle(self, request: OrchestratorRequest) -> OrchestratorResponse:
         intent = request.intent or self.intent_router.route(request.text)
-        memory = self.context_builder.build(baby_id=request.baby_id, family_id=request.family_id)
+        memory = await self.context_builder.build_async(
+            baby_id=request.baby_id,
+            family_id=request.family_id,
+        )
         if intent in {"record", "proactive", "family_memory", "vaccine", "growth", "medication"}:
             copilot_request = CopilotRequest(
                 text=request.text,

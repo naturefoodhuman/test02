@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 22:32:00
+创建时间（北京时间）：2026-07-31 23:35:00
 -->
 
 
@@ -79,7 +79,8 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T012`：PowerSync contract/config 与 `make powersync-smoke-test` 已新增；需要用户 Mac `infra-up` 后复验 liveness。
 - `APC-T012`：PowerSync contract/config 已有，真实 PowerSync 写入/同步行为待验收。
 - `APC-T020`-`APC-T023`：Medication/Triage/Threshold/Vaccine/Growth pure rules + golden tests 已有；生产医学/疫苗/WHO 表审查待完成。
-- `APC-T026`-`APC-T030`：Memory / Copilots / Orchestrator / Dose Interceptor pure/dev API 已有；真实 memory/RAG/audit integration 待完成。
+- `APC-T026`-`APC-T028`：SQLAlchemyMemoryStore、LocalRAG adapter、Logger shared parser 与 Orchestrator DB memory injection 已完成；需要用户 Mac `api-db-smoke-test` 复验后解除主要阻塞。
+- `APC-T029`-`APC-T030`：Dose Interceptor / P0 Copilots pure/dev API 已有；DB audit/Memory 集成继续推进。
 - `APC-T032`-`APC-T036`：Notification/Escalation/Health/Scheduler dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
 - `APC-T037`-`APC-T044`：Camera / mmWave / Media / Export / Backup / Firmware mock/dev/skeleton 已有；真实 RTSP/ISAPI/Fregata/MQTT/PlatformIO/NAS 待验收。
 - `APC-T045`-`APC-T053`：Android TS view models/static flows + native skeleton 已有；真实 RN/Gradle/APK/device/Notifee/FCM/op-sqlite/PowerSync 待验收。
@@ -94,7 +95,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 146 passed, 8 deselected, 1 warning
+# 148 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
@@ -126,7 +127,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Mac 复验 `make powersync-smoke-test`，确认 PowerSync 官方服务 liveness/config；若通过，可解除 `APC-T012` 的主要 PowerSync 启动验收阻塞。
+1. 让用户 Mac 复验 `make api-db-smoke-test` 和 `make powersync-smoke-test`，确认 DB-backed Memory/Orchestrator 与 PowerSync liveness；若通过，可解除 `APC-T012/T026/T027/T028` 的主要验收阻塞。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。

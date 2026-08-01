@@ -1,22 +1,18 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 04:25:00
-
+# 创建时间（北京时间）：2026-07-31 23:00:00
 
 """P0 Logger Copilot.
 
 Produces record candidates only; it does not write to DB or bypass user confirmation.
+The deterministic parser is shared with Normalization so Quick Record and worker
+behavior stay consistent for common P0 Chinese text inputs.
 """
 
 from __future__ import annotations
 
-import re
-
 from server.app.copilots.base import CopilotRequest, CopilotResponse
 from server.app.memory.injector import MemorySnapshot
-
-FEEDING_RE = re.compile(r"(?:喂|喝|奶).*?(?P<amount>\d+(?:\.\d+)?)\s*(?:ml|毫升)", re.I)
-TEMP_RE = re.compile(r"(?P<temp>\d{2}(?:\.\d)?)\s*(?:度|℃|c)", re.I)
-DIAPER_RE = re.compile(r"(尿布|纸尿裤|便便|大便|尿)")
+from server.app.normalization.parsers.voice import parse_voice_text
 
 
 class LoggerCopilot:
@@ -31,7 +27,7 @@ class LoggerCopilot:
         candidate = self._parse(text)
         evidence: list[dict[str, object]] = [
             {
-                "source": "logger_copilot.regex",
+                "source": "logger_copilot.voice_parser",
                 "message": "Record candidate parsed from user text",
                 "memory_baby_id": memory.baby_id,
             }
@@ -46,28 +42,15 @@ class LoggerCopilot:
         )
 
     def _parse(self, text: str) -> dict[str, object]:
-        feeding = FEEDING_RE.search(text)
-        if feeding:
+        record_type, payload, confidence = parse_voice_text(text)
+        if record_type != "unknown":
             return {
-                "event_type": "feeding",
-                "confidence": 0.92,
-                "normalized_payload": {"amount_ml": float(feeding.group("amount"))},
-            }
-        temp = TEMP_RE.search(text)
-        if temp:
-            return {
-                "event_type": "temperature",
-                "confidence": 0.88,
-                "normalized_payload": {"value_c": float(temp.group("temp"))},
-            }
-        if DIAPER_RE.search(text):
-            return {
-                "event_type": "diaper",
-                "confidence": 0.75,
-                "normalized_payload": {"note": text},
+                "event_type": record_type,
+                "confidence": confidence,
+                "normalized_payload": payload,
             }
         return {
             "event_type": "unknown",
-            "confidence": 0.2,
-            "normalized_payload": {"raw_text": text},
+            "confidence": confidence,
+            "normalized_payload": payload,
         }
