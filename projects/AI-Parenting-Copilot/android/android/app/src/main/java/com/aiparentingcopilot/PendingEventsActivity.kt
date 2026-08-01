@@ -1,11 +1,12 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 09:36:00
+// 创建时间（北京时间）：2026-08-01 16:00:00
 
 package com.aiparentingcopilot
 
 import android.app.Activity
 import android.os.Bundle
 import android.view.Gravity
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -32,8 +33,30 @@ class PendingEventsActivity : Activity() {
             textSize = 16f
             gravity = Gravity.CENTER
         }
+        val drain = Button(this).apply {
+            text = "Drain pending to server"
+            setOnClickListener {
+                text = "Draining..."
+                Thread {
+                    val baseUrl = intent.getStringExtra("api_base_url") ?: DEFAULT_EMULATOR_API
+                    val result = PendingSyncDrainer(
+                        this@PendingEventsActivity,
+                        NativeApiClient(baseUrl),
+                    ).drain()
+                    runOnUiThread {
+                        text = "Drain pending to server"
+                        detail.text = "synced=${result.succeeded} failed=${result.failed}"
+                    }
+                }.start()
+            }
+        }
         layout.addView(title)
         layout.addView(detail)
+        layout.addView(drain)
         setContentView(layout)
+    }
+
+    companion object {
+        const val DEFAULT_EMULATOR_API = "http://10.0.2.2:8000"
     }
 }

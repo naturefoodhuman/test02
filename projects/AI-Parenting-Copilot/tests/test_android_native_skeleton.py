@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 09:38:00
+# 创建时间（北京时间）：2026-08-01 16:05:00
 
 """Android native skeleton static tests."""
 
@@ -78,6 +78,11 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     quick = (base / "QuickRecordActivity.kt").read_text()
     pending = (base / "PendingEventsActivity.kt").read_text()
 
+    native_api = (base / "NativeApiClient.kt").read_text()
+    pending_drainer = (base / "PendingSyncDrainer.kt").read_text()
+    alert_drainer = (base / "AlertAckDrainer.kt").read_text()
+    alert_receiver = (base / "AlertActionReceiver.kt").read_text()
+
     assert "NativeLocalEventBridge" in bridge
     assert "pendingSyncCount" in bridge
     assert "QuickRecordActivity" in manifest
@@ -86,6 +91,12 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "LocalEventStore" in quick and "insertPending" in quick
     assert "Pending sync:" in quick
     assert "Pending sync events" in pending
+    assert "PendingSyncDrainer" in pending
+    assert "postJson" in native_api
+    assert "/api/v1/events" in pending_drainer
+    assert "markSynced" in pending_drainer
+    assert "/api/v1/alerts/" in alert_drainer
+    assert "drainLocalActions" in alert_receiver
 
 
 def test_android_native_secure_session_store_uses_keystore() -> None:

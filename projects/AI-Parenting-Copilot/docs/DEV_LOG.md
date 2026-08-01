@@ -18,6 +18,42 @@
 
 ---
 
+## 第 59 轮 · 2026-08-01（Android native API drains）
+
+**目标**：继续推进 Android 离线记录与告警确认闭环，从 TS bridge contract 进一步推进到 native fallback screens 可调用的 Kotlin drainers。
+
+**完成内容**：
+
+1. Native API client：
+   - `NativeApiClient.kt`：最小 HttpURLConnection POST JSON client，支持 Bearer token。
+   - `NativeDrainResult`。
+2. Pending event native drain：
+   - `PendingSyncDrainer.kt`：读取 `LocalEventStore.pending()`，POST `/api/v1/events`，成功后 `markSynced()`。
+3. Alert ack native drain：
+   - `AlertAckDrainer.kt`：读取 `AlertActionReceiver.drainLocalActions()`，POST `/api/v1/alerts/{id}/ack`，失败时重新记录本地 action。
+4. Native UI：
+   - `PendingEventsActivity` 增加“Drain pending to server”按钮，默认 emulator API `http://10.0.2.2:8000`。
+5. Static tests：
+   - `tests/test_android_native_skeleton.py` 覆盖 native client/drainers/action drain。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
+
+**用户下一步（非每轮必需）**：
+
+```bash
+cd android/android && ./gradlew assembleDebug
+```
+
+---
+
 ## 第 58 轮 · 2026-08-01（Android pending sync / alert ack drains）
 
 **目标**：继续推进 Android 端离线记录与告警确认闭环，补齐 native bridge 上层的 drain 逻辑。

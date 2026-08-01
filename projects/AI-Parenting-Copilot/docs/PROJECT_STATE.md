@@ -49,6 +49,15 @@
 
 
 
+
+### 继续开发进展（Android native API drains）
+
+- 新增 `NativeApiClient.kt`，为 native fallback screens 提供最小 POST JSON client。
+- 新增 `PendingSyncDrainer.kt`，将 native SQLite pending events POST 到 `/api/v1/events`，成功后 `markSynced()`。
+- 新增 `AlertAckDrainer.kt`，将 native alert ack actions POST 到 `/api/v1/alerts/{id}/ack`。
+- `AlertActionReceiver` 支持 `drainLocalActions()`；`PendingEventsActivity` 增加“Drain pending to server”按钮。
+- Static tests 覆盖 native API client/drainers 与 TS drain contracts。
+
 ### 继续开发进展（Android pending sync / alert ack drains）
 
 - 新增 `android/src/sync/pending_sync_drain.ts`：将 native pending local events POST 到 `/api/v1/events`，成功后调用 native `markSynced()`。
