@@ -18,6 +18,27 @@
 
 ---
 
+## 第 72 轮 · 2026-08-02（Health DB gray alert persistence）
+
+**目标**：补强 `APC-T035`，让真实 DB mode 的 health check 产生持久化 gray alert，并审计 health check。
+
+**完成内容**：
+
+1. `DeviceHealthMonitor` 改为依赖 create-alert protocol，不再限定 InMemory repo。
+2. `/api/v1/system/health/check` 在 DB mode 用 `SQLAlchemyAlertRepository` 生成 gray alerts。
+3. health check 写 `system.health_check` audit。
+4. API DB smoke 扩展 offline camera probe → gray alert persisted。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_health_api_probes.py tests/test_health_probes.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 174 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## 第 71 轮 · 2026-08-02（Android Rule Engine screen）
 
 **目标**：继续推进 Android 与 Rule Engine 联动，让家长端/真机 fallback 可直接触发 P0 规则评估，避免 LLM 生成医疗/剂量输出。

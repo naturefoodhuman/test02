@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 10:25:00
+# 创建时间（北京时间）：2026-08-01 23:32:00
 
 
 """Health endpoints for local operation and future device monitoring."""
@@ -12,6 +12,9 @@ from fastapi import APIRouter, Request
 
 from server.app.common.clock import utc_now
 from server.app.di import AppContainer
+from server.app.health.monitor import DeviceHealthMonitor
+from server.app.notification.sqlalchemy_alert_repo import SQLAlchemyAlertRepository
+from server.app.observability.request_audit import record_request_audit
 
 router = APIRouter(tags=["health"])
 
@@ -77,9 +80,25 @@ async def run_system_health_check(
     monitor = getattr(request.app.state, "device_health_monitor", None)
     if monitor is None:
         return {"status": "degraded", "checks": {}, "message": "health monitor unavailable"}
-    results = await monitor.run_once(family_id=family_id, baby_id=baby_id)
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        request_monitor = DeviceHealthMonitor(
+            monitor.probes,
+            SQLAlchemyAlertRepository(db_session),
+        )
+        results = await request_monitor.run_once(family_id=family_id, baby_id=baby_id)
+        monitor.last_results.update(request_monitor.last_results)
+    else:
+        results = await monitor.run_once(family_id=family_id, baby_id=baby_id)
     checks = {result.name: result.status.value for result in results}
-    return {
+    response = {
         "status": "degraded" if any(status == "offline" for status in checks.values()) else "ok",
         "checks": checks,
     }
+    await record_request_audit(
+        request,
+        action="system.health_check",
+        resource="system_health",
+        after=response,
+    )
+    return response

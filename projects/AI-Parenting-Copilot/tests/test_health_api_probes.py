@@ -33,3 +33,4 @@ def test_system_health_returns_device_probe_snapshot_and_gray_alert() -> None:
     assert snapshot.status_code == 200
     assert snapshot.json()["status"] == "degraded"
     assert snapshot.json()["device_health"] == {"camera": "offline"}
+    assert app.state.audit_sink.records[-1].action == "system.health_check"

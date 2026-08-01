@@ -77,6 +77,24 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
+## [第 169 轮] 2026-08-02
+
+### 需求变动
+- **AI Parenting Copilot Health 补强**：system health check 在 DB mode 下持久化 gray alerts，并写 `system.health_check` audit。
+
+### 文件影响
+- 修改：health monitor/API、API DB smoke、health tests、project docs、root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_health_api_probes.py tests/test_health_probes.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 174 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## [第 168 轮] 2026-08-02
 
 ### 需求变动

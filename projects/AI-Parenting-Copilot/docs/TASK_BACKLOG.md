@@ -1138,7 +1138,7 @@
 - **所属 Capability**：C15 Health Monitor & Scheduler
 - **所属 Story**：S15 设备健康、晨报、提醒、灰色告警
 - **目标**：监测 DB、MQTT、PowerSync、摄像头、mmWave、FCM、NAS 并在 60s 内产生灰色告警。
-- **状态**：DONE（MockHealthProbe/DeviceHealthMonitor/gray alert tests、DB/TCP/HTTP/PowerSync real probes 与 system health check API 已完成；用户 Mac `api-health-smoke` 真实环境复验通过）
+- **状态**：DONE（MockHealthProbe/DeviceHealthMonitor/gray alert tests、DB/TCP/HTTP/PowerSync real probes、system health check API、DB gray alert persistence/audit 已完成；用户 Mac `api-health-smoke` 真实环境复验通过）
 - **前置依赖**：APC-T031, APC-T033
 - **输入**：`ENGINEERING_DESIGN.md` §10.5；`ARCHITECTURE_FINAL.md` §22.5
 - **输出**：health probes、monitor、system health API

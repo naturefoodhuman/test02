@@ -1,8 +1,7 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 06:40:00
+# 创建时间（北京时间）：2026-08-01 23:30:00
 
-
-"""Device/service health monitor that creates gray alerts in dev mode."""
+"""Device/service health monitor that creates gray alerts."""
 
 from __future__ import annotations
 
@@ -10,11 +9,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from server.app.notification.alert_repo import (
-    AlertLevel,
-    CreateAlertRequest,
-    InMemoryAlertRepository,
-)
+from server.app.notification.alert_repo import AlertLevel, CreateAlertRequest
 
 
 class ProbeStatus(StrEnum):
@@ -35,6 +30,11 @@ class HealthProbe(Protocol):
     async def check(self) -> ProbeResult: ...
 
 
+class AlertCreateRepository(Protocol):
+    async def create(self, request: CreateAlertRequest):  # type: ignore[no-untyped-def]
+        """Create a gray/service alert."""
+
+
 class MockHealthProbe:
     def __init__(self, name: str, *, online: bool = True) -> None:
         self.name = name
@@ -49,7 +49,7 @@ class MockHealthProbe:
 
 
 class DeviceHealthMonitor:
-    def __init__(self, probes: list[HealthProbe], alert_repo: InMemoryAlertRepository) -> None:
+    def __init__(self, probes: list[HealthProbe], alert_repo: AlertCreateRepository) -> None:
         self.probes = probes
         self.alert_repo = alert_repo
         self.last_results: dict[str, ProbeResult] = {}

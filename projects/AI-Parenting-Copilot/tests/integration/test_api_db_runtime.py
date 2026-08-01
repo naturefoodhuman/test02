@@ -30,6 +30,7 @@ from sqlalchemy.ext.asyncio import (
 from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.common.ids import new_ulid
 from server.app.db import normalize_database_url
+from server.app.health.monitor import DeviceHealthMonitor, MockHealthProbe
 from server.app.main import create_app
 from server.app.memory.sqlalchemy_store import SQLAlchemyMemoryStore
 from server.app.normalization.worker import PendingEventProcessor
@@ -217,6 +218,20 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert memory.family_preferences["sleep.preference"] == {"value": "white_noise"}
             assert memory.behavior_baseline["feeding_24h_ml"] == 90
             assert memory.short_context["event_type_counts"] == {"feeding": 1}
+
+            app.state.device_health_monitor = DeviceHealthMonitor(
+                [MockHealthProbe("camera", online=False)],
+                app.state.alert_repository,
+            )
+            health_check = client.post(
+                "/api/v1/system/health/check",
+                params={"family_id": family_id, "baby_id": baby_id},
+            )
+            assert health_check.status_code == 200
+            assert health_check.json()["checks"] == {"camera": "offline"}
+            gray_alerts = client.get("/api/v1/alerts", params={"family_id": family_id})
+            assert gray_alerts.status_code == 200
+            assert any(alert["level"] == "gray" for alert in gray_alerts.json())
 
             media = client.post(
                 "/api/v1/media",

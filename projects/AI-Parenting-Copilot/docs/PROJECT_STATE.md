@@ -109,6 +109,12 @@
 
 
 
+
+### 继续开发进展（Health DB gray alert persistence）
+
+- `/api/v1/system/health/check` 在 DB mode 现在使用 `SQLAlchemyAlertRepository` 生成 gray device/service alerts，而不是只写 in-memory repo。
+- health check 本身写 `system.health_check` audit；API DB smoke 覆盖 offline probe → DB gray alert。
+
 ### 继续开发进展（Android Rule Engine screen）
 
 - 新增 `RuleEvaluationActivity`，native Android fallback 可直接调用 `/api/v1/rules/evaluate/{domain}`。

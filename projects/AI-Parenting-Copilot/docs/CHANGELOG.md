@@ -11,7 +11,7 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke、Camera/mmWave ingest/list APIs、Camera fusion API/clip plan、mmWave live MQTT worker、Android TS/native/background pending sync/alert ack drains、Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API; Rule evaluation API; Android Rule Engine screen、dev E2E substitutes；`APC-T035` 已通过用户复验，`APC-T058` 已 DONE。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke、Camera/mmWave ingest/list APIs、Camera fusion API/clip plan、mmWave live MQTT worker、Android TS/native/background pending sync/alert ack drains、Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API; Rule evaluation API; Android Rule Engine screen; Health DB gray alert persistence、dev E2E substitutes；`APC-T035` 已通过用户复验，`APC-T058` 已 DONE。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
 
 ---
@@ -138,7 +138,33 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
-## [第 71 轮] 2026-08-02 — Android Rule Engine screen
+## [第 72 轮] 2026-08-02 — Health DB gray alert persistence
+
+### 需求变动
+
+- 补强 `APC-T035`：system health check 在 DB mode 下使用 SQLAlchemyAlertRepository 持久化 gray alerts，并写 `system.health_check` audit。
+
+### 文件影响
+
+修改：
+
+- `server/app/health/monitor.py`
+- `server/app/health/api.py`
+- `tests/test_health_api_probes.py`
+- `tests/integration/test_api_db_runtime.py`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_health_api_probes.py tests/test_health_probes.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 174 passed, 8 deselected, 1 warning
+```
+
+---
+
+## [第 71 轮] 2026-08-02 — Android Rule Engine screen; Health DB gray alert persistence
 
 ### 需求变动
 
@@ -249,7 +275,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
-## [第 68 轮] 2026-08-01 — Sync heartbeat API; Family Knowledge API; Rule evaluation API; Android Rule Engine screen / Android pending report
+## [第 68 轮] 2026-08-01 — Sync heartbeat API; Family Knowledge API; Rule evaluation API; Android Rule Engine screen; Health DB gray alert persistence / Android pending report
 
 ### 需求变动
 
@@ -339,7 +365,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
-## [第 61 轮] 2026-08-01 — Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API; Rule evaluation API; Android Rule Engine screen
+## [第 61 轮] 2026-08-01 — Android native core screens/server refresh/actions/login; Sync heartbeat API; Family Knowledge API; Rule evaluation API; Android Rule Engine screen; Health DB gray alert persistence
 
 ### 需求变动
 
