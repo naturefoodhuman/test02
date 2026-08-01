@@ -1291,7 +1291,7 @@
 - **所属 Capability**：C17 mmWave & Firmware
 - **所属 Story**：S17 MQTT 雷达接入与 ESP32C6 固件
 - **目标**：订阅 `baby/radar/telemetry`，解析雷达 JSON，写入 sensor_event / observation_event。
-- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest/list API 与 DB/API smoke 已完成；真实 MQTT ingest 待验收）
+- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest/list API、MMWaveIngestService 与 live MQTT worker CLI 已完成；真实 MQTT broker/device soak 待验收）
 - **前置依赖**：APC-T003, APC-T009, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M12、§7.5；`ARCHITECTURE_FINAL.md` §13
 - **输出**：mmWave adapter

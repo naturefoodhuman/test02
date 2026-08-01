@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-api run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -108,6 +108,7 @@ docs-check:
 	@test -f server/scripts/ensure_dev_deps.py
 	@test -f server/scripts/api_health_smoke.py
 	@test -f server/scripts/api_server_smoke.py
+	@test -f server/scripts/run_mmwave_worker.py
 	@test -f server/migrations/env.py
 	@test -f server/app/model_gateway/client.py
 	@test -f server/app/privacy/adapter.py
@@ -180,6 +181,9 @@ run-api: run-dev
 
 run-dev:
 	@bash server/scripts/run_dev.sh
+
+run-mmwave-worker: ensure-dev-deps
+	@$(PYTHON) server/scripts/run_mmwave_worker.py
 
 clean:
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

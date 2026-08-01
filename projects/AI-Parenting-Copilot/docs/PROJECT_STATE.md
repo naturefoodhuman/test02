@@ -68,6 +68,14 @@
 - `MainActivity` 改为核心功能 launcher：Today / Quick Record / Timeline / Alert Center / Sleep Session / Pending Sync / API Settings / Critical Alert Demo。
 
 
+
+### 继续开发进展（mmWave live MQTT worker）
+
+- 新增 `MMWaveIngestService`，API 与 MQTT worker 共用同一 parse/map/persist 逻辑。
+- 新增 `MMWaveMQTTWorker`，使用 aiomqtt 订阅 `baby/radar/telemetry` 并写入 `sensor_event`，可选生成 sensor `ObservationEvent`。
+- 新增 `server/scripts/run_mmwave_worker.py` 与 `make run-mmwave-worker`，用于真实 Mosquitto/mmWave 环境运行。
+- Unit tests 覆盖 ingest service 与 worker config/snapshot。
+
 ### 继续开发进展（Camera fusion API / clip plan）
 
 - 新增 `POST /api/v1/camera-fusion/evaluate`，封装 `FusionStateMachine`，输出 shadow decision。

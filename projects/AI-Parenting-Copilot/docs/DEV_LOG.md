@@ -18,6 +18,40 @@
 
 ---
 
+## 第 64 轮 · 2026-08-01（mmWave live MQTT worker）
+
+**目标**：继续推进 `APC-T040`，从 mmWave ingest API 补齐 live MQTT worker/CLI。
+
+**完成内容**：
+
+1. Shared ingest service：
+   - `server/app/mmwave/ingest_service.py`
+   - API 与 worker 共用 parse → sensor_event → optional observation_event 流程。
+2. Live MQTT worker：
+   - `server/app/mmwave/worker.py`
+   - `MMWaveMQTTWorker` 使用 aiomqtt 订阅 configured topics。
+   - 支持 snapshot：received_count/persisted_sensor_count/persisted_observation_count/last_signal_type/last_error。
+3. CLI / Make target：
+   - `server/scripts/run_mmwave_worker.py`
+   - `make run-mmwave-worker`
+   - 支持 env：`PARENTING_MMWAVE_BABY_ID` / `PARENTING_MMWAVE_FAMILY_ID`。
+4. Tests：
+   - `tests/test_mmwave_ingest_service.py`。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_mmwave_ingest_service.py tests/test_mmwave_api.py tests/test_mmwave_parser.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 171 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T040` 仍保持 BLOCKED，等待真实 MQTT broker/device soak。
+
+---
+
 ## 第 63 轮 · 2026-08-01（Camera fusion API + clip plan）
 
 **目标**：继续推进 `APC-T039`，把 pure FusionStateMachine/ClipRecorder 推进到 API + DB smoke。
