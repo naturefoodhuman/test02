@@ -1,14 +1,14 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:51:00
+创建时间（北京时间）：2026-08-01 00:30:00
 -->
 
 
 # PROJECT_STATE —— AI Parenting Copilot 当前状态 SSOT
 
-**更新日期**：2026-07-31 CST
+**更新日期**：2026-08-01 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增确认 `APC-T012` PowerSync smoke 通过并 DONE；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准；仍 BLOCKED 的任务主要等待真实设备/Android toolchain/NAS/医学规则审查与新 DB memory 复验。
+**当前任务状态**：新增确认 `APC-T020/T021/T026/T027/T028 DONE`；`APC-T029` 已接入 DB audit，等待用户 Mac `api-db-smoke-test` 复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -33,6 +33,14 @@
 
 
 
+
+
+### 继续开发进展（Dose Interceptor DB audit）
+
+- 新增 `server/app/observability/sqlalchemy_audit_sink.py`，让 `DoseInterceptor` 可在请求事务内写入真实 `audit_log`。
+- `/api/v1/copilot/query` DB mode 现在为 Orchestrator 注入 `SQLAlchemyAuditSink`，不再退回 memory-only audit。
+- `tests/integration/test_api_db_runtime.py` 扩展 dose intercept → `audit_log` smoke；下一步需用户 Mac `make api-db-smoke-test` 复验后解除 `APC-T029` 阻塞。
+- 根据用户已通过的 DB-backed Memory/Orchestrator 复验，同步 `APC-T026/T027/T028` 为 DONE；根据规则测试和前置解除，同步 `APC-T020/T021` 为 DONE。
 
 ### 继续开发进展（Memory / Orchestrator）
 

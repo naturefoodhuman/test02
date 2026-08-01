@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-31 23:20:00
+# 创建时间（北京时间）：2026-08-01 00:25:00
 
 """DB-backed FastAPI runtime smoke tests.
 
@@ -32,6 +32,8 @@ from server.app.db import normalize_database_url
 from server.app.main import create_app
 from server.app.memory.sqlalchemy_store import SQLAlchemyMemoryStore
 from server.app.normalization.worker import PendingEventProcessor
+from server.app.observability.sqlalchemy_audit_sink import SQLAlchemyAuditSink
+from server.app.orchestrator.dose_interceptor import DoseInterceptor
 from server.app.state_engine.snapshot_repo import DerivedBabyStateSnapshot
 from server.app.state_engine.sqlalchemy_snapshot_repo import SQLAlchemyStateSnapshotRepository
 
@@ -210,6 +212,15 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert activated.status_code == 200
             assert activated.json()["activated"]["policy_type"] == "integration"
 
+        async with async_sessionmaker(engine, expire_on_commit=False)() as dose_audit_session:
+            async with dose_audit_session.begin():
+                intercepted = await DoseInterceptor().intercept_and_audit(
+                    "请直接给 2.5ml。",
+                    source="llm",
+                    audit_sink=SQLAlchemyAuditSink(dose_audit_session),
+                )
+        assert intercepted.intercepted is True
+
         async with engine.connect() as audit_connection:
             audit_actions = set(
                 await audit_connection.scalars(
@@ -220,7 +231,8 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                             :family_resource,
                             :event_resource,
                             :alert_resource,
-                            :rule_resource
+                            :rule_resource,
+                            :dose_resource
                         )
                         """
                     ),
@@ -229,12 +241,17 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         "event_resource": f"observation_event:{event.json()['event_id']}",
                         "alert_resource": f"alert:{alert_id}",
                         "rule_resource": f"evidence_policy:integration:{integration_rule_version}",
+                        "dose_resource": "copilot_output",
                     },
                 )
             )
-            assert {"auth.init_family", "event.upsert", "alert.create", "rule.activate"}.issubset(
-                audit_actions
-            )
+            assert {
+                "auth.init_family",
+                "event.upsert",
+                "alert.create",
+                "rule.activate",
+                "dose_intercept",
+            }.issubset(audit_actions)
 
         async with async_sessionmaker(engine, expire_on_commit=False)() as state_session:
             async with state_session.begin():

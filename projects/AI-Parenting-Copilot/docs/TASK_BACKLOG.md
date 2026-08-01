@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:50:00
+创建时间（北京时间）：2026-08-01 00:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 BLOCKED；APC-T021 BLOCKED；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 BLOCKED；APC-T027 BLOCKED；APC-T028 BLOCKED；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 BLOCKED；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -697,7 +697,7 @@
 - **所属 Capability**：C10 规则域
 - **所属 Story**：S10 用药、分诊、阈值、疫苗、生长规则
 - **目标**：实现 P0/V1 用药规则：体重、月龄、浓度、间隔、24h 上限、防重复。
-- **状态**：BLOCKED（MedicationRuleModule/规则包/golden tests 已完成；前置 T018 仍待 DB/audit 验收）
+- **状态**：DONE（MedicationRuleModule/规则包/golden tests、rules-validate 与 DB/audit 前置验收已通过；生产临床审查作为 release checklist 持续项）
 - **前置依赖**：APC-T018
 - **输入**：`ENGINEERING_DESIGN.md` §7.4；`ARCHITECTURE_FINAL.md` §4.4、§10.2
 - **输出**：Medication RuleModule、规则 YAML、golden tests
@@ -729,7 +729,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现分诊红线、危险信号、体温阈值、趋势告警双条件规则。
-- **状态**：BLOCKED（Triage/Threshold pure rule modules/golden tests 已完成；前置 T018/T016 未 DONE）
+- **状态**：DONE（Triage/Threshold pure rule modules/golden tests、rules-validate 与 State Engine 前置验收已通过）
 - **前置依赖**：APC-T018, APC-T016
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§12；`ENGINEERING_DESIGN.md` §7.3
 - **输出**：Triage/Threshold RuleModules 与规则包
@@ -871,7 +871,7 @@
 - **所属 Capability**：C11
 - **所属 Story**：S11
 - **目标**：实现五层记忆读取与上下文快照生成，M5 复用工厂 Local RAG。
-- **状态**：BLOCKED（M1-M5 in-memory + SQLAlchemyMemoryStore、DB hard facts/family prefs/state/72h context 与 LocalRAGMemoryAdapter 已完成；用户 Mac `api-db-smoke-test` 复验待执行）
+- **状态**：DONE（M1-M5 in-memory + SQLAlchemyMemoryStore、DB hard facts/family prefs/state/72h context 与 LocalRAGMemoryAdapter 已完成；用户 Mac DB/API smoke 复验通过）
 - **前置依赖**：APC-T016, APC-T025
 - **输入**：`ENGINEERING_DESIGN.md` §5.9；`ARCHITECTURE_FINAL.md` §6.5
 - **输出**：MemoryStore、MemorySnapshot、injector
@@ -898,7 +898,7 @@
 - **所属 Capability**：C12 Orchestrator & Copilots
 - **所属 Story**：S12 意图路由、上下文注入、Dose Interceptor、P0 Copilots
 - **目标**：实现 DomainCopilot 协议、注册表与 P0 Logger Copilot。
-- **状态**：BLOCKED（Copilot base/registry/logger parser/tests 已完成；Logger 已复用 Normalization voice parser；前置 T026 用户 DB 复验待执行）
+- **状态**：DONE（Copilot base/registry/logger parser/tests 已完成；Logger 已复用 Normalization voice parser；Memory 前置已通过用户 DB/API smoke 复验）
 - **前置依赖**：APC-T024, APC-T026
 - **输入**：`ENGINEERING_DESIGN.md` §5.4、§13.1；`ARCHITECTURE_FINAL.md` §11.4
 - **输出**：Copilot 抽象、Registry、Logger Copilot
@@ -927,7 +927,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 `/api/v1/copilot/query` 主编排链路。
-- **状态**：BLOCKED（IntentRouter/ContextBuilder/OutputGuard/Orchestrator dev API 已完成；DB mode 已注入 SQLAlchemyMemoryStore；用户 Mac `api-db-smoke-test` 复验待执行）
+- **状态**：DONE（IntentRouter/ContextBuilder/OutputGuard/Orchestrator dev API 已完成；DB mode 已注入 SQLAlchemyMemoryStore；用户 Mac `api-db-smoke-test` 复验通过）
 - **前置依赖**：APC-T027, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §5.5、§7.3；`ARCHITECTURE_FINAL.md` §11.2
 - **输出**：Orchestrator service 与 API
@@ -957,7 +957,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：拦截 LLM/Copilot 自由输出中的具体剂量数字，并写审计。
-- **状态**：BLOCKED（DoseInterceptor 纯逻辑与 MemoryAuditSink 测试已完成；前置 T028 与真实 audit_log 写入待验收）
+- **状态**：BLOCKED（DoseInterceptor 纯逻辑、MemoryAuditSink 与 SQLAlchemyAuditSink DB audit 写入已完成；等待用户 Mac `api-db-smoke-test` 复验后解除）
 - **前置依赖**：APC-T028
 - **输入**：`ENGINEERING_DESIGN.md` §5.5、§9、§14；`ARCHITECTURE_FINAL.md` §11.3
 - **输出**：Dose Interceptor、安全测试、审计记录

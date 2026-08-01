@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-31 23:20:00
+# 创建时间（北京时间）：2026-08-01 00:25:00
 
 
 """Orchestrator API routes."""
@@ -12,6 +12,7 @@ from fastapi import APIRouter, Request
 
 from server.app.common.errors import AppError
 from server.app.memory.sqlalchemy_store import SQLAlchemyMemoryStore
+from server.app.observability.sqlalchemy_audit_sink import SQLAlchemyAuditSink
 from server.app.orchestrator.orchestrator import (
     Orchestrator,
     OrchestratorRequest,
@@ -26,7 +27,7 @@ def _orchestrator(request: Request) -> Orchestrator:
     if db_session is not None:
         return Orchestrator(
             memory_store=SQLAlchemyMemoryStore(db_session),
-            audit_sink=getattr(request.app.state, "audit_sink", None),
+            audit_sink=SQLAlchemyAuditSink(db_session),
         )
     orchestrator = getattr(request.app.state, "orchestrator", None)
     if orchestrator is None:

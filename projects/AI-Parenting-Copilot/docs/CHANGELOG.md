@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:53:00
+创建时间（北京时间）：2026-08-01 00:35:00
 -->
 
 
@@ -11,8 +11,47 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Worker/PowerSync 链路已通过用户 Mac 复验并解除 `APC-T011/T012/T013/T014/T015/T016/T017` 阻塞；新增 DB-backed Memory/Orchestrator context，待用户 Mac 复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator 已根据用户复验解除 `APC-T026/T027/T028` 阻塞；新增 Dose Interceptor DB audit，待用户 Mac `api-db-smoke-test` 复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 44 轮] 2026-08-01 — Dose Interceptor DB audit / status unlock
+
+### 需求变动
+
+- 用户确认 DB-backed Memory/Orchestrator 相关本地复验全部通过。
+- 同步 `APC-T020/T021/T026/T027/T028` 为 DONE。
+- 继续推进 `APC-T029`：Dose Interceptor 增加请求事务内 SQLAlchemy audit sink，API DB smoke 覆盖 `dose_intercept` 写入真实 `audit_log`。
+
+### 文件影响
+
+新增：
+
+- `server/app/observability/sqlalchemy_audit_sink.py`
+
+修改：
+
+- `server/app/orchestrator/api/routes.py`
+- `server/app/orchestrator/dose_interceptor.py`（留痕时间）
+- `tests/integration/test_api_db_runtime.py`
+- `docs/TASK_BACKLOG.md`
+- `docs/PROJECT_STATE.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m ruff check server/app/observability/sqlalchemy_audit_sink.py server/app/orchestrator/api/routes.py tests/integration/test_api_db_runtime.py
+python3 -m mypy server/app
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 148 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；Dose Interceptor 仍是剂量安全出口，DB 写入仅补齐既有 audit_log 边界。
 
 ---
 

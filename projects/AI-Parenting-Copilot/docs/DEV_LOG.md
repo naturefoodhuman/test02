@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:52:00
+创建时间（北京时间）：2026-08-01 00:32:00
 -->
 
 
@@ -10,11 +10,43 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T011/T012/T013/T014/T015/T016/T017` PG worker、PowerSync smoke、Normalization、State Engine、event→state 链路已通过用户 Mac 复验并标记 DONE。
+- **最新完成**：`APC-T020/T021/T026/T027/T028` 已根据用户复验与前置解除标记 DONE；`APC-T029` 已接入真实 DB audit，等待用户复验。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 SQLAlchemyMemoryStore、LocalRAGMemoryAdapter、Orchestrator DB memory 注入，并让 LoggerCopilot 复用 Normalization voice parser。
+- **最新继续开发**：新增 SQLAlchemyAuditSink，DoseInterceptor 可写真实 audit_log；API DB smoke 覆盖 dose_intercept audit。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `148 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 44 轮 · 2026-08-01（Dose Interceptor DB audit + status unlock）
+
+**目标**：基于用户确认 DB-backed Memory/Orchestrator 复验通过，解除相关任务阻塞，并继续推进 `APC-T029` 的真实 `audit_log` 写入。
+
+**完成内容**：
+
+1. 任务状态同步：
+   - `APC-T020` Medication Rule Domain → DONE
+   - `APC-T021` Triage / Threshold Rules → DONE
+   - `APC-T026` Memory Store M1-M5 / Local RAG adapter → DONE
+   - `APC-T027` Copilot Base / Registry / Logger Copilot → DONE
+   - `APC-T028` Orchestrator / Intent Router / Context Builder / Output Guard → DONE
+2. Dose Interceptor DB audit：
+   - 新增 `server/app/observability/sqlalchemy_audit_sink.py`。
+   - Orchestrator API DB mode 注入 `SQLAlchemyAuditSink(db_session)`。
+   - `tests/integration/test_api_db_runtime.py` 增加 `DoseInterceptor().intercept_and_audit()` 写入 `audit_log` 并校验 `dose_intercept` action。
+
+**验证**：
+
+```bash
+python3 -m ruff check server/app/observability/sqlalchemy_audit_sink.py server/app/orchestrator/api/routes.py tests/integration/test_api_db_runtime.py
+python3 -m mypy server/app
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 148 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T029` 仍保持 BLOCKED，等待用户 Mac `make api-db-smoke-test` 复验真实 DB audit 后解除。
 
 ---
 
