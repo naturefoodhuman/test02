@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 20:05:00
+// 创建时间（北京时间）：2026-08-01 20:45:00
 
 package com.aiparentingcopilot
 
@@ -70,6 +70,8 @@ class LoginActivity : Activity() {
         setContentView(layout)
     }
 
+    private fun blankToNull(value: String): String? = value.takeIf { it.isNotBlank() }
+
     private fun loginAndStore() {
         status.text = "Logging in..."
         Thread {
@@ -92,9 +94,9 @@ class LoginActivity : Activity() {
                 accessToken = token,
                 familyId = loginJson.getString("family_id"),
                 userId = loginJson.getString("user_id"),
-                babyId = babyId.text.toString().ifBlank { null },
-                deviceId = loginJson.optString("device_id").ifBlank { null },
-                role = loginJson.optString("role").ifBlank { null },
+                babyId = blankToNull(babyId.text.toString()),
+                deviceId = blankToNull(loginJson.optString("device_id")),
+                role = blankToNull(loginJson.optString("role")),
             )
             val registerBody = JSONObject()
                 .put("kind", "phone")
@@ -103,8 +105,8 @@ class LoginActivity : Activity() {
             val registerResult = NativeApiClient(baseUrl, token)
                 .postJsonResult("/api/v1/auth/devices/register", registerBody)
             if (registerResult.statusCode in 200..299) {
-                val deviceId = JSONObject(registerResult.body).optString("device_id").ifBlank { null }
-                session = session.copy(deviceId = deviceId)
+                val registeredDeviceId = blankToNull(JSONObject(registerResult.body).optString("device_id"))
+                session = session.copy(deviceId = registeredDeviceId)
             }
             SecureSessionStore(this).save(session)
             runOnUiThread {

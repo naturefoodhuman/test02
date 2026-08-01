@@ -138,6 +138,29 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
+## [第 69 轮] 2026-08-01 — Android Login nullable compile fix
+
+### 需求变动
+
+- 修复 Kotlin `ifBlank { null }` 潜在编译问题，改为 `blankToNull()` helper，避免 Android assembleDebug 在 LoginActivity 处失败。
+
+### 文件影响
+
+修改：
+
+- `android/android/app/src/main/java/com/aiparentingcopilot/LoginActivity.kt`
+- `tests/test_android_native_skeleton.py`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 172 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## [第 68 轮] 2026-08-01 — Sync heartbeat API / Android pending report
 
 ### 需求变动

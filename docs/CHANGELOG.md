@@ -77,6 +77,17 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
+## [第 165 轮] 2026-08-01
+
+### 需求变动
+- **AI Parenting Copilot Android 编译修复**：修复 LoginActivity 中 `ifBlank { null }` 潜在 Kotlin 编译问题，改为 `blankToNull()`。
+
+### 文件影响
+- 修改：`projects/AI-Parenting-Copilot/android/android/app/src/main/java/com/aiparentingcopilot/LoginActivity.kt`
+- 修改：`projects/AI-Parenting-Copilot/tests/test_android_native_skeleton.py`
+
+---
+
 ## [第 164 轮] 2026-08-01
 
 ### 需求变动

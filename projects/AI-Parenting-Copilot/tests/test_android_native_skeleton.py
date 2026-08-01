@@ -94,6 +94,8 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "/api/v1/auth/login" in login
     assert "/api/v1/auth/devices/register" in login
     assert "SecureSessionStore" in login
+    assert "blankToNull" in login
+    assert "ifBlank { null" not in login
     assert "LocalEventStore" in quick and "insertPending" in quick
     assert "BackgroundDrainScheduler.triggerNow" in quick
     assert "Pending sync:" in quick
