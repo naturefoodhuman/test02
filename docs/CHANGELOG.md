@@ -18,6 +18,24 @@
 
 ---
 
+## [第 161 轮] 2026-08-01
+
+### 需求变动
+- **AI Parenting Copilot Android native 继续推进**：Today/Timeline/AlertCenter/SleepSession native screens 增加服务端 API 读取/调用能力。
+
+### 文件影响
+- 修改：Android NativeApiClient / TodayActivity / TimelineActivity / AlertCenterActivity / SleepSessionActivity / static tests / project docs / root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 171 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## [第 160 轮] 2026-08-01
 
 ### 需求变动

@@ -121,10 +121,15 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "TimelineActivity::class.java" in main
     assert "AlertCenterActivity::class.java" in main
     assert "SleepSessionActivity::class.java" in main
-    assert "Pending sync:" in today
-    assert "LocalEventStore" in timeline
+    assert "Refresh server health" in today
+    assert "/api/v1/system/health" in today
+    assert "Refresh server timeline" in timeline
+    assert "/api/v1/events?baby_id=" in timeline
+    assert "Refresh server alerts" in alert_center
     assert "AlertAckDrainer" in alert_center
+    assert "/api/v1/alerts?family_id=" in alert_center
     assert "/api/v1/sleep-sessions" in sleep
+    assert "postSessionAction" in sleep
     assert ".TodayActivity" in manifest
     assert ".AlertCenterActivity" in manifest
 

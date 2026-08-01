@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 17:20:00
+// 创建时间（北京时间）：2026-08-01 19:26:00
 
 package com.aiparentingcopilot
 
@@ -11,8 +11,10 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 
-/** Native Today fallback showing local-first operational state. */
+/** Native Today fallback showing local-first and server operational state. */
 class TodayActivity : Activity() {
+    private lateinit var status: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val store = LocalEventStore(this)
@@ -27,15 +29,14 @@ class TodayActivity : Activity() {
             textSize = 24f
             gravity = Gravity.CENTER
         }
-        val pending = TextView(this).apply {
-            text = "Pending sync: ${store.pendingCount()}"
-            textSize = 18f
-            gravity = Gravity.CENTER
-        }
-        val lastDrain = TextView(this).apply {
-            text = settings.lastDrainSummary()
+        status = TextView(this).apply {
+            text = "Pending sync: ${store.pendingCount()}\n${settings.lastDrainSummary()}"
             textSize = 16f
             gravity = Gravity.CENTER
+        }
+        val refreshHealth = Button(this).apply {
+            text = "Refresh server health"
+            setOnClickListener { refreshHealth(settings.baseUrl()) }
         }
         val quickRecord = Button(this).apply {
             text = "Quick Record"
@@ -46,10 +47,20 @@ class TodayActivity : Activity() {
             setOnClickListener { startActivity(Intent(this@TodayActivity, PendingEventsActivity::class.java)) }
         }
         layout.addView(title)
-        layout.addView(pending)
-        layout.addView(lastDrain)
+        layout.addView(status)
+        layout.addView(refreshHealth)
         layout.addView(quickRecord)
         layout.addView(pendingEvents)
         setContentView(layout)
+    }
+
+    private fun refreshHealth(baseUrl: String) {
+        status.text = "Refreshing health..."
+        Thread {
+            val result = NativeApiClient(baseUrl).getJson("/api/v1/system/health")
+            runOnUiThread {
+                status.text = "health=${result.statusCode}\n${result.body.take(240)}"
+            }
+        }.start()
     }
 }

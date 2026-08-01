@@ -18,6 +18,35 @@
 
 ---
 
+## 第 65 轮 · 2026-08-01（Android native screens server refresh）
+
+**目标**：继续推进 Android native fallback screens，从纯本地展示升级为可直接读服务端 API。
+
+**完成内容**：
+
+1. `NativeApiClient`：新增 `getJson()` 和 `postJsonResult()`，返回 status/body。
+2. `TodayActivity`：可刷新 `/api/v1/system/health`。
+3. `TimelineActivity`：可刷新 `/api/v1/events?baby_id=...`。
+4. `AlertCenterActivity`：可刷新 `/api/v1/alerts?family_id=...`，并保留 ack drain。
+5. `SleepSessionActivity`：支持 start/pause/resume/end 服务端 API 调用，并解析 session id。
+6. Static tests 扩展 native screen API route checks。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 171 passed, 8 deselected, 1 warning
+```
+
+**用户下一步（非阻塞本轮）**：
+
+```bash
+cd android/android && ./gradlew assembleDebug
+```
+
+---
+
 ## 第 64 轮 · 2026-08-01（mmWave live MQTT worker）
 
 **目标**：继续推进 `APC-T040`，从 mmWave ingest API 补齐 live MQTT worker/CLI。

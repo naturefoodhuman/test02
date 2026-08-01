@@ -59,6 +59,15 @@
 - 新增 red alert API E2E substitute：create → dispatch → ack → cancel receipts → feedback，并修复 dev mode dispatch/cancel audit 记录。
 - 根据安全/DB audit 前置与用户验证，`APC-T058` 已标记 DONE。
 
+
+### 继续开发进展（Android native screens server refresh）
+
+- `NativeApiClient` 新增 GET JSON 与 POST result body，native screens 可读取服务端 JSON。
+- `TodayActivity` 可刷新 `/api/v1/system/health`。
+- `TimelineActivity` 可刷新 `/api/v1/events?baby_id=...`。
+- `AlertCenterActivity` 可刷新 `/api/v1/alerts?family_id=...` 并继续支持 ack drain。
+- `SleepSessionActivity` 支持 start/pause/resume/end 服务端 API 调用。
+
 ### 继续开发进展（Android native core screens）
 
 - 新增 native `TodayActivity`，展示 pending sync 和 last drain summary，并提供 Quick Record/Pending Sync 入口。
