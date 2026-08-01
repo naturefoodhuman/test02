@@ -1503,7 +1503,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现 Android 本地 SQLite、PowerSync client、ObservationEvent 本地写入与 pending_sync 标记。
-- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store 与 TS native bridge 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
+- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert 与 TS native bridge 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
 - **前置依赖**：APC-T012, APC-T046
 - **输入**：`ENGINEERING_DESIGN.md` §1.2 Android、§7.1；`ARCHITECTURE_FINAL.md` §9
 - **输出**：Android Sync module
@@ -1532,7 +1532,7 @@
 - **所属 Capability**：C20 Android 核心页面
 - **所属 Story**：S20 Quick Record、Today、Timeline、Alert Center
 - **目标**：实现大按钮快捷记录、计时器、语音文本候选与一次轻确认。
-- **状态**：BLOCKED（Quick Record candidate builder/local event payload TS/static tests 已完成；UI/native offline write 与前置 T027/T047 待验收）
+- **状态**：BLOCKED（Quick Record candidate builder/local event payload TS/static tests、native QuickRecordActivity offline write 与 PendingEventsActivity 已完成；新增 native code 待用户 Android `assembleDebug`/device 复验）
 - **前置依赖**：APC-T027, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §4.1、§3.2；`ENGINEERING_DESIGN.md` §7.1
 - **输出**：Quick Record feature

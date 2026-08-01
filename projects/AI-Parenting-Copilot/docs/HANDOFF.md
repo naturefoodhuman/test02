@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 05:10:00
+创建时间（北京时间）：2026-08-01 10:00:00
 -->
 
 
@@ -83,7 +83,7 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T029`：Dose Interceptor SQLAlchemyAuditSink 与 API DB smoke 已通过用户复验，已 DONE。
 - `APC-T032/T033/T034`：safe notification adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack cancel receipts 已通过用户 Mac 复验，已 DONE；真实 FCM/TTS/设备凭证转入 Android/device 后续验收。
 - `APC-T045`：Android native Gradle build 已由用户验证通过，已 DONE。
-- `APC-T046/T047`：Android Keystore secure session store、native SQLite pending event store 与 TS bridge contracts 已完成；需要用户执行 `./gradlew assembleDebug` 复验新增 native files。
+- `APC-T046/T047/T048`：Android Keystore secure session store、native SQLite pending event store、TS bridge contracts、QuickRecordActivity 与 PendingEventsActivity 已完成；需要用户执行 `./gradlew assembleDebug` 复验新增 native files。
 - `APC-T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 已完成；需要真机/FCM/Notifee permission 验收。
 - `APC-T030`：P0 Copilots pure/dev API 已有；等待 T029 与 Vaccine/Growth 生产审查相关阻塞。
 - `APC-T032`-`APC-T036`：Notification/Escalation/Health/Scheduler dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
@@ -132,7 +132,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Android toolchain 环境复验 `cd android/android && ./gradlew assembleDebug`；这轮新增了 SecureSessionStore/LocalEventStore native files，若通过，可推进 `APC-T046/T047` 状态。若失败，优先修 Kotlin/Android compile。
+1. 让用户 Android toolchain 环境复验 `cd android/android && ./gradlew assembleDebug`；这轮新增了 QuickRecordActivity/PendingEventsActivity native files，若通过，可推进 `APC-T046/T047/T048` 状态。若失败，优先修 Kotlin/Android compile。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。

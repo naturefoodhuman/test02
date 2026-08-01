@@ -40,6 +40,14 @@
 
 
 
+
+### 继续开发进展（Android Quick Record native offline write）
+
+- 新增 `QuickRecordActivity.kt`，可在 native shell 中保存 feeding event 到 `LocalEventStore.insertPending()`，实现 Android 端本地写入先成功的 P0 兜底路径。
+- 新增 `PendingEventsActivity.kt`，展示 pending sync 数量和最近 pending events，便于真机验证离线记录未丢失。
+- `MainActivity.kt` 从纯 TextView 改为 native shell launcher，提供 Quick Record / Pending Sync / Critical Alert Demo 入口。
+- Android manifest 注册 QuickRecord/PendingEvents activities；static tests 已覆盖。
+
 ### 继续开发进展（Android auth/session + local sync native skeleton）
 
 - 新增 Android Keystore-backed `SecureSessionStore.kt` 与 TS `native_secure_session.ts` bridge contract，推进 `APC-T046`。

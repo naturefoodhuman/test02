@@ -12,9 +12,43 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android native critical alert full-screen fallback skeleton；新增 Android Gradle bootstrap；新增 Android Keystore secure session store 与 native SQLite pending event store。
+- **最新继续开发**：新增 Android native critical alert full-screen fallback skeleton；新增 Android Gradle bootstrap；新增 Android Keystore secure session store、native SQLite pending event store 与 native Quick Record offline write。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `154 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 50 轮 · 2026-08-01（Android Quick Record native offline write）
+
+**目标**：继续推进 `APC-T047/T048`，在 native Android shell 中提供可验证的本地离线写入入口，而不仅是 TypeScript view model/static flow。
+
+**完成内容**：
+
+1. Native Quick Record：
+   - `QuickRecordActivity.kt`：输入奶量并保存 feeding event 到 `LocalEventStore.insertPending()`。
+   - `PendingEventsActivity.kt`：显示 pending sync 数量和最近 pending events。
+   - `MainActivity.kt`：增加 Quick Record / Pending Sync / Critical Alert Demo 入口。
+2. Manifest：
+   - 注册 `QuickRecordActivity` 与 `PendingEventsActivity`。
+3. Static tests：
+   - `tests/test_android_native_skeleton.py` 覆盖 QuickRecordActivity、PendingEventsActivity、LocalEventStore insertPending 和 main launcher route。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 154 passed, 8 deselected, 1 warning
+```
+
+**用户下一步**：
+
+```bash
+cd projects/AI-Parenting-Copilot/android/android
+./gradlew assembleDebug
+```
 
 ---
 
