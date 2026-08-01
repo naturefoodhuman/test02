@@ -1,6 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-07-09 11:10:00
-
+// 创建时间（北京时间）：2026-08-02 02:15:00
 
 export type ApiClientConfig = {
   baseUrl: string;
@@ -36,7 +35,11 @@ export class ApiClient {
   }
 
   async healthz(): Promise<ApiResponse<{ status: string }>> {
-    const response = await fetch(`${this.config.baseUrl}/healthz`, { headers: this.headers() });
+    return this.get<{ status: string }>('/healthz');
+  }
+
+  async get<T>(path: string): Promise<ApiResponse<T>> {
+    const response = await fetch(`${this.config.baseUrl}${path}`, { headers: this.headers() });
     return { status: response.status, data: await response.json() };
   }
 
@@ -45,6 +48,23 @@ export class ApiClient {
       method: 'POST',
       headers: this.headers(),
       body: JSON.stringify(body),
+    });
+    return { status: response.status, data: await response.json() };
+  }
+
+  async put<T>(path: string, body: unknown): Promise<ApiResponse<T>> {
+    const response = await fetch(`${this.config.baseUrl}${path}`, {
+      method: 'PUT',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    return { status: response.status, data: await response.json() };
+  }
+
+  async delete<T>(path: string): Promise<ApiResponse<T>> {
+    const response = await fetch(`${this.config.baseUrl}${path}`, {
+      method: 'DELETE',
+      headers: this.headers(),
     });
     return { status: response.status, data: await response.json() };
   }

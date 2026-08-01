@@ -1,6 +1,7 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-07-09 12:00:00
+// 创建时间（北京时间）：2026-08-02 02:20:00
 
+import { ApiClient } from '../../api/client';
 import { LocalObservationEvent } from '../../sync/schema';
 
 export type TimelineItem = LocalObservationEvent & {
@@ -46,4 +47,30 @@ export function createCorrectionPayload(
 
 export function createSoftDeletePayload(event: LocalObservationEvent): { event_id: string; is_deleted: true } {
   return { event_id: event.event_id, is_deleted: true };
+}
+
+export async function fetchTimeline(api: ApiClient, babyId: string): Promise<LocalObservationEvent[]> {
+  const response = await api.get<LocalObservationEvent[]>(`/api/v1/events?baby_id=${babyId}`);
+  return response.data;
+}
+
+export async function submitCorrection(
+  api: ApiClient,
+  event: LocalObservationEvent,
+  normalizedPayload: Record<string, unknown>,
+  reason?: string,
+): Promise<LocalObservationEvent> {
+  const response = await api.post<LocalObservationEvent>(
+    `/api/v1/events/${event.event_id}/correct`,
+    { normalized_payload: normalizedPayload, reason },
+  );
+  return response.data;
+}
+
+export async function softDeleteEvent(
+  api: ApiClient,
+  event: LocalObservationEvent,
+): Promise<LocalObservationEvent> {
+  const response = await api.delete<LocalObservationEvent>(`/api/v1/events/${event.event_id}`);
+  return response.data;
 }

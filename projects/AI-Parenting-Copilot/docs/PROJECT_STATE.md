@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 01:22:00
+创建时间（北京时间）：2026-08-02 02:52:00
 -->
 
 
@@ -114,6 +114,15 @@
 
 - `/api/v1/system/health/check` 在 DB mode 现在使用 `SQLAlchemyAlertRepository` 生成 gray device/service alerts，而不是只写 in-memory repo。
 - health check 本身写 `system.health_check` audit；API DB smoke 覆盖 offline probe → DB gray alert。
+
+
+### 继续开发进展（Android TS API client / feature flows）
+
+- `ApiClient` 新增 generic `get/put/delete`，除 POST 外支持完整 REST 访问。
+- Today view model 新增 `fetchTodayServerSnapshot()`，读取 state / system health / active alerts。
+- Timeline view model 新增 `fetchTimeline()` / `submitCorrection()` / `softDeleteEvent()`。
+- Alert Center view model 新增 `fetchAlerts()` / `fetchAlertDeliveries()` / `dispatchAlert()`。
+- Sleep Session view model 新增 start/pause/resume/end/saveROI/fetchCameraEvents API helpers。
 
 ### 继续开发进展（Android Rule Engine screen）
 

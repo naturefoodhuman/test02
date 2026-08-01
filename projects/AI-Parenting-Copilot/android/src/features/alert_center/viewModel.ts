@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-07-09 12:00:00
+// 创建时间（北京时间）：2026-08-02 02:22:00
 
 import { ApiClient } from '../../api/client';
 
@@ -18,6 +18,15 @@ export type AlertDTO = {
   ack_at?: string;
 };
 
+export type DeliveryReceiptDTO = {
+  id: string;
+  alert_id: string;
+  channel: string;
+  status: string;
+  sent_at: string;
+  receipt: Record<string, unknown>;
+};
+
 export type AlertViewModel = {
   id: string;
   title: string;
@@ -34,6 +43,24 @@ export function buildAlertViewModel(alert: AlertDTO): AlertViewModel {
     evidenceRows: Object.entries(alert.evidence).map(([key, value]) => `${key}: ${String(value)}`),
     canAck: alert.status === 'active',
   };
+}
+
+export async function fetchAlerts(api: ApiClient, familyId: string): Promise<AlertDTO[]> {
+  const response = await api.get<AlertDTO[]>(`/api/v1/alerts?family_id=${familyId}`);
+  return response.data;
+}
+
+export async function fetchAlertDeliveries(
+  api: ApiClient,
+  alertId: string,
+): Promise<DeliveryReceiptDTO[]> {
+  const response = await api.get<DeliveryReceiptDTO[]>(`/api/v1/alerts/${alertId}/deliveries`);
+  return response.data;
+}
+
+export async function dispatchAlert(api: ApiClient, alertId: string): Promise<DeliveryReceiptDTO[]> {
+  const response = await api.post<DeliveryReceiptDTO[]>(`/api/v1/alerts/${alertId}/dispatch`, {});
+  return response.data;
 }
 
 export async function ackAlert(api: ApiClient, alertId: string, ackBy: string, deviceId?: string): Promise<AlertDTO> {

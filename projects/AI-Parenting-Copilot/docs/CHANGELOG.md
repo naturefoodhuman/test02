@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 18:18:00
+创建时间（北京时间）：2026-08-02 02:56:00
 -->
 
 
@@ -134,6 +134,35 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 make e2e-fake-test
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
 # 168 passed, 8 deselected, 1 warning
+```
+
+---
+
+## [第 74 轮] 2026-08-02 — Android TS API client / feature flows
+
+### 需求变动
+
+- 继续推进 Android RN/TS 层 API helpers：ApiClient 增加 get/put/delete，Today/Timeline/AlertCenter/SleepSession view models 增加服务端 API 操作。
+
+### 文件影响
+
+修改：
+
+- `android/src/api/client.ts`
+- `android/src/features/today/viewModel.ts`
+- `android/src/features/timeline/viewModel.ts`
+- `android/src/features/alert_center/viewModel.ts`
+- `android/src/features/sleep_session/viewModel.ts`
+- `tests/test_android_features.py`
+- `tests/test_android_skeleton.py`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_android_features.py tests/test_android_skeleton.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 176 passed, 8 deselected, 1 warning
 ```
 
 ---

@@ -1,6 +1,8 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-07-09 12:00:00
+// 创建时间（北京时间）：2026-08-02 02:18:00
 
+import { ApiClient } from '../../api/client';
+import { AlertDTO } from '../alert_center/viewModel';
 import { LocalObservationEvent } from '../../sync/schema';
 
 export type DerivedBabyState = {
@@ -24,6 +26,12 @@ export type TodayViewModel = {
   empty: boolean;
 };
 
+export type TodayServerSnapshot = {
+  state?: DerivedBabyState;
+  alerts: AlertDTO[];
+  deviceHealth: DeviceHealthSnapshot;
+};
+
 export function buildTodayViewModel(
   state: DerivedBabyState | undefined,
   localEvents: LocalObservationEvent[],
@@ -40,5 +48,20 @@ export function buildTodayViewModel(
     grayDeviceCount,
     activeAlertCount: state?.active_alert_count ?? 0,
     empty: !state && localEvents.length === 0,
+  };
+}
+
+export async function fetchTodayServerSnapshot(
+  api: ApiClient,
+  babyId: string,
+  familyId: string,
+): Promise<TodayServerSnapshot> {
+  const state = await api.get<{ snapshot: DerivedBabyState }>(`/api/v1/babies/${babyId}/state`);
+  const health = await api.get<{ device_health: DeviceHealthSnapshot }>('/api/v1/system/health');
+  const alerts = await api.get<AlertDTO[]>(`/api/v1/alerts?family_id=${familyId}`);
+  return {
+    state: state.status === 200 ? state.data.snapshot : undefined,
+    alerts: alerts.data ?? [],
+    deviceHealth: health.data.device_health ?? {},
   };
 }

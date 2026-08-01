@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 01:20:00
+创建时间（北京时间）：2026-08-02 02:50:00
 -->
 
 # TASK_BACKLOG.md
@@ -1561,7 +1561,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：展示 DerivedBabyState、统计、待办、告警、同步态、设备健康。
-- **状态**：BLOCKED（Today view model/static tests 与 native TodayActivity server health refresh 已完成；新增 native UI 待 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Today view model/static tests、fetchTodayServerSnapshot 与 native TodayActivity server health refresh 已完成；新增 native UI/TS API flow 待 Android `assembleDebug`/device 复验）
 - **前置依赖**：APC-T016, APC-T035, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§22.5
 - **输出**：Today feature
@@ -1589,7 +1589,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：实现事件时间线、记录人/来源显示、编辑纠错、软删除撤销、重复提示。
-- **状态**：BLOCKED（Timeline view model/correction/delete/duplicate hint static tests 与 native TimelineActivity server events refresh 已完成；新增 native UI 待 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Timeline view model/correction/delete/duplicate hint static tests、server fetch/correct/delete helpers 与 native TimelineActivity server events refresh 已完成；新增 native UI/TS API flow 待 Android `assembleDebug`/device 复验）
 - **前置依赖**：APC-T010, APC-T012, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §9.2、§3.2
 - **输出**：Timeline feature

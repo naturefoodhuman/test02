@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 15:25:00
+# 创建时间（北京时间）：2026-08-02 02:30:00
 
 """APC-T045/T046/T047/T048 Android skeleton static tests."""
 
@@ -27,6 +27,9 @@ def test_api_client_supports_base_url_and_bearer_token() -> None:
     assert "baseUrl" in client
     assert "Bearer" in client
     assert "/healthz" in client
+    assert "async get<T>" in client
+    assert "async put<T>" in client
+    assert "async delete<T>" in client
 
 
 def test_auth_session_and_device_registration_flow_sources_exist() -> None:

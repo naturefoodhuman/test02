@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 15:25:00
+# 创建时间（北京时间）：2026-08-02 02:30:00
 
 """APC-T049/T050/T051/T052/T053 Android feature static tests."""
 
@@ -17,6 +17,9 @@ def test_today_view_model_displays_pending_sync_and_gray_devices() -> None:
     assert "grayDeviceCount" in source
     assert "lastFeedingText" in source
     assert "DeviceHealthSnapshot" in source
+    assert "fetchTodayServerSnapshot" in source
+    assert "/api/v1/system/health" in source
+    assert "/api/v1/babies/${babyId}/state" in source
 
 
 def test_timeline_view_model_supports_correction_soft_delete_and_duplicate_hint() -> None:
@@ -26,6 +29,10 @@ def test_timeline_view_model_supports_correction_soft_delete_and_duplicate_hint(
     assert "createSoftDeletePayload" in source
     assert "duplicateFeedingHint" in source
     assert "5 * 60 * 1000" in source
+    assert "fetchTimeline" in source
+    assert "submitCorrection" in source
+    assert "softDeleteEvent" in source
+    assert "/api/v1/events?baby_id=${babyId}" in source
 
 
 def test_alert_center_fetches_detail_and_supports_ack_feedback() -> None:
@@ -34,7 +41,11 @@ def test_alert_center_fetches_detail_and_supports_ack_feedback() -> None:
     assert "FeedbackType" in source
     assert "ackAlert" in source
     assert "submitFeedback" in source
+    assert "fetchAlerts" in source
+    assert "fetchAlertDeliveries" in source
+    assert "dispatchAlert" in source
     assert "/api/v1/alerts/${alertId}/ack" in source
+    assert "/api/v1/alerts/${alertId}/deliveries" in source
 
 
 def test_android_notification_payload_is_trigger_only_and_high_priority_for_red_or_orange() -> None:
@@ -61,4 +72,10 @@ def test_sleep_session_view_model_active_gate_and_roi_save() -> None:
     assert "analysisVisible: session?.state === 'active'" in source
     assert "影子模式，不强提醒" in source
     assert "saveROI" in source
+    assert "startSleepSession" in source
+    assert "pauseSleepSession" in source
+    assert "resumeSleepSession" in source
+    assert "endSleepSession" in source
+    assert "fetchCameraEvents" in source
     assert "/api/v1/sleep-sessions/${sessionId}/roi" in source
+    assert "/api/v1/sleep-sessions/${sessionId}/camera-events" in source

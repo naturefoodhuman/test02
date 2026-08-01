@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 01:25:00
+创建时间（北京时间）：2026-08-02 02:54:00
 -->
 
 
@@ -15,6 +15,29 @@
 - **最新继续开发**：新增 Android native critical alert/full-screen/quick-record fallback；新增 Android Gradle bootstrap；新增 Android Keystore/session + native SQLite pending event store；新增 system health real probes/check API。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `161 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 74 轮 · 2026-08-02（Android TS API client / feature flows）
+
+**目标**：继续推进 Android RN/TS 层真实服务端联动，使静态 view models 具备完整 API helper，而不是只构造本地展示模型。
+
+**完成内容**：
+
+1. `android/src/api/client.ts`：新增 `get<T>()` / `put<T>()` / `delete<T>()`。
+2. Today：`fetchTodayServerSnapshot()` 读取 `/babies/{id}/state`、`/system/health`、`/alerts`。
+3. Timeline：新增 fetch/correction/soft-delete API helpers。
+4. Alert Center：新增 list/deliveries/dispatch/ack/feedback helpers。
+5. Sleep Session：新增 start/pause/resume/end/saveROI/fetchCameraEvents helpers。
+6. Static tests 覆盖新增 API route strings。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_features.py tests/test_android_skeleton.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 176 passed, 8 deselected, 1 warning
+```
 
 ---
 
