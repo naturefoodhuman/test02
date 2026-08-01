@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-01 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增确认 `APC-T029 DONE`；`APC-T032/T033/T034` 已推进到 safe channel/dispatch/cancel DB smoke，等待用户 Mac 复验与真实通道凭证；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：新增确认 `APC-T032/T033/T034 DONE`；新增 Android native Gradle bootstrap `gradlew` 修复用户本地缺失问题；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -37,6 +37,14 @@
 
 
 
+
+
+### 继续开发进展（Android Gradle bootstrap）
+
+- 修复用户本地 `cd android/android && ./gradlew assembleDebug` 报 `no such file or directory`：新增 `android/android/gradlew`、`gradlew.bat`、`gradle/wrapper/gradle-wrapper.properties`。
+- `gradlew` 支持：优先 committed wrapper jar；其次系统 `gradle`；否则 macOS/Linux 下下载配置的 Gradle distribution 到 gitignored `.gradle/bootstrap/`。
+- 新增 `make android-native-build`，等价于 `cd android/android && ./gradlew assembleDebug`。
+- `.gitignore` 补充 `android/android/.gradle/`、`android/android/build/`、`android/android/app/build/`。
 
 ### 继续开发进展（Android native critical alert）
 

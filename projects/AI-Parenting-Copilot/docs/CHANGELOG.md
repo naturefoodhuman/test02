@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 03:30:00
+创建时间（北京时间）：2026-08-01 04:18:00
 -->
 
 
@@ -11,8 +11,45 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator 与 Dose Interceptor DB audit 已根据用户复验解除 `APC-T026/T027/T028/T029` 阻塞；新增 Notification cancel receipts 与 Android native critical alert fallback，待用户 Mac/Android 真机复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；新增 Android Gradle bootstrap，待用户 Android SDK build 复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 48 轮] 2026-08-01 — Android Gradle bootstrap / Notification status unlock
+
+### 需求变动
+
+- 用户本地 Android native build 尝试失败：`./gradlew` 不存在。
+- 新增 Gradle bootstrap wrapper 脚本与 wrapper properties，使 `cd android/android && ./gradlew assembleDebug` 有入口。
+- 根据用户 API/test 复验通过，同步 `APC-T032/T033/T034` 为 DONE。
+
+### 文件影响
+
+新增：
+
+- `android/android/gradlew`
+- `android/android/gradlew.bat`
+- `android/android/gradle/wrapper/gradle-wrapper.properties`
+
+修改：
+
+- `.gitignore`
+- `Makefile`
+- `android/README.md`
+- `android/package.json`
+- `tests/test_android_native_skeleton.py`
+- project docs
+
+### 验证
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_android_native_skeleton.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 152 passed, 8 deselected, 1 warning
+```
 
 ---
 

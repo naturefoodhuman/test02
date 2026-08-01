@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-08 22:08:00
+# 创建时间（北京时间）：2026-08-01 03:50:00
 
 
 # Python
@@ -36,10 +36,14 @@ logs/
 
 # Android / React Native generated output
 android/.gradle/
+android/android/.gradle/
 android/build/
+android/android/build/
 android/app/build/
+android/android/app/build/
 android/node_modules/
 android/.cxx/
+android/android/.cxx/
 
 # Firmware generated output
 firmware/esp32c6/.pio/

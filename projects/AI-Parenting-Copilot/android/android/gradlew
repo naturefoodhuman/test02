@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建时间（北京时间）：2026-08-01 03:50:00
+
+set -eu
+
+APP_HOME=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+WRAPPER_JAR="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+PROPERTIES="$APP_HOME/gradle/wrapper/gradle-wrapper.properties"
+
+if [ -f "$WRAPPER_JAR" ]; then
+  if ! command -v java >/dev/null 2>&1; then
+    echo "ERROR: Java is required to run Gradle wrapper." >&2
+    exit 1
+  fi
+  exec java -jar "$WRAPPER_JAR" "$@"
+fi
+
+if command -v gradle >/dev/null 2>&1; then
+  exec gradle "$@"
+fi
+
+if ! command -v java >/dev/null 2>&1; then
+  echo "ERROR: Java is required to run Android builds. Install JDK 17+." >&2
+  exit 1
+fi
+if ! command -v curl >/dev/null 2>&1 || ! command -v unzip >/dev/null 2>&1; then
+  echo "ERROR: gradle is not installed and curl/unzip are required for bootstrap download." >&2
+  exit 1
+fi
+if [ ! -f "$PROPERTIES" ]; then
+  echo "ERROR: Missing $PROPERTIES" >&2
+  exit 1
+fi
+
+DIST_URL=$(sed -n 's/^distributionUrl=//p' "$PROPERTIES" | sed 's#\\:#:#g')
+DIST_FILE=$(basename "$DIST_URL")
+DIST_NAME=${DIST_FILE%.zip}
+BOOTSTRAP_DIR="$APP_HOME/.gradle/bootstrap"
+DIST_ZIP="$BOOTSTRAP_DIR/$DIST_FILE"
+GRADLE_BIN="$BOOTSTRAP_DIR/$DIST_NAME/bin/gradle"
+
+mkdir -p "$BOOTSTRAP_DIR"
+if [ ! -x "$GRADLE_BIN" ]; then
+  echo "Gradle wrapper jar not committed; bootstrapping $DIST_NAME..." >&2
+  if [ ! -f "$DIST_ZIP" ]; then
+    curl -L --fail --retry 3 -o "$DIST_ZIP" "$DIST_URL"
+  fi
+  unzip -q -o "$DIST_ZIP" -d "$BOOTSTRAP_DIR"
+fi
+
+exec "$GRADLE_BIN" "$@"

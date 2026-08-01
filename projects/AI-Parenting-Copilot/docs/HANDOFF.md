@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 03:32:00
+创建时间（北京时间）：2026-08-01 04:20:00
 -->
 
 
@@ -81,8 +81,8 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T020`-`APC-T023`：Medication/Triage/Threshold/Vaccine/Growth pure rules + golden tests 已有；生产医学/疫苗/WHO 表审查待完成。
 - `APC-T026`-`APC-T028`：SQLAlchemyMemoryStore、LocalRAG adapter、Logger shared parser 与 Orchestrator DB memory injection 已通过用户 Mac 复验，已 DONE。
 - `APC-T029`：Dose Interceptor SQLAlchemyAuditSink 与 API DB smoke 已通过用户复验，已 DONE。
-- `APC-T032/T033/T034`：safe notification adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack cancel receipts 已完成；需要用户 Mac `api-db-smoke-test` 复验，真实 FCM/TTS/设备凭证仍待接入。
-- `APC-T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 已完成；需要 Android toolchain/真机/FCM/Notifee permission 验收。
+- `APC-T032/T033/T034`：safe notification adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack cancel receipts 已通过用户 Mac 复验，已 DONE；真实 FCM/TTS/设备凭证转入 Android/device 后续验收。
+- `APC-T045/T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 与 Gradle bootstrap `gradlew` 已完成；需要 Android SDK/toolchain 执行 `./gradlew assembleDebug` 与真机/FCM/Notifee permission 验收。
 - `APC-T030`：P0 Copilots pure/dev API 已有；等待 T029 与 Vaccine/Growth 生产审查相关阻塞。
 - `APC-T032`-`APC-T036`：Notification/Escalation/Health/Scheduler dev/fake 逻辑已有；真实 FCM/TTS/device/NAS/worker 待验收。
 - `APC-T037`-`APC-T044`：Camera / mmWave / Media / Export / Backup / Firmware mock/dev/skeleton 已有；真实 RTSP/ISAPI/Fregata/MQTT/PlatformIO/NAS 待验收。
@@ -130,7 +130,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Mac 复验 `make api-db-smoke-test` 与 `make test`，确认 Notification dispatch + ack cancel delivery receipts；若通过，可推进 `APC-T033/T034` 状态。随后请求 Android toolchain/真机复验 native critical alert。
+1. 让用户 Android toolchain 环境复验 `cd android/android && ./gradlew assembleDebug`；若通过，可推进 `APC-T045/T052` 状态。若失败，优先修 Gradle/Android SDK/build 配置。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。

@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 BLOCKED；APC-T033 BLOCKED；APC-T034 BLOCKED；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 DONE；APC-T033 DONE；APC-T034 DONE；APC-T035 BLOCKED；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 BLOCKED；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 BLOCKED；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -1049,7 +1049,7 @@
 - **所属 Capability**：C14 Notification Orchestrator
 - **所属 Story**：S14 多通道扇出、送达凭证、升级状态机
 - **目标**：实现通知通道协议和 P0 通道适配。
-- **状态**：BLOCKED（NotificationChannel/Fake channels/config/tests 与安全 dry-run FCM/Mac/App/Camera adapters 已完成；真实 FCM 凭证/TTS/设备通道待接入）
+- **状态**：DONE（NotificationChannel/Fake channels/config/tests 与安全 dry-run/real-call-capable FCM/Mac/App/Camera adapters 已完成；真实凭证/设备验收转入 Android/ops 后续项）
 - **前置依赖**：APC-T031
 - **输入**：`ENGINEERING_DESIGN.md` §5.6、§7.2、§13.3
 - **输出**：NotificationChannel 实现与 Fake 通道
@@ -1079,7 +1079,7 @@
 - **所属 Capability**：C14
 - **所属 Story**：S14
 - **目标**：实现按告警等级选择通道、并发扇出、记录 alert_delivery。
-- **状态**：BLOCKED（NotificationOrchestrator fan-out/cancel、DB delivery repo、dispatch/deliveries API 与 API DB smoke 已完成；等待用户 Mac `api-db-smoke-test` 复验及真实通道接入）
+- **状态**：DONE（NotificationOrchestrator fan-out/cancel、DB delivery repo、dispatch/deliveries API 与用户 Mac `api-db-smoke-test` 复验已通过；真实通道凭证转入后续设备验收）
 - **前置依赖**：APC-T032
 - **输入**：`ARCHITECTURE_FINAL.md` §14.4；`ENGINEERING_DESIGN.md` §7.2
 - **输出**：Notification orchestrator
@@ -1108,7 +1108,7 @@
 - **所属 Capability**：C14
 - **所属 Story**：S14
 - **目标**：实现 0s/60s/90s 升级策略，任一 ack 后停止所有通道。
-- **状态**：BLOCKED（EscalationStateMachine/虚拟时钟测试、ack 后 channel cancel receipts 与 audit smoke 已完成；前置 T033 真实通道待验收）
+- **状态**：DONE（EscalationStateMachine/虚拟时钟测试、ack 后 channel cancel receipts 与 audit smoke 已完成并通过用户 Mac 复验）
 - **前置依赖**：APC-T033
 - **输入**：`ENGINEERING_DESIGN.md` §7.2；`ARCHITECTURE_FINAL.md` §14.4
 - **输出**：Escalation state machine
@@ -1445,7 +1445,7 @@
 - **所属 Capability**：C19 Android 基础与同步
 - **所属 Story**：S19 RN Android-only 壳、Auth、PowerSync、离线写入
 - **目标**：创建 Android-only React Native 应用基础壳，接入导航、主题、API client。
-- **状态**：BLOCKED（Android RN source skeleton/API client/theme/navigation/static tests 已完成；Gradle/RN native project build 待 Android toolchain 验收）
+- **状态**：BLOCKED（Android RN source skeleton/API client/theme/navigation/static tests 与 native Gradle bootstrap `gradlew` 已完成；`assembleDebug` 待 Android SDK/toolchain 验收）
 - **前置依赖**：APC-T001, APC-T008
 - **输入**：`ENGINEERING_DESIGN.md` §2 安卓端模块、§3；`ARCHITECTURE_FINAL.md` §3.2
 - **输出**：可运行 Android App skeleton

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 03:05:00
+# 创建时间（北京时间）：2026-08-01 04:00:00
 
 """Android native skeleton static tests."""
 
@@ -14,8 +14,13 @@ def test_android_gradle_project_skeleton_exists() -> None:
     assert (ANDROID / "settings.gradle").exists()
     assert (ANDROID / "build.gradle").exists()
     assert (ANDROID / "app/build.gradle").exists()
+    assert (ANDROID / "gradlew").exists()
+    assert (ANDROID / "gradlew").stat().st_mode & 0o111
+    assert (ANDROID / "gradle/wrapper/gradle-wrapper.properties").exists()
     assert "com.android.application" in (ANDROID / "app/build.gradle").read_text()
     assert "applicationId 'com.aiparentingcopilot'" in (ANDROID / "app/build.gradle").read_text()
+    wrapper = (ANDROID / "gradle/wrapper/gradle-wrapper.properties").read_text()
+    assert "gradle-8.10.2-bin.zip" in wrapper
 
 
 def test_android_manifest_has_alert_permissions_and_no_ios() -> None:

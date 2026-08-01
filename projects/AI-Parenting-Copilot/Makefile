@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate run-dev infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test android-native-build clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -92,6 +92,9 @@ docs-check:
 	@test -f android/src/features/sleep_session/viewModel.ts
 	@test -f android/android/app/src/main/AndroidManifest.xml
 	@test -f android/android/app/build.gradle
+	@test -x android/android/gradlew
+	@test -f android/android/gradle/wrapper/gradle-wrapper.properties
+	@test -f android/android/app/src/main/java/com/aiparentingcopilot/CriticalAlertActivity.kt
 	@test -f server/app/export/service.py
 	@test -f server/app/camera/fusion.py
 	@test -f server/app/camera/vlm_dispatcher.py
@@ -149,6 +152,9 @@ worker-db-smoke-test: ensure-dev-deps
 
 powersync-smoke-test: ensure-dev-deps
 	@$(PYTHON) -m pytest tests/integration_powersync -q
+
+android-native-build:
+	@cd android/android && ./gradlew assembleDebug
 
 backup-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"

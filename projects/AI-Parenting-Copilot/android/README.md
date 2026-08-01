@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-09 11:10:00
+创建时间（北京时间）：2026-08-01 03:50:00
 -->
 
 
@@ -21,7 +21,13 @@ cd projects/AI-Parenting-Copilot/android
 npm install
 npm run android
 npm run test:static
+
+# Native Android shell build smoke
+cd android
+./gradlew assembleDebug
 ```
+
+`android/android/gradlew` is a bootstrap wrapper: it uses a committed Gradle wrapper jar when present, otherwise falls back to an installed `gradle` command or downloads the configured Gradle distribution into local `.gradle/bootstrap/` (gitignored).
 
 ## Native Android skeleton
 
