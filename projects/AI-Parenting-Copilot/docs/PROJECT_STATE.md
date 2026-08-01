@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:28:00
+创建时间（北京时间）：2026-07-31 23:51:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-07-31 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增确认 `APC-T011/T013/T014/T015/T016/T017 DONE`；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准；仍 BLOCKED 的任务主要等待 PowerSync/真实设备/Android toolchain/NAS/医学规则审查等验收。
+**当前任务状态**：新增确认 `APC-T012` PowerSync smoke 通过并 DONE；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准；仍 BLOCKED 的任务主要等待真实设备/Android toolchain/NAS/医学规则审查与新 DB memory 复验。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -46,7 +46,7 @@
 
 - 用户确认新增 `make worker-db-smoke-test` / DB smoke / API smoke / `make test` 验证通过。
 - 据此解除 `APC-T011/T013/T014/T015/T016/T017` 的主要 DB/worker 验收阻塞并标记 DONE。
-- 新增 `make powersync-smoke-test` 与 `server/app/sync/service/powersync_probe.py`，下一步用于 `APC-T012` PowerSync liveness/config 复验。
+- `make powersync-smoke-test` 与 `server/app/sync/service/powersync_probe.py` 已通过用户 Mac PowerSync liveness/config 复验，`APC-T012` 已标记 DONE。
 
 ### 继续开发进展（live worker smoke）
 

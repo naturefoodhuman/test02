@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:35:00
+创建时间（北京时间）：2026-07-31 23:54:00
 -->
 
 
@@ -76,7 +76,7 @@ projects/AI-Parenting-Copilot/android/
 
 这些已有 dev/in-memory/static/fake 或 adapter 代码和测试，但还没满足完整 DoD：
 
-- `APC-T012`：PowerSync contract/config 与 `make powersync-smoke-test` 已新增；需要用户 Mac `infra-up` 后复验 liveness。
+- `APC-T012`：PowerSync contract/config 与 `make powersync-smoke-test` 已通过用户 Mac 复验，已 DONE。
 - `APC-T012`：PowerSync contract/config 已有，真实 PowerSync 写入/同步行为待验收。
 - `APC-T020`-`APC-T023`：Medication/Triage/Threshold/Vaccine/Growth pure rules + golden tests 已有；生产医学/疫苗/WHO 表审查待完成。
 - `APC-T026`-`APC-T028`：SQLAlchemyMemoryStore、LocalRAG adapter、Logger shared parser 与 Orchestrator DB memory injection 已完成；需要用户 Mac `api-db-smoke-test` 复验后解除主要阻塞。
@@ -127,7 +127,7 @@ make db-integration-test
 
 继续开发，不等待重设计：
 
-1. 让用户 Mac 复验 `make api-db-smoke-test` 和 `make powersync-smoke-test`，确认 DB-backed Memory/Orchestrator 与 PowerSync liveness；若通过，可解除 `APC-T012/T026/T027/T028` 的主要验收阻塞。
+1. 让用户 Mac 复验 `make api-db-smoke-test` 与 `make test`，确认 DB-backed Memory/Orchestrator context；若通过，可解除 `APC-T026/T027/T028` 的主要验收阻塞。
 2. `APC-T012`：PowerSync 实际配置/写入链路验收（需要用户 Mac compose 环境）。
 3. Android：RN bridge / Gradle wrapper / native modules / APK build（需要 Android toolchain，可能需要用户本机验收）。
 4. Notification：FCM/Notifee/FullScreenIntent 真通道与告警升级取消验收（需要 Firebase/Android 设备）。

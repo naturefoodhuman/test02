@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:32:00
+创建时间（北京时间）：2026-07-31 23:53:00
 -->
 
 
@@ -11,8 +11,30 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Worker 链路已通过用户 Mac 复验并解除 `APC-T011/T013/T014/T015/T016/T017` 阻塞；新增 PowerSync smoke target；新增 DB-backed Memory/Orchestrator context，待用户 Mac 复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Worker/PowerSync 链路已通过用户 Mac 复验并解除 `APC-T011/T012/T013/T014/T015/T016/T017` 阻塞；新增 DB-backed Memory/Orchestrator context，待用户 Mac 复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 43 轮] 2026-07-31 — PowerSync validation accepted
+
+### 需求变动
+
+- 用户确认上一轮包含 `make powersync-smoke-test` 在内的验证全部通过。
+- `APC-T012` 标记为 DONE。
+
+### 文件影响
+
+修改：
+
+- `docs/TASK_BACKLOG.md`
+- `docs/PROJECT_STATE.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+
+### 架构影响
+
+- 无架构变更。
 
 ---
 

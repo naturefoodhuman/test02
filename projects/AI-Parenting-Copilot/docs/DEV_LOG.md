@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-07-31 23:30:00
+创建时间（北京时间）：2026-07-31 23:52:00
 -->
 
 
@@ -10,11 +10,29 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T011/T013/T014/T015/T016/T017` PG worker、Normalization、State Engine、event→state 链路已通过用户 Mac 复验并标记 DONE。
+- **最新完成**：`APC-T011/T012/T013/T014/T015/T016/T017` PG worker、PowerSync smoke、Normalization、State Engine、event→state 链路已通过用户 Mac 复验并标记 DONE。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
 - **最新继续开发**：新增 SQLAlchemyMemoryStore、LocalRAGMemoryAdapter、Orchestrator DB memory 注入，并让 LoggerCopilot 复用 Normalization voice parser。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `148 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 43 轮 · 2026-07-31（PowerSync validation accepted）
+
+**目标**：根据用户“全部通过”结果解除 `APC-T012` 的 PowerSync liveness/config 验收阻塞。
+
+**状态变更**：
+
+- `APC-T012`：BLOCKED → DONE
+
+**依据**：
+
+- 用户 Mac 已执行并确认 `make powersync-smoke-test`、`make db-integration-test`、`make api-db-smoke-test`、`make worker-db-smoke-test`、`make test` 全部通过。
+
+**后续**：
+
+- 新增 DB-backed Memory / Orchestrator context 已推送，下一轮需要用户复验 `make api-db-smoke-test` 与 `make test` 后解除 `APC-T026/T027/T028` 的主要阻塞。
 
 ---
 
