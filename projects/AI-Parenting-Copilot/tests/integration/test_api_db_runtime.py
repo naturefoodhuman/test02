@@ -9,6 +9,7 @@ switch from in-memory repositories to SQLAlchemy repositories when a DB URL is c
 
 from __future__ import annotations
 
+import base64
 import os
 import subprocess
 from collections.abc import AsyncIterator
@@ -88,6 +89,9 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
     family_id: str | None = None
     baby_id: str | None = None
     alert_id: str | None = None
+    sleep_id: str | None = None
+    media_id: str | None = None
+    export_id: str | None = None
     integration_rule_version = new_ulid()
 
     try:
@@ -177,6 +181,60 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert memory.behavior_baseline["feeding_24h_ml"] == 90
             assert memory.short_context["event_type_counts"] == {"feeding": 1}
 
+            media = client.post(
+                "/api/v1/media",
+                json={
+                    "family_id": family_id,
+                    "baby_id": baby_id,
+                    "event_id": event.json()["event_id"],
+                    "filename": "db-smoke.bin",
+                    "content_type": "application/octet-stream",
+                    "content_base64": base64.b64encode(b"db-smoke-media").decode(),
+                    "tags": {"kind": "db_smoke"},
+                },
+            )
+            assert media.status_code == 200
+            media_id = media.json()["id"]
+            downloaded_media = client.get(f"/api/v1/media/{media_id}")
+            assert downloaded_media.status_code == 200
+            assert downloaded_media.content == b"db-smoke-media"
+
+            export = client.post(
+                "/api/v1/exports/summary",
+                json={
+                    "title": "DB Smoke Summary",
+                    "events": [{"event_type": "feeding", "summary": "90ml"}],
+                    "format": "md",
+                    "generated_by": admin_user_id,
+                },
+            )
+            assert export.status_code == 200
+            export_id = export.json()["id"]
+            downloaded_export = client.get(f"/api/v1/exports/{export_id}")
+            assert downloaded_export.status_code == 200
+            assert downloaded_export.text.startswith("# DB Smoke Summary")
+
+            sleep = client.post(
+                "/api/v1/sleep-sessions",
+                json={"baby_id": baby_id, "family_id": family_id},
+            )
+            assert sleep.status_code == 200
+            sleep_id = sleep.json()["id"]
+            roi = client.put(
+                f"/api/v1/sleep-sessions/{sleep_id}/roi",
+                json={"x": 0.1, "y": 0.2, "width": 0.5, "height": 0.4},
+            )
+            assert roi.status_code == 200
+            assert roi.json()["roi_config"]["width"] == 0.5
+            pause = client.post(f"/api/v1/sleep-sessions/{sleep_id}/pause")
+            assert pause.status_code == 200
+            assert pause.json()["state"] == "paused"
+            resume = client.post(f"/api/v1/sleep-sessions/{sleep_id}/resume")
+            assert resume.status_code == 200
+            end = client.post(f"/api/v1/sleep-sessions/{sleep_id}/end")
+            assert end.status_code == 200
+            assert end.json()["state"] == "ended"
+
             alert = client.post(
                 "/api/v1/alerts",
                 json={"baby_id": baby_id, "family_id": family_id, "level": "red", "type": "triage"},
@@ -242,6 +300,9 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                             :family_resource,
                             :event_resource,
                             :alert_resource,
+                            :sleep_resource,
+                            :media_resource,
+                            :export_resource,
                             :rule_resource,
                             :dose_resource
                         )
@@ -251,6 +312,9 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         "family_resource": f"family:{family_id}",
                         "event_resource": f"observation_event:{event.json()['event_id']}",
                         "alert_resource": f"alert:{alert_id}",
+                        "sleep_resource": f"sleep_session:{sleep_id}",
+                        "media_resource": f"media_asset:{media_id}",
+                        "export_resource": f"export:{export_id}",
                         "rule_resource": f"evidence_policy:integration:{integration_rule_version}",
                         "dose_resource": "copilot_output",
                     },
@@ -262,6 +326,11 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 "alert.create",
                 "alert.dispatch",
                 "alert.cancel_channels",
+                "sleep_session.start",
+                "sleep_session.roi_update",
+                "sleep_session.end",
+                "media.upload",
+                "export.summary",
                 "rule.activate",
                 "dose_intercept",
             }.issubset(audit_actions)

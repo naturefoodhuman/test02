@@ -13,8 +13,45 @@
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
 - **最新继续开发**：新增 Android native critical alert/full-screen/quick-record fallback；新增 Android Gradle bootstrap；新增 Android Keystore/session + native SQLite pending event store；新增 system health real probes/check API。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `159 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `161 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 54 轮 · 2026-08-01（Sleep / Media / Export DB API smoke）
+
+**目标**：继续推进 `APC-T037/T042/T043`，补齐 DB-backed API runtime 与 audit 覆盖。
+
+**完成内容**：
+
+1. Sleep Session DB API：
+   - `SQLAlchemySleepSessionRepository` 支持 start/pause/resume/end/set_roi。
+   - Camera/Sleep API DB mode 自动切换 SQLAlchemy repo。
+   - Mutating routes 写 `sleep_session.*` audit。
+2. Media DB persistence：
+   - Media upload DB mode 写 `media_asset`。
+   - Media read 支持从 DB metadata 恢复 record 并读取加密文件。
+   - Mutating route 写 `media.upload` audit。
+3. Export API：
+   - `POST /api/v1/exports/summary`。
+   - `GET /api/v1/exports/{export_id}`。
+   - 写 `export.summary` audit。
+4. API DB smoke：
+   - 扩展 sleep session flow、media upload/read、export create/read，并校验 audit actions。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_media_storage.py tests/test_sleep_session.py tests/test_export_api.py tests/test_export_service.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 161 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T037/T042/T043` 等待用户 Mac `make api-db-smoke-test` 复验后解除主要 DB/audit 阻塞。
 
 ---
 

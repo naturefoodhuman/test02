@@ -1202,7 +1202,7 @@
 - **所属 Capability**：C16 Sleep Session & Camera
 - **所属 Story**：S16 睡眠会话、ROI、抓帧、影子模式
 - **目标**：实现睡眠会话状态机、会话 API、ROI 保存与查询。
-- **状态**：BLOCKED（SleepSession state machine/dev API/ROI/tests 已完成；前置 T004/T006 DB/audit 验收未完成）
+- **状态**：BLOCKED（SleepSession state machine/dev API、SQLAlchemy repo/API DB smoke/audit 已完成；等待用户 Mac `api-db-smoke-test` 复验）
 - **前置依赖**：APC-T004, APC-T006
 - **输入**：`ARCHITECTURE_FINAL.md` §5.2、§12.3、§15.2
 - **输出**：SleepSession service/API
@@ -1351,7 +1351,7 @@
 - **所属 Capability**：C18 Media / Export / Backup
 - **所属 Story**：S18 加密媒体、MD/PDF 导出、NAS 备份
 - **目标**：实现本地媒体加密存储、缩略图、asset 索引与上传/读取 API。
-- **状态**：BLOCKED（AES-GCM file storage/thumbnail/dev API/tests 已完成；DB media_asset/audit 持久化待验收）
+- **状态**：BLOCKED（AES-GCM file storage/thumbnail/dev API/tests、DB media_asset/audit 持久化与 API DB smoke 已完成；等待用户 Mac `api-db-smoke-test` 复验）
 - **前置依赖**：APC-T004, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §2 M16、§11；`ARCHITECTURE_FINAL.md` §8
 - **输出**：Media storage service/API
@@ -1380,7 +1380,7 @@
 - **所属 Capability**：C18
 - **所属 Story**：S18
 - **目标**：按时间范围导出 MD/PDF、基础统计与就诊摘要，并审计导出人/时间。
-- **状态**：BLOCKED（Markdown export/PDF placeholder/local file export/tests 已完成；前置 T016/T042 与 audit/DB 待验收）
+- **状态**：BLOCKED（Markdown export/PDF placeholder/local file export/tests、Export API 与 audit smoke 已完成；等待用户 Mac `api-db-smoke-test` 复验）
 - **前置依赖**：APC-T016, APC-T042
 - **输入**：`ARCHITECTURE_FINAL.md` §8、§15.2、§21
 - **输出**：Export service/API

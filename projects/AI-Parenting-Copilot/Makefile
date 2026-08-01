@@ -98,6 +98,7 @@ docs-check:
 	@test -f android/android/gradle/wrapper/gradle-wrapper.properties
 	@test -f android/android/app/src/main/java/com/aiparentingcopilot/CriticalAlertActivity.kt
 	@test -f server/app/export/service.py
+	@test -f server/app/export/api/routes.py
 	@test -f server/app/camera/fusion.py
 	@test -f server/app/camera/vlm_dispatcher.py
 	@test -f server/scripts/ensure_dev_deps.py

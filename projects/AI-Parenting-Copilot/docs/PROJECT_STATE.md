@@ -44,6 +44,14 @@
 
 
 
+
+### 继续开发进展（Sleep / Media / Export DB API smoke）
+
+- Sleep Session API 已支持 DB mode：`SQLAlchemySleepSessionRepository` 实现 start/pause/resume/end/set_roi，API mutating 操作写 audit。
+- Media API DB mode 已写入 `media_asset` 并写 `media.upload` audit；读取支持从 DB metadata 恢复 record。
+- 新增 Export API：`POST /api/v1/exports/summary`、`GET /api/v1/exports/{id}`，导出 MD/PDF placeholder 并写 `export.summary` audit。
+- `tests/integration/test_api_db_runtime.py` 已扩展 Sleep/Media/Export DB smoke；等待用户 Mac `make api-db-smoke-test` 复验后推进 T037/T042/T043。
+
 ### 继续开发进展（Scheduler API）
 
 - 新增 `server/app/scheduler/api/routes.py`，提供 `GET /api/v1/scheduler/jobs`、`POST /api/v1/scheduler/jobs/{job}/trigger`、`POST /api/v1/scheduler/trigger-all`。
@@ -158,7 +166,7 @@
 
 ```bash
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 159 passed, 8 deselected, 1 warning
+# 161 passed, 8 deselected, 1 warning
 make lint
 make typecheck
 make db-integration-test

@@ -25,6 +25,7 @@ from server.app.db import create_optional_engine, create_session_factory
 from server.app.di import AppContainer, create_container
 from server.app.events.api.routes import router as events_router
 from server.app.events.infra.repository import InMemoryEventRepository
+from server.app.export.api.routes import router as export_router
 from server.app.export.service import ExportService
 from server.app.gateway.exception_handlers import register_exception_handlers
 from server.app.gateway.middleware.logging import RequestLoggingMiddleware
@@ -168,6 +169,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(alert_router)
     app.include_router(camera_router)
     app.include_router(media_router)
+    app.include_router(export_router)
     app.include_router(state_router)
     app.include_router(rules_router)
     app.include_router(scheduler_router)
