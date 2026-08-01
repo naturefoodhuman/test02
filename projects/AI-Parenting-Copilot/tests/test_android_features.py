@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 12:00:00
+# 创建时间（北京时间）：2026-08-01 15:25:00
 
 """APC-T049/T050/T051/T052/T053 Android feature static tests."""
 
@@ -42,6 +42,7 @@ def test_android_notification_payload_is_trigger_only_and_high_priority_for_red_
     channels = (ANDROID / "notification/notifee_channels.ts").read_text()
     fullscreen = (ANDROID / "notification/fullscreen_intent.ts").read_text()
     fallback = (ANDROID / "notification/fallback.ts").read_text()
+    ack_drain = (ANDROID / "notification/ack_drain.ts").read_text()
     work = (ANDROID / "background/work_manager.ts").read_text()
 
     assert "alert_id" in fcm and "level" in fcm and "type" in fcm
@@ -49,6 +50,8 @@ def test_android_notification_payload_is_trigger_only_and_high_priority_for_red_
     assert "importance: high ? 'high'" in channels
     assert "USE_FULL_SCREEN_INTENT" in fullscreen
     assert "startLocalFallback" in fallback and "stopLocalFallback" in fallback
+    assert "drainLocalAlertActions" in ack_drain
+    assert "/api/v1/alerts/${action.alert_id}/ack" in ack_drain
     assert "pending_sync" in work
 
 

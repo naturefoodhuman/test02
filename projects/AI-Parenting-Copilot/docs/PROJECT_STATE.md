@@ -48,6 +48,13 @@
 
 
 
+
+### 继续开发进展（Android pending sync / alert ack drains）
+
+- 新增 `android/src/sync/pending_sync_drain.ts`：将 native pending local events POST 到 `/api/v1/events`，成功后调用 native `markSynced()`。
+- 新增 `android/src/notification/ack_drain.ts`：drain native alert ack actions，调用 `/api/v1/alerts/{id}/ack`，成功后停止本地 fallback。
+- Static tests 覆盖 pending event drain 与 local alert action drain contracts，继续推进 `APC-T047/T048/T052`。
+
 ### 继续开发进展（Camera/mmWave ingest APIs）
 
 - 新增 `server/app/mmwave/api/routes.py`：`POST /api/v1/mmwave/frames`，解析 radar frame，写入 `sensor_event`，可选生成 sensor `ObservationEvent`，并写 `mmwave.frame_ingest` audit。

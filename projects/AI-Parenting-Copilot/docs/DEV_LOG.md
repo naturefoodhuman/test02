@@ -18,6 +18,40 @@
 
 ---
 
+## 第 58 轮 · 2026-08-01（Android pending sync / alert ack drains）
+
+**目标**：继续推进 Android 端离线记录与告警确认闭环，补齐 native bridge 上层的 drain 逻辑。
+
+**完成内容**：
+
+1. Pending event drain：
+   - `android/src/sync/pending_sync_drain.ts`
+   - 从 `NativeLocalEventBridge.pending()` 读取本地 pending events。
+   - POST `/api/v1/events` 成功后调用 `markSynced()`。
+   - 失败事件保留 pending，并返回 attempted/synced/failed/failedEventIds。
+2. Alert ack drain：
+   - `android/src/notification/ack_drain.ts`
+   - 从 native alert bridge `drainLocalActions()` 读取本地 ack/dismiss。
+   - ack action 调用 `/api/v1/alerts/{alert_id}/ack`。
+   - 成功后 `stopLocalFallback(alert_id)`。
+3. Static tests：
+   - `tests/test_android_skeleton.py` 覆盖 pending sync drain。
+   - `tests/test_android_features.py` 覆盖 alert ack drain。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_skeleton.py tests/test_android_features.py tests/test_android_native_skeleton.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T047/T048/T052` 仍等待 Android build/device/PowerSync/Notifee/FCM 验收，但 app 侧 bridge+drain 逻辑已补齐。
+
+---
+
 ## 第 57 轮 · 2026-08-01（Camera/mmWave ingest APIs）
 
 **目标**：继续推进 `APC-T038/T039/T040`，从 DB repository smoke 继续推进到 API ingest 层。

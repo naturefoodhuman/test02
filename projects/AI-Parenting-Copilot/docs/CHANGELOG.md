@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 15:02:00
+创建时间（北京时间）：2026-08-01 15:42:00
 -->
 
 
@@ -11,8 +11,41 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke、Camera/mmWave ingest APIs；`APC-T035` 已通过用户复验。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；DB-backed Memory/Orchestrator、Dose Interceptor、Notification dispatch/cancel 已根据用户复验解除 `APC-T026/T027/T028/T029/T032/T033/T034` 阻塞；用户 Android Gradle build 通过并解除 `APC-T045`；新增 secure session/native pending event store、native Quick Record offline write、system health real probes、FastAPI local API runbook/smoke targets、Scheduler API、Sleep/Media/Export DB API smoke、Scheduler worker、Backup restore drill planner、Camera/mmWave DB repository smoke、Camera/mmWave ingest APIs、Android pending sync/alert ack drains；`APC-T035` 已通过用户复验。
 - **下一任务**：继续推进 `APC-T011/T013/T016/T017` 的真实事件 worker/Normalization/State DB pipeline，随后 Android native/RN build 与真实设备验收。
+
+---
+
+## [第 58 轮] 2026-08-01 — Android pending sync / alert ack drains
+
+### 需求变动
+
+- 继续推进 `APC-T047/T048/T052`：新增 Android pending local event drain 与 alert ack action drain。
+
+### 文件影响
+
+新增：
+
+- `android/src/sync/pending_sync_drain.ts`
+- `android/src/notification/ack_drain.ts`
+
+修改：
+
+- `tests/test_android_skeleton.py`
+- `tests/test_android_features.py`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_android_skeleton.py tests/test_android_features.py tests/test_android_native_skeleton.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 166 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；Android 离线记录仍本地 pending_sync，恢复网络后通过 API/PowerSync bridge drain。
 
 ---
 

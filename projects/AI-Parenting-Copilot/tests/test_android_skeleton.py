@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 11:10:00
+# 创建时间（北京时间）：2026-08-01 15:25:00
 
 """APC-T045/T046/T047/T048 Android skeleton static tests."""
 
@@ -43,6 +43,7 @@ def test_auth_session_and_device_registration_flow_sources_exist() -> None:
 def test_sync_schema_contains_offline_pending_contract_fields() -> None:
     schema = (ANDROID / "src/sync/schema.ts").read_text()
     store = (ANDROID / "src/sync/local_event_store.ts").read_text()
+    drain = (ANDROID / "src/sync/pending_sync_drain.ts").read_text()
 
     for field in [
         "event_id",
@@ -56,6 +57,9 @@ def test_sync_schema_contains_offline_pending_contract_fields() -> None:
         assert field in schema
     assert "pending_sync" in schema
     assert "pending_sync: true" in store
+    assert "drainPendingEvents" in drain
+    assert "/api/v1/events" in drain
+    assert "markSynced" in drain
 
 
 def test_quick_record_candidate_builds_feeding_payload_contract() -> None:
