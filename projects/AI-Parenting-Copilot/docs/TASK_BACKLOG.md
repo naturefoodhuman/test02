@@ -1168,7 +1168,7 @@
 - **所属 Capability**：C15
 - **所属 Story**：S15
 - **目标**：实现 APScheduler runner 与 P0 定时任务。
-- **状态**：BLOCKED（manual SchedulerRunner、morning/vaccine/supplement/health jobs 与 Scheduler API trigger/list 已完成；前置 T022 生产规则审查与长期 worker 待验收）
+- **状态**：BLOCKED（manual SchedulerRunner、PeriodicSchedulerWorker、morning/vaccine/supplement/health jobs 与 Scheduler API trigger/list 已完成；前置 T022 生产规则审查与长期运行验收待完成）
 - **前置依赖**：APC-T022, APC-T031, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M20、§7.2
 - **输出**：Scheduler jobs
@@ -1411,7 +1411,7 @@
 - **所属 Capability**：C18
 - **所属 Story**：S18
 - **目标**：实现数据库与媒体备份任务，提供 launchd plist 与恢复演练流程。
-- **状态**：BLOCKED（PG dump/media archive dry-run tasks/runbook/launchd plist/tests 已完成；真实 pg_dump/NAS/restore drill 待验收）
+- **状态**：BLOCKED（PG dump/media archive dry-run、restore drill planner/manifest、runbook/launchd plist/tests 已完成；真实 pg_dump/NAS/restore drill 待验收）
 - **前置依赖**：APC-T003, APC-T042
 - **输入**：`ARCHITECTURE_FINAL.md` §24；`ENGINEERING_DESIGN.md` §2 M19
 - **输出**：Backup scripts/service/docs

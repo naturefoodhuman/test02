@@ -18,6 +18,45 @@
 
 ---
 
+## 第 55 轮 · 2026-08-01（Scheduler worker + Restore drill planner）
+
+**目标**：继续推进 `APC-T036/T044`，补齐长期 scheduler worker 基础与 restore drill 计划能力。
+
+**完成内容**：
+
+1. Scheduler worker：
+   - `server/app/scheduler/worker.py`
+   - `PeriodicSchedulerWorker` 支持 start/stop/run_once/interval loop。
+   - FastAPI lifespan 注册 scheduler worker，默认 `run_on_start=False`，避免启动时产生提醒/告警副作用。
+   - Snapshot 记录 run_count / last run / errors / results。
+2. Restore drill：
+   - `server/app/backup/restore_drill.py`
+   - `RestoreDrillPlanner` 生成 `pg_restore` command。
+   - `BackupManifest` 记录 pg dump/media archive/verification steps。
+   - `make restore-dry-run`。
+   - `docs/BACKUP_RESTORE_RUNBOOK.md`。
+3. Tests：
+   - `tests/test_scheduler_worker.py`
+   - `tests/test_backup_tasks.py` 扩展 restore drill plan/manifest。
+
+**验证**：
+
+```bash
+make lint
+make typecheck
+python3 -m pytest tests/test_scheduler_worker.py tests/test_scheduler_api.py tests/test_backup_tasks.py -q
+make restore-dry-run
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 164 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T036` 仍等待 T022 生产规则审查与长期运行验收。
+- `APC-T044` 仍等待真实 pg_dump/NAS/restore drill。
+
+---
+
 ## 第 54 轮 · 2026-08-01（Sleep / Media / Export DB API smoke）
 
 **目标**：继续推进 `APC-T037/T042/T043`，补齐 DB-backed API runtime 与 audit 覆盖。

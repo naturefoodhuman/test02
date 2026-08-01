@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-01 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增确认 `APC-T035 DONE`；Scheduler API trigger/list 已完成，`APC-T036` 仍等待 T022 生产规则审查与长期 worker；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：新增 Scheduler periodic worker 与 Backup restore drill planner；`APC-T036/T044` 代码继续推进但仍等待生产规则审查/真实 NAS restore drill；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -44,6 +44,14 @@
 
 
 
+
+
+### 继续开发进展（Scheduler worker / Backup restore drill）
+
+- 新增 `PeriodicSchedulerWorker`，FastAPI lifespan 注册 scheduler worker；默认不 run-on-start，避免 dev/test 副作用。
+- Scheduler worker 保留 run snapshot：run_count、last_started_at、last_finished_at、last_error、last_results。
+- 新增 `RestoreDrillPlanner` / `BackupManifest`，可生成 `pg_restore` dry-run plan、restore manifest 和 verification steps。
+- 新增 `docs/BACKUP_RESTORE_RUNBOOK.md` 和 `make restore-dry-run`。
 
 ### 继续开发进展（Sleep / Media / Export DB API smoke）
 

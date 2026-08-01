@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 13:00:00
+创建时间（北京时间）：2026-08-01 13:25:00
 -->
 
 
@@ -84,8 +84,9 @@ projects/AI-Parenting-Copilot/android/
 - `APC-T032/T033/T034`：safe notification adapters、alert dispatch/deliveries API、DB delivery receipts 与 ack cancel receipts 已通过用户 Mac 复验，已 DONE；真实 FCM/TTS/设备凭证转入 Android/device 后续验收。
 - `APC-T045`：Android native Gradle build 已由用户验证通过，已 DONE。
 - `APC-T035`：DB/TCP/HTTP/PowerSync real probes 与 `/api/v1/system/health/check` 已通过用户 Mac 真实环境复验，已 DONE。
-- `APC-T036`：Scheduler API manual trigger/list 已完成；仍等待 T022 生产规则审查与长期 worker/定时运行验收。
+- `APC-T036`：Scheduler API manual trigger/list 与 PeriodicSchedulerWorker 已完成；仍等待 T022 生产规则审查与长期运行验收。
 - `APC-T037/T042/T043`：Sleep/Media/Export DB API + audit smoke 已完成；需要用户 Mac `api-db-smoke-test` 复验后解除主要阻塞。
+- `APC-T044`：backup/restore dry-run planner + restore runbook 已完成；仍等待真实 NAS/restore drill。
 - `APC-T046/T047/T048`：Android Keystore secure session store、native SQLite pending event store、TS bridge contracts、QuickRecordActivity 与 PendingEventsActivity 已完成；需要用户执行 `./gradlew assembleDebug` 复验新增 native files。
 - `APC-T052`：Android native critical alert Activity/Receiver/NotificationHelper/bridge 已完成；需要真机/FCM/Notifee permission 验收。
 - `APC-T030`：P0 Copilots pure/dev API 已有；等待 T029 与 Vaccine/Growth 生产审查相关阻塞。
@@ -103,7 +104,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 161 passed, 8 deselected, 1 warning
+# 164 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck

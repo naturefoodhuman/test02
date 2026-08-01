@@ -55,6 +55,7 @@ from server.app.scheduler.jobs.morning_brief import MorningBriefJob
 from server.app.scheduler.jobs.supplement import SupplementReminderJob
 from server.app.scheduler.jobs.vaccine_due import VaccineDueJob
 from server.app.scheduler.runner import SchedulerRunner
+from server.app.scheduler.worker import PeriodicSchedulerWorker
 from server.app.settings import Settings
 from server.app.state_engine.api.routes import router as state_router
 from server.app.state_engine.engine import BabyStateEngine
@@ -142,6 +143,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
     )
     app.state.scheduler_runner = scheduler_runner
+    container.worker_registry.register(
+        PeriodicSchedulerWorker(
+            scheduler_runner,
+            interval_seconds=3600.0,
+            run_on_start=False,
+        )
+    )
     app.state.sleep_session_repository = InMemorySleepSessionRepository(app.state.audit_sink)
     app.state.event_repository = InMemoryEventRepository()
     app.state.derived_table_store = InMemoryDerivedTableStore()
