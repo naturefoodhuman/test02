@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 17:26:00
+// 创建时间（北京时间）：2026-08-01 20:10:00
 
 package com.aiparentingcopilot
 
@@ -25,6 +25,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER
         }
         layout.addView(title)
+        addButton(layout, "Login", LoginActivity::class.java)
         addButton(layout, "Today", TodayActivity::class.java)
         addButton(layout, "Quick Record", QuickRecordActivity::class.java)
         addButton(layout, "Timeline", TimelineActivity::class.java)

@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 09:35:00
+// 创建时间（北京时间）：2026-08-01 20:08:00
 
 package com.aiparentingcopilot
 
@@ -38,31 +38,38 @@ class QuickRecordActivity : Activity() {
                 android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
         val save = Button(this).apply { text = "Save feeding locally" }
+        val saveAndDrain = Button(this).apply { text = "Save and trigger drain" }
         status = TextView(this).apply {
             textSize = 16f
             gravity = Gravity.CENTER
         }
         save.setOnClickListener {
             val amountMl = amount.text.toString().toDoubleOrNull() ?: 0.0
-            saveFeeding(amountMl)
+            saveFeeding(amountMl, triggerDrain = false)
+        }
+        saveAndDrain.setOnClickListener {
+            val amountMl = amount.text.toString().toDoubleOrNull() ?: 0.0
+            saveFeeding(amountMl, triggerDrain = true)
         }
 
         layout.addView(title)
         layout.addView(amount)
         layout.addView(save)
+        layout.addView(saveAndDrain)
         layout.addView(status)
         setContentView(layout)
         refreshStatus()
     }
 
-    private fun saveFeeding(amountMl: Double) {
+    private fun saveFeeding(amountMl: Double, triggerDrain: Boolean) {
         val now = Instant.now().toString()
+        val session = SecureSessionStore(this).load()
         val event = LocalObservationEvent(
             eventId = UUID.randomUUID().toString(),
-            babyId = intent.getStringExtra("baby_id") ?: DEV_BABY_ID,
-            familyId = intent.getStringExtra("family_id") ?: DEV_FAMILY_ID,
-            userId = intent.getStringExtra("user_id"),
-            deviceId = intent.getStringExtra("device_id"),
+            babyId = session?.babyId ?: intent.getStringExtra("baby_id") ?: DEV_BABY_ID,
+            familyId = session?.familyId ?: intent.getStringExtra("family_id") ?: DEV_FAMILY_ID,
+            userId = session?.userId ?: intent.getStringExtra("user_id"),
+            deviceId = session?.deviceId ?: intent.getStringExtra("device_id"),
             eventType = "feeding",
             startTime = now,
             clientCreatedAt = now,
@@ -71,6 +78,9 @@ class QuickRecordActivity : Activity() {
             confidence = 1.0,
         )
         store.insertPending(event)
+        if (triggerDrain) {
+            BackgroundDrainScheduler.triggerNow(this)
+        }
         refreshStatus()
     }
 

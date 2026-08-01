@@ -61,6 +61,13 @@
 
 
 
+
+### 继续开发进展（Android native login + save/drain）
+
+- 新增 `LoginActivity`，调用 `/api/v1/auth/login`，登录成功后调用 `/api/v1/auth/devices/register` 注册 phone，并用 `SecureSessionStore` 加密保存 token/session。
+- `MainActivity` 增加 Login 入口。
+- `QuickRecordActivity` 保存记录时优先使用 SecureSession 中的 baby/family/user/device，并增加 Save and trigger drain 按钮。
+
 ### 继续开发进展（Android native screen actions）
 
 - `AlertCenterActivity` 新增 server alerts refresh 后的 useful feedback 提交，调用 `/api/v1/alerts/{id}/feedback`。

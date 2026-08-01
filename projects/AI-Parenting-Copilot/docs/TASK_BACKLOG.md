@@ -1474,7 +1474,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现登录、token 保存、家庭/宝宝上下文、设备注册。
-- **状态**：BLOCKED（session reducer/authService TS flow/static tests 与 Android Keystore-backed SecureSessionStore/native bridge 已完成；新增 native code 待用户 Mac `assembleDebug`/device 复验）
+- **状态**：BLOCKED（session reducer/authService TS flow/static tests、Android Keystore-backed SecureSessionStore/native bridge、native LoginActivity login+device registration 已完成；新增 native code 待用户 Mac `assembleDebug`/device 复验）
 - **前置依赖**：APC-T045, APC-T008
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§19
 - **输出**：Android Auth feature
@@ -1503,7 +1503,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现 Android 本地 SQLite、PowerSync client、ObservationEvent 本地写入与 pending_sync 标记。
-- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert、TS/native pending sync drain、JobScheduler background drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
+- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert/save+drain、TS/native pending sync drain、JobScheduler background drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
 - **前置依赖**：APC-T012, APC-T046
 - **输入**：`ENGINEERING_DESIGN.md` §1.2 Android、§7.1；`ARCHITECTURE_FINAL.md` §9
 - **输出**：Android Sync module

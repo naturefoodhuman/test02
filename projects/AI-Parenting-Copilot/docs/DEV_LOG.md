@@ -18,6 +18,39 @@
 
 ---
 
+## 第 67 轮 · 2026-08-01（Android native login + save/drain）
+
+**目标**：继续推进 `APC-T046/T047/T048`，让 native Android fallback 可以完成登录、设备注册、token 加密保存，并让 Quick Record 使用 session 上下文。
+
+**完成内容**：
+
+1. `LoginActivity.kt`：
+   - 输入 API base URL / family_id / display name / secret / optional baby_id。
+   - 调用 `/api/v1/auth/login`。
+   - 调用 `/api/v1/auth/devices/register` 注册 phone。
+   - 使用 `SecureSessionStore` 加密保存 token/session。
+2. `MainActivity.kt`：新增 Login 入口。
+3. `QuickRecordActivity.kt`：
+   - 保存 feeding 时优先使用 SecureSession 中的 family/baby/user/device。
+   - 新增 “Save and trigger drain” 立即调度 BackgroundDrainScheduler。
+4. Static tests 覆盖 LoginActivity API routes / SecureSessionStore / QuickRecord trigger drain。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 171 passed, 8 deselected, 1 warning
+```
+
+**用户下一步（非阻塞本轮）**：
+
+```bash
+cd android/android && ./gradlew assembleDebug
+```
+
+---
+
 ## 第 66 轮 · 2026-08-01（Android native screen actions）
 
 **目标**：继续推进 Android native fallback screens，不只读服务端数据，也能执行核心动作。

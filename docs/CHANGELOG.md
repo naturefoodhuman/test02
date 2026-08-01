@@ -77,6 +77,25 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 
 ---
 
+## [第 163 轮] 2026-08-01
+
+### 需求变动
+- **AI Parenting Copilot Android native 继续推进**：新增 LoginActivity，登录/注册设备/加密保存 session；QuickRecord 使用 session 上下文并可立即触发 drain。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/android/android/app/src/main/java/com/aiparentingcopilot/LoginActivity.kt`
+- 修改：Android MainActivity/QuickRecordActivity/Manifest/static tests/project docs/root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_skeleton.py tests/test_android_features.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 171 passed, 8 deselected, 1 warning
+```
+
+---
+
 ## [第 162 轮] 2026-08-01
 
 ### 需求变动
