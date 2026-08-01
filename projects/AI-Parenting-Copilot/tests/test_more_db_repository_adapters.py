@@ -15,6 +15,8 @@ def test_additional_sqlalchemy_adapters_exist() -> None:
         Path("server/app/media/sqlalchemy_media_repo.py"),
         Path("server/app/notification/sqlalchemy_delivery_repo.py"),
         Path("server/app/camera/sqlalchemy_sleep_session_repo.py"),
+        Path("server/app/mmwave/sqlalchemy_sensor_event_repo.py"),
+        Path("server/app/camera/sqlalchemy_camera_event_repo.py"),
     ]
 
     for path in files:
@@ -38,7 +40,12 @@ def test_media_delivery_sleep_adapters_preserve_metadata_paths() -> None:
     delivery = Path("server/app/notification/sqlalchemy_delivery_repo.py").read_text()
     sleep = Path("server/app/camera/sqlalchemy_sleep_session_repo.py").read_text()
 
+    sensor = Path("server/app/mmwave/sqlalchemy_sensor_event_repo.py").read_text()
+    camera = Path("server/app/camera/sqlalchemy_camera_event_repo.py").read_text()
+
     assert "content_type" in media
     assert "thumbnail_path" in media
     assert "DeliveryReceipt" in delivery
     assert "roi_config" in sleep
+    assert "SensorEventCandidate" in sensor
+    assert "CameraEventRecord" in camera

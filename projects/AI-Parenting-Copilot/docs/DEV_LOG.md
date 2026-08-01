@@ -18,6 +18,39 @@
 
 ---
 
+## 第 56 轮 · 2026-08-01（Camera/mmWave DB repository smoke）
+
+**目标**：继续推进 `APC-T038/T039/T040`，将 camera/mmWave 从 pure/static/mock 推进到 SQLAlchemy repository DB smoke。
+
+**完成内容**：
+
+1. mmWave DB repository：
+   - `server/app/mmwave/sqlalchemy_sensor_event_repo.py`
+   - 支持 `SensorEventCandidate` → `sensor_event`。
+   - 支持 `list_by_device()`。
+2. Camera DB repository：
+   - `server/app/camera/sqlalchemy_camera_event_repo.py`
+   - 支持 `CameraEventRecord` → `camera_event`。
+   - 支持 `list_by_session()` / `list_by_camera()`。
+3. Integration：
+   - `tests/integration/test_db_repository_adapters.py` 扩展 sensor_event/camera_event DB smoke。
+4. Static repository tests：
+   - `tests/test_more_db_repository_adapters.py` 覆盖新 adapters。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_more_db_repository_adapters.py tests/test_mmwave_parser.py tests/test_camera_shadow_pipeline.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 164 passed, 8 deselected, 1 warning
+```
+
+**状态说明**：
+
+- `APC-T038/T039/T040` 仍保持 BLOCKED，等待真实 RTSP/ISAPI/Fregata/MQTT/VLM/device 验收。
+
+---
+
 ## 第 55 轮 · 2026-08-01（Scheduler worker + Restore drill planner）
 
 **目标**：继续推进 `APC-T036/T044`，补齐长期 scheduler worker 基础与 restore drill 计划能力。

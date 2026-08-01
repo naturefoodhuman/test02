@@ -46,6 +46,13 @@
 
 
 
+
+### 继续开发进展（Camera/mmWave DB repositories）
+
+- 新增 `SQLAlchemySensorEventRepository`，支持 mmWave `SensorEventCandidate` 写入 `sensor_event` 并按 device 查询。
+- 新增 `SQLAlchemyCameraEventRepository`，支持 camera shadow events 写入 `camera_event` 并按 session/camera 查询。
+- `tests/integration/test_db_repository_adapters.py` 扩展 sensor_event/camera_event DB smoke，推进 `APC-T038/T039/T040`。
+
 ### 继续开发进展（Scheduler worker / Backup restore drill）
 
 - 新增 `PeriodicSchedulerWorker`，FastAPI lifespan 注册 scheduler worker；默认不 run-on-start，避免 dev/test 副作用。

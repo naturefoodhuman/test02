@@ -33,6 +33,10 @@ from sqlalchemy.ext.asyncio import (
 from server.app.auth.domain.models import Device, DeviceKind, Family, Role, User
 from server.app.auth.infra.sqlalchemy_repository import SQLAlchemyAuthRepository
 from server.app.camera.sleep_session import SleepSessionRecord
+from server.app.camera.sqlalchemy_camera_event_repo import (
+    CameraEventRecord,
+    SQLAlchemyCameraEventRepository,
+)
 from server.app.camera.sqlalchemy_sleep_session_repo import SQLAlchemySleepSessionRepository
 from server.app.common.ids import new_ulid
 from server.app.db import normalize_database_url
@@ -44,6 +48,9 @@ from server.app.events.domain.observation_event import (
 from server.app.events.infra.sqlalchemy_repository import SQLAlchemyEventRepository
 from server.app.media.sqlalchemy_media_repo import SQLAlchemyMediaAssetRepository
 from server.app.media.storage import MediaAssetRecord
+from server.app.mmwave.frame_parser import parse_radar_frame
+from server.app.mmwave.sensor_event_mapper import map_frame_to_sensor_event
+from server.app.mmwave.sqlalchemy_sensor_event_repo import SQLAlchemySensorEventRepository
 from server.app.notification.alert_repo import AckAlertRequest, CreateAlertRequest, FeedbackRequest
 from server.app.notification.channels.base import DeliveryReceipt
 from server.app.notification.sqlalchemy_alert_repo import SQLAlchemyAlertRepository
@@ -214,6 +221,27 @@ async def test_auth_event_state_alert_media_delivery_sleep_repositories(
     sleep_repo = SQLAlchemySleepSessionRepository(session)
     sleep = await sleep_repo.add(SleepSessionRecord(baby_id=baby_id, family_id=family.id))
     assert (await sleep_repo.get(sleep.id)).state == sleep.state
+
+    sensor_repo = SQLAlchemySensorEventRepository(session)
+    frame = parse_radar_frame(
+        f'{{"device_id":"{device.id}","timestamp":"2026-07-09T00:00:00Z",'
+        '"presence":true,"state":"moving","abnormal_event":"apnea_candidate"}'
+    )
+    sensor = await sensor_repo.add(map_frame_to_sensor_event(frame))
+    assert (await sensor_repo.list_by_device(device.id))[0].id == sensor.id
+
+    camera_repo = SQLAlchemyCameraEventRepository(session)
+    camera_event = await camera_repo.add(
+        CameraEventRecord(
+            camera_id=device.id,
+            session_id=sleep.id,
+            ts="2026-07-09T00:00:01Z",
+            kind="face_covered",
+            confidence=0.91,
+            clip_path="runtime/media/clips/fake.mp4",
+        )
+    )
+    assert (await camera_repo.list_by_session(sleep.id))[0].id == camera_event.id
 
     alert_repo = SQLAlchemyAlertRepository(session)
     alert = await alert_repo.create(
