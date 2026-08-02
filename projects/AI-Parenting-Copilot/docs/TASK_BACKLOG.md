@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 16:40:00
+创建时间（北京时间）：2026-08-02 16:52:00
 -->
 
 # TASK_BACKLOG.md
@@ -1503,7 +1503,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现 Android 本地 SQLite、PowerSync client、ObservationEvent 本地写入与 pending_sync 标记。
-- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert/save+drain、TS/native pending sync drain、native drain heartbeat、JobScheduler background drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
+- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert/save+drain、TS/native pending sync drain、native drain heartbeat、manual drain session/settings、JobScheduler background drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
 - **前置依赖**：APC-T012, APC-T046
 - **输入**：`ENGINEERING_DESIGN.md` §1.2 Android、§7.1；`ARCHITECTURE_FINAL.md` §9
 - **输出**：Android Sync module
@@ -1616,7 +1616,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：展示告警列表、证据链、确认、反馈。
-- **状态**：BLOCKED（Alert Center view model/ack/feedback TS flow/static tests 与 native AlertCenterActivity alerts refresh/ack drain 已完成；新增 native UI 待 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Alert Center view model/ack/feedback TS flow/static tests、native AlertCenterActivity alerts refresh/ack drain 与 exception-safe ack retry 已完成；新增 native UI 待 Android `assembleDebug`/device 复验）
 - **前置依赖**：APC-T031, APC-T046
 - **输入**：`ARCHITECTURE_FINAL.md` §14、§3.2
 - **输出**：Alert Center feature

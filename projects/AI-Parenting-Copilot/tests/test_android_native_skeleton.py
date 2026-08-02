@@ -109,6 +109,9 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
 
     assert "Pending sync events" in pending
     assert "PendingSyncDrainer" in pending
+    assert "ApiSettingsStore(this)" in pending
+    assert "SecureSessionStore(this@PendingEventsActivity).load()" in pending
+    assert "settings.saveLastDrain" in pending
     assert "postJson" in native_api
     assert "/api/v1/events" in pending_drainer
     assert "markSynced" in pending_drainer
@@ -141,6 +144,8 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
     assert "Refresh server alerts" in alert_center
     assert "Submit useful feedback" in alert_center
     assert "AlertAckDrainer" in alert_center
+    assert "recordLocalAction" in alert_drainer
+    assert "catch (_: Exception)" in alert_drainer
     assert "/api/v1/alerts?family_id=" in alert_center
     assert "/feedback" in alert_center
     assert "/api/v1/sleep-sessions" in sleep

@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 16:00:00
+// 创建时间（北京时间）：2026-08-02 16:47:00
 
 package com.aiparentingcopilot
 
@@ -15,6 +15,7 @@ class PendingEventsActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val store = LocalEventStore(this)
+        val settings = ApiSettingsStore(this)
         val pending = store.pending()
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -38,14 +39,17 @@ class PendingEventsActivity : Activity() {
             setOnClickListener {
                 text = "Draining..."
                 Thread {
-                    val baseUrl = intent.getStringExtra("api_base_url") ?: DEFAULT_EMULATOR_API
+                    val session = SecureSessionStore(this@PendingEventsActivity).load()
                     val result = PendingSyncDrainer(
                         this@PendingEventsActivity,
-                        NativeApiClient(baseUrl),
+                        NativeApiClient(settings.baseUrl(), session?.accessToken),
                     ).drain()
+                    val alertAck = NativeDrainResult(attempted = 0, succeeded = 0, failed = 0)
+                    settings.saveLastDrain(result, alertAck)
                     runOnUiThread {
                         text = "Drain pending to server"
-                        detail.text = "synced=${result.succeeded} failed=${result.failed}"
+                        title.text = "Pending sync events: ${store.pendingCount()}"
+                        detail.text = "synced=${result.succeeded} failed=${result.failed}\n${settings.lastDrainSummary()}"
                     }
                 }.start()
             }
@@ -54,9 +58,5 @@ class PendingEventsActivity : Activity() {
         layout.addView(detail)
         layout.addView(drain)
         setContentView(layout)
-    }
-
-    companion object {
-        const val DEFAULT_EMULATOR_API = "http://10.0.2.2:8000"
     }
 }
