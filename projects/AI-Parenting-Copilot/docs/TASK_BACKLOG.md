@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 03:30:00
+创建时间（北京时间）：2026-08-02 16:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -987,7 +987,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 P0 所需低/中安全 Copilot 外壳，调用 Rule Engine 并生成结构化解释。
-- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API 与 Android RuleEvaluationActivity 已完成；T022/T023 生产规则审查待验收）
+- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API、Android RuleEvaluationActivity、Android Quick Record Copilot text flow 与 DB API smoke 扩展已完成；T022/T023 生产规则审查待验收）
 - **前置依赖**：APC-T020, APC-T022, APC-T023, APC-T028, APC-T029
 - **输入**：`ARCHITECTURE_FINAL.md` §11.4、§26.1
 - **输出**：P0 Copilot 实现与单测
@@ -1532,7 +1532,7 @@
 - **所属 Capability**：C20 Android 核心页面
 - **所属 Story**：S20 Quick Record、Today、Timeline、Alert Center
 - **目标**：实现大按钮快捷记录、计时器、语音文本候选与一次轻确认。
-- **状态**：BLOCKED（Quick Record candidate builder/local event payload TS/static tests、native QuickRecordActivity offline write、PendingEventsActivity、NativeApiClient/PendingSyncDrainer 与 pending sync drain 已完成；新增 native code 待用户 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Quick Record candidate builder/local event payload TS/static tests、RN/TS Copilot flow helper、native QuickRecordActivity offline write + Copilot text parse → local pending save、PendingEventsActivity、NativeApiClient/PendingSyncDrainer 与 pending sync drain 已完成；新增 native code 待用户 Android `assembleDebug`/device 复验）
 - **前置依赖**：APC-T027, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §4.1、§3.2；`ENGINEERING_DESIGN.md` §7.1
 - **输出**：Quick Record feature

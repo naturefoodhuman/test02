@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 05:30:00
+创建时间（北京时间）：2026-08-02 16:25:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,10 +11,45 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API；Android native core screens；Dev E2E substitutes / APC-T058 accepted；Camera fusion API / clip plan；mmWave live MQTT worker；Android TS API client/view model helpers；Camera VLM shadow API；Composite camera shadow API。
+- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API；Android native core screens；Dev E2E substitutes / APC-T058 accepted；Camera fusion API / clip plan；mmWave live MQTT worker；Android TS API client/view model helpers；Camera VLM shadow API；Composite camera shadow API；Android Quick Record Copilot text flow；Copilot/Rule DB smoke expansion。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
-- **当前 AI Parenting Copilot 测试基线**：`PARENTING_DATABASE__URL=... make test` → `179 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
+- **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+
+## [第 174 轮] 2026-08-02
+
+### 需求变动
+- **AI Parenting Copilot Quick Record/Copilot 继续推进**：Android native Quick Record 增加 Copilot 文本解析并保存本地 pending，网络/API 不可用时用本地 deterministic fallback 保存 pending；RN/TS 增加 Copilot flow helper，DB API smoke 扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation。
+
+### 文件影响
+- 新增：`projects/AI-Parenting-Copilot/android/src/features/quick_record/copilotFlow.ts`
+- 修改：`projects/AI-Parenting-Copilot/android/android/app/src/main/java/com/aiparentingcopilot/QuickRecordActivity.kt`
+- 修改：`projects/AI-Parenting-Copilot/tests/integration/test_api_db_runtime.py`
+- 修改：`projects/AI-Parenting-Copilot/tests/test_android_features.py`
+- 修改：`projects/AI-Parenting-Copilot/Makefile`
+- 修改：`projects/AI-Parenting-Copilot/docs/DEV_LOG.md`
+- 修改：`projects/AI-Parenting-Copilot/docs/CHANGELOG.md`
+- 修改：`projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`
+- 修改：`projects/AI-Parenting-Copilot/docs/TASK_BACKLOG.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
+python3 -m pytest tests/test_android_features.py tests/test_android_native_skeleton.py tests/test_orchestrator.py tests/test_rules_admin_api.py -q
+# 18 passed, 1 warning
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 188 source files
+make test
+# 180 passed, 8 deselected, 1 warning
+make api-server-smoke-test
+# healthz ok; dev-mock DB; MQTT offline expected in sandbox
+```
 
 ---
 

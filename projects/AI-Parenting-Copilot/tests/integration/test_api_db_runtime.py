@@ -93,6 +93,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
     sleep_id: str | None = None
     media_id: str | None = None
     export_id: str | None = None
+    copilot_event_id: str | None = None
     integration_rule_version = new_ulid()
 
     try:
@@ -140,6 +141,12 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 },
             )
             assert copilot_memory.status_code == 200
+            memory_list = client.get(f"/api/v1/family-knowledge/{family_id}")
+            assert memory_list.status_code == 200
+            assert {item["key"] for item in memory_list.json()} >= {
+                "sleep.preference",
+                "correction.milk_unit",
+            }
 
             device = client.post(
                 "/api/v1/auth/devices/register",
@@ -189,18 +196,33 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             listed = client.get("/api/v1/events", params={"baby_id": baby_id})
             assert listed.status_code == 200
             assert listed.json()[0]["event_type"] == "feeding"
+            copilot_query = client.post(
+                "/api/v1/copilot/query",
+                json={
+                    "baby_id": baby_id,
+                    "family_id": family_id,
+                    "text": "刚换了尿布",
+                    "intent": "record",
+                },
+            )
+            assert copilot_query.status_code == 200
+            copilot_candidate = copilot_query.json()["copilot_response"]["payload"][
+                "record_candidate"
+            ]
+            assert copilot_candidate["event_type"] == "diaper"
             copilot_confirmed = client.post(
                 "/api/v1/copilot/record-candidates/confirm",
                 json={
                     "baby_id": baby_id,
                     "family_id": family_id,
-                    "event_type": "diaper",
-                    "normalized_payload": {"diaper_type": "wet"},
-                    "confidence": 0.75,
-                    "raw_text": "换了尿布",
+                    "event_type": copilot_candidate["event_type"],
+                    "normalized_payload": copilot_candidate["normalized_payload"],
+                    "confidence": copilot_candidate["confidence"],
+                    "raw_text": "刚换了尿布",
                 },
             )
             assert copilot_confirmed.status_code == 200
+            copilot_event_id = copilot_confirmed.json()["event_id"]
 
             mmwave = client.post(
                 "/api/v1/mmwave/frames",
@@ -386,6 +408,44 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             )
             assert activated.status_code == 200
             assert activated.json()["activated"]["policy_type"] == "integration"
+            triage_eval = client.post(
+                "/api/v1/rules/evaluate/triage",
+                json={"payload": {"baby_age_months": 2, "temperature_c": 38.2}},
+            )
+            medication_eval = client.post(
+                "/api/v1/rules/evaluate/medication",
+                json={
+                    "payload": {
+                        "medication_key": "acetaminophen",
+                        "baby_age_months": 4,
+                        "weight_kg": 6,
+                        "concentration_mg_per_ml": 32,
+                    }
+                },
+            )
+            vaccine_eval = client.post(
+                "/api/v1/rules/evaluate/vaccine",
+                json={"payload": {"birth_date": "2026-07-09", "as_of": "2026-07-09"}},
+            )
+            growth_eval = client.post(
+                "/api/v1/rules/evaluate/growth",
+                json={
+                    "payload": {
+                        "sex": "male",
+                        "age_months": 3,
+                        "metric": "weight_kg",
+                        "value": 6.4,
+                    }
+                },
+            )
+            assert triage_eval.status_code == 200
+            assert triage_eval.json()["result"]["outputs"]["alert_level"] == "red"
+            assert medication_eval.status_code == 200
+            assert medication_eval.json()["result"]["outputs"]["dose_ml"] > 0
+            assert vaccine_eval.status_code == 200
+            assert vaccine_eval.json()["result"]["reason_code"] == "vaccine_plan_generated"
+            assert growth_eval.status_code == 200
+            assert growth_eval.json()["result"]["outputs"]["percentile_band"] == "p50"
 
         async with async_sessionmaker(engine, expire_on_commit=False)() as dose_audit_session:
             async with dose_audit_session.begin():
@@ -395,6 +455,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                     audit_sink=SQLAlchemyAuditSink(dose_audit_session),
                 )
         assert intercepted.intercepted is True
+        assert copilot_event_id is not None
 
         async with engine.connect() as audit_connection:
             audit_actions = set(
@@ -406,7 +467,9 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                             :family_resource,
                             :sync_resource,
                             :memory_resource,
+                            :copilot_memory_resource,
                             :event_resource,
+                            :copilot_event_resource,
                             :alert_resource,
                             :sleep_resource,
                             :media_resource,
@@ -422,7 +485,11 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         "family_resource": f"family:{family_id}",
                         "sync_resource": f"sync_state:{device_id}",
                         "memory_resource": f"family_knowledge:{family_id}:sleep.preference",
+                        "copilot_memory_resource": (
+                            f"family_knowledge:{family_id}:correction.milk_unit"
+                        ),
                         "event_resource": f"observation_event:{event.json()['event_id']}",
+                        "copilot_event_resource": f"observation_event:{copilot_event_id}",
                         "alert_resource": f"alert:{alert_id}",
                         "sleep_resource": f"sleep_session:{sleep_id}",
                         "media_resource": f"media_asset:{media_id}",
@@ -438,7 +505,9 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 "auth.init_family",
                 "sync.heartbeat",
                 "family_knowledge.upsert",
+                "copilot.family_memory_confirm",
                 "event.upsert",
+                "copilot.record_confirm",
                 "alert.create",
                 "alert.dispatch",
                 "alert.cancel_channels",

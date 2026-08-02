@@ -1,14 +1,14 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 05:30:00
+创建时间（北京时间）：2026-08-02 16:20:00
 -->
 
 
 # PROJECT_STATE —— AI Parenting Copilot 当前状态 SSOT
 
-**更新日期**：2026-08-01 CST
-**当前阶段**：P0-M1 DB-backed API runtime hardening + PG worker/Normalization/State pipeline 继续开发
-**当前任务状态**：新增 Scheduler periodic worker 与 Backup restore drill planner；`APC-T036/T044` 代码继续推进但仍等待生产规则审查/真实 NAS restore drill；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**更新日期**：2026-08-02 CST
+**当前阶段**：P0-M1 DB-backed API runtime hardening + Android Quick Record/Copilot/API smoke 继续开发
+**当前任务状态**：Android Quick Record Copilot text parse、本地 pending 保存、TS Copilot flow helper 与 DB API smoke 扩展已完成；`APC-T030/T048` 代码继续推进但仍等待生产规则审查/Android build/device 复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -117,6 +117,13 @@
 
 
 
+
+
+### 继续开发进展（Quick Record Copilot flow / DB smoke）
+
+- Native `QuickRecordActivity` 新增自由文本 Copilot parse：调用 `/api/v1/copilot/query`，得到候选后写入 `LocalEventStore.insertPending()`，保持 Android offline-first。
+- RN/TS 新增 `android/src/features/quick_record/copilotFlow.ts`，封装 Copilot query、record confirm 与 local fallback parser。
+- `tests/integration/test_api_db_runtime.py` 扩展 Copilot query → confirm → audit、FamilyMemory confirm audit 与 P0 Rule Evaluation API smoke。
 
 ### 继续开发进展（Composite Camera Shadow API）
 

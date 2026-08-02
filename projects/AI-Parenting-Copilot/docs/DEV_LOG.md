@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 05:30:00
+创建时间（北京时间）：2026-08-02 16:20:00
 -->
 
 
@@ -12,9 +12,44 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android native critical alert/full-screen/quick-record fallback；新增 Android Gradle bootstrap；新增 Android Keystore/session + native SQLite pending event store；新增 system health real probes/check API。
-- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `161 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
+- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation。
+- **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 77 轮 · 2026-08-02（Quick Record Copilot flow + DB smoke expansion）
+
+**目标**：继续推进 Android Quick Record 与 P0 Copilot/API 闭环，减少用户手动验证前的服务端/客户端契约缺口。
+
+**完成内容**：
+
+1. Android native Quick Record：
+   - 新增自由文本输入与“Parse text with Copilot and save locally”按钮。
+   - 调用 `/api/v1/copilot/query` 获取 Logger Copilot record candidate。
+   - 解析成功后写入 native `LocalEventStore.insertPending()`；网络/API 不可用时用本地 deterministic fallback 保存 pending，继续保证离线记录不丢失。
+2. Android RN/TS Quick Record：
+   - 新增 `android/src/features/quick_record/copilotFlow.ts`。
+   - 支持 `fetchCopilotRecordCandidate()`、`confirmCopilotRecordCandidate()`、`createLocalEventFromCopilotText()`。
+   - 服务器不可用时回退到本地 deterministic parser。
+3. DB API smoke：
+   - 扩展 Copilot query → candidate → confirm → audit 覆盖。
+   - 扩展 FamilyMemory confirm 后的 FamilyKnowledge list 与 audit 覆盖。
+   - 扩展 medication/triage/vaccine/growth Rule Evaluation API smoke，确保 App/Copilot 医疗/剂量路径只走 Rule Engine。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_features.py tests/test_android_native_skeleton.py tests/test_orchestrator.py tests/test_rules_admin_api.py -q
+make lint
+make typecheck
+make test
+# 当前沙盒无 DB/Mac Android SDK；api-db-smoke-test 与 assembleDebug 仍需用户本机环境复验。
+```
+
+**架构影响**：
+
+- 无架构变更。Copilot 仅产出候选，确认/持久化走现有 API 与 audit；剂量/分诊/疫苗/生长仍只经 Rule Engine；Android 保存仍先落本地 pending。
 
 ---
 

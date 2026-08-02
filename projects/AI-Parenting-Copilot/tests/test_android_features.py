@@ -10,6 +10,27 @@ from pathlib import Path
 ANDROID = Path("android/src")
 
 
+def test_quick_record_copilot_flow_uses_server_candidate_with_local_fallback() -> None:
+    source = (ANDROID / "features/quick_record/copilotFlow.ts").read_text()
+    native = (
+        Path("android/android/app/src/main/java/com/aiparentingcopilot/QuickRecordActivity.kt")
+        .read_text()
+    )
+
+    assert "fetchCopilotRecordCandidate" in source
+    assert "mapServerRecordCandidate" in source
+    assert "confirmCopilotRecordCandidate" in source
+    assert "createLocalEventFromCopilotText" in source
+    assert "/api/v1/copilot/query" in source
+    assert "/api/v1/copilot/record-candidates/confirm" in source
+    assert "buildRecordCandidate(text)" in source
+    assert "Parse text with Copilot and save locally" in native
+    assert "/api/v1/copilot/query" in native
+    assert "saveFallbackCandidate" in native
+    assert "Copilot error" in native
+    assert "insertPending" in native
+
+
 def test_today_view_model_displays_pending_sync_and_gray_devices() -> None:
     source = (ANDROID / "features/today/viewModel.ts").read_text()
 

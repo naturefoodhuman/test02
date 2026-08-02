@@ -94,6 +94,7 @@ docs-check:
 	@test -f firmware/esp32c6/platformio.ini
 	@test -f android/src/features/today/viewModel.ts
 	@test -f android/src/features/timeline/viewModel.ts
+	@test -f android/src/features/quick_record/copilotFlow.ts
 	@test -f android/src/features/alert_center/viewModel.ts
 	@test -f android/src/notification/fcm.ts
 	@test -f android/src/features/sleep_session/viewModel.ts
