@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-02 02:30:00
+# 创建时间（北京时间）：2026-08-02 05:22:00
 
 """APC-T049/T050/T051/T052/T053 Android feature static tests."""
 
@@ -77,5 +77,9 @@ def test_sleep_session_view_model_active_gate_and_roi_save() -> None:
     assert "resumeSleepSession" in source
     assert "endSleepSession" in source
     assert "fetchCameraEvents" in source
+    assert "fetchCameraShadowSummary" in source
+    assert "evaluateCameraShadow" in source
     assert "/api/v1/sleep-sessions/${sessionId}/roi" in source
     assert "/api/v1/sleep-sessions/${sessionId}/camera-events" in source
+    assert "/api/v1/sleep-sessions/${sessionId}/shadow-summary" in source
+    assert "/api/v1/camera-shadow/evaluate" in source

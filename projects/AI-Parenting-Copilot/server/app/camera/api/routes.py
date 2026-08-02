@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-02 04:10:00
+# 创建时间（北京时间）：2026-08-02 05:10:00
 
 """Camera and sleep session API routes."""
 
@@ -80,6 +80,14 @@ class CameraShadowEvaluateRequest(FusionEvaluateRequest):
 
 class CameraShadowEvaluateResponse(FusionEvaluateResponse):
     vlm: dict[str, object] | None = None
+
+
+class CameraShadowSummary(BaseModel):
+    session_id: str
+    event_count: int
+    shadow_count: int
+    kind_counts: dict[str, int] = Field(default_factory=dict)
+    clip_paths: list[str] = Field(default_factory=list)
 
 
 def _repo(request: Request) -> InMemorySleepSessionRepository | SQLAlchemySleepSessionRepository:
@@ -196,15 +204,37 @@ async def create_camera_event(
     return record
 
 
+async def _camera_events_by_session(session_id: str, request: Request) -> list[CameraEventRecord]:
+    db_session = getattr(request.state, "db_session", None)
+    if db_session is not None:
+        return await SQLAlchemyCameraEventRepository(db_session).list_by_session(session_id)
+    return [record for record in _dev_camera_events(request) if record.session_id == session_id]
+
+
 @router.get("/sleep-sessions/{session_id}/camera-events", response_model=list[CameraEventRecord])
 async def list_camera_events_by_session(
     session_id: str,
     request: Request,
 ) -> list[CameraEventRecord]:
-    db_session = getattr(request.state, "db_session", None)
-    if db_session is not None:
-        return await SQLAlchemyCameraEventRepository(db_session).list_by_session(session_id)
-    return [record for record in _dev_camera_events(request) if record.session_id == session_id]
+    return await _camera_events_by_session(session_id, request)
+
+
+@router.get("/sleep-sessions/{session_id}/shadow-summary", response_model=CameraShadowSummary)
+async def get_camera_shadow_summary(session_id: str, request: Request) -> CameraShadowSummary:
+    events = await _camera_events_by_session(session_id, request)
+    kind_counts: dict[str, int] = {}
+    clip_paths: list[str] = []
+    for event in events:
+        kind_counts[event.kind] = kind_counts.get(event.kind, 0) + 1
+        if event.clip_path:
+            clip_paths.append(event.clip_path)
+    return CameraShadowSummary(
+        session_id=session_id,
+        event_count=len(events),
+        shadow_count=sum(1 for event in events if event.kind in {"face_covered", "prone"}),
+        kind_counts=kind_counts,
+        clip_paths=clip_paths,
+    )
 
 
 @router.post("/camera-fusion/evaluate", response_model=FusionEvaluateResponse)

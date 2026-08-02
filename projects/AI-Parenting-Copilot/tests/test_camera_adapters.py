@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 07:15:00
+# 创建时间（北京时间）：2026-08-02 05:15:00
 
 """APC-T038 camera adapter mock tests."""
 
@@ -78,8 +78,13 @@ def test_camera_fusion_api_creates_shadow_camera_event() -> None:
         )
         listed = client.get("/api/v1/sleep-sessions/sleep-1/camera-events")
 
+    summary = client.get("/api/v1/sleep-sessions/sleep-1/shadow-summary")
+
     assert fused.status_code == 200
     assert fused.json()["decision"]["reason_code"] == "multi_signal_shadow_candidate"
     assert fused.json()["clip_plan"]["path"].endswith("sleep-1.mp4")
     assert fused.json()["camera_event"]["kind"] == "face_covered"
     assert listed.json()[0]["id"] == fused.json()["camera_event"]["id"]
+    assert summary.status_code == 200
+    assert summary.json()["shadow_count"] == 1
+    assert summary.json()["clip_paths"][0].endswith("sleep-1.mp4")

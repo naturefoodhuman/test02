@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 04:26:00
+创建时间（北京时间）：2026-08-02 05:30:00
 -->
 
 
@@ -122,6 +122,12 @@
 
 - 新增 `POST /api/v1/camera-shadow/evaluate`，组合 fusion decision、clip plan、camera_event 与 optional VLM shadow dispatch。
 - 默认 dry-run 安全返回，仍保持 shadow-mode，不产生强提醒/红色医疗告警。
+
+
+### 继续开发进展（Composite camera shadow / Android helpers）
+
+- 新增 composite camera shadow evaluate API 与 shadow-summary API。
+- Android SleepSession TS 增加 camera shadow summary/evaluate helpers。
 
 ### 继续开发进展（Camera VLM shadow API）
 

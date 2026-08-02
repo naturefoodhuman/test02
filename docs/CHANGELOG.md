@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 04:29:00
+创建时间（北京时间）：2026-08-02 05:30:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -107,6 +107,23 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 cd projects/AI-Parenting-Copilot
 python3 -m pytest tests/test_camera_shadow_pipeline.py tests/test_camera_adapters.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 179 passed, 8 deselected, 1 warning
+```
+
+---
+
+## [第 172 轮] 2026-08-02
+
+### 需求变动
+- **AI Parenting Copilot Camera/Android 推进**：新增 composite camera shadow evaluate API、shadow summary API、Android SleepSession shadow helpers。
+
+### 文件影响
+- 修改：camera API、Android sleep_session TS helper、tests、project docs、root CHANGELOG
+
+### 验证
+```bash
+cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
 # 179 passed, 8 deselected, 1 warning
 ```

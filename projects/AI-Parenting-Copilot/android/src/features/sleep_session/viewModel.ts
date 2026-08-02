@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-02 02:24:00
+// 创建时间（北京时间）：2026-08-02 05:20:00
 
 import { ApiClient } from '../../api/client';
 
@@ -22,6 +22,21 @@ export type CameraEventDTO = {
   kind: string;
   confidence?: number;
   clip_path?: string;
+};
+
+export type CameraShadowSummaryDTO = {
+  session_id: string;
+  event_count: number;
+  shadow_count: number;
+  kind_counts: Record<string, number>;
+  clip_paths: string[];
+};
+
+export type CameraShadowEvaluateDTO = {
+  decision: Record<string, unknown>;
+  clip_plan?: Record<string, unknown>;
+  camera_event?: CameraEventDTO;
+  vlm?: Record<string, unknown>;
 };
 
 export type SleepSessionViewModel = {
@@ -76,5 +91,31 @@ export async function saveROI(api: ApiClient, sessionId: string, roi: ROI): Prom
 
 export async function fetchCameraEvents(api: ApiClient, sessionId: string): Promise<CameraEventDTO[]> {
   const response = await api.get<CameraEventDTO[]>(`/api/v1/sleep-sessions/${sessionId}/camera-events`);
+  return response.data;
+}
+
+
+export async function fetchCameraShadowSummary(
+  api: ApiClient,
+  sessionId: string,
+): Promise<CameraShadowSummaryDTO> {
+  const response = await api.get<CameraShadowSummaryDTO>(`/api/v1/sleep-sessions/${sessionId}/shadow-summary`);
+  return response.data;
+}
+
+export async function evaluateCameraShadow(
+  api: ApiClient,
+  payload: {
+    camera_id: string;
+    session_id: string;
+    sleep_session_active: boolean;
+    camera_kind?: string;
+    camera_confidence?: number;
+    mmwave_abnormal_event?: string;
+    image_base64?: string;
+    dispatch_vlm?: boolean;
+  },
+): Promise<CameraShadowEvaluateDTO> {
+  const response = await api.post<CameraShadowEvaluateDTO>('/api/v1/camera-shadow/evaluate', payload);
   return response.data;
 }

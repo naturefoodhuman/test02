@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 04:25:00
+创建时间（北京时间）：2026-08-02 05:30:00
 -->
 
 
@@ -34,6 +34,27 @@
 
 ```bash
 python3 -m pytest tests/test_camera_shadow_pipeline.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 179 passed, 8 deselected, 1 warning
+```
+
+---
+
+## 第 76 轮 · 2026-08-02（Composite camera shadow + Android shadow helpers）
+
+**目标**：继续推进 Camera shadow 与 Android SleepSession 联动。
+
+**完成内容**：
+
+- 新增 `POST /api/v1/camera-shadow/evaluate`，组合 fusion decision、clip plan、camera_event 与 optional VLM shadow dry-run/dispatch。
+- 新增 `/sleep-sessions/{id}/shadow-summary` 聚合 camera events、shadow count、kind counts、clip paths。
+- Android Sleep Session TS 增加 `fetchCameraShadowSummary()` 与 `evaluateCameraShadow()`。
+- API DB smoke / camera tests / Android feature tests 扩展覆盖。
+
+**验证**：
+
+```bash
+make lint && make typecheck
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
 # 179 passed, 8 deselected, 1 warning
 ```

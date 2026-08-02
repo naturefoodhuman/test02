@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 04:28:00
+创建时间（北京时间）：2026-08-02 05:30:00
 -->
 
 
@@ -227,3 +227,5 @@ JSON / JSONL 使用 `_forge_trace` 字段。
 - Copilot confirm APIs: `POST /api/v1/copilot/record-candidates/confirm` and `/api/v1/copilot/family-memory/confirm` write DB/dev stores and audit.
 
 - Composite camera shadow API: `POST /api/v1/camera-shadow/evaluate` combines fusion + clip plan + optional VLM shadow dry-run/dispatch.
+
+- Camera shadow APIs: `POST /api/v1/camera-shadow/evaluate` and `GET /api/v1/sleep-sessions/{id}/shadow-summary`; Android TS helpers exist in `sleep_session/viewModel.ts`.

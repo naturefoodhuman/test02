@@ -333,6 +333,10 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert fusion.status_code == 200
             assert fusion.json()["decision"]["alert_level"] == "shadow"
             assert fusion.json()["camera_event"]["kind"] == "prone"
+            shadow_summary = client.get(f"/api/v1/sleep-sessions/{sleep_id}/shadow-summary")
+            assert shadow_summary.status_code == 200
+            assert shadow_summary.json()["event_count"] >= 2
+            assert "prone" in shadow_summary.json()["kind_counts"]
             end = client.post(f"/api/v1/sleep-sessions/{sleep_id}/end")
             assert end.status_code == 200
             assert end.json()["state"] == "ended"
