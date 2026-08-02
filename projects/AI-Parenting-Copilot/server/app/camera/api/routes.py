@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-01 12:08:00
+# 创建时间（北京时间）：2026-08-02 04:10:00
 
 """Camera and sleep session API routes."""
 
@@ -70,6 +70,16 @@ class VLMShadowDispatchResponse(BaseModel):
     mode: str
     dispatched: bool
     response_text: str | None = None
+
+
+class CameraShadowEvaluateRequest(FusionEvaluateRequest):
+    image_base64: str | None = None
+    vlm_prompt: str = "Analyze this nursery image in shadow mode. Do not alert."
+    dispatch_vlm: bool = False
+
+
+class CameraShadowEvaluateResponse(FusionEvaluateResponse):
+    vlm: dict[str, object] | None = None
 
 
 def _repo(request: Request) -> InMemorySleepSessionRepository | SQLAlchemySleepSessionRepository:
@@ -286,6 +296,45 @@ async def dispatch_camera_vlm_shadow(
         mode=result.mode,
         dispatched=result.dispatched,
         response_text=result.response_text,
+    )
+
+
+@router.post("/camera-shadow/evaluate", response_model=CameraShadowEvaluateResponse)
+async def evaluate_camera_shadow(
+    payload: CameraShadowEvaluateRequest,
+    request: Request,
+) -> CameraShadowEvaluateResponse:
+    fusion = await evaluate_camera_fusion(payload, request)
+    vlm_result: dict[str, object] | None = None
+    if payload.image_base64:
+        model_client = (
+            getattr(request.app.state, "model_client", None) if payload.dispatch_vlm else None
+        )
+        result = await VLMDispatcher(model_client, shadow_mode=True).dispatch(
+            image_base64=payload.image_base64,
+            prompt=payload.vlm_prompt,
+        )
+        vlm_result = {
+            "mode": result.mode,
+            "dispatched": result.dispatched,
+            "response_text": result.response_text,
+        }
+    await record_request_audit(
+        request,
+        action="camera.shadow_evaluate",
+        resource=f"sleep_session:{payload.session_id or 'none'}",
+        after={
+            "decision": fusion.decision,
+            "camera_event_id": fusion.camera_event.id if fusion.camera_event is not None else None,
+            "vlm": vlm_result,
+        },
+        db_only=True,
+    )
+    return CameraShadowEvaluateResponse(
+        decision=fusion.decision,
+        clip_plan=fusion.clip_plan,
+        camera_event=fusion.camera_event,
+        vlm=vlm_result,
     )
 
 

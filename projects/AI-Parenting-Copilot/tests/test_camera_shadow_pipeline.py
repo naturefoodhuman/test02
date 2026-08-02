@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-07-09 07:55:00
+# 创建时间（北京时间）：2026-08-02 04:12:00
 
 """APC-T039 camera shadow pipeline tests."""
 
@@ -102,3 +102,35 @@ def test_camera_vlm_shadow_api_can_dry_run_without_model_client() -> None:
     assert response.status_code == 200
     assert response.json()["mode"] == "shadow"
     assert response.json()["dispatched"] is False
+
+
+def test_camera_shadow_evaluate_api_combines_fusion_and_vlm_dry_run() -> None:
+    from fastapi.testclient import TestClient
+
+    from server.app.main import create_app
+    from server.app.settings import Settings
+
+    app = create_app(Settings(env="test"))
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/camera-shadow/evaluate",
+            json={
+                "camera_id": "camera-dev",
+                "session_id": "sleep-1",
+                "sleep_session_active": True,
+                "camera_kind": "face_covered",
+                "camera_confidence": 0.91,
+                "mmwave_abnormal_event": "apnea_candidate",
+                "image_base64": "ZmFrZQ==",
+                "dispatch_vlm": False,
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["decision"]["reason_code"] == "multi_signal_shadow_candidate"
+    assert response.json()["camera_event"]["kind"] == "face_covered"
+    assert response.json()["vlm"] == {
+        "mode": "shadow",
+        "dispatched": False,
+        "response_text": None,
+    }

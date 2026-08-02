@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 03:40:00
+创建时间（北京时间）：2026-08-02 04:28:00
 -->
 
 
@@ -106,7 +106,7 @@ projects/AI-Parenting-Copilot/android/
 ```bash
 cd projects/AI-Parenting-Copilot
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 178 passed, 8 deselected, 1 warning
+# 179 passed, 8 deselected, 1 warning
 make docs-check
 make lint
 make typecheck
@@ -225,3 +225,5 @@ JSON / JSONL 使用 `_forge_trace` 字段。
 - Health DB mode: `/api/v1/system/health/check` persists gray alerts via `SQLAlchemyAlertRepository` and audits `system.health_check`.
 
 - Copilot confirm APIs: `POST /api/v1/copilot/record-candidates/confirm` and `/api/v1/copilot/family-memory/confirm` write DB/dev stores and audit.
+
+- Composite camera shadow API: `POST /api/v1/camera-shadow/evaluate` combines fusion + clip plan + optional VLM shadow dry-run/dispatch.

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 03:35:00
+创建时间（北京时间）：2026-08-02 04:25:00
 -->
 
 
@@ -15,6 +15,28 @@
 - **最新继续开发**：新增 Android native critical alert/full-screen/quick-record fallback；新增 Android Gradle bootstrap；新增 Android Keystore/session + native SQLite pending event store；新增 system health real probes/check API。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `PARENTING_DATABASE__URL=... make test` → `161 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 76 轮 · 2026-08-02（Composite camera shadow evaluate API）
+
+**目标**：把 fusion 与 VLM shadow 两个步骤组合成单一 API，便于 App/Shadow harness 一次性完成 shadow decision、clip plan、camera_event 与 optional VLM dry-run/dispatch。
+
+**完成内容**：
+
+- 新增 `POST /api/v1/camera-shadow/evaluate`。
+- 复用 `evaluate_camera_fusion()` 生成 decision/camera_event/clip_plan。
+- 可选 `image_base64` + `dispatch_vlm` 触发 `VLMDispatcher`；默认 dry-run 安全返回。
+- 写 `camera.shadow_evaluate` audit（DB mode）。
+- `tests/test_camera_shadow_pipeline.py` 新增 composite API dry-run regression。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_camera_shadow_pipeline.py -q
+PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
+# 179 passed, 8 deselected, 1 warning
+```
 
 ---
 
@@ -38,7 +60,7 @@
 ```bash
 python3 -m pytest tests/test_camera_shadow_pipeline.py tests/test_camera_adapters.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 178 passed, 8 deselected, 1 warning
+# 179 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -61,7 +83,7 @@ PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432
 ```bash
 python3 -m pytest tests/test_android_features.py tests/test_android_skeleton.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 178 passed, 8 deselected, 1 warning
+# 179 passed, 8 deselected, 1 warning
 ```
 
 ---
@@ -91,7 +113,7 @@ make lint
 make typecheck
 python3 -m pytest tests/test_orchestrator.py -q
 PARENTING_DATABASE__URL="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting" make test
-# 178 passed, 8 deselected, 1 warning
+# 179 passed, 8 deselected, 1 warning
 ```
 
 ---
