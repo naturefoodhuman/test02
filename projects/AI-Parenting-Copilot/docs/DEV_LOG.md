@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 16:20:00
+创建时间（北京时间）：2026-08-02 16:40:00
 -->
 
 
@@ -12,9 +12,38 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation。
+- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+
+## 第 78 轮 · 2026-08-02（Native pending drain heartbeat hardening）
+
+**目标**：继续加固 Android native offline-first 同步链路，保证 drain 失败不会丢本地记录，并让 native fallback 与服务端 sync_state 保持一致。
+
+**完成内容**：
+
+- `PendingSyncDrainer` 对每条 pending event 的上传增加 exception 隔离；单条网络失败不会中断后续 drain，也不会 markSynced。
+- drain 完成后 best-effort 上报 `/api/v1/sync/heartbeat`，使用 SecureSession 中的 device/family 与当前 pending count。
+- heartbeat 失败不影响本地事件保存/同步状态，继续遵守 Android offline record must not be lost。
+- Static tests 覆盖 native drainer heartbeat contract。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_features.py -q
+# 12 passed
+make lint
+make typecheck
+make test
+# 180 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更；sync heartbeat 走既有 Sync API，失败不影响本地 pending 可靠性。
 
 ---
 

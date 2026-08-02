@@ -1,5 +1,5 @@
 // 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-// 创建时间（北京时间）：2026-08-01 15:56:00
+// 创建时间（北京时间）：2026-08-02 16:35:00
 
 package com.aiparentingcopilot
 
@@ -8,7 +8,7 @@ import org.json.JSONObject
 
 /** Drains native pending ObservationEvents to the server Events API. */
 class PendingSyncDrainer(
-    context: Context,
+    private val context: Context,
     private val apiClient: NativeApiClient,
 ) {
     private val store = LocalEventStore(context)
@@ -18,7 +18,12 @@ class PendingSyncDrainer(
         var succeeded = 0
         var failed = 0
         for (event in pending) {
-            val statusCode = apiClient.postJson("/api/v1/events", event.toServerJson().toString())
+            val statusCode = try {
+                apiClient.postJson("/api/v1/events", event.toServerJson().toString())
+            } catch (_: Exception) {
+                failed += 1
+                continue
+            }
             if (statusCode in 200..299) {
                 store.markSynced(event.eventId)
                 succeeded += 1
@@ -26,7 +31,22 @@ class PendingSyncDrainer(
                 failed += 1
             }
         }
+        reportHeartbeat(pendingCount = store.pendingCount())
         return NativeDrainResult(attempted = pending.size, succeeded = succeeded, failed = failed)
+    }
+
+    private fun reportHeartbeat(pendingCount: Int) {
+        val session = SecureSessionStore(context).load() ?: return
+        val deviceId = session.deviceId ?: return
+        val payload = JSONObject()
+            .put("client_id", deviceId)
+            .put("family_id", session.familyId)
+            .put("pending_count", pendingCount)
+        try {
+            apiClient.postJson("/api/v1/sync/heartbeat", payload.toString())
+        } catch (_: Exception) {
+            // Heartbeat is best-effort; never drop or mark local events based on heartbeat failure.
+        }
     }
 
     private fun LocalObservationEvent.toServerJson(): JSONObject {

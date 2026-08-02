@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 16:20:00
+创建时间（北京时间）：2026-08-02 16:40:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-02 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + Android Quick Record/Copilot/API smoke 继续开发
-**当前任务状态**：Android Quick Record Copilot text parse、本地 pending 保存、TS Copilot flow helper 与 DB API smoke 扩展已完成；`APC-T030/T048` 代码继续推进但仍等待生产规则审查/Android build/device 复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：Android Quick Record Copilot text parse、本地 pending 保存、native pending drain heartbeat、TS Copilot flow helper 与 DB API smoke 扩展已完成；`APC-T030/T048` 代码继续推进但仍等待生产规则审查/Android build/device 复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -118,6 +118,12 @@
 
 
 
+
+
+### 继续开发进展（Native pending drain heartbeat）
+
+- Native `PendingSyncDrainer` 上传 pending events 时逐条捕获网络/API 异常，失败事件保持 pending，不影响后续事件 drain。
+- drain 结束后上报 `/api/v1/sync/heartbeat`，同步 native fallback pending count 到服务端 sync_state；heartbeat 失败不影响本地可靠性。
 
 ### 继续开发进展（Quick Record Copilot flow / DB smoke）
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 16:20:00
+创建时间（北京时间）：2026-08-02 16:40:00
 -->
 
 
@@ -13,6 +13,37 @@
 - **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
 - **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；Camera/mmWave/Health/Scheduler/Backup/Android fallback 继续推进；`APC-T035`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+
+## [第 78 轮] 2026-08-02 — Native pending drain heartbeat hardening
+
+### 需求变动
+
+- 继续推进 Android native offline-first 同步可靠性：pending drain 逐条异常隔离，并在 drain 后 best-effort 上报 Sync heartbeat。
+
+### 文件影响
+
+修改：
+
+- `android/android/app/src/main/java/com/aiparentingcopilot/PendingSyncDrainer.kt`
+- `tests/test_android_native_skeleton.py`
+- project docs
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_features.py -q
+make lint
+make typecheck
+make test
+# 180 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；heartbeat 走既有 Sync API，失败不影响本地 pending 记录。
 
 ---
 

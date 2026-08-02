@@ -86,6 +86,8 @@ def test_android_native_local_event_store_supports_pending_sync_contract() -> No
 
     assert "NativeLocalEventBridge" in bridge
     assert "pendingSyncCount" in bridge
+    assert "/api/v1/sync/heartbeat" in pending_drainer
+    assert "reportHeartbeat" in pending_drainer
     assert "LoginActivity" in manifest
     assert "QuickRecordActivity" in manifest
     assert "PendingEventsActivity" in manifest
