@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 10:45:00
+创建时间（北京时间）：2026-08-03 23:10:00
 -->
 
 
@@ -10,9 +10,46 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T037`、`APC-T042`、`APC-T043`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
+- **最新完成任务**：`APC-T037`、`APC-T042`、`APC-T043`；Rule Review Packet 生成器已完成。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 83 轮] 2026-08-03 — Rule Review Packet generator
+
+### 需求变动
+
+- 继续推进 Vaccine/Growth 生产审查前置准备：新增 Rule Review Packet 生成器，输出 rule pack hash、golden-case pass/fail、人审 blocker 与 Markdown/JSON 人审包。
+
+### 文件影响
+
+新增：
+
+- `server/app/rule_engine/review_packet.py`
+- `server/scripts/generate_rule_review_packet.py`
+- `tests/test_rule_review_packet.py`
+
+修改：
+
+- `Makefile`
+- `docs/TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_rule_review_packet.py tests/test_vaccine_rules.py tests/test_growth_rules.py tests/test_medication_rules.py tests/test_triage_threshold_rules.py -q
+# 10 passed
+make rule-review-packet
+# review_status=pending_human_review
+```
+
+### 架构影响
+
+- 无架构变更；该工具只打包人审证据，不批准或改写规则决策。
 
 ---
 

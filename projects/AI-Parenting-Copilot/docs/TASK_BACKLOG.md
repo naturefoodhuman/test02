@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 10:45:00
+创建时间（北京时间）：2026-08-03 23:10:00
 -->
 
 # TASK_BACKLOG.md
@@ -759,7 +759,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现中国疫苗规则 P0：计划、逾期、已完成记录与 EvidencePolicy 版本化。
-- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests、`/api/v1/rules/evaluate/vaccine` 与 Android RuleEvaluationActivity 已完成；生产规则审查未完成）
+- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests、`/api/v1/rules/evaluate/vaccine`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；生产规则审查未完成）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4；`ENGINEERING_DESIGN.md` §13.2
 - **输出**：Vaccine RuleModule、规则包、golden tests
@@ -786,7 +786,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现 WHO 0–5 岁基础生长百分位计算与趋势提示规则。
-- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests、`/api/v1/rules/evaluate/growth` 与 Android RuleEvaluationActivity 已完成；完整 WHO 表验收未完成）
+- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests、`/api/v1/rules/evaluate/growth`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；完整 WHO 表验收未完成）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4
 - **输出**：Growth RuleModule、WHO 配置、golden tests
@@ -987,7 +987,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 P0 所需低/中安全 Copilot 外壳，调用 Rule Engine 并生成结构化解释。
-- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API、Android RuleEvaluationActivity、Android Quick Record Copilot text flow、DB API smoke 扩展与 Memory event_type_counts 断言修复已完成；T022/T023 生产规则审查待验收）
+- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API、Android RuleEvaluationActivity、Android Quick Record Copilot text flow、DB API smoke 扩展、Memory event_type_counts 断言修复与 Rule Review Packet 已完成；T022/T023 生产规则审查待验收）
 - **前置依赖**：APC-T020, APC-T022, APC-T023, APC-T028, APC-T029
 - **输入**：`ARCHITECTURE_FINAL.md` §11.4、§26.1
 - **输出**：P0 Copilot 实现与单测

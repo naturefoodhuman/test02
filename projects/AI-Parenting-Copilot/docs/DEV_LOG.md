@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 10:45:00
+创建时间（北京时间）：2026-08-03 23:10:00
 -->
 
 
@@ -10,11 +10,38 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：用户本机 `api-db-smoke-test` 复验通过后，`APC-T037/T042/T043` 标记 DONE；`APC-T036` 继续推进 Scheduler reminder alert bridge。
+- **最新完成**：用户本机 `api-db-smoke-test` 复验通过后，`APC-T037/T042/T043` 已 DONE；新增 Rule Review Packet 生成器，继续压缩 `APC-T022/T023` 人审成本。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge。
+- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge；Rule Review Packet 可输出 rule pack hash、golden case pass/fail 与人审 blocker。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 83 轮 · 2026-08-03（Rule Review Packet generator）
+
+**目标**：继续推进 `APC-T022/T023`，把 Vaccine/Growth 生产规则审查从“读源码”压缩为可交付的人审包，降低人工验收成本。
+
+**完成内容**：
+
+- 新增 `server/app/rule_engine/review_packet.py`：汇总 rule pack metadata、SHA256 hash、rule ids、source、人审 blocker 与 golden-case 运行结果。
+- 新增 `server/scripts/generate_rule_review_packet.py` 与 `make rule-review-packet`：输出 JSON + Markdown 到 `runtime/reports/`。
+- 覆盖所有 P0 rule domains：medication、triage、thresholds、vaccine、growth。
+- Vaccine/Growth 明确保留 `pending_human_review`，不伪造生产审查；packet 明确提示官方 CN 免疫规划审查、完整 WHO LMS 表导入/审查仍是 blocker。
+- 新增 `tests/test_rule_review_packet.py`，断言 golden cases 全通过、hash 存在、人审 blocker 存在、Markdown/JSON 可生成。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_rule_review_packet.py tests/test_vaccine_rules.py tests/test_growth_rules.py tests/test_medication_rules.py tests/test_triage_threshold_rules.py -q
+# 10 passed
+make rule-review-packet
+# review_status=pending_human_review
+```
+
+**架构影响**：
+
+- 无架构变更；Rule Review Packet 只做审查证据打包，不改变 Rule Engine 决策逻辑，不把 dev fixture 标记为 production approved。
 
 ---
 
