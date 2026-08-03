@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 23:28:00
+创建时间（北京时间）：2026-08-04 04:05:00
 -->
 
 
@@ -11,8 +11,46 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T037`、`APC-T042`、`APC-T043`；Rule Review Packet 生成器已完成。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator 已完成；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator 与 backup manifest verifier 已完成；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 85 轮] 2026-08-04 — Backup manifest verifier
+
+### 需求变动
+
+- 继续推进 Backup/Restore：新增 backup manifest verifier 与 `make backup-verify-dry-run`，在真实 NAS/restore drill 前验证 manifest、dump/media archive path、tar 安全路径并输出下一步命令。
+
+### 文件影响
+
+新增：
+
+- `server/app/backup/verification.py`
+- `server/scripts/verify_backup_manifest.py`
+- `tests/test_backup_verification.py`
+
+修改：
+
+- `Makefile`
+- `docs/TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_backup_verification.py tests/test_backup_tasks.py -q
+# 6 passed
+make backup-verify-dry-run
+make lint && make typecheck && make test
+# 190 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；仅增加备份 manifest 和 archive 静态验证。
 
 ---
 

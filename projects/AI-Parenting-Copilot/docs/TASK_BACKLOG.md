@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 23:28:00
+创建时间（北京时间）：2026-08-04 04:05:00
 -->
 
 # TASK_BACKLOG.md
@@ -1411,7 +1411,7 @@
 - **所属 Capability**：C18
 - **所属 Story**：S18
 - **目标**：实现数据库与媒体备份任务，提供 launchd plist 与恢复演练流程。
-- **状态**：BLOCKED（PG dump/media archive dry-run、restore drill planner/manifest、runbook/launchd plist/tests、launchd static validator 已完成；真实 pg_dump/NAS/restore drill 待验收）
+- **状态**：BLOCKED（PG dump/media archive dry-run、restore drill planner/manifest、manifest verifier、runbook/launchd plist/tests、launchd static validator 已完成；真实 pg_dump/NAS/restore drill 待验收）
 - **前置依赖**：APC-T003, APC-T042
 - **输入**：`ARCHITECTURE_FINAL.md` §24；`ENGINEERING_DESIGN.md` §2 M19
 - **输出**：Backup scripts/service/docs

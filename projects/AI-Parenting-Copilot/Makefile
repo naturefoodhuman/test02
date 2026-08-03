@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -88,8 +88,10 @@ docs-check:
 	@test -f server/app/scheduler/worker.py
 	@test -f server/app/backup/pg_dump_task.py
 	@test -f server/app/backup/restore_drill.py
+	@test -f server/app/backup/verification.py
 	@test -f server/app/ops/launchd_validator.py
 	@test -f server/scripts/mock_mmwave_publisher.py
+	@test -f server/scripts/verify_backup_manifest.py
 	@test -f tests/shadow/camera_mmwave_shadow_harness.py
 	@test -f tests/soak/locustfile.py
 	@test -f docs/RELEASE_CHECKLIST_P0.md
@@ -185,6 +187,10 @@ android-native-build:
 
 backup-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.pg_dump_task import PGDumpTask; from server.app.backup.media_archive import MediaArchiveTask; print(PGDumpTask().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting').shell_safe_command); print(MediaArchiveTask().plan().output_path)"
+
+backup-verify-dry-run: ensure-dev-deps
+	@$(PYTHON) -c "from server.app.backup.restore_drill import RestoreDrillPlanner; p=RestoreDrillPlanner(); m=p.manifest(pg_dump_path='runtime/backups/pg/latest.dump', media_archive_path='runtime/backups/media/latest.tar.gz'); path=p.write_manifest(m); print(path)"
+	@$(PYTHON) server/scripts/verify_backup_manifest.py $$(ls -t runtime/restore-drills/backup-manifest-*.json | head -1)
 
 restore-dry-run: ensure-dev-deps
 	@$(PYTHON) -c "from server.app.backup.restore_drill import RestoreDrillPlanner; plan=RestoreDrillPlanner().plan(database_url='postgresql://parenting:parenting@127.0.0.1:5432/parenting_restore', pg_dump_path='runtime/backups/pg/latest.dump', clean_before_restore=True); print(plan.shell_safe_command)"

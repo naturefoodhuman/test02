@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 23:28:00
+创建时间（北京时间）：2026-08-04 04:05:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-03 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + Android Quick Record/Copilot/API smoke 继续开发
-**当前任务状态**：用户本机 `api-db-smoke-test` 复验通过后 `APC-T037/T042/T043` 已 DONE；Android build 已通过；Scheduler create_alert reminder bridge、Camera ISAPI/Fregata HTTP bridge、Rule Review Packet generator 与 launchd static validator 已完成；`APC-T022/T023/T030/T036/T038/T039/T048` 继续推进但仍等待生产规则审查/device/PowerSync 等复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：用户本机 `api-db-smoke-test` 复验通过后 `APC-T037/T042/T043` 已 DONE；Android build 已通过；Scheduler create_alert reminder bridge、Camera ISAPI/Fregata HTTP bridge、Rule Review Packet generator、launchd static validator 与 backup manifest verifier 已完成；`APC-T022/T023/T030/T036/T038/T039/T048` 继续推进但仍等待生产规则审查/device/PowerSync 等复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -126,6 +126,11 @@
 
 - 用户本机 `./gradlew assembleDebug` 已成功，说明最新 Android native Kotlin 可构建。
 - 修复 `tests/integration/test_api_db_runtime.py` 中 Memory short_context 断言：DB smoke 实际包含 feeding、Copilot diaper 与 mmWave telemetry 事件，测试现在按业务实际分别断言三个计数。
+
+### 继续开发进展（Backup manifest verifier）
+
+- 新增 backup manifest verifier 与 `make backup-verify-dry-run`，可在真实 NAS/restore drill 前验证 manifest、dump/media archive path、tar 安全路径和归档 scope。
+- verifier 输出 `pg_restore --list`、`pg_restore --clean`、`tar -tzf` 下一步命令，便于用户 Mac 本地执行真实恢复演练。
 
 ### 继续开发进展（launchd static validator）
 

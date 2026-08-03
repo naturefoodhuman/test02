@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-01 13:10:00
+创建时间（北京时间）：2026-08-04 04:05:00
 -->
 
 # BACKUP_RESTORE_RUNBOOK —— PostgreSQL / Media 备份与恢复演练
@@ -27,6 +27,28 @@ make restore-dry-run
 
 ```text
 pg_restore --dbname postgresql://parenting:parenting@127.0.0.1:5432/parenting_restore --clean runtime/backups/pg/latest.dump
+```
+
+
+## 2.5 Manifest verification dry-run
+
+```bash
+make backup-verify-dry-run
+```
+
+该命令会生成 restore drill manifest，并验证：
+
+- manifest JSON 可读取；
+- `pg_dump_path` 使用 `.dump`；
+- `media_archive_path` 使用 `.tar.gz`；
+- 如实际 archive 存在，则 tar 成员必须只位于 `files/` / `thumbs/`，且不得包含绝对路径或 `..`。
+
+输出会包含真实恢复演练的下一步命令：
+
+```text
+pg_restore --list runtime/backups/pg/latest.dump
+pg_restore --dbname postgresql://parenting:parenting@127.0.0.1:5432/parenting_restore --clean runtime/backups/pg/latest.dump
+tar -tzf runtime/backups/media/latest.tar.gz
 ```
 
 ## 3. 真实备份建议流程
