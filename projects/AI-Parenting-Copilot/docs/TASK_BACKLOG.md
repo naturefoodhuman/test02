@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-02 16:52:00
+创建时间（北京时间）：2026-08-03 09:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -987,7 +987,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 P0 所需低/中安全 Copilot 外壳，调用 Rule Engine 并生成结构化解释。
-- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API、Android RuleEvaluationActivity、Android Quick Record Copilot text flow 与 DB API smoke 扩展已完成；T022/T023 生产规则审查待验收）
+- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API、Android RuleEvaluationActivity、Android Quick Record Copilot text flow、DB API smoke 扩展与 Memory event_type_counts 断言修复已完成；T022/T023 生产规则审查待验收）
 - **前置依赖**：APC-T020, APC-T022, APC-T023, APC-T028, APC-T029
 - **输入**：`ARCHITECTURE_FINAL.md` §11.4、§26.1
 - **输出**：P0 Copilot 实现与单测
@@ -1474,7 +1474,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现登录、token 保存、家庭/宝宝上下文、设备注册。
-- **状态**：BLOCKED（session reducer/authService TS flow/static tests、Android Keystore-backed SecureSessionStore/native bridge、native LoginActivity login+device registration 已完成；新增 native code 待用户 Mac `assembleDebug`/device 复验）
+- **状态**：BLOCKED（session reducer/authService TS flow/static tests、Android Keystore-backed SecureSessionStore/native bridge、native LoginActivity login+device registration 已完成；用户 Mac `assembleDebug` 已通过；device 登录/家庭切换复验待完成）
 - **前置依赖**：APC-T045, APC-T008
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§19
 - **输出**：Android Auth feature
@@ -1532,7 +1532,7 @@
 - **所属 Capability**：C20 Android 核心页面
 - **所属 Story**：S20 Quick Record、Today、Timeline、Alert Center
 - **目标**：实现大按钮快捷记录、计时器、语音文本候选与一次轻确认。
-- **状态**：BLOCKED（Quick Record candidate builder/local event payload TS/static tests、RN/TS Copilot flow helper、native QuickRecordActivity offline write + Copilot text parse → local pending save、PendingEventsActivity、NativeApiClient/PendingSyncDrainer 与 pending sync drain 已完成；新增 native code 待用户 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Quick Record candidate builder/local event payload TS/static tests、RN/TS Copilot flow helper、native QuickRecordActivity offline write + Copilot text parse → local pending save、PendingEventsActivity、NativeApiClient/PendingSyncDrainer 与 pending sync drain 已完成；用户 Android `assembleDebug` 已通过；device/offline roundtrip 复验待完成）
 - **前置依赖**：APC-T027, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §4.1、§3.2；`ENGINEERING_DESIGN.md` §7.1
 - **输出**：Quick Record feature
@@ -1561,7 +1561,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：展示 DerivedBabyState、统计、待办、告警、同步态、设备健康。
-- **状态**：BLOCKED（Today view model/static tests、fetchTodayServerSnapshot 与 native TodayActivity server health refresh 已完成；新增 native UI/TS API flow 待 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Today view model/static tests、fetchTodayServerSnapshot 与 native TodayActivity server health refresh 已完成；用户 Android `assembleDebug` 已通过；device UI/API flow 复验待完成）
 - **前置依赖**：APC-T016, APC-T035, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§22.5
 - **输出**：Today feature
@@ -1589,7 +1589,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：实现事件时间线、记录人/来源显示、编辑纠错、软删除撤销、重复提示。
-- **状态**：BLOCKED（Timeline view model/correction/delete/duplicate hint static tests、server fetch/correct/delete helpers 与 native TimelineActivity server events refresh 已完成；新增 native UI/TS API flow 待 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Timeline view model/correction/delete/duplicate hint static tests、server fetch/correct/delete helpers 与 native TimelineActivity server events refresh 已完成；用户 Android `assembleDebug` 已通过；device UI/API flow 复验待完成）
 - **前置依赖**：APC-T010, APC-T012, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §9.2、§3.2
 - **输出**：Timeline feature
@@ -1616,7 +1616,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：展示告警列表、证据链、确认、反馈。
-- **状态**：BLOCKED（Alert Center view model/ack/feedback TS flow/static tests、native AlertCenterActivity alerts refresh/ack drain 与 exception-safe ack retry 已完成；新增 native UI 待 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Alert Center view model/ack/feedback TS flow/static tests、native AlertCenterActivity alerts refresh/ack drain 与 exception-safe ack retry 已完成；用户 Android `assembleDebug` 已通过；device UI flow 复验待完成）
 - **前置依赖**：APC-T031, APC-T046
 - **输入**：`ARCHITECTURE_FINAL.md` §14、§3.2
 - **输出**：Alert Center feature
@@ -1673,7 +1673,7 @@
 - **所属 Capability**：C21
 - **所属 Story**：S21
 - **目标**：实现睡眠会话开始/暂停/结束、snapshot 展示、ROI 配置、影子事件查看。
-- **状态**：BLOCKED（Sleep Session view model/ROI save TS flow/static tests 与 native SleepSessionActivity start/pause/resume/end API calls 已完成；新增 native UI 待 Android `assembleDebug`/device 复验）
+- **状态**：BLOCKED（Sleep Session view model/ROI save TS flow/static tests 与 native SleepSessionActivity start/pause/resume/end API calls 已完成；用户 Android `assembleDebug` 已通过；device UI flow 复验待完成）
 - **前置依赖**：APC-T037, APC-T038, APC-T039
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§12.3
 - **输出**：Sleep Session feature

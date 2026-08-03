@@ -260,7 +260,10 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             assert memory.hard_facts["name"] == "DB Baby"
             assert memory.family_preferences["sleep.preference"] == {"value": "white_noise"}
             assert memory.behavior_baseline["feeding_24h_ml"] == 90
-            assert memory.short_context["event_type_counts"] == {"feeding": 1}
+            event_type_counts = memory.short_context["event_type_counts"]
+            assert event_type_counts["feeding"] == 1
+            assert event_type_counts["diaper"] == 1
+            assert event_type_counts["mmwave_telemetry"] == 1
 
             app.state.device_health_monitor = DeviceHealthMonitor(
                 [MockHealthProbe("camera", online=False)],
