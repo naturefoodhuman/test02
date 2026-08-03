@@ -11,6 +11,16 @@ search:
     max_chars_per_page: 8000
     engines_enabled: [github, arxiv, stackoverflow, hackernews, lobste.rs, wikipedia]
     engines_disabled: [google, brave, startpage, duckduckgo, bing, qwant, mojeek, yahoo, reddit, baidu]
+    # 场景化引擎预设 — 调用方按场景名选引擎组合,避免手写列表误用高风险引擎。
+    # wikidata 已于 2026-07-30 因 SPARQL 端点 403 移除,不在任何预设中。
+    # wikipedia 只做精确词条匹配,非全文搜索,故仅 knowledge/academic 场景含它。
+    engine_presets:
+      coding: [stackoverflow, github, mdn, hackernews, lobste.rs]
+      academic: [arxiv, semantic scholar, crossref, pubmed, wikipedia]
+      news: [hackernews, lobste.rs]
+      knowledge: [wikipedia]
+      packages: [npm, pypi, docker hub, github]
+      default: [github, arxiv, stackoverflow, hackernews, lobste.rs, wikipedia]
   fallback_tavily:
     enabled: true
     api_key_env: "TAVILY_API_KEY"

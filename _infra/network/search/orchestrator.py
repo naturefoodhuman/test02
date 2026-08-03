@@ -53,6 +53,16 @@ INTENT_TO_ENGINES = {
     "general": None,
 }
 
+# 意图 → 场景预设名 的映射,用于从 config/network.yaml 的 engine_presets
+# 加载引擎列表,避免在代码里硬编码(与 searxng_client.get_preset 对齐)。
+# 2026-07-30: wikidata 已从所有预设移除(SPARQL 端点 403)。
+INTENT_TO_PRESET = {
+    "coding": "coding",
+    "academic": "academic",
+    "news": "news",
+    "general": "default",
+}
+
 
 def detect_intent(query: str) -> str:
     """Simple deterministic intent detector. Rules first; no LLM dependency."""
@@ -144,8 +154,13 @@ class MultiSourceSearchOrchestrator(SearchProvider):
         all_results: List[SearchResult] = []
 
         # L1: intent-specific SearXNG route.
+        # 优先用 config/network.yaml 的 engine_presets(与 searxng_client 对齐),
+        # INTENT_TO_ENGINES 仅作向后兼容回退。
         try:
-            intent_engines = INTENT_TO_ENGINES.get(intent)
+            preset = INTENT_TO_PRESET.get(intent)
+            intent_engines = self.searxng.get_preset(preset) if preset else None
+            if not intent_engines:
+                intent_engines = INTENT_TO_ENGINES.get(intent)
             if intent_engines:
                 results = await self.searxng.search(query, max_results=max_results, engines=intent_engines)
             else:

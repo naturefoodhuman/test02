@@ -85,6 +85,17 @@ FORGE_REMOTE_MAX_TOKENS_CAP = int(os.getenv("FORGE_REMOTE_MAX_TOKENS", "16384"))
 FORGE_SORT_TOOLS_FOR_CACHE = _env_bool("FORGE_SORT_TOOLS_FOR_CACHE", True)
 FORGE_COUNT_TOKENS_DIVISOR = int(os.getenv("FORGE_COUNT_TOKENS_DIVISOR", "4"))
 
+# ── 上下文预算 guard（防上游 context 超长 400）──────────────────────────
+# 上游 GLM 5.2（NIM 平台）硬上限 202752 tokens；超长直接返回 400，且 400 不可重试
+# （RETRYABLE_STATUS_CODES 只含 429/502/503/504），重试只会把同样的超长请求再打一遍。
+# 故在转发前估算 messages token 数：达 SOFT（80%）结构化裁剪历史，达 HARD（95%）拒绝并提示 /compact。
+# 与 count_tokens 端点同口径（_json_bytes // FORGE_COUNT_TOKENS_DIVISOR）。
+FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "202752"))
+FORGE_CTX_SOFT_RATIO = float(os.getenv("FORGE_CTX_SOFT_RATIO", "0.80"))
+FORGE_CTX_HARD_RATIO = float(os.getenv("FORGE_CTX_HARD_RATIO", "0.95"))
+FORGE_CTX_KEEP_RECENT_TURNS = int(os.getenv("FORGE_CTX_KEEP_RECENT_TURNS", "8"))
+FORGE_CTX_TRUNC_TOOL_RESULT_CHARS = int(os.getenv("FORGE_CTX_TRUNC_TOOL_RESULT_CHARS", "2000"))
+
 FORGE_TOOL_SELECTION_ENABLED = _env_bool("FORGE_TOOL_SELECTION_ENABLED", True)
 FORGE_TOOL_SELECTION_THRESHOLD = int(os.getenv("FORGE_TOOL_SELECTION_THRESHOLD", "8"))
 FORGE_TOOL_SELECTION_MAX = int(os.getenv("FORGE_TOOL_SELECTION_MAX", "8"))
@@ -106,9 +117,16 @@ FORGE_SERIALIZE_LOCAL_PORTS = _env_bool("FORGE_SERIALIZE_LOCAL_PORTS", True)
 
 FORGE_LOCAL_RETRY_COUNT = int(os.getenv("FORGE_LOCAL_RETRY_COUNT", "0"))
 FORGE_REMOTE_RETRY_COUNT = int(os.getenv("FORGE_REMOTE_RETRY_COUNT", "2"))
-RETRYABLE_STATUS_CODES = {502, 503, 504}
+# 429 纳入可重试：上游限流通常是瞬时的，退避后重试可自愈，避免直接透传 504 给客户端。
+RETRYABLE_STATUS_CODES = {429, 502, 503, 504}
 
 FORGE_STREAM_PING_INTERVAL_SECONDS = float(os.getenv("FORGE_STREAM_PING_INTERVAL_SECONDS", "10"))
+# 流式路径在"尚未向客户端发出任何内容"时，对 429/502/503/504 的有限重试次数。
+# 一旦已发出正文（emitted_text=True）绝不重试（文档 §12），避免重复/错乱。
+FORGE_STREAM_REMOTE_RETRY_COUNT = int(os.getenv("FORGE_STREAM_REMOTE_RETRY_COUNT", "2"))
+
+# 429/503 退避封顶（秒），防止上游给出过大 Retry-After 导致请求长时间挂起。
+_RETRY_AFTER_CAP_SECONDS = 30.0
 
 _SYSTEM_REMINDER_RE = re.compile(r"<system-reminder>.*?</system-reminder>", re.DOTALL)
 _WORD_RE = re.compile(r"[a-zA-Z0-9_]+")
@@ -187,7 +205,7 @@ async def _release_inflight_lock(key: str):
 # RPM 限流
 # ============================================================
 class RPMGuard:
-    def __init__(self, max_rpm=35):
+    def __init__(self, max_rpm=15):
         self.max_rpm = max_rpm
         self.windows = {}
         self._lock = asyncio.Lock()
@@ -222,7 +240,14 @@ class RPMGuard:
         }
 
 
-rpm_guard = RPMGuard(max_rpm=int(os.getenv("FORGE_RPM_MAX", "35")))
+rpm_guard = RPMGuard(max_rpm=int(os.getenv("FORGE_RPM_MAX", "15")))
+
+# 429/502/503/504 触发重试的累计计数（流式+非流式合计），供 /stats 观测重试是否在生效。
+_retry_counters = {"429": 0, "502": 0, "503": 0, "504": 0}
+
+# 上下文预算 guard 计数，供 /stats 观测压缩是否在生效。
+_ctx_budget_counters = {"pass": 0, "compacted": 0, "rejected": 0}
+_ctx_budget_last = {"action": "pass", "est_before": 0, "est_after": 0}
 
 
 # ============================================================
@@ -522,6 +547,197 @@ def _json_bytes(v) -> int:
         return len(json.dumps(v, ensure_ascii=False).encode("utf-8"))
     except Exception:
         return 0
+
+
+# ============================================================
+# 上下文预算 guard：估算 + 结构化裁剪（纯函数，便于单测）
+# 口径与 /messages/count_tokens 端点一致：_json_bytes // FORGE_COUNT_TOKENS_DIVISOR。
+# ============================================================
+def _estimate_messages_tokens(messages) -> int:
+    """估算 messages 数组的 input token 数。与 count_tokens 端点同口径。"""
+    if not messages:
+        return 0
+    return max(1, _json_bytes(messages) // FORGE_COUNT_TOKENS_DIVISOR)
+
+
+def _msg_text_len(msg) -> int:
+    """单条 message 的可见文本字节数（用于裁剪时判断哪条最长）。"""
+    c = msg.get("content") if isinstance(msg, dict) else None
+    if c is None:
+        return 0
+    if isinstance(c, str):
+        return len(c)
+    if isinstance(c, list):
+        total = 0
+        for b in c:
+            if isinstance(b, dict):
+                if b.get("type") == "text":
+                    total += len(str(b.get("text", "")))
+                elif b.get("type") == "tool_result":
+                    rc = b.get("content", "")
+                    if isinstance(rc, list):
+                        rc = "".join(
+                            x.get("text", "") if isinstance(x, dict) else str(x) for x in rc
+                        )
+                    total += len(str(rc))
+        return total
+    return 0
+
+
+def _truncate_tool_result_content(content, max_chars: int):
+    """截断 tool_result 的 content 到 max_chars，加截断标记。"""
+    marker = "\n…[forge:tool_result truncated]"
+    if isinstance(content, str):
+        if len(content) <= max_chars:
+            return content
+        return content[:max_chars] + marker
+    if isinstance(content, list):
+        out = []
+        kept = 0
+        for b in content:
+            if isinstance(b, dict) and b.get("type") == "text":
+                txt = str(b.get("text", ""))
+                if kept + len(txt) > max_chars:
+                    remain = max(0, max_chars - kept)
+                    if remain:
+                        out.append({"type": "text", "text": txt[:remain] + marker})
+                    return out
+                out.append(b)
+                kept += len(txt)
+            else:
+                out.append(b)
+        return out
+    return content
+
+
+def _compact_messages(messages: list, keep_recent_turns: int, trunc_tool_result_chars: int) -> list:
+    """结构化裁剪历史 messages，降低 token 数。
+
+    策略（不调 LLM，零额外 token 成本）：
+      - 不删除：所有 system 消息、最近 keep_recent_turns*2 条 user/assistant、
+        以及任何含 tool_calls / tool_use_id 的消息（保证工具调用配对完整）。
+      - 不截断（原样保留）：最近 keep_recent_turns*2 条（保证最新上下文完整）。
+      - 可截断 content：上述"不删除"之外的历史消息——
+        中间历史 assistant 的长文本输出（保留首尾骨架）、tool_result 的大块内容
+        （截断到 trunc_tool_result_chars）。含 tool_call_id 的消息保留结构但截断其 content。
+    返回裁剪后的新列表（不修改入参）。
+    """
+    if not isinstance(messages, list) or len(messages) <= 2:
+        return list(messages or [])
+
+    n = len(messages)
+    # no_delete: 不整条删除（system / 最近轮 / 含工具配对）
+    # no_truncate: 原样保留不截断（仅最近轮，保证最新上下文完整）
+    no_delete = set()
+    for i, m in enumerate(messages):
+        if isinstance(m, dict) and m.get("role") == "system":
+            no_delete.add(i)
+    tail_start = max(0, n - keep_recent_turns * 2)
+    no_truncate = set(range(tail_start, n))
+    no_delete |= no_truncate
+    for i, m in enumerate(messages):
+        if not isinstance(m, dict):
+            continue
+        if m.get("tool_calls") or m.get("tool_call_id"):
+            no_delete.add(i)
+        c = m.get("content")
+        if isinstance(c, list):
+            for b in c:
+                if isinstance(b, dict) and b.get("type") in ("tool_use", "tool_result"):
+                    no_delete.add(i)
+                    break
+
+    def _truncate_msg(m):
+        """对单条消息做 content 截断，返回 (new_msg, changed)。"""
+        if not isinstance(m, dict):
+            return m, False
+        role = m.get("role")
+        c = m.get("content")
+        # OpenAI 格式 tool_result（role=tool）截断 content
+        if role == "tool" and isinstance(c, str) and len(c) > trunc_tool_result_chars:
+            m2 = dict(m)
+            m2["content"] = c[:trunc_tool_result_chars] + "\n…[forge:tool_result truncated]"
+            return m2, True
+        # Anthropic 格式：content 列表里的 tool_result 截断
+        if isinstance(c, list):
+            new_blocks = []
+            changed = False
+            for b in c:
+                if isinstance(b, dict) and b.get("type") == "tool_result":
+                    rc = b.get("content", "")
+                    if _msg_text_len({"content": rc}) > trunc_tool_result_chars:
+                        nb = dict(b)
+                        nb["content"] = _truncate_tool_result_content(rc, trunc_tool_result_chars)
+                        new_blocks.append(nb)
+                        changed = True
+                        continue
+                new_blocks.append(b)
+            if changed:
+                m2 = dict(m)
+                m2["content"] = new_blocks
+                return m2, True
+        # assistant 长文本输出：保留首尾骨架
+        if role == "assistant" and isinstance(c, str) and len(c) > 2000:
+            m2 = dict(m)
+            m2["content"] = c[:500] + "\n…[forge:assistant output truncated]…\n" + c[-200:]
+            return m2, True
+        return m, False
+
+    out = []
+    for i, m in enumerate(messages):
+        if i in no_delete:
+            # 不删除，但若不在最近轮则可截断 content
+            if i in no_truncate:
+                out.append(m)
+            else:
+                new_m, _ = _truncate_msg(m)
+                out.append(new_m)
+            continue
+        # 可删除的中间历史消息：截断后保留（不直接删，避免对话断裂）
+        new_m, _ = _truncate_msg(m)
+        out.append(new_m)
+    return out
+
+
+def _apply_context_budget(forward_payload: dict):
+    """转发前应用上下文预算 guard。原地修改 forward_payload["messages"]。
+
+    返回 (action, est_before, est_after, hint)：
+      action ∈ {"pass", "compacted", "rejected"}
+      hint  ∈ 非空时为给用户的提示文本（compacted/rejected 时）
+    达 SOFT(80%) 触发结构化裁剪；达 HARD(95%) 拒绝并提示 /compact。
+    """
+    msgs = forward_payload.get("messages")
+    if not isinstance(msgs, list) or not msgs:
+        return ("pass", 0, 0, "")
+
+    est_before = _estimate_messages_tokens(msgs)
+    soft = int(FORGE_CTX_MAX_TOKENS * FORGE_CTX_SOFT_RATIO)
+    hard = int(FORGE_CTX_MAX_TOKENS * FORGE_CTX_HARD_RATIO)
+
+    if est_before < soft:
+        return ("pass", est_before, est_before, "")
+
+    # 已超 HARD：先尝试裁剪，裁剪后仍超 HARD 才拒绝（给一次自愈机会）
+    compacted = _compact_messages(msgs, FORGE_CTX_KEEP_RECENT_TURNS, FORGE_CTX_TRUNC_TOOL_RESULT_CHARS)
+    est_after = _estimate_messages_tokens(compacted)
+
+    if est_before >= hard and est_after >= hard:
+        hint = (
+            f"上下文已达上游上限的 {int(FORGE_CTX_HARD_RATIO*100)}%"
+            f"（约 {est_after}/{FORGE_CTX_MAX_TOKENS} tokens），即使压缩后仍超限。"
+            f"请手动 /compact 或减少上下文后再试。"
+        )
+        return ("rejected", est_before, est_after, hint)
+
+    # 软阈值触发，或超 HARD 但裁剪后已降到 HARD 以下：采用裁剪结果
+    forward_payload["messages"] = compacted
+    hint = (
+        f"⚠️ 上下文已达上游上限的 {int(FORGE_CTX_SOFT_RATIO*100)}%"
+        f"（约 {est_before}/{FORGE_CTX_MAX_TOKENS} tokens），已自动压缩历史消息"
+        f"（{est_before}→{est_after}）。建议手动 /compact 以获得更好的语义压缩质量。"
+    )
+    return ("compacted", est_before, est_after, hint)
 
 
 # ============================================================
@@ -831,6 +1047,28 @@ def ensure_server(port: int) -> bool:
 
 
 # ============================================================
+# 退避辅助：从上游 429/503 响应读 Retry-After，无则指数退避，统一封顶。
+# ============================================================
+def _retry_after_seconds_from_value(ra, default: float) -> float:
+    """从已提取的 Retry-After 头值计算退避秒数；非法或缺失返回 default。封顶 _RETRY_AFTER_CAP_SECONDS。"""
+    if ra:
+        try:
+            return min(float(ra), _RETRY_AFTER_CAP_SECONDS)
+        except (ValueError, TypeError):
+            pass  # HTTP-date 格式不解析，走 default
+    return min(default, _RETRY_AFTER_CAP_SECONDS)
+
+
+def _retry_after_seconds(resp, default: float) -> float:
+    """从 httpx 响应对象读 Retry-After 头；无则返回 default。"""
+    try:
+        ra = resp.headers.get("Retry-After") or resp.headers.get("retry-after")
+    except Exception:
+        ra = None
+    return _retry_after_seconds_from_value(ra, default)
+
+
+# ============================================================
 # 非流式请求转发（含重试策略，Patch B，抽成独立函数便于单测）
 # ============================================================
 async def _forward_with_retries(target_url: str, forward_payload: dict, headers: dict,
@@ -856,8 +1094,11 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
                 break
 
             logger.warning(f"⚠️ 可重试状态码 {resp.status_code}，第 {attempt + 1}/{max_attempts} 次")
+            _retry_counters[str(resp.status_code)] = _retry_counters.get(str(resp.status_code), 0) + 1
             if attempt < max_attempts - 1:
-                await asyncio.sleep(min(1.5 * (attempt + 1), 5))
+                wait = _retry_after_seconds(resp, default=min(1.5 * (attempt + 1), 5))
+                logger.info(f"   退避 {wait:.1f}s 后重试")
+                await asyncio.sleep(wait)
 
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError) as e:
             last_exception = f"connect_error: {e}"
@@ -905,7 +1146,13 @@ async def _stream_line_producer(target_url, forward_payload, headers, port_ctx, 
             async with http_client.stream("POST", target_url, json=forward_payload, headers=headers) as resp:
                 if resp.status_code != 200:
                     err_body = (await resp.aread()).decode("utf-8", errors="ignore")
-                    await queue.put(("http_error", f"{resp.status_code}: {err_body}"))
+                    # 附带状态码 + Retry-After，供上层在"未发内容"时按可重试状态码有限重试。
+                    ra = resp.headers.get("Retry-After") or resp.headers.get("retry-after")
+                    await queue.put(("http_error", {
+                        "status": resp.status_code,
+                        "body": err_body,
+                        "retry_after": ra,
+                    }))
                     return
                 async for line in resp.aiter_lines():
                     if line:
@@ -948,6 +1195,18 @@ async def forge_status():
         "retry": {
             "local_retry_count": FORGE_LOCAL_RETRY_COUNT,
             "remote_retry_count": FORGE_REMOTE_RETRY_COUNT,
+            "stream_remote_retry_count": FORGE_STREAM_REMOTE_RETRY_COUNT,
+            "retryable_status_codes": sorted(RETRYABLE_STATUS_CODES),
+            "retry_counters": dict(_retry_counters),
+        },
+        "context_budget": {
+            "max_tokens": FORGE_CTX_MAX_TOKENS,
+            "soft_ratio": FORGE_CTX_SOFT_RATIO,
+            "hard_ratio": FORGE_CTX_HARD_RATIO,
+            "keep_recent_turns": FORGE_CTX_KEEP_RECENT_TURNS,
+            "trunc_tool_result_chars": FORGE_CTX_TRUNC_TOOL_RESULT_CHARS,
+            "counters": dict(_ctx_budget_counters),
+            "last": dict(_ctx_budget_last),
         },
         "routing": {
             "allow_unknown_model_fallback": FORGE_ALLOW_UNKNOWN_MODEL_FALLBACK,
@@ -1127,6 +1386,43 @@ async def smart_gateway(request: Request, path: str):
         forward_payload["max_tokens"] = _bounded_max_tokens(
             forward_payload.get("max_tokens", def_max), def_max, cap)
 
+    # ── 上下文预算 guard：转发前估算 messages token 数，防上游超长 400 ──
+    # 400 不在 RETRYABLE_STATUS_CODES 内，重试无效；故在源头拦截。
+    # 达 SOFT(80%) 结构化裁剪历史，达 HARD(95%) 裁剪后仍超限则拒绝并提示 /compact。
+    _ctx_action, _ctx_est_before, _ctx_est_after, _ctx_hint = _apply_context_budget(forward_payload)
+    _ctx_budget_counters[_ctx_action] = _ctx_budget_counters.get(_ctx_action, 0) + 1
+    _ctx_budget_last.update(
+        {"action": _ctx_action, "est_before": _ctx_est_before, "est_after": _ctx_est_after}
+    )
+    if _ctx_action == "rejected":
+        # 裁剪后仍超 HARD：直接拒绝，避免 400 透传 + 无意义重试
+        logger.error(
+            f"🛑 [{request_id}] context budget rejected: "
+            f"{_ctx_est_before}→{_ctx_est_after}/{FORGE_CTX_MAX_TOKENS} tokens"
+        )
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "type": "context_too_large",
+                "message": _ctx_hint,
+                "est_tokens": _ctx_est_after,
+                "max_context_tokens": FORGE_CTX_MAX_TOKENS,
+            },
+        )
+    if _ctx_action == "compacted":
+        logger.warning(
+            f"🗜️ [{request_id}] context budget compacted: "
+            f"{_ctx_est_before}→{_ctx_est_after}/{FORGE_CTX_MAX_TOKENS} tokens"
+        )
+        # 把提示注入 system message（Anthropic 客户端会显示给用户），不破坏对话结构
+        _compact_hint_msg = {
+            "role": "system",
+            "content": _ctx_hint,
+        }
+        msgs_now = forward_payload.get("messages")
+        if isinstance(msgs_now, list):
+            forward_payload["messages"] = [_compact_hint_msg] + msgs_now
+
     # ============ 流式响应 ============
     if is_anthropic and forward_payload.get("stream"):
         await tracker.update(request_id, status="connecting")
@@ -1175,85 +1471,127 @@ async def smart_gateway(request: Request, path: str):
             usage_output = 0
             stream_error = None
 
-            queue = asyncio.Queue()
             port_ctx = _local_port_guard(target_port) if (not is_remote) else _NullContext()
-            producer = asyncio.create_task(
-                _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue)
-            )
+            stream_attempts = (FORGE_STREAM_REMOTE_RETRY_COUNT + 1) if is_remote else 1
 
             try:
-                await tracker.update(request_id, status="generating")
+                for _stream_attempt in range(stream_attempts):
+                    queue = asyncio.Queue()
+                    producer = asyncio.create_task(
+                        _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue)
+                    )
+                    _stream_retry_pending = False
 
-                while True:
                     try:
-                        kind, item = await asyncio.wait_for(
-                            queue.get(), timeout=FORGE_STREAM_PING_INTERVAL_SECONDS
-                        )
-                    except asyncio.TimeoutError:
-                        yield _anthropic_sse("ping", {"type": "ping"})
-                        await tracker.heartbeat(request_id, 0)
+                        await tracker.update(request_id, status="generating")
+
+                        while True:
+                            try:
+                                kind, item = await asyncio.wait_for(
+                                    queue.get(), timeout=FORGE_STREAM_PING_INTERVAL_SECONDS
+                                )
+                            except asyncio.TimeoutError:
+                                yield _anthropic_sse("ping", {"type": "ping"})
+                                await tracker.heartbeat(request_id, 0)
+                                continue
+
+                            if kind == "eof":
+                                break
+                            if kind in ("http_error", "exception"):
+                                # 连接期错误：可重试状态码且尚未发任何内容时，有限重试。
+                                # 一旦 emitted_text/tool_calls_data 已有内容，绝不重试（文档 §12）。
+                                if (
+                                    kind == "http_error"
+                                    and isinstance(item, dict)
+                                    and item.get("status") in RETRYABLE_STATUS_CODES
+                                    and not emitted_text
+                                    and not tool_calls_data
+                                    and _stream_attempt < stream_attempts - 1
+                                ):
+                                    status = item.get("status")
+                                    _retry_counters[str(status)] = _retry_counters.get(str(status), 0) + 1
+                                    wait = _retry_after_seconds_from_value(
+                                        item.get("retry_after"),
+                                        default=min(1.5 * (_stream_attempt + 1), 5),
+                                    )
+                                    logger.warning(
+                                        f"⚠️ 流式上游 {status}，未发内容，"
+                                        f"第 {_stream_attempt + 1}/{stream_attempts} 次，退避 {wait:.1f}s 重试"
+                                    )
+                                    await asyncio.sleep(wait)
+                                    _stream_retry_pending = True
+                                    break
+                                stream_error = item
+                                break
+
+                            line = item
+                            raw_lines.append(line)
+                            await tracker.heartbeat(request_id, len(line.encode("utf-8", "ignore")))
+                            if not line.startswith("data:"):
+                                continue
+                            raw = line[5:].strip()
+                            if raw == "[DONE]":
+                                continue
+                            try:
+                                chunk = json.loads(raw)
+                            except Exception:
+                                continue
+
+                            usage_chunk = chunk.get("usage")
+                            if isinstance(usage_chunk, dict):
+                                usage_output = usage_chunk.get("completion_tokens", usage_output)
+
+                            for choice in chunk.get("choices", []):
+                                fr = choice.get("finish_reason")
+                                if fr:
+                                    finish_reason = fr
+                                delta = choice.get("delta", {}) or {}
+
+                                text = delta.get("content")
+                                if text:
+                                    if not emitted_text:
+                                        yield _anthropic_sse("content_block_start", {
+                                            "type": "content_block_start", "index": 0,
+                                            "content_block": {"type": "text", "text": ""},
+                                        })
+                                        emitted_text = True
+                                    text_content += text
+                                    yield _anthropic_sse("content_block_delta", {
+                                        "type": "content_block_delta", "index": 0,
+                                        "delta": {"type": "text_delta", "text": text},
+                                    })
+
+                                tc_list = delta.get("tool_calls")
+                                if tc_list:
+                                    for tc in tc_list:
+                                        idx = tc.get("index", 0)
+                                        func = tc.get("function", {}) or {}
+                                        if idx not in tool_calls_data:
+                                            raw_id = tc.get("id") or f"call_{uuid.uuid4().hex[:8]}"
+                                            tool_calls_data[idx] = {
+                                                "id": _to_anthropic_tool_id(raw_id),
+                                                "name": "", "arguments": "",
+                                            }
+                                        entry = tool_calls_data[idx]
+                                        if tc.get("id"):
+                                            entry["id"] = _to_anthropic_tool_id(tc["id"])
+                                        entry["name"] += str(func.get("name") or "")
+                                        entry["arguments"] += str(func.get("arguments") or "")
+
+                    finally:
+                        if not producer.done():
+                            producer.cancel()
+                            with contextlib.suppress(asyncio.CancelledError):
+                                await producer
+
+                    if _stream_retry_pending:
+                        # 清空本轮残留，进入下一次 for 迭代重新建连
+                        raw_lines = []
                         continue
+                    # 正常 eof、不可重试错误、或已发内容后断流：不再重试
+                    break
 
-                    if kind == "eof":
-                        break
-                    if kind in ("http_error", "exception"):
-                        stream_error = item
-                        break
-
-                    line = item
-                    raw_lines.append(line)
-                    await tracker.heartbeat(request_id, len(line.encode("utf-8", "ignore")))
-                    if not line.startswith("data:"):
-                        continue
-                    raw = line[5:].strip()
-                    if raw == "[DONE]":
-                        continue
-                    try:
-                        chunk = json.loads(raw)
-                    except Exception:
-                        continue
-
-                    usage_chunk = chunk.get("usage")
-                    if isinstance(usage_chunk, dict):
-                        usage_output = usage_chunk.get("completion_tokens", usage_output)
-
-                    for choice in chunk.get("choices", []):
-                        fr = choice.get("finish_reason")
-                        if fr:
-                            finish_reason = fr
-                        delta = choice.get("delta", {}) or {}
-
-                        text = delta.get("content")
-                        if text:
-                            if not emitted_text:
-                                yield _anthropic_sse("content_block_start", {
-                                    "type": "content_block_start", "index": 0,
-                                    "content_block": {"type": "text", "text": ""},
-                                })
-                                emitted_text = True
-                            text_content += text
-                            yield _anthropic_sse("content_block_delta", {
-                                "type": "content_block_delta", "index": 0,
-                                "delta": {"type": "text_delta", "text": text},
-                            })
-
-                        tc_list = delta.get("tool_calls")
-                        if tc_list:
-                            for tc in tc_list:
-                                idx = tc.get("index", 0)
-                                func = tc.get("function", {}) or {}
-                                if idx not in tool_calls_data:
-                                    raw_id = tc.get("id") or f"call_{uuid.uuid4().hex[:8]}"
-                                    tool_calls_data[idx] = {
-                                        "id": _to_anthropic_tool_id(raw_id),
-                                        "name": "", "arguments": "",
-                                    }
-                                entry = tool_calls_data[idx]
-                                if tc.get("id"):
-                                    entry["id"] = _to_anthropic_tool_id(tc["id"])
-                                entry["name"] += str(func.get("name") or "")
-                                entry["arguments"] += str(func.get("arguments") or "")
-
+                # for 循环结束：所有重试耗尽或正常退出。stream_error 收尾与 fallback 在此处理。
                 if stream_error:
                     logger.error(f"❌ 后端流式错误: {stream_error}")
                     if not emitted_text and not tool_calls_data:
@@ -1298,16 +1636,16 @@ async def smart_gateway(request: Request, path: str):
                                     "name": func.get("name", ""),
                                     "arguments": func.get("arguments", "") or "",
                                 }
-                        if text_content and not emitted_text:
-                            yield _anthropic_sse("content_block_start", {
-                                "type": "content_block_start", "index": 0,
-                                "content_block": {"type": "text", "text": ""},
-                            })
-                            yield _anthropic_sse("content_block_delta", {
-                                "type": "content_block_delta", "index": 0,
-                                "delta": {"type": "text_delta", "text": text_content},
-                            })
-                            emitted_text = True
+                    if text_content and not emitted_text:
+                        yield _anthropic_sse("content_block_start", {
+                            "type": "content_block_start", "index": 0,
+                            "content_block": {"type": "text", "text": ""},
+                        })
+                        yield _anthropic_sse("content_block_delta", {
+                            "type": "content_block_delta", "index": 0,
+                            "delta": {"type": "text_delta", "text": text_content},
+                        })
+                        emitted_text = True
 
                 if emitted_text:
                     yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
@@ -1361,10 +1699,6 @@ async def smart_gateway(request: Request, path: str):
                 await tracker.finish(request_id, success=False)
                 yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": str(exc)}})
             finally:
-                if not producer.done():
-                    producer.cancel()
-                    with contextlib.suppress(asyncio.CancelledError):
-                        await producer
                 await asyncio.sleep(0.1)
                 await tracker.remove(request_id)
 

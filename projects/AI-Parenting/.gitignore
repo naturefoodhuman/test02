@@ -1,0 +1,83 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-02 00:00:00
+
+# ============================================================
+# AI Parenting Copilot — .gitignore
+# 铁律（APC-T001 / ENGINEERING_DESIGN §14）：
+#   - runtime/、.env、真实密钥、媒体、日志一律不入库。
+#   - 不提交任何真实家庭数据 / 真实设备凭据 / 真实 WiFi·MQTT 密码。
+# ============================================================
+
+# ---- 运行时产物（本地优先：媒体/日志/DB/密钥/RAG 全部留本机）----
+runtime/
+!runtime/.gitkeep
+
+# ---- 环境变量与密钥 ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+fcm-service-account.json
+runtime/secrets/
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# ---- 虚拟环境 / uv ----
+.uv-cache/
+
+# ---- IDE / 编辑器 ----
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# ---- Android / Node ----
+android/node_modules/
+android/.expo/
+android/dist/
+android/web-build/
+android/android/.gradle/
+android/android/app/build/
+android/android/build/
+android/android/app/release/
+*.apk
+*.aab
+*.keystore
+!*.keystore.example
+
+# ---- 固件 PlatformIO ----
+firmware/esp32c6/.pio/
+firmware/esp32c6/.vscode/
+firmware/esp32c6/.pioenvs/
+
+# ---- 媒体（绝不出局域网，更不入库）----
+*.mp4
+*.mov
+*.m4a
+*.opus
+*.wav
+!tests/fixtures/*.mp4
+!tests/fixtures/*.wav
+
+# ---- 备份产物 ----
+*.dump
+*.sql.gz

@@ -23,9 +23,12 @@ logger = get_logger("network.search.searxng")
 # healthy: github / arxiv / stackoverflow / hackernews / lobste.rs
 # avoid for default routing on current proxy: bing / qwant / mojeek / reddit / DDG / Google / Brave / Startpage.
 # Wikipedia is kept as a knowledge/health engine but not treated as broad web search.
+# 2026-07-30: wikidata removed — its startup SPARQL probe (query.wikidata.org)
+# returns HTTP 403 under the current proxy and fails engine init. See
+# docker/searxng/settings.yml for the matching server-side removal.
 ENGINE_TIERS: dict[str, list[str]] = {
     "tier1_stable": ["github", "arxiv", "hackernews", "lobste.rs", "stackoverflow"],
-    "tier2_knowledge": ["wikipedia", "wikidata"],
+    "tier2_knowledge": ["wikipedia"],
     "tier3_academic": ["crossref", "pubmed", "semantic scholar"],
     "tier4_general_api_trigger": [],
     "tier5_risky": [],
@@ -64,8 +67,34 @@ class SearXNGProvider(SearchProvider):
         self.timeout = getattr(cfg, "timeout_seconds", 30)
         self.engines_enabled = list(getattr(cfg, "engines_enabled", []) or [])
         self.engines_disabled = list(getattr(cfg, "engines_disabled", ["google", "brave", "startpage"]) or [])
+        self.engine_presets = dict(getattr(cfg, "engine_presets", {}) or {})
         self._client = client
         self.breaker = get_global_breaker()
+
+    def get_preset(self, preset: str) -> list[str]:
+        """按场景名返回引擎列表,过滤掉被禁用的引擎。
+
+        预设来源:config/network.yaml 的 search.searxng.engine_presets,
+        缺省回退到 schemas.SearXNGConfig 的默认预设。
+        """
+        engines = self.engine_presets.get(preset) or self.engine_presets.get("default") or []
+        return [e for e in engines if e not in self.engines_disabled]
+
+    async def search_with_preset(
+        self,
+        query: str,
+        preset: str = "default",
+        max_results: int = 10,
+    ) -> List[SearchResult]:
+        """按场景预设搜索 (coding/academic/news/knowledge/packages/default)。
+
+        等价于 search(query, engines=get_preset(preset)),但避免调用方
+        硬编码引擎列表。预设不存在时回退到 default 预设。
+        """
+        engines = self.get_preset(preset)
+        if not engines:
+            raise SearchResultEmpty(f"preset '{preset}' 为空或全部被禁用")
+        return await self.search(query, max_results=max_results, engines=engines)
 
     @property
     def client(self) -> httpx.AsyncClient:

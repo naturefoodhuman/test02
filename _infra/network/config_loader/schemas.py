@@ -23,6 +23,24 @@ class SearXNGConfig(BaseModel):
     max_chars_per_page: int = Field(8000, ge=500, le=20000)
     engines_enabled: list[str] = Field(default_factory=list)
     engines_disabled: list[str] = Field(default_factory=list)
+    # 场景化引擎预设 — 把"什么查询该用哪些引擎"固化下来,避免调用方手写
+    # 引擎列表时漏配或误用高风险引擎。预设只含经真机诊断稳定可用的引擎
+    # (github/arxiv/stackoverflow/hackernews/lobste.rs/wikipedia 等)。
+    # wikidata 已于 2026-07-30 因 SPARQL 端点 403 移除,不在任何预设中。
+    engine_presets: dict[str, list[str]] = Field(default_factory=lambda: {
+        # 编程/技术问题:IT 类全文搜索引擎,查"python asyncio"这类会有结果
+        "coding": ["stackoverflow", "github", "mdn", "hackernews", "lobste.rs"],
+        # 学术/研究:开放 API + 学术数据库
+        "academic": ["arxiv", "semantic scholar", "crossref", "pubmed", "wikipedia"],
+        # 资讯/动态:Hacker News + lobste.rs(均为稳定 API)
+        "news": ["hackernews", "lobste.rs"],
+        # 百科/词条查询:wikipedia 只返回精确匹配的词条,非全文搜索
+        "knowledge": ["wikipedia"],
+        # 包/依赖查询:仓库类引擎
+        "packages": ["npm", "pypi", "docker hub", "github"],
+        # 默认兜底:稳定的 IT+学术混合池
+        "default": ["github", "arxiv", "stackoverflow", "hackernews", "lobste.rs", "wikipedia"],
+    })
 
 class TavilyFallbackConfig(BaseModel):
     enabled: bool = False
