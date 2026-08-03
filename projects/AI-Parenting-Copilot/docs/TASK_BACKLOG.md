@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 04:05:00
+创建时间（北京时间）：2026-08-04 04:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -1791,7 +1791,7 @@
 - **所属 Capability**：C23
 - **所属 Story**：S23
 - **目标**：验证红色告警从 Rule Engine 输出到 Notification 多通道、升级、Android ack 停止全链路。
-- **状态**：BLOCKED（server fake/API red alert delivery/dispatch/ack/cancel/feedback E2E regressions 已完成；真实 Android FCM/Notifee E2E 待验收）
+- **状态**：BLOCKED（server fake/API red alert delivery/dispatch/ack/cancel/feedback E2E regressions、fake-channel escalation report 与 trigger-only payload regression 已完成；真实 Android FCM/Notifee E2E 待验收）
 - **前置依赖**：APC-T021, APC-T034, APC-T052, APC-T055
 - **输入**：`ARCHITECTURE_FINAL.md` §14；`ENGINEERING_DESIGN.md` §7.2
 - **输出**：Red alert E2E 测试
