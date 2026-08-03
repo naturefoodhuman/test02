@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 23:10:00
+创建时间（北京时间）：2026-08-03 23:28:00
 -->
 
 
@@ -11,8 +11,48 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T037`、`APC-T042`、`APC-T043`；Rule Review Packet 生成器已完成。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator 已完成；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 84 轮] 2026-08-03 — launchd static validator
+
+### 需求变动
+
+- 继续推进本地部署硬化：新增 launchd plist static validator 与 `make launchd-validate`，并修正 backup plist 日志路径到 `runtime/logs/`。
+
+### 文件影响
+
+新增：
+
+- `server/app/ops/__init__.py`
+- `server/app/ops/launchd_validator.py`
+- `tests/test_launchd_validator.py`
+
+修改：
+
+- `Makefile`
+- `deploy/launchd/com.parenting.backup.plist`
+- `docs/TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_launchd_validator.py tests/test_backup_tasks.py -q
+# 5 passed
+make launchd-validate
+make lint && make typecheck && make test
+# 187 passed, 8 deselected, 1 warning
+make docs-check
+```
+
+### 架构影响
+
+- 无架构变更；仅增加部署配置静态校验。
 
 ---
 

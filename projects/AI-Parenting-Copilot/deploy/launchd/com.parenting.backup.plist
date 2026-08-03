@@ -23,8 +23,8 @@
     <integer>30</integer>
   </dict>
   <key>StandardOutPath</key>
-  <string>/tmp/parenting-backup.out</string>
+  <string>runtime/logs/parenting-backup.out</string>
   <key>StandardErrorPath</key>
-  <string>/tmp/parenting-backup.err</string>
+  <string>runtime/logs/parenting-backup.err</string>
 </dict>
 </plist>

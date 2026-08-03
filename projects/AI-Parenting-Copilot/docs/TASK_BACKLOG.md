@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 23:10:00
+创建时间（北京时间）：2026-08-03 23:28:00
 -->
 
 # TASK_BACKLOG.md
@@ -1411,7 +1411,7 @@
 - **所属 Capability**：C18
 - **所属 Story**：S18
 - **目标**：实现数据库与媒体备份任务，提供 launchd plist 与恢复演练流程。
-- **状态**：BLOCKED（PG dump/media archive dry-run、restore drill planner/manifest、runbook/launchd plist/tests 已完成；真实 pg_dump/NAS/restore drill 待验收）
+- **状态**：BLOCKED（PG dump/media archive dry-run、restore drill planner/manifest、runbook/launchd plist/tests、launchd static validator 已完成；真实 pg_dump/NAS/restore drill 待验收）
 - **前置依赖**：APC-T003, APC-T042
 - **输入**：`ARCHITECTURE_FINAL.md` §24；`ENGINEERING_DESIGN.md` §2 M19
 - **输出**：Backup scripts/service/docs
@@ -1703,7 +1703,7 @@
 - **所属 Capability**：C22 DevOps & Fixtures
 - **所属 Story**：S22 启动脚本、Mock、Seed、治理命令
 - **目标**：提供本地开发与生产 launchd 启动入口。
-- **状态**：BLOCKED（run scripts/launchd/runbook/static tests、FastAPI local API runbook、`make run-api`、`make api-health-smoke`、`make api-server-smoke-test` 已完成；前置 T036/T044 与真实 launchd/长期运行待验收）
+- **状态**：BLOCKED（run scripts/launchd/runbook/static tests、launchd static validator、FastAPI local API runbook、`make run-api`、`make api-health-smoke`、`make api-server-smoke-test` 已完成；前置 T036/T044 与真实 launchd/长期运行待验收）
 - **前置依赖**：APC-T003, APC-T036, APC-T044
 - **输入**：`ENGINEERING_DESIGN.md` §1.3、§14；`ARCHITECTURE_FINAL.md` §25
 - **输出**：run scripts、launchd plist、部署说明

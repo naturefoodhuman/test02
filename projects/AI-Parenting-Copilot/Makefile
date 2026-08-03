@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -88,6 +88,7 @@ docs-check:
 	@test -f server/app/scheduler/worker.py
 	@test -f server/app/backup/pg_dump_task.py
 	@test -f server/app/backup/restore_drill.py
+	@test -f server/app/ops/launchd_validator.py
 	@test -f server/scripts/mock_mmwave_publisher.py
 	@test -f tests/shadow/camera_mmwave_shadow_harness.py
 	@test -f tests/soak/locustfile.py
@@ -130,6 +131,9 @@ rules-validate: ensure-dev-deps
 
 rule-review-packet: ensure-dev-deps
 	@$(PYTHON) server/scripts/generate_rule_review_packet.py --output-dir runtime/reports
+
+launchd-validate: ensure-dev-deps
+	@$(PYTHON) -m server.app.ops.launchd_validator deploy/launchd
 
 governance-check: docs-check
 	@echo "Project-level governance placeholder passed. Factory governance remains at repository root."
