@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 04:20:00
+创建时间（北京时间）：2026-08-04 04:35:00
 -->
 
 # TASK_BACKLOG.md
@@ -1320,7 +1320,7 @@
 - **所属 Capability**：C17
 - **所属 Story**：S17
 - **目标**：实现 ESP32C6 固件：串口读取雷达帧、连接 WiFi、发布 MQTT JSON。
-- **状态**：BLOCKED（PlatformIO firmware skeleton/config README/tests 已完成；前置 T040 未 DONE，pio 编译与真实硬件待验收）
+- **状态**：BLOCKED（PlatformIO firmware skeleton/config README/tests、valid JSON mock payload 与 firmware static preflight 已完成；前置 T040 未 DONE，pio 编译与真实硬件待验收）
 - **前置依赖**：APC-T040
 - **输入**：`ARCHITECTURE_FINAL.md` §13.1；`ENGINEERING_DESIGN.md` §1.2
 - **输出**：PlatformIO 固件工程

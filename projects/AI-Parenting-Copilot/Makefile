@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate red-alert-sim run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate red-alert-sim firmware-preflight run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -99,6 +99,7 @@ docs-check:
 	@test -f docs/RELEASE_CHECKLIST_P0.md
 	@test -f tests/fakes.py
 	@test -f firmware/esp32c6/platformio.ini
+	@test -f firmware/esp32c6/tools/preflight.py
 	@test -f android/src/features/today/viewModel.ts
 	@test -f android/src/features/timeline/viewModel.ts
 	@test -f android/src/features/quick_record/copilotFlow.ts
@@ -141,6 +142,9 @@ launchd-validate: ensure-dev-deps
 
 red-alert-sim: ensure-dev-deps
 	@$(PYTHON) server/scripts/simulate_red_alert_escalation.py
+
+firmware-preflight:
+	@$(PYTHON) firmware/esp32c6/tools/preflight.py firmware/esp32c6
 
 governance-check: docs-check
 	@echo "Project-level governance placeholder passed. Factory governance remains at repository root."
