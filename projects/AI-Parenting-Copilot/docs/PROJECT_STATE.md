@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 09:20:00
+创建时间（北京时间）：2026-08-03 09:45:00
 -->
 
 
@@ -126,6 +126,12 @@
 
 - 用户本机 `./gradlew assembleDebug` 已成功，说明最新 Android native Kotlin 可构建。
 - 修复 `tests/integration/test_api_db_runtime.py` 中 Memory short_context 断言：DB smoke 实际包含 feeding、Copilot diaper 与 mmWave telemetry 事件，测试现在按业务实际分别断言三个计数。
+
+### 继续开发进展（DB smoke assertion fix / Android build accepted / workspace cleanup）
+
+- 用户本机 `./gradlew assembleDebug` 已成功，说明最新 Android native Kotlin 可构建。
+- 修复 `tests/integration/test_api_db_runtime.py` 中 Memory short_context 断言：DB smoke 实际包含 feeding、Copilot diaper 与 mmWave telemetry 事件，测试现在按业务实际分别断言三个计数。
+- 沙盒工作区完成清理：删除 `.local` dev deps/cache、Python cache/runtime artifacts 并执行 git gc，`/home/user` 从约 198M 降到约 22M。
 
 ### 继续开发进展（Native drain UI/session + alert ack retry）
 

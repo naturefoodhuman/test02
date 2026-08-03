@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 09:20:00
+创建时间（北京时间）：2026-08-03 09:45:00
 -->
 
 
@@ -15,6 +15,41 @@
 - **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 80 轮 · 2026-08-03（Workspace cleanup + API DB smoke assertion fix）
+
+**目标**：先清理沙盒工作区垃圾文件并修复用户本机 `api-db-smoke-test` 失败。
+
+**完成内容**：
+
+- 定位失败原因：DB smoke 在 Memory snapshot 前已创建 feeding、Copilot-confirmed diaper、mmWave telemetry 三类 ObservationEvent；`SQLAlchemyMemoryStore._short_context()` 按最近 72h 所有未删除事件统计 `event_type_counts`，因此旧断言只期待 `{feeding: 1}` 与实际业务逻辑不符。
+- 修复断言：改为分别验证 `feeding == 1`、`diaper == 1`、`mmwave_telemetry == 1`。
+- 同步用户本地复验结果：`./gradlew assembleDebug` 已成功；Android 相关任务仍等待真机/device/PowerSync/FCM 等实体验收。
+- 工作区清理：已清除沙盒 `.local` 开发依赖缓存/包与 Python/pytest/mypy/ruff cache，并执行 git gc；`/home/user` 从约 198M 降到约 22M，低于 Arena workspace snapshot budget。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_native_skeleton.py tests/test_android_features.py tests/test_orchestrator.py tests/test_rules_admin_api.py -q
+# 18 passed, 1 warning
+make lint
+# All checks passed.
+make typecheck
+# Success: no issues found in 188 source files
+make test
+# 180 passed, 8 deselected, 1 warning
+make api-db-smoke-test
+# sandbox: 1 skipped（无本地 DB URL）；用户 Mac DB 环境需复验
+make docs-check
+cd ../.. && make docs-check
+# Blockers: 0
+```
+
+**架构影响**：
+
+- 无架构变更；Memory short_context 继续反映真实最近事件，Rule/Copilot/Android offline-first 边界不变。
 
 ---
 
