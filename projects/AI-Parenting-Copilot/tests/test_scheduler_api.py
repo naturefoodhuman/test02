@@ -32,6 +32,32 @@ def test_scheduler_api_lists_and_triggers_jobs_with_audit() -> None:
     assert "scheduler.trigger_all" in audit_actions
 
 
+def test_scheduler_trigger_can_create_blue_reminder_alert() -> None:
+    app = create_app(Settings(env="test"))
+
+    with TestClient(app) as client:
+        triggered = client.post(
+            "/api/v1/scheduler/jobs/vaccine_due/trigger",
+            params={
+                "family_id": "family-1",
+                "baby_id": "baby-1",
+                "create_alert": True,
+            },
+        )
+        alerts = client.get("/api/v1/alerts", params={"family_id": "family-1"})
+
+    assert triggered.status_code == 200
+    assert triggered.json()["alert_level"] == "blue"
+    alert_id = triggered.json()["created_alert_id"]
+    assert alerts.status_code == 200
+    assert alerts.json()[0]["id"] == alert_id
+    assert alerts.json()[0]["type"] == "scheduler.vaccine_due"
+    assert alerts.json()[0]["recommended_action"].startswith("查看疫苗到期提醒")
+    audit_actions = [record.action for record in app.state.audit_sink.records]
+    assert "alert.create" in audit_actions
+    assert "scheduler.trigger" in audit_actions
+
+
 def test_scheduler_api_unknown_job_returns_404() -> None:
     app = create_app(Settings(env="test"))
 

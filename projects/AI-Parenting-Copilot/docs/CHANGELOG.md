@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 09:45:00
+创建时间（北京时间）：2026-08-03 10:20:00
 -->
 
 
@@ -10,9 +10,47 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T008`、`APC-T010`、`APC-T019`、`APC-T031`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Camera/mmWave/Health/Scheduler/Backup/Android fallback 继续推进；`APC-T035`、`APC-T058` 已 DONE。
+- **最新完成任务**：`APC-T037`、`APC-T042`、`APC-T043`。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 81 轮] 2026-08-03 — Scheduler reminder alert bridge + task unblocking
+
+### 需求变动
+
+- 用户本机 `api-db-smoke-test` 复验通过，解除 Sleep/Media/Export 三个仅等待 DB smoke 的阻塞。
+- Scheduler API 增加 `create_alert` 提醒桥接，手动触发 vaccine/supplement 等 job 时可生成蓝色提醒 Alert。
+
+### 文件影响
+
+修改：
+
+- `server/app/scheduler/api/routes.py`
+- `tests/test_scheduler_api.py`
+- `docs/TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- `docs/PROJECT_STATE.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_scheduler_api.py tests/test_scheduler_jobs.py tests/test_scheduler_worker.py -q
+# 8 passed, 1 warning
+make lint && make typecheck && make test
+# 181 passed, 8 deselected, 1 warning
+make security-test && make e2e-fake-test && make shadow-test && make rules-validate && make restore-dry-run
+make docs-check
+cd ../.. && make docs-check
+# Blockers: 0
+```
+
+### 架构影响
+
+- 无架构变更；Scheduler 只创建提醒 Alert，实际 alert delivery 仍只能由 Notification Orchestrator 执行。
 
 ---
 

@@ -90,6 +90,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
     family_id: str | None = None
     baby_id: str | None = None
     alert_id: str | None = None
+    scheduler_alert_id: str | None = None
     sleep_id: str | None = None
     media_id: str | None = None
     export_id: str | None = None
@@ -275,9 +276,22 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
             )
             assert health_check.status_code == 200
             assert health_check.json()["checks"] == {"camera": "offline"}
+            scheduler = client.post(
+                "/api/v1/scheduler/jobs/vaccine_due/trigger",
+                params={
+                    "family_id": family_id,
+                    "baby_id": baby_id,
+                    "create_alert": True,
+                },
+            )
+            assert scheduler.status_code == 200
+            assert scheduler.json()["alert_level"] == "blue"
+            scheduler_alert_id = scheduler.json()["created_alert_id"]
             gray_alerts = client.get("/api/v1/alerts", params={"family_id": family_id})
             assert gray_alerts.status_code == 200
-            assert any(alert["level"] == "gray" for alert in gray_alerts.json())
+            alerts_payload = gray_alerts.json()
+            assert any(alert["level"] == "gray" for alert in alerts_payload)
+            assert any(alert["id"] == scheduler_alert_id for alert in alerts_payload)
 
             media = client.post(
                 "/api/v1/media",
@@ -459,6 +473,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 )
         assert intercepted.intercepted is True
         assert copilot_event_id is not None
+        assert scheduler_alert_id is not None
 
         async with engine.connect() as audit_connection:
             audit_actions = set(
@@ -474,6 +489,8 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                             :event_resource,
                             :copilot_event_resource,
                             :alert_resource,
+                            :scheduler_alert_resource,
+                            :scheduler_resource,
                             :sleep_resource,
                             :media_resource,
                             :export_resource,
@@ -494,6 +511,8 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                         "event_resource": f"observation_event:{event.json()['event_id']}",
                         "copilot_event_resource": f"observation_event:{copilot_event_id}",
                         "alert_resource": f"alert:{alert_id}",
+                        "scheduler_alert_resource": f"alert:{scheduler_alert_id}",
+                        "scheduler_resource": "scheduler_job:vaccine_due",
                         "sleep_resource": f"sleep_session:{sleep_id}",
                         "media_resource": f"media_asset:{media_id}",
                         "export_resource": f"export:{export_id}",
@@ -514,6 +533,7 @@ async def test_db_backed_auth_event_alert_state_and_rules_api(
                 "alert.create",
                 "alert.dispatch",
                 "alert.cancel_channels",
+                "scheduler.trigger",
                 "sleep_session.start",
                 "sleep_session.roi_update",
                 "sleep_session.end",

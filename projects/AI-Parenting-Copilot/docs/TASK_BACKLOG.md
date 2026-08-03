@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 09:20:00
+创建时间（北京时间）：2026-08-03 10:20:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 DONE；APC-T033 DONE；APC-T034 DONE；APC-T035 DONE；APC-T036 BLOCKED；APC-T037 BLOCKED；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 BLOCKED；APC-T043 BLOCKED；APC-T044 BLOCKED；APC-T045 DONE；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 DONE；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 DONE；APC-T033 DONE；APC-T034 DONE；APC-T035 DONE；APC-T036 BLOCKED；APC-T037 DONE；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 DONE；APC-T043 DONE；APC-T044 BLOCKED；APC-T045 DONE；APC-T046 BLOCKED；APC-T047 BLOCKED；APC-T048 BLOCKED；APC-T049 BLOCKED；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 BLOCKED；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 DONE；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -1168,7 +1168,7 @@
 - **所属 Capability**：C15
 - **所属 Story**：S15
 - **目标**：实现 APScheduler runner 与 P0 定时任务。
-- **状态**：BLOCKED（manual SchedulerRunner、PeriodicSchedulerWorker、morning/vaccine/supplement/health jobs 与 Scheduler API trigger/list 已完成；前置 T022 生产规则审查与长期运行验收待完成）
+- **状态**：BLOCKED（manual SchedulerRunner、PeriodicSchedulerWorker、morning/vaccine/supplement/health jobs、Scheduler API trigger/list 与 create_alert reminder bridge 已完成；前置 T022 生产规则审查与长期运行验收待完成）
 - **前置依赖**：APC-T022, APC-T031, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M20、§7.2
 - **输出**：Scheduler jobs
@@ -1202,7 +1202,7 @@
 - **所属 Capability**：C16 Sleep Session & Camera
 - **所属 Story**：S16 睡眠会话、ROI、抓帧、影子模式
 - **目标**：实现睡眠会话状态机、会话 API、ROI 保存与查询。
-- **状态**：BLOCKED（SleepSession state machine/dev API、SQLAlchemy repo/API DB smoke/audit 已完成；等待用户 Mac `api-db-smoke-test` 复验）
+- **状态**：DONE
 - **前置依赖**：APC-T004, APC-T006
 - **输入**：`ARCHITECTURE_FINAL.md` §5.2、§12.3、§15.2
 - **输出**：SleepSession service/API
@@ -1351,7 +1351,7 @@
 - **所属 Capability**：C18 Media / Export / Backup
 - **所属 Story**：S18 加密媒体、MD/PDF 导出、NAS 备份
 - **目标**：实现本地媒体加密存储、缩略图、asset 索引与上传/读取 API。
-- **状态**：BLOCKED（AES-GCM file storage/thumbnail/dev API/tests、DB media_asset/audit 持久化与 API DB smoke 已完成；等待用户 Mac `api-db-smoke-test` 复验）
+- **状态**：DONE
 - **前置依赖**：APC-T004, APC-T006
 - **输入**：`ENGINEERING_DESIGN.md` §2 M16、§11；`ARCHITECTURE_FINAL.md` §8
 - **输出**：Media storage service/API
@@ -1380,7 +1380,7 @@
 - **所属 Capability**：C18
 - **所属 Story**：S18
 - **目标**：按时间范围导出 MD/PDF、基础统计与就诊摘要，并审计导出人/时间。
-- **状态**：BLOCKED（Markdown export/PDF placeholder/local file export/tests、Export API 与 audit smoke 已完成；等待用户 Mac `api-db-smoke-test` 复验）
+- **状态**：DONE
 - **前置依赖**：APC-T016, APC-T042
 - **输入**：`ARCHITECTURE_FINAL.md` §8、§15.2、§21
 - **输出**：Export service/API

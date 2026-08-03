@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 09:45:00
+创建时间（北京时间）：2026-08-03 10:20:00
 -->
 
 
@@ -10,11 +10,50 @@
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
-- **最新完成**：`APC-T020/T021/T026/T027/T028/T029` 已根据用户复验与前置解除标记 DONE；`APC-T032/T033/T034` 继续推进。
+- **最新完成**：用户本机 `api-db-smoke-test` 复验通过后，`APC-T037/T042/T043` 标记 DONE；`APC-T036` 继续推进 Scheduler reminder alert bridge。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文。
+- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 81 轮 · 2026-08-03（Scheduler reminder alert bridge + task unblocking）
+
+**目标**：利用用户本机复验结果解除已满足 DoD 的 Sleep/Media/Export 阻塞，并继续推进 Scheduler 提醒闭环。
+
+**完成内容**：
+
+- 根据用户本机 `api-db-smoke-test` 复验通过，`APC-T037`、`APC-T042`、`APC-T043` 更新为 DONE。
+- `POST /api/v1/scheduler/jobs/{job}/trigger` 新增可选 query：`family_id`、`baby_id`、`create_alert`。
+- `POST /api/v1/scheduler/trigger-all` 同步支持 `create_alert`。
+- 当 job result 包含 `alert_level` 且 `create_alert=true` 时，通过 AlertStore 创建 `scheduler.{job}` reminder alert，并审计 `alert.create` / `scheduler.trigger`。
+- 新增 regression test：vaccine_due scheduler trigger 可生成 blue reminder alert；API DB smoke 也覆盖 scheduler reminder alert 与 `scheduler.trigger` audit。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_scheduler_api.py tests/test_scheduler_jobs.py tests/test_scheduler_worker.py -q
+# 8 passed, 1 warning
+make lint
+make typecheck
+make test
+# 181 passed, 8 deselected, 1 warning
+make api-db-smoke-test
+# sandbox: 1 skipped（无本地 DB URL）；用户本机已复验通过基础 DB smoke
+make security-test
+make e2e-fake-test
+make shadow-test
+make rules-validate
+make restore-dry-run
+make docs-check
+cd ../.. && make docs-check
+# Blockers: 0
+```
+
+**架构影响**：
+
+- 无架构变更；Scheduler 只创建提醒型 Alert 记录，不直接投递；后续投递仍必须经 Notification Orchestrator。
 
 ---
 
