@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 10:20:00
+创建时间（北京时间）：2026-08-03 10:45:00
 -->
 
 
@@ -12,9 +12,37 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：用户本机 `api-db-smoke-test` 复验通过后，`APC-T037/T042/T043` 标记 DONE；`APC-T036` 继续推进 Scheduler reminder alert bridge。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore。
+- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 82 轮 · 2026-08-03（Camera ISAPI/Fregata HTTP bridge）
+
+**目标**：继续推进 `APC-T038/T039`，把摄像头相关 placeholder adapter 提升为可注入、可测试的真实 HTTP bridge，同时不要求本轮具备真实设备。
+
+**完成内容**：
+
+- `ISAPIClient.health()` 支持真实 `/ISAPI/System/status` HTTP health probe，支持注入 fake async HTTP client 做无设备测试。
+- `FregataBridge.analyze_snapshot()` 支持向 Fregata endpoint POST snapshot bytes，并把 `events` / `detections` 规范化为 shadow events。
+- Fregata/ISAPI 异常均返回 shadow/offline 结果，不直接生成红橙告警，不绕过 Camera shadow pipeline。
+- 新增 camera adapter unit tests 覆盖 ISAPI health URL 与 Fregata shadow events normalization。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_camera_adapters.py -q
+# 7 passed, 1 warning
+make lint
+make typecheck
+make test
+# 183 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更；Camera/Fregata 仍保持 shadow-mode，真实设备/RTSP/ISAPI/Fregata endpoint 验收仍需本地硬件环境。
 
 ---
 

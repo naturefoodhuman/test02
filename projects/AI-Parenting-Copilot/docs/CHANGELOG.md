@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-03 10:20:00
+创建时间（北京时间）：2026-08-03 10:45:00
 -->
 
 
@@ -11,8 +11,42 @@
 ## Latest Change Index
 
 - **最新完成任务**：`APC-T037`、`APC-T042`、`APC-T043`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 82 轮] 2026-08-03 — Camera ISAPI/Fregata HTTP bridge
+
+### 需求变动
+
+- 继续推进 Camera/mmWave shadow 前置能力：ISAPI health 与 Fregata snapshot analysis adapter 从 placeholder 升级为可注入 HTTP bridge。
+
+### 文件影响
+
+修改：
+
+- `server/app/camera/isapi_client.py`
+- `server/app/camera/fregata_bridge.py`
+- `tests/test_camera_adapters.py`
+- `docs/TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- `docs/PROJECT_STATE.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_camera_adapters.py -q
+# 7 passed, 1 warning
+make lint && make typecheck && make test
+# 183 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；adapter 只产生 shadow analysis/health 结果，不直接生成医疗/红橙告警。
 
 ---
 

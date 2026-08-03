@@ -11,6 +11,8 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
+from server.app.camera.fregata_bridge import FregataBridge
+from server.app.camera.isapi_client import ISAPIClient
 from server.app.camera.rtsp_client import MockRTSPSnapshotClient
 from server.app.main import create_app
 from server.app.settings import Settings
@@ -24,11 +26,62 @@ def test_devices_yaml_camera_mock_config() -> None:
     assert "baby/radar/telemetry" in config["mmwave"]["mqtt_topics"]
 
 
+class FakeHTTPResponse:
+    def __init__(self, status_code: int = 200, payload: dict[str, object] | None = None) -> None:
+        self.status_code = status_code
+        self.payload = payload or {}
+
+    def json(self) -> dict[str, object]:
+        return self.payload
+
+
+class FakeCameraHTTPClient:
+    def __init__(self, response: FakeHTTPResponse) -> None:
+        self.response = response
+        self.calls: list[tuple[str, str]] = []
+
+    async def get(self, url: str, **kwargs: object) -> FakeHTTPResponse:
+        self.calls.append(("GET", url))
+        return self.response
+
+    async def post(self, url: str, **kwargs: object) -> FakeHTTPResponse:
+        self.calls.append(("POST", url))
+        return self.response
+
+
 @pytest.mark.asyncio
 async def test_mock_rtsp_snapshot_client_returns_png() -> None:
     snapshot = await MockRTSPSnapshotClient("nursery").snapshot()
 
     assert snapshot.startswith(b"\x89PNG")
+
+
+@pytest.mark.asyncio
+async def test_isapi_client_health_uses_injected_http_client() -> None:
+    fake = FakeCameraHTTPClient(FakeHTTPResponse(status_code=200))
+    result = await ISAPIClient("http://camera.local", http_client=fake).health()
+
+    assert result["status"] == "online"
+    assert result["http_status"] == "200"
+    assert fake.calls == [("GET", "http://camera.local/ISAPI/System/status")]
+
+
+@pytest.mark.asyncio
+async def test_fregata_bridge_normalizes_shadow_events() -> None:
+    fake = FakeCameraHTTPClient(
+        FakeHTTPResponse(
+            status_code=200,
+            payload={"events": [{"kind": "face_covered", "confidence": 0.91}]},
+        )
+    )
+    result = await FregataBridge("http://fregata.local/analyze", http_client=fake).analyze_snapshot(
+        b"jpeg"
+    )
+
+    assert result["mode"] == "shadow"
+    assert result["source"] == "fregata"
+    assert result["events"] == [{"kind": "face_covered", "confidence": 0.91}]
+    assert fake.calls == [("POST", "http://fregata.local/analyze")]
 
 
 def test_camera_snapshot_api_returns_png() -> None:
