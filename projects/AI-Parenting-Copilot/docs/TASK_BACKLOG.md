@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 08:40:00
+创建时间（北京时间）：2026-08-04 21:10:00
 -->
 
 # TASK_BACKLOG.md
@@ -10,7 +10,7 @@
 > 主要实施依据：`docs/ENGINEERING_DESIGN.md`
 > 架构事实来源：`docs/ARCHITECTURE_FINAL.md`
 > 工厂能力背景：工厂根目录 `../../../PROJECT_DOSSIER_V5.md`（不要使用项目内旧拷贝）
-> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 DONE；APC-T033 DONE；APC-T034 DONE；APC-T035 DONE；APC-T036 BLOCKED；APC-T037 DONE；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 DONE；APC-T043 DONE；APC-T044 BLOCKED；APC-T045 DONE；APC-T046 DONE；APC-T047 BLOCKED；APC-T048 DONE；APC-T049 DONE；APC-T050 BLOCKED；APC-T051 BLOCKED；APC-T052 BLOCKED；APC-T053 BLOCKED；APC-T054 BLOCKED；APC-T055 DONE；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 DONE；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
+> 状态：APC-T001 DONE；APC-T002 DONE；APC-T003 DONE；APC-T004 DONE；APC-T005 DONE；APC-T006 DONE；APC-T007 DONE；APC-T008 DONE；APC-T009 DONE；APC-T010 DONE；APC-T011 DONE；APC-T012 DONE；APC-T013 DONE；APC-T014 DONE；APC-T015 DONE；APC-T016 DONE；APC-T017 DONE；APC-T018 DONE；APC-T019 DONE；APC-T020 DONE；APC-T021 DONE；APC-T022 BLOCKED；APC-T023 BLOCKED；APC-T024 DONE；APC-T025 DONE；APC-T026 DONE；APC-T027 DONE；APC-T028 DONE；APC-T029 DONE；APC-T030 BLOCKED；APC-T031 DONE；APC-T032 DONE；APC-T033 DONE；APC-T034 DONE；APC-T035 DONE；APC-T036 BLOCKED；APC-T037 DONE；APC-T038 BLOCKED；APC-T039 BLOCKED；APC-T040 BLOCKED；APC-T041 BLOCKED；APC-T042 DONE；APC-T043 DONE；APC-T044 BLOCKED；APC-T045 DONE；APC-T046 DONE；APC-T047 BLOCKED；APC-T048 DONE；APC-T049 DONE；APC-T050 DONE；APC-T051 DONE；APC-T052 BLOCKED；APC-T053 DONE；APC-T054 BLOCKED；APC-T055 DONE；APC-T056 BLOCKED；APC-T057 BLOCKED；APC-T058 DONE；APC-T059 BLOCKED。供 Claude Code / Codex 等 AI Agent 直接逐任务执行。
 
 ---
 
@@ -1589,7 +1589,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：实现事件时间线、记录人/来源显示、编辑纠错、软删除撤销、重复提示。
-- **状态**：BLOCKED（Timeline view model/correction/delete/duplicate hint static tests、server fetch/correct/delete helpers 与 native TimelineActivity server events refresh 已完成；用户 Android `assembleDebug` 已通过；device UI/API flow 复验待完成）
+- **状态**：DONE
 - **前置依赖**：APC-T010, APC-T012, APC-T047
 - **输入**：`ARCHITECTURE_FINAL.md` §9.2、§3.2
 - **输出**：Timeline feature
@@ -1616,7 +1616,7 @@
 - **所属 Capability**：C20
 - **所属 Story**：S20
 - **目标**：展示告警列表、证据链、确认、反馈。
-- **状态**：BLOCKED（Alert Center view model/ack/feedback TS flow/static tests、native AlertCenterActivity alerts refresh/ack drain 与 exception-safe ack retry 已完成；用户 Android `assembleDebug` 已通过；device UI flow 复验待完成）
+- **状态**：DONE
 - **前置依赖**：APC-T031, APC-T046
 - **输入**：`ARCHITECTURE_FINAL.md` §14、§3.2
 - **输出**：Alert Center feature
@@ -1673,7 +1673,7 @@
 - **所属 Capability**：C21
 - **所属 Story**：S21
 - **目标**：实现睡眠会话开始/暂停/结束、snapshot 展示、ROI 配置、影子事件查看。
-- **状态**：BLOCKED（Sleep Session view model/ROI save TS flow/static tests 与 native SleepSessionActivity start/pause/resume/end API calls 已完成；用户 Android `assembleDebug` 已通过；device UI flow 复验待完成）
+- **状态**：DONE
 - **前置依赖**：APC-T037, APC-T038, APC-T039
 - **输入**：`ARCHITECTURE_FINAL.md` §3.2、§12.3
 - **输出**：Sleep Session feature
@@ -1761,7 +1761,7 @@
 - **所属 Capability**：C23 E2E / Security / Soak
 - **所属 Story**：S23 MVP E2E、告警 E2E、安全回归、影子/稳定性验证
 - **目标**：验证 P0-M0 最小闭环：Android 离线记录 feeding，恢复网络后同步到 PG，派生态回传 Today。
-- **状态**：BLOCKED（semi-automated checklist、dev API feeding roundtrip E2E substitute、Android/PowerSync contract report 与 Android native offline pieces 已完成；真实 Android/PowerSync E2E 待验收（T046/T048/T049 代码任务已 DONE））
+- **状态**：BLOCKED（semi-automated checklist、dev API feeding roundtrip E2E substitute、Android/PowerSync contract report 与 Android native offline pieces 已完成；真实 Android/PowerSync E2E 待验收（T046/T048/T049/T050/T051/T053 代码任务已 DONE））
 - **前置依赖**：APC-T017, APC-T047, APC-T048, APC-T049, APC-T055
 - **输入**：`ENGINEERING_DESIGN.md` §14 Bootstrap 顺序；§12
 - **输出**：跨端 MVP E2E 测试与报告

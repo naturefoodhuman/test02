@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 08:40:00
+创建时间（北京时间）：2026-08-04 21:10:00
 -->
 
 
@@ -10,9 +10,49 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T037`、`APC-T042`、`APC-T043`、`APC-T046`、`APC-T048`、`APC-T049`、`APC-T055`。
-- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator、backup manifest verifier、red alert escalation report 与 firmware static preflight、mmWave replay report、Android/PowerSync E2E contract report 已完成；APC-T046/T048/T049/T055 已 DONE；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
+- **最新完成任务**：`APC-T050`、`APC-T051`、`APC-T053`；累计 Android core screens code tasks accepted。
+- **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator、backup manifest verifier、red alert escalation report 与 firmware static preflight、mmWave replay report、Android/PowerSync E2E contract report 已完成；APC-T046/T048/T049/T050/T051/T053/T055 已 DONE；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 90 轮] 2026-08-04 — APC-T050/T051/T053 accepted
+
+### 需求变动
+
+- 按用户要求一次性完成至少 3 个 APC 任务：基于 Android `assembleDebug`、static tests 和 Android E2E contract report，将 Timeline、Alert Center、Sleep Session UI 代码任务标记 DONE。
+
+### 状态变更
+
+- `APC-T050`：BLOCKED → DONE
+- `APC-T051`：BLOCKED → DONE
+- `APC-T053`：BLOCKED → DONE
+
+### 文件影响
+
+修改：
+
+- `server/app/sync/e2e_contract.py`
+- `tests/e2e/test_android_e2e_contract_report.py`
+- `docs/TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- `docs/PROJECT_STATE.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/e2e/test_android_e2e_contract_report.py tests/test_android_features.py tests/test_android_native_skeleton.py -q
+# 13 passed
+make android-e2e-contract
+make lint && make typecheck && make test
+# 196 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；真实 Android/PowerSync/FCM E2E 仍由 `APC-T056/T057` 跟踪。
 
 ---
 

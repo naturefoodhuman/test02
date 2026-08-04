@@ -28,12 +28,18 @@ REQUIRED_ANDROID_FILES = (
     "android/src/features/quick_record/createLocalEvent.ts",
     "android/src/features/quick_record/copilotFlow.ts",
     "android/src/features/today/viewModel.ts",
+    "android/src/features/timeline/viewModel.ts",
+    "android/src/features/alert_center/viewModel.ts",
+    "android/src/features/sleep_session/viewModel.ts",
     "android/android/app/src/main/java/com/aiparentingcopilot/LoginActivity.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/SecureSessionStore.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/MainActivity.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/QuickRecordActivity.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/PendingSyncDrainer.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/TodayActivity.kt",
+    "android/android/app/src/main/java/com/aiparentingcopilot/TimelineActivity.kt",
+    "android/android/app/src/main/java/com/aiparentingcopilot/AlertCenterActivity.kt",
+    "android/android/app/src/main/java/com/aiparentingcopilot/SleepSessionActivity.kt",
 )
 
 REQUIRED_COLUMNS = (
@@ -84,7 +90,12 @@ def build_android_e2e_contract_report(project_root: Path | str = ".") -> Android
         errors,
     )
     secure_session_ts = _read(root / "android/src/features/auth/native_secure_session.ts")
-    _expect("NativeSecureSessionBridge" in secure_session_ts, "ts_secure_session_bridge", checks, errors)
+    _expect(
+        "NativeSecureSessionBridge" in secure_session_ts,
+        "ts_secure_session_bridge",
+        checks,
+        errors,
+    )
     pending_drain = _read(root / "android/src/sync/pending_sync_drain.ts")
     _expect("/api/v1/events" in pending_drain, "ts_drain_events_route", checks, errors)
     _expect("/api/v1/sync/heartbeat" in pending_drain, "ts_drain_heartbeat_route", checks, errors)
@@ -96,6 +107,24 @@ def build_android_e2e_contract_report(project_root: Path | str = ".") -> Android
     _expect(
         "QuickRecordActivity::class.java" in main_activity,
         "native_main_quick_record_entry",
+        checks,
+        errors,
+    )
+    _expect(
+        "TimelineActivity::class.java" in main_activity,
+        "native_main_timeline_entry",
+        checks,
+        errors,
+    )
+    _expect(
+        "AlertCenterActivity::class.java" in main_activity,
+        "native_main_alert_center_entry",
+        checks,
+        errors,
+    )
+    _expect(
+        "SleepSessionActivity::class.java" in main_activity,
+        "native_main_sleep_session_entry",
         checks,
         errors,
     )
@@ -144,7 +173,93 @@ def build_android_e2e_contract_report(project_root: Path | str = ".") -> Android
     _expect("pendingSyncCount" in today_view_model, "ts_today_pending_sync_count", checks, errors)
     _expect("grayDeviceCount" in today_view_model, "ts_today_gray_device_count", checks, errors)
     _expect("/api/v1/system/health" in today_view_model, "ts_today_health_route", checks, errors)
-    _expect("/api/v1/babies/${babyId}/state" in today_view_model, "ts_today_state_route", checks, errors)
+    _expect(
+        "/api/v1/babies/${babyId}/state" in today_view_model,
+        "ts_today_state_route",
+        checks,
+        errors,
+    )
+
+    timeline_native = _read(
+        root / "android/android/app/src/main/java/com/aiparentingcopilot/TimelineActivity.kt"
+    )
+    _expect(
+        "/api/v1/events?baby_id=" in timeline_native,
+        "native_timeline_events_route",
+        checks,
+        errors,
+    )
+    timeline_vm = _read(root / "android/src/features/timeline/viewModel.ts")
+    _expect(
+        "/api/v1/events?baby_id=${babyId}" in timeline_vm,
+        "ts_timeline_events_route",
+        checks,
+        errors,
+    )
+    _expect("/correct" in timeline_vm, "ts_timeline_correction_route", checks, errors)
+    _expect(
+        "delete<LocalObservationEvent>" in timeline_vm,
+        "ts_timeline_soft_delete",
+        checks,
+        errors,
+    )
+    _expect("5 * 60 * 1000" in timeline_vm, "ts_timeline_duplicate_hint", checks, errors)
+
+    alert_native = _read(
+        root / "android/android/app/src/main/java/com/aiparentingcopilot/AlertCenterActivity.kt"
+    )
+    _expect(
+        "/api/v1/alerts?family_id=" in alert_native,
+        "native_alert_list_route",
+        checks,
+        errors,
+    )
+    _expect("/feedback" in alert_native, "native_alert_feedback_route", checks, errors)
+    _expect("AlertAckDrainer" in alert_native, "native_alert_ack_drainer", checks, errors)
+    alert_vm = _read(root / "android/src/features/alert_center/viewModel.ts")
+    _expect(
+        "/api/v1/alerts?family_id=${familyId}" in alert_vm,
+        "ts_alert_list_route",
+        checks,
+        errors,
+    )
+    _expect("/deliveries" in alert_vm, "ts_alert_deliveries_route", checks, errors)
+    _expect("/dispatch" in alert_vm, "ts_alert_dispatch_route", checks, errors)
+    _expect("/ack" in alert_vm, "ts_alert_ack_route", checks, errors)
+    _expect("/feedback" in alert_vm, "ts_alert_feedback_route", checks, errors)
+
+    sleep_native = _read(
+        root / "android/android/app/src/main/java/com/aiparentingcopilot/SleepSessionActivity.kt"
+    )
+    _expect(
+        "/api/v1/sleep-sessions" in sleep_native,
+        "native_sleep_start_route",
+        checks,
+        errors,
+    )
+    _expect("/roi" in sleep_native, "native_sleep_roi_route", checks, errors)
+    _expect(
+        "/camera-events" in sleep_native,
+        "native_sleep_camera_events_route",
+        checks,
+        errors,
+    )
+    sleep_vm = _read(root / "android/src/features/sleep_session/viewModel.ts")
+    _expect("/api/v1/sleep-sessions" in sleep_vm, "ts_sleep_start_route", checks, errors)
+    _expect("/pause" in sleep_vm, "ts_sleep_pause_route", checks, errors)
+    _expect("/resume" in sleep_vm, "ts_sleep_resume_route", checks, errors)
+    _expect("/end" in sleep_vm, "ts_sleep_end_route", checks, errors)
+    _expect("/roi" in sleep_vm, "ts_sleep_roi_route", checks, errors)
+    _expect("/camera-events" in sleep_vm, "ts_sleep_camera_events_route", checks, errors)
+    _expect("/shadow-summary" in sleep_vm, "ts_sleep_shadow_summary_route", checks, errors)
+    _expect(
+        "/api/v1/camera-shadow/evaluate" in sleep_vm,
+        "ts_sleep_shadow_evaluate_route",
+        checks,
+        errors,
+    )
+    _expect("影子模式，不强提醒" in sleep_vm, "ts_sleep_shadow_label", checks, errors)
+
     sample_event = _sample_sync_event()
     try:
         validate_sync_record(sample_event)
