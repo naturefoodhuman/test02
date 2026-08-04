@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet rule-signoff-template launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract android-notification-contract deployment-readiness p0-readiness external-validation-plan external-evidence-template apc-closeout-gate run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet rule-signoff-template launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract android-notification-contract deployment-readiness p0-readiness external-validation-plan external-evidence-template apc-closeout-gate apc-closeout-recommendations run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -98,6 +98,7 @@ docs-check:
 	@test -f server/app/ops/external_validation.py
 	@test -f server/app/ops/external_evidence.py
 	@test -f server/app/ops/apc_closeout.py
+	@test -f server/app/ops/closeout_recommendation.py
 	@test -f server/app/notification/escalation_report.py
 	@test -f server/app/notification/android_contract.py
 	@test -f server/app/mmwave/replay.py
@@ -112,6 +113,7 @@ docs-check:
 	@test -f server/scripts/external_validation_plan.py
 	@test -f server/scripts/external_evidence.py
 	@test -f server/scripts/apc_closeout_gate.py
+	@test -f server/scripts/apc_closeout_recommendations.py
 	@test -f tests/shadow/camera_mmwave_shadow_harness.py
 	@test -f tests/soak/locustfile.py
 	@test -f docs/RELEASE_CHECKLIST_P0.md
@@ -192,6 +194,9 @@ external-evidence-template: ensure-dev-deps
 
 apc-closeout-gate: ensure-dev-deps
 	@$(PYTHON) server/scripts/apc_closeout_gate.py
+
+apc-closeout-recommendations: ensure-dev-deps
+	@$(PYTHON) server/scripts/apc_closeout_recommendations.py
 
 governance-check: docs-check
 	@echo "Project-level governance placeholder passed. Factory governance remains at repository root."
