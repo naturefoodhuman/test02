@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 04:35:00
+创建时间（北京时间）：2026-08-04 08:25:00
 -->
 
 # TASK_BACKLOG.md
@@ -1291,7 +1291,7 @@
 - **所属 Capability**：C17 mmWave & Firmware
 - **所属 Story**：S17 MQTT 雷达接入与 ESP32C6 固件
 - **目标**：订阅 `baby/radar/telemetry`，解析雷达 JSON，写入 sensor_event / observation_event。
-- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest/list API、MMWaveIngestService 与 live MQTT worker CLI 已完成；真实 MQTT broker/device soak 待验收）
+- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest/list API、MMWaveIngestService、fixture replay report 与 live MQTT worker CLI 已完成；真实 MQTT broker/device soak 待验收）
 - **前置依赖**：APC-T003, APC-T009, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M12、§7.5；`ARCHITECTURE_FINAL.md` §13
 - **输出**：mmWave adapter
@@ -1503,7 +1503,7 @@
 - **所属 Capability**：C19
 - **所属 Story**：S19
 - **目标**：实现 Android 本地 SQLite、PowerSync client、ObservationEvent 本地写入与 pending_sync 标记。
-- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert/save+drain、TS/native pending sync drain、native drain heartbeat、manual drain session/settings、JobScheduler background drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成）
+- **状态**：BLOCKED（sync schema/InMemoryLocalEventStore/PowerSync config static tests、native SQLite pending event store、QuickRecordActivity local insert/save+drain、TS/native pending sync drain、native drain heartbeat、manual drain session/settings、JobScheduler background drain 已完成；op-sqlite/PowerSync native integration 与前置 T046 device 验收待完成；Android/PowerSync contract report 已完成）
 - **前置依赖**：APC-T012, APC-T046
 - **输入**：`ENGINEERING_DESIGN.md` §1.2 Android、§7.1；`ARCHITECTURE_FINAL.md` §9
 - **输出**：Android Sync module
@@ -1732,7 +1732,7 @@
 - **所属 Capability**：C22
 - **所属 Story**：S22
 - **目标**：提供测试夹具、FakeModelClient、FakeFCM、mock camera/mmWave publisher。
-- **状态**：BLOCKED（fixtures/fakes/mock publisher/security helpers 已完成；前置 T032/T038/T040 未 DONE，真实 MQTT integration 待验收）
+- **状态**：BLOCKED（fixtures/fakes/mock publisher/security helpers、mmWave fixture replay report 已完成；前置 T032/T038/T040 未 DONE，真实 MQTT integration 待验收）
 - **前置依赖**：APC-T024, APC-T032, APC-T038, APC-T040
 - **输入**：`ENGINEERING_DESIGN.md` §12.2
 - **输出**：fixtures 与 fake services
@@ -1761,7 +1761,7 @@
 - **所属 Capability**：C23 E2E / Security / Soak
 - **所属 Story**：S23 MVP E2E、告警 E2E、安全回归、影子/稳定性验证
 - **目标**：验证 P0-M0 最小闭环：Android 离线记录 feeding，恢复网络后同步到 PG，派生态回传 Today。
-- **状态**：BLOCKED（semi-automated checklist、dev API feeding roundtrip E2E substitute 与 Android native offline pieces 已完成；真实 Android/PowerSync E2E 待验收）
+- **状态**：BLOCKED（semi-automated checklist、dev API feeding roundtrip E2E substitute、Android/PowerSync contract report 与 Android native offline pieces 已完成；真实 Android/PowerSync E2E 待验收）
 - **前置依赖**：APC-T017, APC-T047, APC-T048, APC-T049, APC-T055
 - **输入**：`ENGINEERING_DESIGN.md` §14 Bootstrap 顺序；§12
 - **输出**：跨端 MVP E2E 测试与报告
