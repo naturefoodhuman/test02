@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 22:40:00
+创建时间（北京时间）：2026-08-04 23:05:00
 -->
 
 
@@ -136,6 +136,7 @@
 
 - 新增 `make p0-readiness`，聚合当前所有自动化 readiness checks，并输出 `ready_for_external_validation`。
 - 新增 `make external-validation-plan`，针对剩余外部 blocker 输出命令、证据要求和成功标准。
+- 新增 Rule Signoff validator/template，校验 reviewer sign-off artifact 的 hash/version/scope/checklist，并阻止 dev fixture 被误当 production approval。
 - 报告明确剩余外部 blocker：Vaccine/Growth 人审、Camera/VLM 设备、真实 MQTT/mmWave soak、PlatformIO flash、NAS/restore drill、7-night shadow/soak。
 
 ### 状态接受（APC-T047/T052/T054/T056/T057）

@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract android-notification-contract deployment-readiness p0-readiness external-validation-plan run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet rule-signoff-template launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract android-notification-contract deployment-readiness p0-readiness external-validation-plan run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -56,7 +56,9 @@ docs-check:
 	@test -f server/app/rule_engine/kernel.py
 	@test -f server/app/rule_engine/loader.py
 	@test -f server/app/rule_engine/review_packet.py
+	@test -f server/app/rule_engine/review_signoff.py
 	@test -f server/scripts/generate_rule_review_packet.py
+	@test -f server/scripts/validate_rule_signoff.py
 	@test -f server/app/rule_engine/domains/medication.py
 	@test -f server/app/rule_engine/domains/vaccine.py
 	@test -f server/app/rule_engine/domains/growth.py
@@ -148,6 +150,10 @@ rules-validate: ensure-dev-deps
 
 rule-review-packet: ensure-dev-deps
 	@$(PYTHON) server/scripts/generate_rule_review_packet.py --output-dir runtime/reports
+
+rule-signoff-template: ensure-dev-deps
+	@$(PYTHON) server/scripts/validate_rule_signoff.py --template-domain vaccine
+	@$(PYTHON) server/scripts/validate_rule_signoff.py --template-domain growth
 
 launchd-validate: ensure-dev-deps
 	@$(PYTHON) -m server.app.ops.launchd_validator deploy/launchd

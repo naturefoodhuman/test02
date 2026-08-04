@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 22:40:00
+创建时间（北京时间）：2026-08-04 23:05:00
 -->
 
 # TASK_BACKLOG.md
@@ -759,7 +759,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现中国疫苗规则 P0：计划、逾期、已完成记录与 EvidencePolicy 版本化。
-- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests、`/api/v1/rules/evaluate/vaccine`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；生产规则审查未完成；external-validation-plan 已列明证据与命令）
+- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests、`/api/v1/rules/evaluate/vaccine`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包、Rule Signoff validator/template 已完成；生产规则审查未完成；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4；`ENGINEERING_DESIGN.md` §13.2
 - **输出**：Vaccine RuleModule、规则包、golden tests
@@ -786,7 +786,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现 WHO 0–5 岁基础生长百分位计算与趋势提示规则。
-- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests、`/api/v1/rules/evaluate/growth`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；完整 WHO 表验收未完成；external-validation-plan 已列明证据与命令）
+- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests、`/api/v1/rules/evaluate/growth`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包、Rule Signoff validator/template 已完成；完整 WHO 表验收未完成；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4
 - **输出**：Growth RuleModule、WHO 配置、golden tests
