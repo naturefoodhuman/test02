@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 01:10:00
+创建时间（北京时间）：2026-08-05 01:35:00
 -->
 
 
@@ -10,9 +10,46 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T047`、`APC-T052`、`APC-T054`、`APC-T056`、`APC-T057`；新增 P0 readiness aggregate report、external validation plan、external evidence verifier、rule signoff validator、APC closeout gate 与 closeout recommendation report。
+- **最新完成任务**：`APC-T047`、`APC-T052`、`APC-T054`、`APC-T056`、`APC-T057`；新增 P0 readiness aggregate report、external validation plan、external validation bundle、external evidence verifier、rule signoff validator、APC closeout gate 与 closeout recommendation report。
 - **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator、backup manifest verifier、red alert escalation report 与 firmware static preflight、mmWave replay report、Android/PowerSync E2E contract report 已完成；APC-T046/T047/T048/T049/T050/T051/T052/T053/T054/T055/T056/T057 已 DONE；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 98 轮] 2026-08-05 — External validation bundle
+
+### 需求变动
+
+- 继续推进外部验收可执行性：新增 external validation bundle，一键生成 plan、evidence templates、rule signoff templates、closeout recommendations 和 manifest。
+
+### 文件影响
+
+新增：
+
+- `server/app/ops/external_validation_bundle.py`
+- `server/scripts/external_validation_bundle.py`
+- `tests/test_external_validation_bundle.py`
+
+修改：
+
+- `Makefile`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_external_validation_bundle.py tests/test_external_validation_plan.py tests/test_closeout_recommendation.py -q
+# 6 passed
+make external-validation-bundle
+make lint && make typecheck && make test
+# 216 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；bundle 只打包外部验收材料，不自动关闭任务。
 
 ---
 
