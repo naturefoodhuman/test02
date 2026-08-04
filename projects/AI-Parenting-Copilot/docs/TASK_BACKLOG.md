@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 21:35:00
+创建时间（北京时间）：2026-08-04 21:55:00
 -->
 
 # TASK_BACKLOG.md
@@ -1848,7 +1848,7 @@
 - **所属 Capability**：C23
 - **所属 Story**：S23
 - **目标**：实现摄像头/mmWave 7 晚影子模式记录、稳定性 soak 测试与生产前检查清单。
-- **状态**：BLOCKED（shadow harness/soak locustfile/release checklist/smoke tests 已完成；前置 T039 未 DONE；T054/T057/T058 已 DONE，真实 7 晚 shadow 与 soak 待验收）
+- **状态**：BLOCKED（shadow harness/soak locustfile/release checklist/smoke tests、P0 readiness aggregate report 已完成；前置 T039 未 DONE；T054/T057/T058 已 DONE，真实 7 晚 shadow 与 soak 待验收）
 - **前置依赖**：APC-T039, APC-T054, APC-T057, APC-T058
 - **输入**：`ENGINEERING_DESIGN.md` §12.1、§12.3；`ARCHITECTURE_FINAL.md` §25.3、§26
 - **输出**：Shadow harness、soak 脚本、release checklist

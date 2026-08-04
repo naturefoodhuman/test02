@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 21:35:00
+创建时间（北京时间）：2026-08-04 21:55:00
 -->
 
 
@@ -15,6 +15,36 @@
 - **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge；Rule Review Packet 可输出 rule pack hash、golden case pass/fail 与人审 blocker；新增 launchd plist static validator，拦截 /tmp 日志路径等部署错误；新增 backup manifest verifier，校验 dump/media archive manifest 并输出 restore next commands；新增 red alert fake-channel escalation report，验证 0/60/90s escalation、trigger-only FCM payload 与 ack cancel；修复 ESP32C6 firmware mock JSON 字符串并新增 firmware static preflight；新增 mmWave fixture replay report 与 Android/PowerSync E2E contract report；基于 assembleDebug、static tests、contract report 与 server tests 解除 T046/T048/T049/T050/T051/T053/T055。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 92 轮 · 2026-08-04（P0 readiness aggregate report）
+
+**目标**：继续推进 `APC-T059`，把所有无外部资源即可完成的发布前检查汇总成一个 P0 readiness 聚合报告，明确剩余只有人审/硬件/长稳态。
+
+**完成内容**：
+
+- 新增 `server/app/ops/p0_readiness.py`：聚合 Rule Review Packet、Android E2E contract、Android Notification contract、Deployment Readiness、Backup Manifest verifier、mmWave replay、Firmware preflight、Red Alert simulation、Shadow harness、Release checklist 关键项。
+- 新增 `server/scripts/p0_readiness_report.py` 与 `make p0-readiness`。
+- 新增 `tests/test_p0_readiness_report.py`，断言所有自动化检查为 `ok`，报告状态为 `ready_for_external_validation`，并列出仍需外部验收的 blockers。
+- P0 readiness report 明确列出 remaining external blockers：Vaccine/Growth 人审、Camera/VLM 设备、真实 MQTT/mmWave soak、PlatformIO flash、NAS/restore drill、7-night shadow/soak。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_p0_readiness_report.py tests/test_shadow_soak_release.py -q
+# 3 passed
+make p0-readiness
+# automated_status=ready_for_external_validation
+make lint
+make typecheck
+make test
+# 199 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更；聚合报告只汇总现有自动化检查和外部 blocker，不替代真实人审/硬件/7-night soak。
 
 ---
 

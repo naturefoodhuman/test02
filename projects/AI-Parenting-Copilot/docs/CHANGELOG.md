@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 21:35:00
+创建时间（北京时间）：2026-08-04 21:55:00
 -->
 
 
@@ -10,9 +10,48 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T047`、`APC-T052`、`APC-T054`、`APC-T056`、`APC-T057`；本轮一次性完成 5 个 APC 任务。
+- **最新完成任务**：`APC-T047`、`APC-T052`、`APC-T054`、`APC-T056`、`APC-T057`；新增 P0 readiness aggregate report。
 - **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator、backup manifest verifier、red alert escalation report 与 firmware static preflight、mmWave replay report、Android/PowerSync E2E contract report 已完成；APC-T046/T047/T048/T049/T050/T051/T052/T053/T054/T055/T056/T057 已 DONE；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 92 轮] 2026-08-04 — P0 readiness aggregate report
+
+### 需求变动
+
+- 继续推进 P0 发布前硬化：新增 P0 readiness 聚合报告，把所有自动化合同/回归/预检集中运行，并明确剩余外部 blocker。
+
+### 文件影响
+
+新增：
+
+- `server/app/ops/p0_readiness.py`
+- `server/scripts/p0_readiness_report.py`
+- `tests/test_p0_readiness_report.py`
+
+修改：
+
+- `Makefile`
+- `docs/TASK_BACKLOG.md`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_p0_readiness_report.py tests/test_shadow_soak_release.py -q
+# 3 passed
+make p0-readiness
+# automated_status=ready_for_external_validation
+make lint && make typecheck && make test
+# 199 passed, 8 deselected, 1 warning
+```
+
+### 架构影响
+
+- 无架构变更；报告不替代真实人审/硬件/7-night soak。
 
 ---
 
