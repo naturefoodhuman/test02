@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 08:25:00
+创建时间（北京时间）：2026-08-04 08:40:00
 -->
 
 
@@ -8,7 +8,7 @@
 
 **更新日期**：2026-08-03 CST
 **当前阶段**：P0-M1 DB-backed API runtime hardening + Android Quick Record/Copilot/API smoke 继续开发
-**当前任务状态**：用户本机 `api-db-smoke-test` 复验通过后 `APC-T037/T042/T043` 已 DONE；Android build 已通过；Scheduler create_alert reminder bridge、Camera ISAPI/Fregata HTTP bridge、Rule Review Packet generator、launchd static validator、backup manifest verifier、red alert escalation report、firmware static preflight、mmWave replay report 与 Android/PowerSync E2E contract report 已完成；`APC-T022/T023/T030/T036/T038/T039/T048` 继续推进但仍等待生产规则审查/device/PowerSync 等复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
+**当前任务状态**：用户本机 `api-db-smoke-test` 复验通过后 `APC-T037/T042/T043` 已 DONE；Android build 已通过；Scheduler create_alert reminder bridge、Camera ISAPI/Fregata HTTP bridge、Rule Review Packet generator、launchd static validator、backup manifest verifier、red alert escalation report、firmware static preflight、mmWave replay report 与 Android/PowerSync E2E contract report 已完成；APC-T046/T048/T049/T055 已 DONE；`APC-T022/T023/T030/T036/T038/T039/T048` 继续推进但仍等待生产规则审查/device/PowerSync 等复验；累计 DONE 以 `docs/TASK_BACKLOG.md` 顶部状态行为准。
 **状态说明**：本文件是 AI Parenting Copilot 项目级当前状态 SSOT；工厂根目录文档仅作为工厂能力与治理规则参考。下方较早轮次的“阻塞原因”段落保留为历史审计记录；若与本节或 `docs/TASK_BACKLOG.md` 顶部状态冲突，以本节和 `TASK_BACKLOG.md` 为准。
 
 ---
@@ -126,6 +126,12 @@
 
 - 用户本机 `./gradlew assembleDebug` 已成功，说明最新 Android native Kotlin 可构建。
 - 修复 `tests/integration/test_api_db_runtime.py` 中 Memory short_context 断言：DB smoke 实际包含 feeding、Copilot diaper 与 mmWave telemetry 事件，测试现在按业务实际分别断言三个计数。
+
+### 状态接受（APC-T046/T048/T049/T055）
+
+- `APC-T046` Android Auth、`APC-T048` Quick Record、`APC-T049` Today 首页已基于用户 `assembleDebug`、static/API tests 和 Android E2E contract report 标记 DONE。
+- `APC-T055` Dev Fixtures 已基于 fake channels、mock mmWave publisher、radar fixtures、mmWave replay report、安全回归与 E2E substitutes 标记 DONE。
+- 真实 Android/PowerSync 端到端仍由 `APC-T056` 跟踪，避免把设备验收混入单功能代码任务。
 
 ### 继续开发进展（mmWave replay / Android E2E contract reports）
 

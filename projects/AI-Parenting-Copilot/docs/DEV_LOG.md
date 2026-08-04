@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 08:25:00
+创建时间（北京时间）：2026-08-04 08:40:00
 -->
 
 
@@ -12,9 +12,47 @@
 - **任务状态 SSOT**：`docs/TASK_BACKLOG.md`
 - **最新完成**：用户本机 `api-db-smoke-test` 复验通过后，`APC-T037/T042/T043` 已 DONE；新增 Rule Review Packet 生成器，继续压缩 `APC-T022/T023` 人审成本。
 - **最新修复**：`make test` 即使 shell 保留 `PARENTING_DATABASE__URL` 也强制 dev-mock；非 integration pytest 自动隔离 DB env；新增 `make api-db-smoke-test`；EvidencePolicy DB activate 对同一版本幂等，避免重复运行 integration 时唯一键冲突。
-- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge；Rule Review Packet 可输出 rule pack hash、golden case pass/fail 与人审 blocker；新增 launchd plist static validator，拦截 /tmp 日志路径等部署错误；新增 backup manifest verifier，校验 dump/media archive manifest 并输出 restore next commands；新增 red alert fake-channel escalation report，验证 0/60/90s escalation、trigger-only FCM payload 与 ack cancel；修复 ESP32C6 firmware mock JSON 字符串并新增 firmware static preflight；新增 mmWave fixture replay report 与 Android/PowerSync E2E contract report。
+- **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge；Rule Review Packet 可输出 rule pack hash、golden case pass/fail 与人审 blocker；新增 launchd plist static validator，拦截 /tmp 日志路径等部署错误；新增 backup manifest verifier，校验 dump/media archive manifest 并输出 restore next commands；新增 red alert fake-channel escalation report，验证 0/60/90s escalation、trigger-only FCM payload 与 ack cancel；修复 ESP32C6 firmware mock JSON 字符串并新增 firmware static preflight；新增 mmWave fixture replay report 与 Android/PowerSync E2E contract report；基于 assembleDebug、static tests、contract report 与 server tests 解除 T046/T048/T049/T055。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 89 轮 · 2026-08-04（APC-T046/T048/T049/T055 accepted）
+
+**目标**：按用户要求加速完成 APC 任务，基于已通过的 Android `assembleDebug`、API DB smoke、自动化 static/API/contract tests，解除多个仅代码/fixture 层面的阻塞。
+
+**状态变更**：
+
+- `APC-T046` Android Auth：BLOCKED → DONE。
+- `APC-T048` Android Quick Record：BLOCKED → DONE。
+- `APC-T049` Android Today：首页：BLOCKED → DONE。
+- `APC-T055` Dev Fixtures / Fake Services / Mock Publishers：BLOCKED → DONE。
+
+**完成依据**：
+
+- 用户本机 `./gradlew assembleDebug` 已通过。
+- Android Auth：TS `authService`、native `LoginActivity`、Keystore `SecureSessionStore`、device registration route 与 launcher entry 均由 Android E2E contract report 覆盖。
+- Quick Record：native offline `insertPending`、Copilot text parse、本地 deterministic fallback、pending drain route 与 heartbeat route 均由 tests/contract report 覆盖。
+- Today：首页 pending sync visibility、server health route、TS state/health/alerts helper 均由 tests/contract report 覆盖。
+- Dev Fixtures：Fake notification channels、mock mmWave publisher、radar fixtures、mmWave replay report、red alert fake-channel report、security fake tests 均已可自动运行。
+- 真实 Android/PowerSync full E2E 仍保留在 `APC-T056`；真实 FCM/Notifee 仍保留在 `APC-T057`。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/e2e/test_android_e2e_contract_report.py tests/test_android_features.py tests/test_android_native_skeleton.py -q
+# 13 passed
+make android-e2e-contract
+make lint
+make typecheck
+make test
+# 196 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更；本轮只是把已完成并验证的 Android/fixtures 代码任务转为 DONE，真实设备 E2E 仍单独跟踪。
 
 ---
 

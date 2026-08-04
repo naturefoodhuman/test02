@@ -14,9 +14,14 @@ def test_android_e2e_contract_report_passes_static_and_server_contracts() -> Non
     report = build_android_e2e_contract_report(Path("."))
 
     assert report.ok is True
+    assert report.checks["ts_auth_login_route"] == "ok"
+    assert report.checks["native_login_route"] == "ok"
+    assert report.checks["native_device_register_route"] == "ok"
+    assert report.checks["native_keystore"] == "ok"
     assert report.checks["native_quick_record_insert_pending"] == "ok"
     assert report.checks["native_quick_record_offline_fallback"] == "ok"
     assert report.checks["native_drain_heartbeat_route"] == "ok"
     assert report.checks["today_pending_visible"] == "ok"
+    assert report.checks["ts_today_state_route"] == "ok"
     assert report.checks["server_sync_contract_sample"] == "ok"
     assert report.sample_event["event_type"] == "feeding"

@@ -23,8 +23,14 @@ REQUIRED_ANDROID_FILES = (
     "android/src/sync/schema.ts",
     "android/src/sync/pending_sync_drain.ts",
     "android/src/sync/native_sqlite_bridge.ts",
+    "android/src/features/auth/authService.ts",
+    "android/src/features/auth/native_secure_session.ts",
     "android/src/features/quick_record/createLocalEvent.ts",
     "android/src/features/quick_record/copilotFlow.ts",
+    "android/src/features/today/viewModel.ts",
+    "android/android/app/src/main/java/com/aiparentingcopilot/LoginActivity.kt",
+    "android/android/app/src/main/java/com/aiparentingcopilot/SecureSessionStore.kt",
+    "android/android/app/src/main/java/com/aiparentingcopilot/MainActivity.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/QuickRecordActivity.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/PendingSyncDrainer.kt",
     "android/android/app/src/main/java/com/aiparentingcopilot/TodayActivity.kt",
@@ -69,9 +75,46 @@ def build_android_e2e_contract_report(project_root: Path | str = ".") -> Android
     schema_text = _read(root / "android/src/sync/schema.ts")
     for column in REQUIRED_COLUMNS:
         _expect(f"'{column}'" in schema_text, f"schema_column:{column}", checks, errors)
+    auth_service = _read(root / "android/src/features/auth/authService.ts")
+    _expect("/api/v1/auth/login" in auth_service, "ts_auth_login_route", checks, errors)
+    _expect(
+        "/api/v1/auth/devices/register" in auth_service,
+        "ts_auth_device_register_route",
+        checks,
+        errors,
+    )
+    secure_session_ts = _read(root / "android/src/features/auth/native_secure_session.ts")
+    _expect("NativeSecureSessionBridge" in secure_session_ts, "ts_secure_session_bridge", checks, errors)
     pending_drain = _read(root / "android/src/sync/pending_sync_drain.ts")
     _expect("/api/v1/events" in pending_drain, "ts_drain_events_route", checks, errors)
     _expect("/api/v1/sync/heartbeat" in pending_drain, "ts_drain_heartbeat_route", checks, errors)
+    main_activity = _read(
+        root / "android/android/app/src/main/java/com/aiparentingcopilot/MainActivity.kt"
+    )
+    _expect("LoginActivity::class.java" in main_activity, "native_main_login_entry", checks, errors)
+    _expect("TodayActivity::class.java" in main_activity, "native_main_today_entry", checks, errors)
+    _expect(
+        "QuickRecordActivity::class.java" in main_activity,
+        "native_main_quick_record_entry",
+        checks,
+        errors,
+    )
+    login_activity = _read(
+        root / "android/android/app/src/main/java/com/aiparentingcopilot/LoginActivity.kt"
+    )
+    _expect("/api/v1/auth/login" in login_activity, "native_login_route", checks, errors)
+    _expect(
+        "/api/v1/auth/devices/register" in login_activity,
+        "native_device_register_route",
+        checks,
+        errors,
+    )
+    _expect("SecureSessionStore" in login_activity, "native_login_secure_store", checks, errors)
+    secure_session = _read(
+        root / "android/android/app/src/main/java/com/aiparentingcopilot/SecureSessionStore.kt"
+    )
+    _expect("AndroidKeyStore" in secure_session, "native_keystore", checks, errors)
+    _expect("AES/GCM/NoPadding" in secure_session, "native_session_aes_gcm", checks, errors)
     quick_record = _read(
         root / "android/android/app/src/main/java/com/aiparentingcopilot/QuickRecordActivity.kt"
     )
@@ -96,6 +139,12 @@ def build_android_e2e_contract_report(project_root: Path | str = ".") -> Android
         root / "android/android/app/src/main/java/com/aiparentingcopilot/TodayActivity.kt"
     )
     _expect("Pending sync:" in today, "today_pending_visible", checks, errors)
+    _expect("/api/v1/system/health" in today, "native_today_health_route", checks, errors)
+    today_view_model = _read(root / "android/src/features/today/viewModel.ts")
+    _expect("pendingSyncCount" in today_view_model, "ts_today_pending_sync_count", checks, errors)
+    _expect("grayDeviceCount" in today_view_model, "ts_today_gray_device_count", checks, errors)
+    _expect("/api/v1/system/health" in today_view_model, "ts_today_health_route", checks, errors)
+    _expect("/api/v1/babies/${babyId}/state" in today_view_model, "ts_today_state_route", checks, errors)
     sample_event = _sample_sync_event()
     try:
         validate_sync_record(sample_event)
