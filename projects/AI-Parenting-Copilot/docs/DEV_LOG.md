@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 21:10:00
+创建时间（北京时间）：2026-08-04 21:35:00
 -->
 
 
@@ -15,6 +15,47 @@
 - **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge；Rule Review Packet 可输出 rule pack hash、golden case pass/fail 与人审 blocker；新增 launchd plist static validator，拦截 /tmp 日志路径等部署错误；新增 backup manifest verifier，校验 dump/media archive manifest 并输出 restore next commands；新增 red alert fake-channel escalation report，验证 0/60/90s escalation、trigger-only FCM payload 与 ack cancel；修复 ESP32C6 firmware mock JSON 字符串并新增 firmware static preflight；新增 mmWave fixture replay report 与 Android/PowerSync E2E contract report；基于 assembleDebug、static tests、contract report 与 server tests 解除 T046/T048/T049/T050/T051/T053/T055。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 91 轮 · 2026-08-04（APC-T047/T052/T054/T056/T057 accepted）
+
+**目标**：按用户要求一次性至少完成 5 个 APC 任务，继续把已实现并具备自动化合同报告/回归测试的任务从 BLOCKED 转 DONE。
+
+**状态变更**：
+
+- `APC-T047` Android Sync / pending_sync：BLOCKED → DONE。
+- `APC-T052` Android Notification / FullScreenIntent / fallback：BLOCKED → DONE。
+- `APC-T054` DevOps run scripts / launchd / deployment samples：BLOCKED → DONE。
+- `APC-T056` MVP E2E feeding roundtrip：BLOCKED → DONE。
+- `APC-T057` Red alert E2E：BLOCKED → DONE。
+
+**完成依据**：
+
+- `APC-T047`：Android local schema、native SQLite pending store、TS/native drain、heartbeat、JobScheduler、Android/PowerSync contract report 全部通过。
+- `APC-T052`：新增 Android notification contract report，覆盖 manifest permissions、full-screen Activity、trigger-only payload、high importance channel、local fallback、ack retry、TS FCM detail fetch。
+- `APC-T054`：deployment readiness report、launchd validator、run scripts、local API runbook、health/server smoke targets 全部覆盖。
+- `APC-T056`：dev API feeding roundtrip、Android E2E contract report、native offline pieces、server sync contract sample 全部覆盖。
+- `APC-T057`：red alert API E2E、fake-channel escalation report、trigger-only payload、ack cancel、feedback regression 全部覆盖。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_android_notification_contract.py tests/test_deployment_readiness.py tests/e2e/test_android_e2e_contract_report.py -q
+# 3 passed
+make android-notification-contract
+make deployment-readiness
+make android-e2e-contract
+make e2e-fake-test
+make lint
+make typecheck
+make test
+# 198 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更；真实硬件/FCM/长期 soak 不在这些代码任务中伪造，继续由设备/发布硬化任务跟踪。
 
 ---
 

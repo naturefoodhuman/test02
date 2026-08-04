@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract android-notification-contract deployment-readiness run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -91,13 +91,17 @@ docs-check:
 	@test -f server/app/backup/restore_drill.py
 	@test -f server/app/backup/verification.py
 	@test -f server/app/ops/launchd_validator.py
+	@test -f server/app/ops/deployment_readiness.py
 	@test -f server/app/notification/escalation_report.py
+	@test -f server/app/notification/android_contract.py
 	@test -f server/app/mmwave/replay.py
 	@test -f server/scripts/mock_mmwave_publisher.py
 	@test -f server/scripts/replay_mmwave_fixture.py
 	@test -f server/scripts/simulate_red_alert_escalation.py
 	@test -f server/scripts/verify_backup_manifest.py
 	@test -f server/scripts/android_e2e_contract_report.py
+	@test -f server/scripts/android_notification_contract_report.py
+	@test -f server/scripts/deployment_readiness_report.py
 	@test -f tests/shadow/camera_mmwave_shadow_harness.py
 	@test -f tests/soak/locustfile.py
 	@test -f docs/RELEASE_CHECKLIST_P0.md
@@ -155,6 +159,12 @@ mmwave-replay: ensure-dev-deps
 
 android-e2e-contract: ensure-dev-deps
 	@$(PYTHON) server/scripts/android_e2e_contract_report.py
+
+android-notification-contract: ensure-dev-deps
+	@$(PYTHON) server/scripts/android_notification_contract_report.py
+
+deployment-readiness: ensure-dev-deps
+	@$(PYTHON) server/scripts/deployment_readiness_report.py
 
 governance-check: docs-check
 	@echo "Project-level governance placeholder passed. Factory governance remains at repository root."
