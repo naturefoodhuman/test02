@@ -131,6 +131,55 @@ def _items() -> list[ExternalValidationItem]:
                 "Reviewer confirms no single-point strong alert is emitted.",
             ),
         ),
+
+        ExternalValidationItem(
+            task_id="APC-T030",
+            title="P0 Copilot production dependency signoff",
+            resource_type="dependent_review",
+            blocked_by=(
+                "Requires APC-T022/APC-T023 production rule review "
+                "before P0 Copilots can be closed."
+            ),
+            commands=(
+                "make rule-review-packet",
+                "make p0-readiness",
+                "python3 -m pytest tests/test_p0_copilots.py tests/test_orchestrator.py -q",
+            ),
+            evidence_required=(
+                "Vaccine production signoff result.",
+                "Growth production signoff result.",
+                "P0 Copilot smoke evidence with no free-form medical/dose decision.",
+            ),
+            success_criteria=(
+                "P0 Copilots delegate vaccine/growth/medication decisions to Rule Engine.",
+                "No Copilot output bypasses Dose Interceptor or Rule Engine.",
+            ),
+        ),
+        ExternalValidationItem(
+            task_id="APC-T036",
+            title="Scheduler production and long-running validation",
+            resource_type="long_running_scheduler",
+            blocked_by=(
+                "Requires APC-T022 production vaccine review plus local "
+                "long-running scheduler evidence."
+            ),
+            commands=(
+                "make rule-review-packet",
+                "make deployment-readiness",
+                "curl -X POST 'http://127.0.0.1:8000/api/v1/scheduler/jobs/"
+                "vaccine_due/trigger?create_alert=true&family_id=<family>&baby_id=<baby>'",
+            ),
+            evidence_required=(
+                "Vaccine production signoff result.",
+                "Scheduler trigger alert evidence.",
+                "Long-running scheduler log without crash or duplicate reminders.",
+            ),
+            success_criteria=(
+                "Scheduler vaccine reminders are based on reviewed Rule Engine outputs.",
+                "Long-running scheduler does not duplicate reminders or bypass "
+                "Notification Orchestrator.",
+            ),
+        ),
         ExternalValidationItem(
             task_id="APC-T038",
             title="Camera RTSP/ISAPI device validation",
