@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 21:55:00
+创建时间（北京时间）：2026-08-04 22:40:00
 -->
 
 
@@ -127,9 +127,15 @@
 - 用户本机 `./gradlew assembleDebug` 已成功，说明最新 Android native Kotlin 可构建。
 - 修复 `tests/integration/test_api_db_runtime.py` 中 Memory short_context 断言：DB smoke 实际包含 feeding、Copilot diaper 与 mmWave telemetry 事件，测试现在按业务实际分别断言三个计数。
 
+### 继续开发进展（External validation plan）
+
+- 新增 external validation plan，覆盖剩余人审/硬件/NAS/长稳态 blocker：`APC-T022/T023/T038/T039/T040/T041/T044/T059`。
+- 每项均包含 resource type、blocked_by、commands、evidence_required、success_criteria，方便用户 Mac/设备环境逐项执行。
+
 ### 继续开发进展（P0 readiness aggregate report）
 
 - 新增 `make p0-readiness`，聚合当前所有自动化 readiness checks，并输出 `ready_for_external_validation`。
+- 新增 `make external-validation-plan`，针对剩余外部 blocker 输出命令、证据要求和成功标准。
 - 报告明确剩余外部 blocker：Vaccine/Growth 人审、Camera/VLM 设备、真实 MQTT/mmWave soak、PlatformIO flash、NAS/restore drill、7-night shadow/soak。
 
 ### 状态接受（APC-T047/T052/T054/T056/T057）

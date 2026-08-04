@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 21:55:00
+创建时间（北京时间）：2026-08-04 22:40:00
 -->
 
 
@@ -15,6 +15,35 @@
 - **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge；Rule Review Packet 可输出 rule pack hash、golden case pass/fail 与人审 blocker；新增 launchd plist static validator，拦截 /tmp 日志路径等部署错误；新增 backup manifest verifier，校验 dump/media archive manifest 并输出 restore next commands；新增 red alert fake-channel escalation report，验证 0/60/90s escalation、trigger-only FCM payload 与 ack cancel；修复 ESP32C6 firmware mock JSON 字符串并新增 firmware static preflight；新增 mmWave fixture replay report 与 Android/PowerSync E2E contract report；基于 assembleDebug、static tests、contract report 与 server tests 解除 T046/T048/T049/T050/T051/T053/T055。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 93 轮 · 2026-08-04（External validation plan）
+
+**目标**：继续压缩剩余 BLOCKED 的执行不确定性，把所有必须依赖人审/硬件/NAS/长稳态的任务整理成一份可执行外部验收计划。
+
+**完成内容**：
+
+- 新增 `server/app/ops/external_validation.py`：列出剩余外部 blocker 的 task_id、resource_type、blocked_by、commands、evidence_required、success_criteria。
+- 新增 `server/scripts/external_validation_plan.py` 与 `make external-validation-plan`，输出 JSON + Markdown 到 `runtime/reports/`。
+- 覆盖剩余外部任务：`APC-T022/T023/T038/T039/T040/T041/T044/T059`，并显式说明自动化检查不能替代人审/真实设备/真实 NAS/7-night soak。
+- 新增 `tests/test_external_validation_plan.py`，确保计划覆盖剩余关键 blocker 且每项都有命令、证据和成功标准。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_external_validation_plan.py -q
+# 2 passed
+make external-validation-plan
+make lint
+make typecheck
+make test
+# 201 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更；该计划只组织外部验收，不替代真实人审、设备、NAS 或长期 soak。
 
 ---
 

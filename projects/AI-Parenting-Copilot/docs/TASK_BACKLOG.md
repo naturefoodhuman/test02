@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-04 21:55:00
+创建时间（北京时间）：2026-08-04 22:40:00
 -->
 
 # TASK_BACKLOG.md
@@ -759,7 +759,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现中国疫苗规则 P0：计划、逾期、已完成记录与 EvidencePolicy 版本化。
-- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests、`/api/v1/rules/evaluate/vaccine`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；生产规则审查未完成）
+- **状态**：BLOCKED（VaccineRuleModule/规则包/golden tests、`/api/v1/rules/evaluate/vaccine`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；生产规则审查未完成；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4；`ENGINEERING_DESIGN.md` §13.2
 - **输出**：Vaccine RuleModule、规则包、golden tests
@@ -786,7 +786,7 @@
 - **所属 Capability**：C10
 - **所属 Story**：S10
 - **目标**：实现 WHO 0–5 岁基础生长百分位计算与趋势提示规则。
-- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests、`/api/v1/rules/evaluate/growth`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；完整 WHO 表验收未完成）
+- **状态**：BLOCKED（GrowthRuleModule/简化 WHO fixture/golden tests、`/api/v1/rules/evaluate/growth`、Android RuleEvaluationActivity、Rule Review Packet 生成器/人审包已完成；完整 WHO 表验收未完成；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T018
 - **输入**：`ARCHITECTURE_FINAL.md` §10.2、§11.4
 - **输出**：Growth RuleModule、WHO 配置、golden tests
@@ -987,7 +987,7 @@
 - **所属 Capability**：C12
 - **所属 Story**：S12
 - **目标**：实现 P0 所需低/中安全 Copilot 外壳，调用 Rule Engine 并生成结构化解释。
-- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API、Android RuleEvaluationActivity、Android Quick Record Copilot text flow、DB API smoke 扩展、Memory event_type_counts 断言修复与 Rule Review Packet 已完成；T022/T023 生产规则审查待验收）
+- **状态**：BLOCKED（P0 Copilot wrappers/tests、record candidate confirm、FamilyMemory confirm、FamilyKnowledge API/DB persistence/audit、Rule Evaluation API、Android RuleEvaluationActivity、Android Quick Record Copilot text flow、DB API smoke 扩展、Memory event_type_counts 断言修复与 Rule Review Packet 已完成；T022/T023 生产规则审查待验收；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T020, APC-T022, APC-T023, APC-T028, APC-T029
 - **输入**：`ARCHITECTURE_FINAL.md` §11.4、§26.1
 - **输出**：P0 Copilot 实现与单测
@@ -1168,7 +1168,7 @@
 - **所属 Capability**：C15
 - **所属 Story**：S15
 - **目标**：实现 APScheduler runner 与 P0 定时任务。
-- **状态**：BLOCKED（manual SchedulerRunner、PeriodicSchedulerWorker、morning/vaccine/supplement/health jobs、Scheduler API trigger/list 与 create_alert reminder bridge 已完成；前置 T022 生产规则审查与长期运行验收待完成）
+- **状态**：BLOCKED（manual SchedulerRunner、PeriodicSchedulerWorker、morning/vaccine/supplement/health jobs、Scheduler API trigger/list 与 create_alert reminder bridge 已完成；前置 T022 生产规则审查与长期运行验收待完成；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T022, APC-T031, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M20、§7.2
 - **输出**：Scheduler jobs
@@ -1233,7 +1233,7 @@
 - **所属 Capability**：C16
 - **所属 Story**：S16
 - **目标**：实现摄像头接入适配层，支持 dev mock snapshot 与真实 RTSP/ISAPI/Fregata 配置。
-- **状态**：BLOCKED（devices.yaml/mock snapshot API/adapter placeholders、SQLAlchemyCameraEventRepository、camera-events API 与 DB/API smoke 已完成；ISAPI health HTTP adapter 已接入注入式测试；真实 RTSP/ISAPI/Fregata 待设备验收）
+- **状态**：BLOCKED（devices.yaml/mock snapshot API/adapter placeholders、SQLAlchemyCameraEventRepository、camera-events API 与 DB/API smoke 已完成；ISAPI health HTTP adapter 已接入注入式测试；真实 RTSP/ISAPI/Fregata 待设备验收；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T037, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M11、§7.5；`ARCHITECTURE_FINAL.md` §12
 - **输出**：Camera adapters
@@ -1262,7 +1262,7 @@
 - **所属 Capability**：C16
 - **所属 Story**：S16
 - **目标**：实现事件片段记录、摄像头/mmWave 融合状态机与 VLM 调度影子模式。
-- **状态**：BLOCKED（Clip plan/FusionStateMachine/VLMDispatcher shadow tests、camera_event/fusion API、clip plan、VLM shadow API 与 DB/API smoke 已完成；Fregata shadow HTTP bridge 已接入注入式测试；真实 VLM/media/device shadow 待验收）
+- **状态**：BLOCKED（Clip plan/FusionStateMachine/VLMDispatcher shadow tests、camera_event/fusion API、clip plan、VLM shadow API 与 DB/API smoke 已完成；Fregata shadow HTTP bridge 已接入注入式测试；真实 VLM/media/device shadow 待验收；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T021, APC-T038, APC-T040
 - **输入**：`ENGINEERING_DESIGN.md` §7.5；`ARCHITECTURE_FINAL.md` §12.3、§13.2
 - **输出**：Camera safety shadow pipeline
@@ -1291,7 +1291,7 @@
 - **所属 Capability**：C17 mmWave & Firmware
 - **所属 Story**：S17 MQTT 雷达接入与 ESP32C6 固件
 - **目标**：订阅 `baby/radar/telemetry`，解析雷达 JSON，写入 sensor_event / observation_event。
-- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest/list API、MMWaveIngestService、fixture replay report 与 live MQTT worker CLI 已完成；真实 MQTT broker/device soak 待验收）
+- **状态**：BLOCKED（frame parser/sensor mapper/topic whitelist subscriber tests、SQLAlchemySensorEventRepository、mmWave frame ingest/list API、MMWaveIngestService、fixture replay report 与 live MQTT worker CLI 已完成；真实 MQTT broker/device soak 待验收；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T003, APC-T009, APC-T035
 - **输入**：`ENGINEERING_DESIGN.md` §2 M12、§7.5；`ARCHITECTURE_FINAL.md` §13
 - **输出**：mmWave adapter
@@ -1320,7 +1320,7 @@
 - **所属 Capability**：C17
 - **所属 Story**：S17
 - **目标**：实现 ESP32C6 固件：串口读取雷达帧、连接 WiFi、发布 MQTT JSON。
-- **状态**：BLOCKED（PlatformIO firmware skeleton/config README/tests、valid JSON mock payload 与 firmware static preflight 已完成；前置 T040 未 DONE，pio 编译与真实硬件待验收）
+- **状态**：BLOCKED（PlatformIO firmware skeleton/config README/tests、valid JSON mock payload 与 firmware static preflight 已完成；前置 T040 未 DONE，pio 编译与真实硬件待验收；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T040
 - **输入**：`ARCHITECTURE_FINAL.md` §13.1；`ENGINEERING_DESIGN.md` §1.2
 - **输出**：PlatformIO 固件工程
@@ -1411,7 +1411,7 @@
 - **所属 Capability**：C18
 - **所属 Story**：S18
 - **目标**：实现数据库与媒体备份任务，提供 launchd plist 与恢复演练流程。
-- **状态**：BLOCKED（PG dump/media archive dry-run、restore drill planner/manifest、manifest verifier、runbook/launchd plist/tests、launchd static validator 已完成；真实 pg_dump/NAS/restore drill 待验收）
+- **状态**：BLOCKED（PG dump/media archive dry-run、restore drill planner/manifest、manifest verifier、runbook/launchd plist/tests、launchd static validator 已完成；真实 pg_dump/NAS/restore drill 待验收；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T003, APC-T042
 - **输入**：`ARCHITECTURE_FINAL.md` §24；`ENGINEERING_DESIGN.md` §2 M19
 - **输出**：Backup scripts/service/docs
@@ -1848,7 +1848,7 @@
 - **所属 Capability**：C23
 - **所属 Story**：S23
 - **目标**：实现摄像头/mmWave 7 晚影子模式记录、稳定性 soak 测试与生产前检查清单。
-- **状态**：BLOCKED（shadow harness/soak locustfile/release checklist/smoke tests、P0 readiness aggregate report 已完成；前置 T039 未 DONE；T054/T057/T058 已 DONE，真实 7 晚 shadow 与 soak 待验收）
+- **状态**：BLOCKED（shadow harness/soak locustfile/release checklist/smoke tests、P0 readiness aggregate report 已完成；前置 T039 未 DONE；T054/T057/T058 已 DONE，真实 7 晚 shadow 与 soak 待验收；external-validation-plan 已列明证据与命令）
 - **前置依赖**：APC-T039, APC-T054, APC-T057, APC-T058
 - **输入**：`ENGINEERING_DESIGN.md` §12.1、§12.3；`ARCHITECTURE_FINAL.md` §25.3、§26
 - **输出**：Shadow harness、soak 脚本、release checklist
