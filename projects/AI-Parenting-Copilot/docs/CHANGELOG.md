@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 02:05:00
+创建时间（北京时间）：2026-08-05 11:35:00
 -->
 
 
@@ -10,9 +10,52 @@
 
 ## Latest Change Index
 
-- **最新完成任务**：`APC-T047`、`APC-T052`、`APC-T054`、`APC-T056`、`APC-T057`；新增 P0 readiness aggregate report、external validation plan、external validation bundle、external evidence verifier、rule signoff validator、APC closeout gate、closeout recommendation report 与 Backlog patch plan。
+- **最新完成任务**：`APC-T047`、`APC-T052`、`APC-T054`、`APC-T056`、`APC-T057`；新增 P0 readiness aggregate report、external validation plan、external validation bundle、external evidence verifier、rule signoff validator、APC closeout gate、closeout recommendation report、Backlog patch plan 与 Architecture Compliance Audit。
 - **当前状态**：用户 Mac DB integration 已 `5 passed`；标准 `make test` 已修复为不受 shell 遗留 DB URL 影响；DB-backed API smoke 可单独通过 `make api-db-smoke-test` 运行；PG worker/Normalization/State DB pipeline 已实现；Android native/RN Quick Record 已补齐 Copilot text parse → local pending save helper；DB API smoke 已扩展 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation，并修复 Memory event_type_counts 断言；Scheduler trigger 已支持 create_alert reminder bridge，API DB smoke 覆盖 scheduler alert/audit；Camera ISAPI/Fregata HTTP bridge 已接入注入式测试；Rule Review Packet 已可生成人审包；launchd static validator、backup manifest verifier、red alert escalation report 与 firmware static preflight、mmWave replay report、Android/PowerSync E2E contract report 已完成；APC-T046/T047/T048/T049/T050/T051/T052/T053/T054/T055/T056/T057 已 DONE；Camera/mmWave/Health/Backup/Android fallback 继续推进；`APC-T035`、`APC-T037`、`APC-T042`、`APC-T043`、`APC-T058` 已 DONE。
 - **下一任务**：继续推进 Android `assembleDebug`/device 复验、DB `api-db-smoke-test` 用户本机复验，以及真实 camera/mmWave/PowerSync/FCM/NAS 等本地资源验收。
+
+---
+
+## [第 100 轮] 2026-08-05 — Architecture compliance audit
+
+### 需求变动
+
+- 对照开发文档进行架构一致性自查，新增自动化 architecture audit 与三份静态报告，回答安装部署、剩余缺口和发布 readiness 问题。
+
+### 文件影响
+
+新增：
+
+- `server/app/ops/architecture_compliance.py`
+- `server/scripts/architecture_compliance_audit.py`
+- `tests/test_architecture_compliance.py`
+- `docs/ARCHITECTURE_COMPLIANCE_AUDIT.md`
+- `docs/IMPLEMENTATION_GAP_REPORT.md`
+- `docs/RELEASE_READINESS_REPORT.md`
+
+修改：
+
+- `Makefile`
+- `docs/DEV_LOG.md`
+- `docs/CHANGELOG.md`
+- `docs/PROJECT_STATE.md`
+- root `docs/CHANGELOG.md`
+
+### 验证
+
+```bash
+python3 -m pytest tests/test_architecture_compliance.py -q
+# 2 passed
+make architecture-audit
+# status=pass_with_external_blockers
+make lint && make typecheck && make test
+# 220 passed, 8 deselected, 1 warning
+make docs-check
+```
+
+### 架构影响
+
+- 无架构变更；新增静态核查和报告，不改变运行时调用链。
 
 ---
 

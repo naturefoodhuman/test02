@@ -5,7 +5,7 @@ PYTHON ?= python3
 PROJECT_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 DEPLOY_ENV := $(shell test -f deploy/.env && echo deploy/.env || echo deploy/.env.example)
 
-.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet rule-signoff-template launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract android-notification-contract deployment-readiness p0-readiness external-validation-plan external-validation-bundle external-evidence-template apc-closeout-gate apc-closeout-recommendations apc-backlog-patch-plan run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
+.PHONY: ensure-dev-deps install-dev test lint typecheck docs-check governance-check rules-validate rule-review-packet rule-signoff-template launchd-validate red-alert-sim firmware-preflight mmwave-replay android-e2e-contract android-notification-contract deployment-readiness architecture-audit p0-readiness external-validation-plan external-validation-bundle external-evidence-template apc-closeout-gate apc-closeout-recommendations apc-backlog-patch-plan run-api run-dev run-mmwave-worker infra-up infra-down infra-logs db-migrate db-current backup-dry-run backup-verify-dry-run security-test e2e-fake-test shadow-test db-integration-test api-db-smoke-test worker-db-smoke-test powersync-smoke-test api-health-smoke api-server-smoke-test android-native-build restore-dry-run clean
 
 ensure-dev-deps:
 	@$(PYTHON) server/scripts/ensure_dev_deps.py
@@ -37,6 +37,9 @@ docs-check:
 	@test -f docs/CHANGELOG.md
 	@test -f docs/HANDOFF.md
 	@test -f docs/RUNBOOK_LOCAL_API.md
+	@test -f docs/ARCHITECTURE_COMPLIANCE_AUDIT.md
+	@test -f docs/IMPLEMENTATION_GAP_REPORT.md
+	@test -f docs/RELEASE_READINESS_REPORT.md
 	@test -f docs/BACKUP_RESTORE_RUNBOOK.md
 	@test -f docs/ADR/ADR-001-project-bootstrap.md
 	@test -f server/app/main.py
@@ -94,6 +97,8 @@ docs-check:
 	@test -f server/app/backup/verification.py
 	@test -f server/app/ops/launchd_validator.py
 	@test -f server/app/ops/deployment_readiness.py
+	@test -f server/app/ops/architecture_compliance.py
+	@test -f server/app/ops/architecture_compliance.py
 	@test -f server/app/ops/p0_readiness.py
 	@test -f server/app/ops/external_validation.py
 	@test -f server/app/ops/external_validation_bundle.py
@@ -111,6 +116,8 @@ docs-check:
 	@test -f server/scripts/android_e2e_contract_report.py
 	@test -f server/scripts/android_notification_contract_report.py
 	@test -f server/scripts/deployment_readiness_report.py
+	@test -f server/scripts/architecture_compliance_audit.py
+	@test -f server/scripts/architecture_compliance_audit.py
 	@test -f server/scripts/p0_readiness_report.py
 	@test -f server/scripts/external_validation_plan.py
 	@test -f server/scripts/external_validation_bundle.py
@@ -185,6 +192,9 @@ android-notification-contract: ensure-dev-deps
 
 deployment-readiness: ensure-dev-deps
 	@$(PYTHON) server/scripts/deployment_readiness_report.py
+
+architecture-audit: ensure-dev-deps
+	@$(PYTHON) server/scripts/architecture_compliance_audit.py
 
 p0-readiness: ensure-dev-deps
 	@$(PYTHON) server/scripts/p0_readiness_report.py
