@@ -1,7 +1,7 @@
 # FORGE Factory Makefile
 # 常用操作单命令完成
 
-.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks
+.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test
 
 # 日常开发
 start-gateway:    # 启动 LiteLLM 网关
@@ -85,3 +85,11 @@ install-governance-hooks:
 feos-test:
 	@python3 -m pytest _infra/feos/tests/unit _infra/feos/tests/security _infra/feos/tests/golden _infra/feos/tests/integration -q
 	@python3 -m compileall -q _infra/feos
+
+
+# NVIDIA NIM sidecar proxy
+run-nim-proxy:
+	@python3 _infra/nim_proxy.py
+
+nim-proxy-test:
+	@python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q

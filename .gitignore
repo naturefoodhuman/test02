@@ -80,3 +80,7 @@ mcp-servers/
 .forge/feos/knowledge_index/
 .forge/feos/policies/
 .forge/feos/renderer_profiles/
+
+.env.*
+
+!.env.example

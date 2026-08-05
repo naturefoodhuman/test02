@@ -1,3 +1,6 @@
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建时间（北京时间）：2026-08-05 12:10:00
+
 import os
 import sys
 import uvicorn
@@ -467,7 +470,13 @@ def load_routes_from_litellm():
                 continue
             p = e.get("litellm_params", {}) or {}
             base = p.get("api_base", "") or ""
-            if "127.0.0.1" in base or "localhost" in base:
+            use_nim_proxy = (
+                os.getenv("FORGE_USE_NIM_PROXY", "0").lower() in {"1", "true", "yes", "on"}
+                and "integrate.api.nvidia.com" in base
+            )
+            if use_nim_proxy:
+                base = os.getenv("NIM_PROXY_BASE_URL", "http://127.0.0.1:4010/v1")
+            if ("127.0.0.1" in base or "localhost" in base) and not use_nim_proxy:
                 try:
                     M[mn] = int(base.split(":")[-1].split("/")[0])
                 except Exception:
@@ -475,10 +484,13 @@ def load_routes_from_litellm():
             else:
                 ref = str(p.get("api_key", ""))
                 env = ref.replace("os.environ/", "").strip("${}")
+                if use_nim_proxy:
+                    env = os.getenv("NIM_PROXY_API_KEY_ENV", "NIM_PROXY_API_KEY")
                 R[mn] = {
                     "api_base": base.rstrip("/"),
                     "model": p.get("model", "").replace("openai/", ""),
                     "api_key_env": env,
+                    "api_key_optional": use_nim_proxy,
                     "max_tokens": p.get("max_tokens", 16384),
                 }
         logger.info(f"📋 路由表加载完成: {len(M)} 本地, {len(R)} 远程")
@@ -1392,8 +1404,10 @@ async def smart_gateway(request: Request, path: str):
     # ── 路由决策 ──
     if is_remote:
         api_key = os.environ.get(remote_route["api_key_env"], "")
-        if not api_key:
+        if not api_key and not remote_route.get("api_key_optional"):
             raise HTTPException(503, f"API key {remote_route['api_key_env']} empty")
+        if not api_key and remote_route.get("api_key_optional"):
+            api_key = "nim-proxy-local"
         await rpm_guard.acquire(remote_route["api_key_env"])
         target_url = f"{remote_route['api_base']}/chat/completions"
         remote_model = remote_route["model"]

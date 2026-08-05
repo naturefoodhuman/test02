@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 11:35:00
+创建时间（北京时间）：2026-08-05 12:30:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -11,12 +11,48 @@
 ## Latest Change Index
 
 - **当前状态 SSOT**：`docs/PROJECT_STATE.md`；AI Parenting Copilot 项目内状态见 `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md`。
-- **最新完成模块**：AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API；Android native core screens；Dev E2E substitutes / APC-T058 accepted；Camera fusion API / clip plan；mmWave live MQTT worker；Android TS API client/view model helpers；Camera VLM shadow API；Composite camera shadow API；Android Quick Record Copilot text flow；native pending drain heartbeat；manual drain session/settings；alert ack retry；Copilot/Rule DB smoke expansion；API DB smoke assertion fix；Scheduler reminder alert bridge；Camera ISAPI/Fregata HTTP bridge；Rule Review Packet generator；launchd static validator；backup manifest verifier；red alert escalation report；firmware static preflight；mmWave replay report；Android E2E contract report；APC-T046/T047/T048/T049/T050/T051/T052/T053/T054/T055/T056/T057 accepted；APC-T037/T042/T043 accepted。
+- **最新完成模块**：NVIDIA NIM sidecar proxy（indexed key pool、per-key RPM/concurrency、Retry-After cooldown、optional same-tier fallback、Smart Proxy route rewrite）；AI Parenting Copilot APC-T008/T010/T019/T031 DB-backed API runtime hardening；`make test` DB env isolation；seed_family DB mode；PG worker/Normalization/State DB pipeline；EvidencePolicy activate idempotency；live worker DB smoke target；PowerSync validation accepted；DB-backed Memory/Orchestrator context；Dose Interceptor DB audit；Notification adapters / DB delivery dispatch / cancel receipts；Android native critical alert fallback；Android Gradle bootstrap；Android secure session/native pending event store；Android Quick Record native offline write；System health real probes；FastAPI local API runbook/smoke targets；Scheduler API；Sleep/Media/Export DB API smoke；Scheduler worker / Backup restore drill；Camera/mmWave DB repository smoke；Camera/mmWave ingest APIs；Android TS/native/background pending sync/alert ack drains；mmWave event list API；Android native core screens；Dev E2E substitutes / APC-T058 accepted；Camera fusion API / clip plan；mmWave live MQTT worker；Android TS API client/view model helpers；Camera VLM shadow API；Composite camera shadow API；Android Quick Record Copilot text flow；native pending drain heartbeat；manual drain session/settings；alert ack retry；Copilot/Rule DB smoke expansion；API DB smoke assertion fix；Scheduler reminder alert bridge；Camera ISAPI/Fregata HTTP bridge；Rule Review Packet generator；launchd static validator；backup manifest verifier；red alert escalation report；firmware static preflight；mmWave replay report；Android E2E contract report；APC-T046/T047/T048/T049/T050/T051/T052/T053/T054/T055/T056/T057 accepted；APC-T037/T042/T043 accepted。
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
 
 ---
+
+## [第 198 轮] 2026-08-05
+
+### 需求变动
+- **暂停 AI Parenting 开发，处理 NVIDIA NIM 免费 API 限流**：新增本地 OpenAI-compatible NIM sidecar proxy，支持 `NVIDIA_API_KEY_1/2/3...` key pool、每 key RPM/concurrency、429 cooldown、Retry-After、session affinity、可配置 DeepSeek-V4-Pro fallback。
+- **Smart Proxy 集成**：新增 `FORGE_USE_NIM_PROXY=1` 时，将 NVIDIA remote routes 改写到 `NIM_PROXY_BASE_URL`，避免 Claude Code/Feishu Bot 裸打 NVIDIA NIM。
+- **安全清理**：删除误提交的 `.env.bak.20260804_125136`，并把 `.env.*` 加入 `.gitignore`；真实 key 仍需在 NVIDIA 控制台轮换。
+
+### 文件影响
+- 新增：`_infra/nim_proxy.py`
+- 新增：`_infra/network/tests/unit/test_nim_proxy.py`
+- 新增：`scripts/start-nim-proxy.sh`
+- 新增：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`_infra/smart_proxy.py`
+- 修改：`Makefile`
+- 修改：`.env.example`
+- 修改：`.gitignore`
+- 删除：`.env.bak.20260804_125136`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q
+# 7 passed
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py
+make docs-check
+# Blockers: 0
+```
+
+### 架构影响
+- 不改变 Smart Proxy 对客户端的 Anthropic/OpenAI 兼容入口。
+- 新增 sidecar 只接管 NVIDIA NIM remote route 的 key pool / rate limit / cooldown。
+- 默认 fallback 关闭；只有 `NIM_PROXY_ENABLE_FALLBACK=1` 才允许切 DeepSeek-V4-Pro。
+
+---
+
 
 
 ## [第 174 轮] 2026-08-02
