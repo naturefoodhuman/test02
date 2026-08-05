@@ -3,7 +3,6 @@ import sys
 import uvicorn
 import json
 import time
-import random
 import subprocess
 import socket
 import logging
@@ -86,18 +85,14 @@ FORGE_REMOTE_MAX_TOKENS_CAP = int(os.getenv("FORGE_REMOTE_MAX_TOKENS", "16384"))
 FORGE_SORT_TOOLS_FOR_CACHE = _env_bool("FORGE_SORT_TOOLS_FOR_CACHE", True)
 FORGE_COUNT_TOKENS_DIVISOR = int(os.getenv("FORGE_COUNT_TOKENS_DIVISOR", "4"))
 
-# ── 上下文预算 guard（双职责：防 429 膨胀 + 防上游 400 超长）──────────────
-# 估算 forward_payload["messages"] 的 token 数（= 整个会话多轮历史，cc-connect 每次全量带上）。
-#  - SOFT 阈值：会话膨胀到此就压缩历史，防 NIM 大请求 429 + 降 TTFB（2026-08-04 实测
-#    body 289KB/25 工具的请求易 429；soft 降到 ~32K tokens ≈ 128KB body）。
-#  - HARD 阈值：对齐上游 GLM 5.2 硬上限 202752，超此即使压缩后仍超则拒绝（400 不可重试）。
+# ── 上下文预算 guard（防上游 context 超长 400）──────────────────────────
+# 上游 GLM 5.2（NIM 平台）硬上限 202752 tokens；超长直接返回 400，且 400 不可重试
+# （RETRYABLE_STATUS_CODES 只含 429/502/503/504），重试只会把同样的超长请求再打一遍。
+# 故在转发前估算 messages token 数：达 SOFT（80%）结构化裁剪历史，达 HARD（95%）拒绝并提示 /compact。
 # 与 count_tokens 端点同口径（_json_bytes // FORGE_COUNT_TOKENS_DIVISOR）。
 FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "202752"))
 FORGE_CTX_SOFT_RATIO = float(os.getenv("FORGE_CTX_SOFT_RATIO", "0.80"))
 FORGE_CTX_HARD_RATIO = float(os.getenv("FORGE_CTX_HARD_RATIO", "0.95"))
-# SOFT 直接指定（优先于 ratio）：防 429 用 ~32K tokens；设 >0 则覆盖 ratio 计算。
-# 旧值 soft=162201(=202752*0.8) 太高，会话从未触发；新默认 32000 让 guard 真正生效。
-FORGE_CTX_SOFT_TOKENS = int(os.getenv("FORGE_CTX_SOFT_TOKENS", "32000"))
 FORGE_CTX_KEEP_RECENT_TURNS = int(os.getenv("FORGE_CTX_KEEP_RECENT_TURNS", "8"))
 FORGE_CTX_TRUNC_TOOL_RESULT_CHARS = int(os.getenv("FORGE_CTX_TRUNC_TOOL_RESULT_CHARS", "2000"))
 
@@ -111,13 +106,6 @@ FORGE_TOOL_SELECTION_MAX_TOKENS = int(os.getenv("FORGE_TOOL_SELECTION_MAX_TOKENS
 FORGE_TOOL_SELECTION_INTENT_MAX_CHARS = int(os.getenv("FORGE_TOOL_SELECTION_INTENT_MAX_CHARS", "2000"))
 FORGE_TOOL_SCHEMA_BYTE_BUDGET = int(os.getenv("FORGE_TOOL_SCHEMA_BYTE_BUDGET", "32768"))
 FORGE_TOOL_SELECTOR_POLICY_VERSION = os.getenv("FORGE_TOOL_SELECTOR_POLICY_VERSION", "v2")
-
-# 远程路径(NIM)工具选择：NIM 免费档全量转发 25 工具时每个请求 ~289KB，是 429 膨胀
-# 与 TTFB 过长主因（2026-08-04 实测 179/269 请求 >200KB）。开启后远程请求也走工具选择，
-# 用本地轻量模型(默认 8080 mtplx-qwen36-27b)做选择，body 降至 ~39KB，零额外 NIM 额度。
-# 有 core tools + 已用工具闭环 + 启发式兜底，漏选风险低；可随时关回全量。
-FORGE_REMOTE_TOOL_SELECTION = _env_bool("FORGE_REMOTE_TOOL_SELECTION", True)
-FORGE_REMOTE_SELECTOR_PORT = int(os.getenv("FORGE_REMOTE_SELECTOR_PORT", "8080"))
 
 FORGE_CORE_TOOLS = [
     t.strip() for t in os.getenv(
@@ -253,91 +241,6 @@ class RPMGuard:
 
 
 rpm_guard = RPMGuard(max_rpm=int(os.getenv("FORGE_RPM_MAX", "15")))
-
-# 远程上游并发上限（NIM 免费档实测并发 ~5，20 并发 → 15×429/5×200）。
-# 用信号量从源头卡并发，比 RPM 更关键——NIM 对并发比对 RPM 更敏感。
-FORGE_REMOTE_MAX_CONCURRENCY = int(os.getenv("FORGE_REMOTE_MAX_CONCURRENCY", "5"))
-_remote_concurrency = asyncio.Semaphore(FORGE_REMOTE_MAX_CONCURRENCY)
-
-
-# ============================================================
-# 429 风暴熔断器（circuit breaker）
-# ------------------------------------------------------------
-# 动机：NIM 免费档无 Retry-After / ratelimit 头（实测），429 后无法从响应头得知
-# 何时恢复。退避重试在"持续限流窗口"下会把请求量推更高 → 越重试越 429（今日
-# 06:47–07:04 的 234 次 429 即此恶性循环）。熔断器在连续 429 达阈值后强制冷却，
-# 冷却期内新请求在本地等待而非裸打上游，打破循环。
-# ============================================================
-class CircuitBreaker:
-    def __init__(self, trip_threshold=5, cooldown_seconds=45.0, half_open_probe=True):
-        self.trip_threshold = trip_threshold          # 连续 429 达此数即熔断
-        self.cooldown_seconds = cooldown_seconds      # 熔断后强制冷却时长
-        self.half_open_probe = half_open_probe        # 冷却后放一个探测请求验证恢复
-        self._consecutive_429 = 0
-        self._state = "closed"                        # closed / open / half_open
-        self._opened_at = 0.0
-        self._lock = asyncio.Lock()
-
-    async def before_request(self) -> float:
-        """请求前调用；返回需要等待的秒数（熔断冷却）。closed 时返回 0。"""
-        async with self._lock:
-            if self._state == "open":
-                elapsed = time.time() - self._opened_at
-                wait = self.cooldown_seconds - elapsed
-                if wait > 0:
-                    return wait
-                # 冷却结束 → half_open，放一个探测请求
-                self._state = "half_open"
-                return 0.0
-            return 0.0
-
-    async def on_success(self):
-        async with self._lock:
-            self._consecutive_429 = 0
-            if self._state == "half_open":
-                self._state = "closed"               # 探测成功，恢复
-
-    async def on_429(self):
-        async with self._lock:
-            self._consecutive_429 += 1
-            if self._state == "half_open":
-                # 探测请求仍 429 → 重新熔断
-                self._state = "open"
-                self._opened_at = time.time()
-            elif self._consecutive_429 >= self.trip_threshold and self._state == "closed":
-                self._state = "open"
-                self._opened_at = time.time()
-
-    def stats(self):
-        return {
-            "state": self._state,
-            "consecutive_429": self._consecutive_429,
-            "trip_threshold": self.trip_threshold,
-            "cooldown_seconds": self.cooldown_seconds,
-            "opened_at": self._opened_at,
-        }
-
-
-circuit_breaker = CircuitBreaker(
-    trip_threshold=int(os.getenv("FORGE_CIRCUIT_BREAKER_TRIP", "5")),
-    cooldown_seconds=float(os.getenv("FORGE_CIRCUIT_BREAKER_COOLDOWN", "45.0")),
-)
-
-# 退避加 jitter：base * 2^attempt + random(0, base)，避免多请求同步重试惊群。
-def _backoff_with_jitter(attempt: int, base: float = 1.5, cap: float = 5.0) -> float:
-    """指数退避 + 全抖动 jitter，封顶 cap（与 _RETRY_AFTER_CAP_SECONDS 协同）。"""
-    exp = min(base * (2 ** attempt), cap)
-    return min(exp + random.uniform(0, base), cap)
-
-
-# 流式路径可重试的读类异常类型名（httpx 在排队/断流时抛这些，常空 message）。
-# 未发内容时对它们退避重试，避免 turn 空挂 20 分钟 + 0 token。
-_STREAM_RETRYABLE_EXC_TYPES = {
-    "ReadTimeout", "ReadError", "RemoteProtocolError",
-    "PoolTimeout", "ConnectTimeout", "ConnectError",
-    "TimeoutException",  # httpx 基类
-}
-
 
 # 429/502/503/504 触发重试的累计计数（流式+非流式合计），供 /stats 观测重试是否在生效。
 _retry_counters = {"429": 0, "502": 0, "503": 0, "504": 0}
@@ -809,8 +712,7 @@ def _apply_context_budget(forward_payload: dict):
         return ("pass", 0, 0, "")
 
     est_before = _estimate_messages_tokens(msgs)
-    # SOFT：优先用 FORGE_CTX_SOFT_TOKENS（防 429，~32K），否则回退 ratio 计算（防 400）。
-    soft = FORGE_CTX_SOFT_TOKENS if FORGE_CTX_SOFT_TOKENS > 0 else int(FORGE_CTX_MAX_TOKENS * FORGE_CTX_SOFT_RATIO)
+    soft = int(FORGE_CTX_MAX_TOKENS * FORGE_CTX_SOFT_RATIO)
     hard = int(FORGE_CTX_MAX_TOKENS * FORGE_CTX_HARD_RATIO)
 
     if est_before < soft:
@@ -1176,26 +1078,12 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
     resp = None
 
     for attempt in range(max_attempts):
-        # 熔断前置：远程请求前检查是否处于熔断冷却期，避免裸打上游加剧 429 风暴。
-        if is_remote:
-            cb_wait = await circuit_breaker.before_request()
-            if cb_wait > 0:
-                logger.warning(f"🛑 熔断冷却中，等待 {cb_wait:.1f}s 后再发（attempt {attempt + 1}/{max_attempts}）")
-                await asyncio.sleep(min(cb_wait, _RETRY_AFTER_CAP_SECONDS))
-
         try:
             port_ctx = _local_port_guard(target_port) if (not is_remote) else _NullContext()
-            # 远程请求受并发信号量约束（NIM 免费档并发 ~5），本地请求不限。
-            if is_remote:
-                async with _remote_concurrency, port_ctx:
-                    resp = await http_client.post(target_url, json=forward_payload, headers=headers)
-            else:
-                async with port_ctx:
-                    resp = await http_client.post(target_url, json=forward_payload, headers=headers)
+            async with port_ctx:
+                resp = await http_client.post(target_url, json=forward_payload, headers=headers)
 
             if resp.status_code == 200:
-                if is_remote:
-                    await circuit_breaker.on_success()
                 return resp, None
 
             err_body = resp.text[:500] if hasattr(resp, "text") else ""
@@ -1207,11 +1095,8 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
 
             logger.warning(f"⚠️ 可重试状态码 {resp.status_code}，第 {attempt + 1}/{max_attempts} 次")
             _retry_counters[str(resp.status_code)] = _retry_counters.get(str(resp.status_code), 0) + 1
-            # 429 喂熔断器：连续 429 达阈值即熔断，打破"重试也 429"的恶性循环。
-            if resp.status_code == 429 and is_remote:
-                await circuit_breaker.on_429()
             if attempt < max_attempts - 1:
-                wait = _retry_after_seconds(resp, default=_backoff_with_jitter(attempt))
+                wait = _retry_after_seconds(resp, default=min(1.5 * (attempt + 1), 5))
                 logger.info(f"   退避 {wait:.1f}s 后重试")
                 await asyncio.sleep(wait)
 
@@ -1220,11 +1105,11 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
             resp = None
             logger.warning(f"⚠️ 连接异常，第 {attempt + 1}/{max_attempts} 次: {e}")
             if attempt < max_attempts - 1:
-                await asyncio.sleep(_backoff_with_jitter(attempt))
+                await asyncio.sleep(min(1.5 * (attempt + 1), 5))
         except Exception as e:
             last_exception = str(e)
             resp = None
-            logger.warning(f"❌ 非连接类异常，不重试: {type(e).__name__}: {e}")
+            logger.warning(f"❌ 非连接类异常，不重试: {e}")
             break
 
     return resp, last_exception
@@ -1255,12 +1140,9 @@ async def _run_with_ping(coro, ping_interval: float):
 # ============================================================
 # 流式后端读取生产者（Patch D：后台任务 + 队列，避免阻塞 ping）
 # ============================================================
-async def _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue: asyncio.Queue,
-                                is_remote: bool = False):
+async def _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue: asyncio.Queue):
     try:
-        # 远程请求受并发信号量约束（NIM 免费档并发 ~5），本地请求不限。
-        sem = _remote_concurrency if is_remote else _NullContext()
-        async with sem, port_ctx:
+        async with port_ctx:
             async with http_client.stream("POST", target_url, json=forward_payload, headers=headers) as resp:
                 if resp.status_code != 200:
                     err_body = (await resp.aread()).decode("utf-8", errors="ignore")
@@ -1272,20 +1154,13 @@ async def _stream_line_producer(target_url, forward_payload, headers, port_ctx, 
                         "retry_after": ra,
                     }))
                     return
-                # 200：通知熔断器恢复（half_open 探测成功 → closed）。
-                if is_remote:
-                    await circuit_breaker.on_success()
                 async for line in resp.aiter_lines():
                     if line:
                         await queue.put(("line", line))
     except asyncio.CancelledError:
         raise
     except Exception as e:
-        # 带上异常类型名：httpx 的 ReadTimeout/ReadError/RemoteProtocolError 等经常
-        # str(e) 为空（日志里"非连接类异常，不重试:"后面空白即此），上层无法据此
-        # 区分"可重试的读超时"与"真不可重试的协议错误"。这里把 type 名一并传出，
-        # 供 consumer 在"未发内容"时对读类异常按 429 同策略退避重试，避免 turn 空挂。
-        await queue.put(("exception", {"message": str(e), "exc_type": type(e).__name__}))
+        await queue.put(("exception", str(e)))
     finally:
         await queue.put(("eof", None))
 
@@ -1316,8 +1191,6 @@ async def forge_status():
             "policy_version": FORGE_TOOL_SELECTOR_POLICY_VERSION,
             "cache": tool_selection_cache.stats(),
             "last_reduction": last_reduction,
-            "remote_tool_selection": FORGE_REMOTE_TOOL_SELECTION,
-            "remote_selector_port": FORGE_REMOTE_SELECTOR_PORT,
         },
         "retry": {
             "local_retry_count": FORGE_LOCAL_RETRY_COUNT,
@@ -1326,13 +1199,8 @@ async def forge_status():
             "retryable_status_codes": sorted(RETRYABLE_STATUS_CODES),
             "retry_counters": dict(_retry_counters),
         },
-        "circuit_breaker": circuit_breaker.stats(),
-        "remote_concurrency": {
-            "max": FORGE_REMOTE_MAX_CONCURRENCY,
-        },
         "context_budget": {
             "max_tokens": FORGE_CTX_MAX_TOKENS,
-            "soft_tokens": FORGE_CTX_SOFT_TOKENS,
             "soft_ratio": FORGE_CTX_SOFT_RATIO,
             "hard_ratio": FORGE_CTX_HARD_RATIO,
             "keep_recent_turns": FORGE_CTX_KEEP_RECENT_TURNS,
@@ -1417,32 +1285,22 @@ async def smart_gateway(request: Request, path: str):
         headers = {"Content-Type": "application/json"}
         await tracker.start(request_id, model_name, f"local:{target_port}", False)
 
-    # ── 工具选择决策（本地 + 远程均支持，受开关控制）──
-    # 本地：FORGE_TOOL_SELECTION_ENABLED；远程：FORGE_REMOTE_TOOL_SELECTION（默认开）。
-    # 远程用专用本地选择器端口(FORGE_REMOTE_SELECTOR_PORT)，不碰远程 target_url。
+    # ── 工具选择决策（仅本地 + Anthropic）──
     needs_deferred_tool_selection = False
-    # 默认选择器端口：本地用 target_port，远程用专用本地选择器端口（延迟分支沿用）。
-    stream_source_selector_port = target_port if not is_remote else FORGE_REMOTE_SELECTOR_PORT
-    tool_selection_active = (not is_remote and FORGE_TOOL_SELECTION_ENABLED) or \
-                            (is_remote and FORGE_REMOTE_TOOL_SELECTION)
-    if is_anthropic and tool_selection_active:
+    if is_anthropic and not is_remote:
         tool_choice_raw = data.get("tool_choice")
         if isinstance(tool_choice_raw, dict) and tool_choice_raw.get("type") == "none":
             # 本回合显式禁止工具：不转发 schema，避免无意义 prefill（文档 §9.5）
             data = dict(data)
             data["tools"] = []
-        else:
-            # 选择器端口：本地用 target_port，远程用专用本地选择器端口。
-            selector_port = target_port if not is_remote else FORGE_REMOTE_SELECTOR_PORT
+        elif FORGE_TOOL_SELECTION_ENABLED:
             tools_in = data.get("tools") or []
             large_tool_set = isinstance(tools_in, list) and len(tools_in) > FORGE_TOOL_SELECTION_THRESHOLD
             if wants_stream and large_tool_set:
                 # 流式 + 大工具集：把选择推迟到生成器内部执行，以便用 ping 覆盖这段等待（Patch G）
                 needs_deferred_tool_selection = True
-                # 延迟选择需要 selector_port 在生成器闭包内可见——存到 stream_source_data 上下文
-                stream_source_selector_port = selector_port
             else:
-                data = await _apply_tool_selection(data, selector_port, remote_model)
+                data = await _apply_tool_selection(data, target_port, remote_model)
 
     stream_source_data = data  # 供生成器闭包内的延迟工具选择使用
 
@@ -1583,10 +1441,8 @@ async def smart_gateway(request: Request, path: str):
 
             # ── 延迟工具选择：全程用 ping 覆盖，避免冷启动期间客户端裸等（Patch G）──
             if needs_deferred_tool_selection:
-                # 选择器端口：本地用 target_port，远程用专用本地选择器端口（决策时存入）。
-                deferred_selector_port = stream_source_selector_port
                 async for kind, payload in _run_with_ping(
-                    _apply_tool_selection(stream_source_data, deferred_selector_port, remote_model),
+                    _apply_tool_selection(stream_source_data, target_port, remote_model),
                     FORGE_STREAM_PING_INTERVAL_SECONDS,
                 ):
                     if kind == "ping":
@@ -1620,20 +1476,9 @@ async def smart_gateway(request: Request, path: str):
 
             try:
                 for _stream_attempt in range(stream_attempts):
-                    # 熔断前置：远程流式请求前检查冷却期，避免裸打上游加剧 429 风暴。
-                    if is_remote:
-                        cb_wait = await circuit_breaker.before_request()
-                        if cb_wait > 0:
-                            logger.warning(f"🛑 流式熔断冷却中，等待 {cb_wait:.1f}s（attempt {_stream_attempt + 1}/{stream_attempts}）")
-                            # 冷却期间持续向客户端发 ping，保持连接不超时。
-                            deadline = time.time() + min(cb_wait, _RETRY_AFTER_CAP_SECONDS)
-                            while time.time() < deadline:
-                                yield _anthropic_sse("ping", {"type": "ping"})
-                                await asyncio.sleep(FORGE_STREAM_PING_INTERVAL_SECONDS)
                     queue = asyncio.Queue()
                     producer = asyncio.create_task(
-                        _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue,
-                                              is_remote=is_remote)
+                        _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue)
                     )
                     _stream_retry_pending = False
 
@@ -1655,38 +1500,22 @@ async def smart_gateway(request: Request, path: str):
                             if kind in ("http_error", "exception"):
                                 # 连接期错误：可重试状态码且尚未发任何内容时，有限重试。
                                 # 一旦 emitted_text/tool_calls_data 已有内容，绝不重试（文档 §12）。
-                                # 读类异常（ReadTimeout/ReadError/RemoteProtocolError 等，常空 message）
-                                # 在未发内容时同样退避重试——这是"空响应/turn 空挂 20 分钟"的真凶。
-                                can_retry = (
-                                    not emitted_text
+                                if (
+                                    kind == "http_error"
+                                    and isinstance(item, dict)
+                                    and item.get("status") in RETRYABLE_STATUS_CODES
+                                    and not emitted_text
                                     and not tool_calls_data
                                     and _stream_attempt < stream_attempts - 1
-                                    and (
-                                        (kind == "http_error"
-                                         and isinstance(item, dict)
-                                         and item.get("status") in RETRYABLE_STATUS_CODES)
-                                        or (kind == "exception"
-                                            and isinstance(item, dict)
-                                            and item.get("exc_type") in _STREAM_RETRYABLE_EXC_TYPES)
+                                ):
+                                    status = item.get("status")
+                                    _retry_counters[str(status)] = _retry_counters.get(str(status), 0) + 1
+                                    wait = _retry_after_seconds_from_value(
+                                        item.get("retry_after"),
+                                        default=min(1.5 * (_stream_attempt + 1), 5),
                                     )
-                                )
-                                if can_retry:
-                                    if kind == "http_error":
-                                        status = item.get("status")
-                                        _retry_counters[str(status)] = _retry_counters.get(str(status), 0) + 1
-                                        # 429 喂熔断器：连续 429 达阈值即熔断。
-                                        if status == 429 and is_remote:
-                                            await circuit_breaker.on_429()
-                                        label = f"上游 {status}"
-                                        wait = _retry_after_seconds_from_value(
-                                            item.get("retry_after"),
-                                            default=_backoff_with_jitter(_stream_attempt),
-                                        )
-                                    else:  # exception（读类异常）
-                                        label = f"读异常 {item.get('exc_type')}"
-                                        wait = _backoff_with_jitter(_stream_attempt)
                                     logger.warning(
-                                        f"⚠️ 流式{label}，未发内容，"
+                                        f"⚠️ 流式上游 {status}，未发内容，"
                                         f"第 {_stream_attempt + 1}/{stream_attempts} 次，退避 {wait:.1f}s 重试"
                                     )
                                     await asyncio.sleep(wait)
