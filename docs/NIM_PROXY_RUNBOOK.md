@@ -136,6 +136,32 @@ curl http://127.0.0.1:4010/v1/chat/completions \
 
 ---
 
+## Dashboard / 前端页面
+
+当前仓库内置的是轻量 Python sidecar：`_infra/nim_proxy.py`。它没有 HTML dashboard；可视状态通过 JSON 端点查看：
+
+```bash
+curl http://127.0.0.1:4010/stats
+make nim-proxy-tuning
+```
+
+你提到的 `miztertea/nim-proxy` 上游项目自带 Dashboard。若单独部署上游 Docker，它的页面在：
+
+```text
+http://localhost:8000/
+```
+
+首次打开会进入 setup wizard，后续用它生成的 `npk_...` client key 作为 OpenAI-compatible API key。
+
+本仓库这版没有直接 vendor 上游 Rust dashboard，原因是：
+
+- 先保持工厂内依赖最少，便于 `forge-start.sh` 一键启动；
+- 先满足 key pool、cooldown、route rewrite、tuning 的核心限流目标；
+- 如后续你明确要上游 dashboard，可把 `NIM_PROXY_BASE_URL` 切到上游 `http://127.0.0.1:8000/v1`，Smart Proxy 无需大改。
+
+
+---
+
 ## 参数调优
 
 先观察：
@@ -172,6 +198,21 @@ NIM_PROXY_PER_KEY_RPM=30
 NIM_PROXY_PER_KEY_CONCURRENCY=1
 NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=600
 ```
+
+
+---
+
+## Smart Proxy 冲突审查
+
+已检查当前 `_infra/smart_proxy.py` 的 NIM 相关路径：
+
+- `FORGE_USE_NIM_PROXY=0`：保持原直连 NVIDIA 行为。
+- `FORGE_USE_NIM_PROXY=1`：NVIDIA route 被重写到 `NIM_PROXY_BASE_URL`。
+- 对 `api_key_optional` 的 NIM sidecar route，Smart Proxy 跳过自身 `rpm_guard`；否则会把多 key sidecar 的吞吐重新压成一个全局窗口。
+- Smart Proxy 的全局 `FORGE_REMOTE_MAX_CONCURRENCY` 仍保留；它是总并发保险阀，不替代 sidecar 的 per-key concurrency。
+- Anthropic→OpenAI 工具转换、SSE 回传、context guard、remote tool selection 均不被 sidecar 改写。
+
+建议：使用 sidecar 时，把每 key 限速交给 NIM Proxy；Smart Proxy 只做协议转换、工具选择、上下文预算和总并发保护。
 
 
 ---

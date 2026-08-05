@@ -22,7 +22,7 @@
 
 ### 需求变动
 - **暂停 AI Parenting 开发，处理 NVIDIA NIM 免费 API 限流**：新增本地 OpenAI-compatible NIM sidecar proxy，支持 `NVIDIA_API_KEY_1/2/3...` key pool、每 key RPM/concurrency、429 cooldown、Retry-After、session affinity、可配置 DeepSeek-V4-Pro fallback。
-- **Smart Proxy / forge-start 集成**：新增 `FORGE_USE_NIM_PROXY=1` 时，将 NVIDIA remote routes 改写到 `NIM_PROXY_BASE_URL`；`scripts/forge-start.sh` 会自动加载 `.env`、启动 NIM sidecar、等待 `/healthz` 后再启动 Smart Proxy。
+- **Smart Proxy / forge-start 集成**：新增 `FORGE_USE_NIM_PROXY=1` 时，将 NVIDIA remote routes 改写到 `NIM_PROXY_BASE_URL`；`scripts/forge-start.sh` 会自动加载 `.env`、启动 NIM sidecar、等待 `/healthz` 后再启动 Smart Proxy；NIM sidecar route 跳过 Smart Proxy 全局 RPM gate，避免与 per-key key pool 限速冲突。
 - **参数调优**：新增 `scripts/diagnostics/nim_proxy_tuning.py` 与 `make nim-proxy-tuning`，根据 `/stats` 推荐 RPM/concurrency/cooldown。
 - **安全清理**：删除误提交的 `.env.bak.20260804_125136`，并把 `.env.*` 加入 `.gitignore`；真实 key 仍需在 NVIDIA 控制台轮换。
 
@@ -33,7 +33,7 @@
 - 新增：`scripts/start-nim-proxy.sh`
 - 新增：`scripts/diagnostics/nim_proxy_tuning.py`
 - 新增：`docs/NIM_PROXY_RUNBOOK.md`
-- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/smart_proxy.py`（NIM route rewrite + sidecar route skip global rpm_guard）
 - 修改：`_infra/nim_proxy.py`
 - 修改：`scripts/forge-start.sh`
 - 修改：`Makefile`
@@ -46,6 +46,7 @@
 ```bash
 python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py -q
 # 14 passed
+# 其中包含 Smart Proxy sidecar route 跳过全局 rpm_guard 的静态回归
 python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py
 make nim-proxy-test
 make docs-check
@@ -2101,7 +2102,7 @@ python3 -m compileall -q scripts/governance_check.py
 
 ### 文件影响
 - 修改：`_infra/litellm-config.yaml`
-- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/smart_proxy.py`（NIM route rewrite + sidecar route skip global rpm_guard）
 - 修改：`_infra/litellm_gatekeeper.py`
 - 修改：`scripts/forge-start.sh`
 - 修改：`docs/工厂使用手册.md`
@@ -2140,7 +2141,7 @@ python3 -c "import yaml; from pathlib import Path; cfg=yaml.safe_load(Path('_inf
 ### 文件影响
 - 新增：`scripts/model_status.sh`
 - 新增：`scripts/stop_local_models.sh`
-- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/smart_proxy.py`（NIM route rewrite + sidecar route skip global rpm_guard）
 - 修改：`docs/工厂使用手册.md`
 - 修改：`docs/全功能最小示例项目.md`
 - 修改：`docs/DEV_LOG.md`
@@ -2190,7 +2191,7 @@ python3 -m compileall -q scripts/diagnostics/test_local_streaming.py
 - 新增：`docs/LOCAL_MODEL_RUNTIME_TUNING.md`
 - 修改：`scripts/forge-start.sh`
 - 修改：`_factory/patterns/peer-review/src/peer_review/llm_client.py`
-- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/smart_proxy.py`（NIM route rewrite + sidecar route skip global rpm_guard）
 - 修改：`config/models.yaml`
 - 修改：`docs/DEV_LOG.md`
 - 修改：`docs/CHANGELOG.md`

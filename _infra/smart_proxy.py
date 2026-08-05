@@ -1408,7 +1408,12 @@ async def smart_gateway(request: Request, path: str):
             raise HTTPException(503, f"API key {remote_route['api_key_env']} empty")
         if not api_key and remote_route.get("api_key_optional"):
             api_key = "nim-proxy-local"
-        await rpm_guard.acquire(remote_route["api_key_env"])
+        # When NVIDIA routes are rewritten to the local NIM sidecar, the sidecar
+        # owns per-key RPM/concurrency/cooldown. A second Smart Proxy RPM gate
+        # keyed by NIM_PROXY_API_KEY would collapse multi-key capacity back to a
+        # single global window, so skip rpm_guard for api_key_optional routes.
+        if not remote_route.get("api_key_optional"):
+            await rpm_guard.acquire(remote_route["api_key_env"])
         target_url = f"{remote_route['api_base']}/chat/completions"
         remote_model = remote_route["model"]
         headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}

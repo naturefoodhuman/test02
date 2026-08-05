@@ -178,3 +178,11 @@ def test_start_nim_proxy_loads_env_and_requires_indexed_keys() -> None:
     assert 'source ".env"' in source
     assert "NVIDIA_API_KEY_${i}" in source
     assert "No NVIDIA NIM keys configured" in source
+
+
+def test_smart_proxy_skips_global_rpm_guard_for_nim_sidecar_routes() -> None:
+    source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
+
+    assert "api_key_optional" in source
+    assert "skip rpm_guard for api_key_optional routes" in source
+    assert 'if not remote_route.get("api_key_optional"):' in source
