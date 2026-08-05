@@ -28,9 +28,31 @@ import time
 from collections import deque
 from dataclasses import asdict, dataclass, field
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 from typing import Any, AsyncIterator
 
 import httpx
+
+
+
+def load_dotenv_if_present(env_path: Path | str = ".env") -> int:
+    """Load simple KEY=VALUE lines without overriding existing environment variables."""
+
+    path = Path(env_path)
+    if not path.exists():
+        return 0
+    loaded = 0
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+            loaded += 1
+    return loaded
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -447,6 +469,9 @@ def _jitter_backoff(attempt: int) -> float:
 
 
 def create_app():
+    load_dotenv_if_present(Path(__file__).resolve().parents[1] / ".env")
+    load_dotenv_if_present(Path.cwd() / ".env")
+
     from fastapi import FastAPI, Header, HTTPException, Request
     from fastapi.responses import Response, StreamingResponse
 

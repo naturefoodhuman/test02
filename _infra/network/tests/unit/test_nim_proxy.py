@@ -150,3 +150,31 @@ def test_forward_non_stream_can_use_configurable_fallback(monkeypatch: pytest.Mo
         assert service.fallback_count == 1
 
     asyncio.run(scenario())
+
+
+
+def test_forge_start_integrates_nim_proxy_when_enabled() -> None:
+    source = Path("scripts/forge-start.sh").read_text(encoding="utf-8")
+
+    assert "load_forge_env" in source
+    assert "start_nim_proxy_if_enabled" in source
+    assert "FORGE_USE_NIM_PROXY" in source
+    assert "NVIDIA_API_KEY_" in source
+    assert "http://${NIM_PROXY_HOST}:${NIM_PROXY_PORT}/healthz" in source
+
+
+def test_smart_proxy_has_nim_route_rewrite_switch() -> None:
+    source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
+
+    assert "FORGE_USE_NIM_PROXY" in source
+    assert "NIM_PROXY_BASE_URL" in source
+    assert "api_key_optional" in source
+    assert "integrate.api.nvidia.com" in source
+
+
+def test_start_nim_proxy_loads_env_and_requires_indexed_keys() -> None:
+    source = Path("scripts/start-nim-proxy.sh").read_text(encoding="utf-8")
+
+    assert 'source ".env"' in source
+    assert "NVIDIA_API_KEY_${i}" in source
+    assert "No NVIDIA NIM keys configured" in source

@@ -22,15 +22,20 @@
 
 ### 需求变动
 - **暂停 AI Parenting 开发，处理 NVIDIA NIM 免费 API 限流**：新增本地 OpenAI-compatible NIM sidecar proxy，支持 `NVIDIA_API_KEY_1/2/3...` key pool、每 key RPM/concurrency、429 cooldown、Retry-After、session affinity、可配置 DeepSeek-V4-Pro fallback。
-- **Smart Proxy 集成**：新增 `FORGE_USE_NIM_PROXY=1` 时，将 NVIDIA remote routes 改写到 `NIM_PROXY_BASE_URL`，避免 Claude Code/Feishu Bot 裸打 NVIDIA NIM。
+- **Smart Proxy / forge-start 集成**：新增 `FORGE_USE_NIM_PROXY=1` 时，将 NVIDIA remote routes 改写到 `NIM_PROXY_BASE_URL`；`scripts/forge-start.sh` 会自动加载 `.env`、启动 NIM sidecar、等待 `/healthz` 后再启动 Smart Proxy。
+- **参数调优**：新增 `scripts/diagnostics/nim_proxy_tuning.py` 与 `make nim-proxy-tuning`，根据 `/stats` 推荐 RPM/concurrency/cooldown。
 - **安全清理**：删除误提交的 `.env.bak.20260804_125136`，并把 `.env.*` 加入 `.gitignore`；真实 key 仍需在 NVIDIA 控制台轮换。
 
 ### 文件影响
 - 新增：`_infra/nim_proxy.py`
 - 新增：`_infra/network/tests/unit/test_nim_proxy.py`
+- 新增：`_infra/network/tests/unit/test_nim_proxy_tuning.py`
 - 新增：`scripts/start-nim-proxy.sh`
+- 新增：`scripts/diagnostics/nim_proxy_tuning.py`
 - 新增：`docs/NIM_PROXY_RUNBOOK.md`
 - 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/nim_proxy.py`
+- 修改：`scripts/forge-start.sh`
 - 修改：`Makefile`
 - 修改：`.env.example`
 - 修改：`.gitignore`
@@ -39,9 +44,10 @@
 
 ### 验证
 ```bash
-python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q
-# 7 passed
-python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py -q
+# 14 passed
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py
+make nim-proxy-test
 make docs-check
 # Blockers: 0
 ```

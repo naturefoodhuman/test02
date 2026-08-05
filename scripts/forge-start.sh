@@ -1,15 +1,34 @@
 
 #!/bin/bash
+# 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
+# 创建时间（北京时间）：2026-08-05 12:55:00
 # FORGE 智能启动脚本 v3.1 (自检并释放显存版 + SSD Cache 目录预建)
 # 职责：冷启动各端口模型进行可用性校验，成功后立即释放显存，实现"按需动态加载"基础。
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
 FORGE_ROOT="/Users/naturist/MusicProject/AI-Project-Incubation-Factory"
 SERVER_DIR="/Users/naturist/LocalAI/servers"
+
+# Load local .env once so optional sidecars (NIM proxy) see the same variables as smart_proxy.
+load_forge_env() {
+    local env_file="$FORGE_ROOT/.env"
+    if [ -f "$env_file" ]; then
+        echo -e "${BLUE}📦 加载 $env_file（仅本机，不提交）${NC}"
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+    fi
+}
+
+load_forge_env
+NIM_PROXY_HOST="${NIM_PROXY_HOST:-127.0.0.1}"
+NIM_PROXY_PORT="${NIM_PROXY_PORT:-4010}"
 
 # 确保 MTPLX SSD Session Cache 目录存在，避免因目录不存在导致启动失败（文档 §14.6）
 mkdir -p "$HOME/.mtplx/session_cache/8080"
@@ -43,6 +62,51 @@ stop_listening_port() {
         echo -e "${BLUE}🧹 强制停止端口 $port 的残留进程: $pids${NC}"
         kill -9 $pids 2>/dev/null || true
     fi
+}
+
+nim_key_count() {
+    local count=0
+    for i in {1..10}; do
+        local var="NVIDIA_API_KEY_${i}"
+        if [ -n "${!var:-}" ]; then
+            count=$((count + 1))
+        fi
+    done
+    echo "$count"
+}
+
+start_nim_proxy_if_enabled() {
+    local enabled="${FORGE_USE_NIM_PROXY:-0}"
+    case "${enabled,,}" in
+        1|true|yes|on) ;;
+        *)
+            echo -e "${BLUE}ℹ️  NIM sidecar 未启用（FORGE_USE_NIM_PROXY=${enabled}）${NC}"
+            return 0
+            ;;
+    esac
+
+    local key_count
+    key_count=$(nim_key_count)
+    if [ "$key_count" -eq 0 ]; then
+        echo -e "${RED}❌ FORGE_USE_NIM_PROXY=1 但未设置 NVIDIA_API_KEY_1/2/...${NC}"
+        echo -e "${YELLOW}   请在 .env 中配置 NVIDIA_API_KEY_1 和 NVIDIA_API_KEY_2 后重试。${NC}"
+        return 1
+    fi
+
+    stop_listening_port "$NIM_PROXY_PORT"
+    echo -e "${BLUE}🚦 启动 NVIDIA NIM sidecar proxy (Port $NIM_PROXY_PORT, keys=$key_count)...${NC}"
+    cd "$FORGE_ROOT" && nohup bash scripts/start-nim-proxy.sh > /tmp/forge_nim_proxy.log 2>&1 &
+
+    for i in {1..20}; do
+        if curl -fsS "http://${NIM_PROXY_HOST}:${NIM_PROXY_PORT}/healthz" >/dev/null 2>&1; then
+            echo -e "${GREEN}✅ NIM sidecar proxy 已就绪 (Port $NIM_PROXY_PORT)${NC}"
+            return 0
+        fi
+        sleep 0.5
+    done
+
+    echo -e "${RED}❌ NIM sidecar proxy 启动失败，请看 /tmp/forge_nim_proxy.log${NC}"
+    return 1
 }
 
 model_command() {
@@ -122,6 +186,10 @@ check_and_unload 8084 "深度评审 (Qwopus-GGUF)" "$(model_command 8084)" "$(mo
 # 5. 启动智能网关中继器 (4000) 与 核心网关 (4001)
 stop_listening_port 4000
 stop_listening_port 4001
+
+# Optional NVIDIA NIM key-pool sidecar. When enabled, smart_proxy rewrites NVIDIA routes
+# to NIM_PROXY_BASE_URL so agents never hammer integrate.api.nvidia.com directly.
+start_nim_proxy_if_enabled
 
 echo -e "${BLUE}📥 启动核心网关 (4001)...${NC}"
 cd "$FORGE_ROOT" && source .venv/bin/activate && nohup bash _infra/start-litellm.sh 4001 > /tmp/forge_litellm_4001.log 2>&1 &
