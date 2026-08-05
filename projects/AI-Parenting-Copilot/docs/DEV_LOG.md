@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 01:35:00
+创建时间（北京时间）：2026-08-05 02:05:00
 -->
 
 
@@ -15,6 +15,35 @@
 - **最新继续开发**：新增 Android Quick Record Copilot text parse → local pending save flow；新增 RN/TS `copilotFlow.ts` 串联 `/api/v1/copilot/query`、record candidate confirm 与 local fallback；native pending drain 增加 `/api/v1/sync/heartbeat` best-effort 上报与逐条异常隔离；PendingEventsActivity 使用 ApiSettings/SecureSession 并保存 last drain；AlertAckDrainer 异常时重新入队 ack；扩展 DB API smoke 覆盖 Copilot query/confirm、FamilyMemory confirm audit 与 P0 Rule Evaluation；修复 DB smoke Memory event_type_counts 断言，使其匹配 feeding + diaper + mmwave_telemetry 的实际短上下文；Scheduler API trigger 新增 create_alert reminder bridge，可把 vaccine/supplement 等蓝色提醒写入 AlertStore；Camera ISAPI/Fregata adapters 从 placeholder 推进到注入式 HTTP bridge；Rule Review Packet 可输出 rule pack hash、golden case pass/fail 与人审 blocker；新增 launchd plist static validator，拦截 /tmp 日志路径等部署错误；新增 backup manifest verifier，校验 dump/media archive manifest 并输出 restore next commands；新增 red alert fake-channel escalation report，验证 0/60/90s escalation、trigger-only FCM payload 与 ack cancel；修复 ESP32C6 firmware mock JSON 字符串并新增 firmware static preflight；新增 mmWave fixture replay report 与 Android/PowerSync E2E contract report；基于 assembleDebug、static tests、contract report 与 server tests 解除 T046/T048/T049/T050/T051/T053/T055。
 - **当前测试基线**：用户 Mac `make db-integration-test` → `5 passed, 1 warning`；沙盒 `make test` → `180 passed, 8 deselected, 1 warning`；`make lint/typecheck/security/e2e/shadow/rules/docs-check` 通过；无 DB URL 时 DB integration/smoke 按预期 skipped。
 - **当前依赖规则**：uv-first；`ensure-dev-deps` 优先 `uv pip install --python <venv-python> -e .[dev]`，`install-dev` 已改为 uv pip，不直接调用 pip。
+
+---
+
+## 第 99 轮 · 2026-08-05（APC Backlog patch plan）
+
+**目标**：继续推进剩余 BLOCKED 的安全关闭流程，在 closeout recommendations 之后生成 dry-run TASK_BACKLOG patch plan，做到“可一键看差异，但不自动改状态”。
+
+**完成内容**：
+
+- 新增 `server/app/ops/backlog_patch_plan.py`：读取 closeout recommendations，定位 `TASK_BACKLOG.md` 中对应任务状态行，生成 old/new diff 风格 patch plan。
+- 新增 `server/scripts/apc_backlog_patch_plan.py` 与 `make apc-backlog-patch-plan`。
+- 新增 `tests/test_backlog_patch_plan.py`，覆盖 ready task 的 DONE 状态行建议、blocked task 保留、JSON/Markdown 写出。
+- 该工具不修改 `TASK_BACKLOG.md`；只有外部证据通过 closeout gate 后，才生成可审核状态变更建议。
+
+**验证**：
+
+```bash
+python3 -m pytest tests/test_backlog_patch_plan.py tests/test_closeout_recommendation.py -q
+# 4 passed
+make apc-backlog-patch-plan
+make lint
+make typecheck
+make test
+# 218 passed, 8 deselected, 1 warning
+```
+
+**架构影响**：
+
+- 无架构变更；patch plan 只生成 dry-run 建议，不自动关闭 APC 任务。
 
 ---
 

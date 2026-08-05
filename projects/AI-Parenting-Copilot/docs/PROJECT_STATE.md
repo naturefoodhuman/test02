@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 01:35:00
+创建时间（北京时间）：2026-08-05 02:05:00
 -->
 
 
@@ -145,7 +145,7 @@
 - 新增 external evidence template/verifier，外部验收完成后可提交标准 JSON 证据包，系统可校验字段完整性。
 - 新增 APC closeout gate，聚合 rule signoff 与 external evidence，输出剩余任务 ready_to_close/blocked 状态。
 - 新增 APC closeout recommendation report，把 gate 结果渲染为可审核的 Backlog 状态建议和建议状态行。
-- 新增 external validation bundle，把 plan/evidence templates/rule signoff templates/closeout recommendations 集中到一个运行时报告目录。
+- 新增 external validation bundle 与 Backlog patch plan，把 plan/evidence templates/rule signoff templates/closeout recommendations 集中到一个运行时报告目录。
 - 报告明确剩余外部 blocker：Vaccine/Growth 人审、Camera/VLM 设备、真实 MQTT/mmWave soak、PlatformIO flash、NAS/restore drill、7-night shadow/soak。
 
 ### 状态接受（APC-T047/T052/T054/T056/T057）
