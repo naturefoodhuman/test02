@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 12:30:00
+创建时间（北京时间）：2026-08-05 13:35:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,36 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 199 轮] 2026-08-05
+
+### 需求变动
+- **FORGE env 配置审计**：梳理根 `.env` 与 `_infra/.env` 的职责，新增 `make env-config-audit` 检查重复冲突、Markdown 污染 URL、NIM key 配置和 NIM_PROXY_BASE_URL 形态。
+- **LiteLLM env 加载统一**：`_infra/start-litellm.sh` 改为优先加载根 `.env`，再加载 `_infra/.env` 作为 legacy fallback，且不覆盖已存在变量，减少两份 `.env` 冲突。
+- **文档**：新增 `docs/ENV_CONFIG_GUIDE.md`，说明两份 `.env` 的历史原因、推荐 SSOT、用户当前配置中的重复/冲突点和修复建议。
+
+### 文件影响
+- 新增：`scripts/diagnostics/env_config_audit.py`
+- 新增：`_infra/network/tests/unit/test_env_config_audit.py`
+- 新增：`docs/ENV_CONFIG_GUIDE.md`
+- 修改：`_infra/start-litellm.sh`
+- 修改：`Makefile`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_env_config_audit.py _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py -q
+# 18 passed
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/env_config_audit.py
+bash -n scripts/forge-start.sh scripts/start-nim-proxy.sh _infra/start-litellm.sh
+make docs-check
+# Blockers: 0
+```
+
+### 架构影响
+- 不改变模型路由架构；只统一 env 加载语义并新增配置审计。
 
 ---
 

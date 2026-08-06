@@ -1,7 +1,7 @@
 # FORGE Factory Makefile
 # 常用操作单命令完成
 
-.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning
+.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning env-config-audit
 
 # 日常开发
 start-gateway:    # 启动 LiteLLM 网关
@@ -97,3 +97,6 @@ nim-proxy-test:
 
 nim-proxy-tuning:
 	@python3 scripts/diagnostics/nim_proxy_tuning.py
+
+env-config-audit:
+	@python3 scripts/diagnostics/env_config_audit.py

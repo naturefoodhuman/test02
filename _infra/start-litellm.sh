@@ -16,7 +16,8 @@
 set -o pipefail
 
 FORGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_FILE="$FORGE_ROOT/_infra/.env"
+ROOT_ENV_FILE="$FORGE_ROOT/.env"
+INFRA_ENV_FILE="$FORGE_ROOT/_infra/.env"
 CONFIG="$FORGE_ROOT/_infra/litellm-config.yaml"
 PORT="${1:-4000}"
 
@@ -39,15 +40,32 @@ else
 fi
 
 # 3) 加载并 export .env（关键修复）
-if [ -f "$ENV_FILE" ]; then
-  echo "📥 从 $ENV_FILE 加载并 export 环境变量..."
-  # 只处理形如 KEY=VALUE 的非注释行；用 set -a 让随后所有赋值自动 export
-  set -a
-  # shellcheck disable=SC1090
-  . "$ENV_FILE"
-  set +a
-else
-  echo "⚠️  未找到 $ENV_FILE（cp _infra/.env.example _infra/.env 并填值）"
+# 新规则：根 .env 是运行时主配置；_infra/.env 只作为 legacy fallback。
+load_env_no_override() {
+  local env_file="$1"
+  if [ ! -f "$env_file" ]; then
+    return 0
+  fi
+  echo "📥 从 $env_file 加载环境变量（不覆盖已存在变量）..."
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%%#*}"
+    if [[ "$line" != *=* ]]; then
+      continue
+    fi
+    local key="${line%%=*}"
+    local value="${line#*=}"
+    key="$(echo "$key" | xargs)"
+    value="$(echo "$value" | sed -e 's/^ *//' -e 's/ *$//' -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")"
+    if [ -n "$key" ] && [ -z "${!key:-}" ]; then
+      export "$key=$value"
+    fi
+  done < "$env_file"
+}
+
+load_env_no_override "$ROOT_ENV_FILE"
+load_env_no_override "$INFRA_ENV_FILE"
+if [ ! -f "$ROOT_ENV_FILE" ] && [ ! -f "$INFRA_ENV_FILE" ]; then
+  echo "⚠️  未找到 $ROOT_ENV_FILE 或 $INFRA_ENV_FILE（请从 .env.example 创建本地配置）"
 fi
 
 # 3) 自检 GLM_API_KEY 是否真的进了环境
