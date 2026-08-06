@@ -60,3 +60,18 @@ def test_env_audit_passes_for_clean_root_env(tmp_path: Path) -> None:
 
     assert report.status == "pass"
     assert report.effective_values["NVIDIA_API_KEY_1"].startswith("<redacted:")
+
+
+
+def test_env_audit_detects_duplicate_keys_in_same_file(tmp_path: Path) -> None:
+    (tmp_path / ".env").write_text(
+        "FORGE_REMOTE_MAX_CONCURRENCY=2\nFORGE_REMOTE_MAX_CONCURRENCY=5\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "_infra").mkdir()
+
+    report = audit_env_files(tmp_path)
+
+    assert report.status == "fail"
+    assert any(issue.path and issue.path.endswith(".env") for issue in report.issues)
+    assert any("multiple times" in issue.message for issue in report.issues)

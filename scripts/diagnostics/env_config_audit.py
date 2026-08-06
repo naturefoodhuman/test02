@@ -35,6 +35,7 @@ class EnvAuditReport:
     status: str
     loaded_files: tuple[str, ...]
     duplicate_keys: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    same_file_duplicate_keys: dict[str, tuple[str, ...]] = field(default_factory=dict)
     effective_values: dict[str, str] = field(default_factory=dict)
     issues: tuple[EnvAuditIssue, ...] = field(default_factory=tuple)
     recommendations: tuple[str, ...] = field(default_factory=tuple)
@@ -62,6 +63,22 @@ def parse_env_file(path: Path) -> dict[str, str]:
     return values
 
 
+def duplicate_keys_in_file(path: Path) -> dict[str, tuple[str, ...]]:
+    seen: dict[str, list[str]] = {}
+    if not path.exists():
+        return {}
+    for raw_line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip().lstrip("export ").strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            seen.setdefault(key, []).append(value)
+    return {key: tuple(values) for key, values in seen.items() if len(values) > 1}
+
+
 def audit_env_files(root: Path | str = ".") -> EnvAuditReport:
     root_path = Path(root)
     paths = [root_path / ".env", root_path / "_infra" / ".env"]
@@ -69,6 +86,33 @@ def audit_env_files(root: Path | str = ".") -> EnvAuditReport:
     issues: list[EnvAuditIssue] = []
     recommendations: list[str] = []
     duplicate_keys: dict[str, tuple[str, ...]] = {}
+    same_file_duplicate_keys: dict[str, tuple[str, ...]] = {}
+    for path in paths:
+        dupes = duplicate_keys_in_file(path)
+        if dupes:
+            for key, values in dupes.items():
+                same_file_duplicate_keys[f"{path}:{key}"] = values
+                if len(set(values)) > 1:
+                    issues.append(
+                        EnvAuditIssue(
+                            level="error",
+                            key=key,
+                            path=str(path),
+                            message=(
+                                "duplicate key appears multiple times in one .env file "
+                                "with conflicting values"
+                            ),
+                        )
+                    )
+                else:
+                    issues.append(
+                        EnvAuditIssue(
+                            level="warning",
+                            key=key,
+                            path=str(path),
+                            message="duplicate key appears multiple times in one .env file",
+                        )
+                    )
     all_keys = sorted({key for values in parsed.values() for key in values})
     for key in all_keys:
         owners = [path for path, values in parsed.items() if key in values]
@@ -116,7 +160,9 @@ def audit_env_files(root: Path | str = ".") -> EnvAuditReport:
                     message="FORGE_USE_NIM_PROXY=1 but no indexed NVIDIA keys are configured",
                 )
             )
-        if effective.get("NIM_PROXY_BASE_URL") and not effective["NIM_PROXY_BASE_URL"].endswith("/v1"):
+        if effective.get("NIM_PROXY_BASE_URL") and not effective["NIM_PROXY_BASE_URL"].endswith(
+            "/v1"
+        ):
             issues.append(
                 EnvAuditIssue(
                     level="warning",
@@ -135,12 +181,15 @@ def audit_env_files(root: Path | str = ".") -> EnvAuditReport:
             )
     if "FORGE_REMOTE_MAX_CONCURRENCY" in root_env and "FORGE_REMOTE_MAX_CONCURRENCY" in infra_env:
         recommendations.append(
-            "Keep FORGE_REMOTE_MAX_CONCURRENCY in root .env only; _infra/.env should be legacy keys only."
+            "Keep FORGE_REMOTE_MAX_CONCURRENCY in root .env only; "
+            "_infra/.env should be legacy keys only."
         )
     recommendations.extend(
         [
-            "Use root .env as the runtime source of truth for forge-start, smart_proxy, and NIM proxy.",
-            "Keep _infra/.env only for legacy LiteLLM credentials if needed; avoid duplicating FORGE_* and NIM_PROXY_* keys there.",
+            "Use root .env as the runtime source of truth for forge-start, "
+            "smart_proxy, and NIM proxy.",
+            "Keep _infra/.env only for legacy LiteLLM credentials if needed; "
+            "avoid duplicating FORGE_* and NIM_PROXY_* keys there.",
             "Use plain URLs, e.g. http://127.0.0.1:4010/v1, never Markdown links copied from chat.",
         ]
     )
@@ -149,7 +198,10 @@ def audit_env_files(root: Path | str = ".") -> EnvAuditReport:
         status=status,
         loaded_files=tuple(parsed.keys()),
         duplicate_keys=duplicate_keys,
-        effective_values={key: _redact_value(key, value) for key, value in sorted(effective.items())},
+        same_file_duplicate_keys=same_file_duplicate_keys,
+        effective_values={
+            key: _redact_value(key, value) for key, value in sorted(effective.items())
+        },
         issues=tuple(issues),
         recommendations=tuple(recommendations),
     )
