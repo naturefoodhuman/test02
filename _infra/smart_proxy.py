@@ -980,6 +980,9 @@ async def _select_tools_stage1(user_text, tools, target_port, real_model_id):
         "stream": False,
     }
     try:
+        if not is_listening(target_port):
+            if not await asyncio.to_thread(ensure_server, target_port):
+                return None
         async with _local_port_guard(target_port):
             resp = await _selector_http_client.post(url, json=payload)
         if resp.status_code != 200:
@@ -1182,8 +1185,9 @@ def _retry_after_seconds(resp, default: float) -> float:
 # 非流式请求转发（含重试策略，Patch B，抽成独立函数便于单测）
 # ============================================================
 async def _forward_with_retries(target_url: str, forward_payload: dict, headers: dict,
-                                 is_remote: bool, target_port):
-    max_attempts = max(1, (FORGE_REMOTE_RETRY_COUNT if is_remote else FORGE_LOCAL_RETRY_COUNT) + 1)
+                                 is_remote: bool, target_port, handles_retries: bool = False):
+    retry_count = 0 if handles_retries else (FORGE_REMOTE_RETRY_COUNT if is_remote else FORGE_LOCAL_RETRY_COUNT)
+    max_attempts = max(1, retry_count + 1)
     last_exception = None
     resp = None
 
@@ -1399,6 +1403,7 @@ async def smart_gateway(request: Request, path: str):
 
     remote_route = REMOTE_ROUTES.get(model_name)
     is_remote = remote_route is not None
+    nim_sidecar_route = bool(remote_route and remote_route.get("api_key_optional"))
     target_port = None
 
     # ── 路由决策 ──
@@ -1635,7 +1640,7 @@ async def smart_gateway(request: Request, path: str):
             stream_error = None
 
             port_ctx = _local_port_guard(target_port) if (not is_remote) else _NullContext()
-            stream_attempts = (FORGE_STREAM_REMOTE_RETRY_COUNT + 1) if is_remote else 1
+            stream_attempts = 1 if nim_sidecar_route else ((FORGE_STREAM_REMOTE_RETRY_COUNT + 1) if is_remote else 1)
 
             try:
                 for _stream_attempt in range(stream_attempts):
@@ -1899,7 +1904,7 @@ async def smart_gateway(request: Request, path: str):
 
     # ============ 非流式响应 ============
     resp, last_exception = await _forward_with_retries(
-        target_url, forward_payload, headers, is_remote, target_port
+        target_url, forward_payload, headers, is_remote, target_port, handles_retries=nim_sidecar_route
     )
 
     if resp is None or resp.status_code != 200:

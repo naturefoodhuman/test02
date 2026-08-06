@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-06 19:40:00
+创建时间（北京时间）：2026-08-06 22:55:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,35 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 204 轮] 2026-08-06
+
+### 需求变动
+- **飞书长时间无回复修复**：用户本机简单消息 10-20 分钟无回复，NVIDIA 直连也出现约 5 分钟后 HTTP 504。降低 NIM sidecar 默认等待风险：`NIM_PROXY_READ_TIMEOUT_SECONDS=180`、`NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=2`，并建议高峰期可降到 120/1 或开启同级 fallback。
+- **避免重试放大**：Smart Proxy 对 NIM sidecar route 不再做额外 remote retry/stream retry，避免 Smart Proxy retry × sidecar retry 叠加造成 10-20 分钟等待。
+- **selector 可用性**：远程工具选择器 8080 未监听时自动 `ensure_server`，减少 `stage1 network error` 后退回启发式兜底的概率。
+- **Smart Proxy PID 修复**：`forge-start.sh` 改为直接用 venv Python 启动 `_infra/smart_proxy.py` 并记录真实 Python PID，而不是记录 subshell/bash PID。
+- **NIM stream 统计修复**：stream 请求计入 `request_count`，并且只有完整读完才记 success；流中异常会记 error。
+
+### 文件影响
+- 修改：`_infra/nim_proxy.py`
+- 修改：`_infra/smart_proxy.py`
+- 修改：`scripts/forge-start.sh`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q
+# 16 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py
+bash -n scripts/forge-start.sh scripts/start-nim-proxy.sh
+make docs-check
+```
 
 ---
 

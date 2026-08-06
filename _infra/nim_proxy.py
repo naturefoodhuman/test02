@@ -77,9 +77,9 @@ class NIMProxySettings:
     queue_timeout_seconds: float = 900.0
     retry_after_cap_seconds: float = 900.0
     default_cooldown_seconds: float = 300.0
-    max_attempts_per_request: int = 4
+    max_attempts_per_request: int = 2
     connect_timeout_seconds: float = 30.0
-    read_timeout_seconds: float = 300.0
+    read_timeout_seconds: float = 180.0
     idle_ping_seconds: float = 10.0
     inbound_api_key: str | None = None
 
@@ -438,12 +438,14 @@ class NIMProxyService:
         payload: dict[str, Any],
         headers: dict[str, str] | None = None,
     ) -> AsyncIterator[bytes]:
+        self.request_count += 1
         session_id = session_id_from_request(payload, headers)
         decision = normalize_model_name_for_nim(str(payload.get("model", "")), self.settings)
         try:
             key = await self.pool.acquire(session_id=session_id)
         except NoNIMKeyAvailable as exc:
-            yield f"event: error\ndata: {json.dumps({'error': str(exc)}, ensure_ascii=False)}\n\n".encode()
+            payload_json = json.dumps({"error": str(exc)}, ensure_ascii=False)
+            yield f"event: error\ndata: {payload_json}\n\n".encode()
             return
         try:
             upstream_payload = build_upstream_payload(payload, decision)
@@ -451,21 +453,31 @@ class NIMProxyService:
                 "POST",
                 f"{self.settings.upstream_base_url}/chat/completions",
                 json=upstream_payload,
-                headers={"Authorization": f"Bearer {key.api_key}", "Content-Type": "application/json"},
+                headers={
+                    "Authorization": f"Bearer {key.api_key}",
+                    "Content-Type": "application/json",
+                },
             ) as response:
                 if response.status_code == 429:
                     key.mark_429(response.headers.get("Retry-After"))
-                elif response.status_code == 200:
-                    key.mark_success()
-                else:
+                elif response.status_code != 200:
                     key.mark_retryable_error()
                 if response.status_code != 200:
                     body = await response.aread()
-                    yield f"event: error\ndata: {body.decode('utf-8', errors='ignore')}\n\n".encode()
+                    body_text = body.decode("utf-8", errors="ignore")
+                    yield f"event: error\ndata: {body_text}\n\n".encode()
                     return
-                async for chunk in response.aiter_bytes():
-                    if chunk:
-                        yield chunk
+                try:
+                    async for chunk in response.aiter_bytes():
+                        if chunk:
+                            yield chunk
+                    key.mark_success()
+                except Exception as exc:
+                    key.mark_retryable_error()
+                    error = {"error": {"message": str(exc), "type": type(exc).__name__}}
+                    payload_json = json.dumps(error, ensure_ascii=False)
+                    yield f"event: error\ndata: {payload_json}\n\n".encode()
+                    return
         finally:
             self.pool.release(key)
 

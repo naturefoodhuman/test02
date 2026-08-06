@@ -102,7 +102,11 @@ start_smart_proxy() {
         stop_smart_proxy_processes
         stop_listening_port 4000
         echo -e "${BLUE}🚀 启动智能看门人 (4000)，attempt ${attempt}/2...${NC}"
-        cd "$FORGE_ROOT" && source .venv/bin/activate &&             nohup python3 _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
+        local python_bin="$FORGE_ROOT/.venv/bin/python"
+        if [ ! -x "$python_bin" ]; then
+            python_bin="$(command -v python3)"
+        fi
+        (cd "$FORGE_ROOT" && nohup "$python_bin" _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1) &
         local proxy_pid=$!
         echo "$proxy_pid" > /tmp/forge_smart_proxy.pid
         for i in {1..30}; do

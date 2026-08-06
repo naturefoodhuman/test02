@@ -256,3 +256,24 @@ def test_forge_start_waits_for_smart_proxy_pid_and_health() -> None:
     assert "/_forge/health" in source
     assert "forge_smart_proxy.pid" in source
     assert "attempt ${attempt}/2" in source
+
+
+def test_nim_proxy_defaults_fail_faster_than_upstream_five_minute_hang(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST", raising=False)
+    monkeypatch.delenv("NIM_PROXY_READ_TIMEOUT_SECONDS", raising=False)
+
+    settings = NIMProxySettings.from_env()
+
+    assert settings.max_attempts_per_request == 2
+    assert settings.read_timeout_seconds == 180.0
+
+
+def test_smart_proxy_sidecar_route_avoids_nested_retries_and_autostarts_selector() -> None:
+    source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
+
+    assert "nim_sidecar_route" in source
+    assert "handles_retries=nim_sidecar_route" in source
+    assert "stream_attempts = 1 if nim_sidecar_route" in source
+    assert "await asyncio.to_thread(ensure_server, target_port)" in source

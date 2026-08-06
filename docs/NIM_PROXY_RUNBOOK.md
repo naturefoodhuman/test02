@@ -58,6 +58,8 @@ export NIM_PROXY_PER_KEY_CONCURRENCY=2
 export NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=300
 export NIM_PROXY_RETRY_AFTER_CAP_SECONDS=900
 export NIM_PROXY_QUEUE_TIMEOUT_SECONDS=900
+export NIM_PROXY_READ_TIMEOUT_SECONDS=180
+export NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=2
 
 export NIM_PRIMARY_MODEL="z-ai/glm-5.2"
 export NIM_PROXY_ENABLE_FALLBACK=0
@@ -232,6 +234,44 @@ NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=600
 ---
 
 ## Troubleshooting
+
+
+### Upstream GLM request waits for many minutes then fails
+
+Symptom:
+
+```text
+NVIDIA direct curl returns HTTP 504 after ~5 minutes, or Feishu waits 10-20 minutes.
+```
+
+Meaning: NIM free-tier queue/worker is overloaded. The sidecar now defaults to a
+shorter upstream read timeout and fewer nested attempts:
+
+```bash
+NIM_PROXY_READ_TIMEOUT_SECONDS=180
+NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=2
+```
+
+Smart Proxy skips extra remote retries for NIM sidecar routes, so retry multiplication
+is avoided. If this still waits too long, reduce further:
+
+```bash
+NIM_PROXY_READ_TIMEOUT_SECONDS=120
+NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
+NIM_PROXY_ENABLE_FALLBACK=1   # only if DeepSeek-V4-Pro quality is acceptable
+```
+
+### Smart Proxy pid file points to `bash scripts/forge-start.sh`
+
+Older `forge-start.sh` captured the PID of a subshell instead of the Python
+`smart_proxy.py` process. The launcher now starts Smart Proxy via the venv Python
+binary directly and writes the actual process PID to `/tmp/forge_smart_proxy.pid`.
+Verify:
+
+```bash
+cat /tmp/forge_smart_proxy.pid
+ps -p $(cat /tmp/forge_smart_proxy.pid) -o pid,command
+```
 
 ### NIM sidecar `/v1/chat/completions` returns HTTP 422 missing query `request`
 
