@@ -26,7 +26,7 @@ import os
 import random
 import time
 from collections import deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, AsyncIterator
@@ -85,34 +85,40 @@ class NIMProxySettings:
 
     @classmethod
     def from_env(cls) -> NIMProxySettings:
+        defaults = {item.name: item.default for item in fields(cls)}
         return cls(
-            upstream_base_url=os.getenv("NIM_PROXY_UPSTREAM_BASE_URL", cls.upstream_base_url).rstrip("/"),
-            primary_model=os.getenv("NIM_PRIMARY_MODEL", cls.primary_model),
-            fallback_model=os.getenv("NIM_FALLBACK_MODEL", cls.fallback_model),
+            upstream_base_url=os.getenv(
+                "NIM_PROXY_UPSTREAM_BASE_URL",
+                str(defaults["upstream_base_url"]),
+            ).rstrip("/"),
+            primary_model=os.getenv("NIM_PRIMARY_MODEL", str(defaults["primary_model"])),
+            fallback_model=os.getenv("NIM_FALLBACK_MODEL", str(defaults["fallback_model"])),
             enable_fallback=_env_bool("NIM_PROXY_ENABLE_FALLBACK", False),
-            per_key_rpm=int(os.getenv("NIM_PROXY_PER_KEY_RPM", str(cls.per_key_rpm))),
+            per_key_rpm=int(os.getenv("NIM_PROXY_PER_KEY_RPM", str(defaults["per_key_rpm"]))),
             per_key_concurrency=int(
-                os.getenv("NIM_PROXY_PER_KEY_CONCURRENCY", str(cls.per_key_concurrency))
+                os.getenv("NIM_PROXY_PER_KEY_CONCURRENCY", str(defaults["per_key_concurrency"]))
             ),
             queue_timeout_seconds=float(
-                os.getenv("NIM_PROXY_QUEUE_TIMEOUT_SECONDS", str(cls.queue_timeout_seconds))
+                os.getenv("NIM_PROXY_QUEUE_TIMEOUT_SECONDS", str(defaults["queue_timeout_seconds"]))
             ),
             retry_after_cap_seconds=float(
-                os.getenv("NIM_PROXY_RETRY_AFTER_CAP_SECONDS", str(cls.retry_after_cap_seconds))
+                os.getenv("NIM_PROXY_RETRY_AFTER_CAP_SECONDS", str(defaults["retry_after_cap_seconds"]))
             ),
             default_cooldown_seconds=float(
-                os.getenv("NIM_PROXY_DEFAULT_COOLDOWN_SECONDS", str(cls.default_cooldown_seconds))
+                os.getenv("NIM_PROXY_DEFAULT_COOLDOWN_SECONDS", str(defaults["default_cooldown_seconds"]))
             ),
             max_attempts_per_request=int(
-                os.getenv("NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST", str(cls.max_attempts_per_request))
+                os.getenv("NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST", str(defaults["max_attempts_per_request"]))
             ),
             connect_timeout_seconds=float(
-                os.getenv("NIM_PROXY_CONNECT_TIMEOUT_SECONDS", str(cls.connect_timeout_seconds))
+                os.getenv("NIM_PROXY_CONNECT_TIMEOUT_SECONDS", str(defaults["connect_timeout_seconds"]))
             ),
             read_timeout_seconds=float(
-                os.getenv("NIM_PROXY_READ_TIMEOUT_SECONDS", str(cls.read_timeout_seconds))
+                os.getenv("NIM_PROXY_READ_TIMEOUT_SECONDS", str(defaults["read_timeout_seconds"]))
             ),
-            idle_ping_seconds=float(os.getenv("NIM_PROXY_IDLE_PING_SECONDS", str(cls.idle_ping_seconds))),
+            idle_ping_seconds=float(
+                os.getenv("NIM_PROXY_IDLE_PING_SECONDS", str(defaults["idle_ping_seconds"]))
+            ),
             inbound_api_key=os.getenv("NIM_PROXY_API_KEY") or None,
         )
 

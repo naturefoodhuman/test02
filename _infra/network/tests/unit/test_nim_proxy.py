@@ -200,3 +200,20 @@ def test_forge_start_uses_bash3_safe_nim_enable_check() -> None:
     assert 'source "$env_file"' not in source
     assert "load_forge_env_file" in source
     assert "start_nim_proxy_if_enabled || exit 1" in source
+
+
+def test_nim_proxy_settings_from_env_uses_real_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in [
+        "NIM_PROXY_UPSTREAM_BASE_URL",
+        "NIM_PRIMARY_MODEL",
+        "NIM_FALLBACK_MODEL",
+        "NIM_PROXY_PER_KEY_RPM",
+    ]:
+        monkeypatch.delenv(name, raising=False)
+
+    settings = NIMProxySettings.from_env()
+
+    assert settings.upstream_base_url == "https://integrate.api.nvidia.com/v1"
+    assert settings.primary_model == "z-ai/glm-5.2"
+    assert settings.fallback_model == "deepseek-ai/DeepSeek-V4-Pro"
+    assert settings.per_key_rpm == 35

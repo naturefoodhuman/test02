@@ -23,8 +23,7 @@ load_forge_env_file() {
     fi
     echo -e "${BLUE}📦 加载 $env_file（仅本机，不提交）${NC}"
     while IFS= read -r raw_line || [ -n "$raw_line" ]; do
-        raw_line=$(printf '%s' "$raw_line" | tr -d '
-')
+        raw_line=$(printf '%s' "$raw_line" | tr -d '\r')
         case "$raw_line" in
             ''|'#'*) continue ;;
         esac

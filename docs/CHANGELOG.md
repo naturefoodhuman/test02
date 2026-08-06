@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-06 18:30:00
+创建时间（北京时间）：2026-08-06 19:10:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,35 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 201 轮] 2026-08-06
+
+### 需求变动
+- **NIM sidecar 启动失败修复**：用户本机 `/tmp/forge_nim_proxy.log` 显示 `AttributeError: 'member_descriptor' object has no attribute 'rstrip'`，根因是 `NIMProxySettings.from_env()` 在 `slots=True` dataclass 上读取 `cls.upstream_base_url` 等字段默认值，得到的是 descriptor 而非字符串。
+- **`.env` 安全加载修正**：修复 `forge-start.sh` / `start-nim-proxy.sh` 中 CR 清理写法，确保不会把 CRLF/空行/Markdown 污染作为 shell 命令执行。
+- **回归测试**：新增 `NIMProxySettings.from_env()` 默认值测试，防止 descriptor 默认值问题复发。
+
+### 文件影响
+- 修改：`_infra/nim_proxy.py`
+- 修改：`scripts/forge-start.sh`
+- 修改：`scripts/start-nim-proxy.sh`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_env_config_audit.py -q
+# 17 passed
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py
+bash -n scripts/forge-start.sh scripts/start-nim-proxy.sh _infra/start-litellm.sh
+make docs-check
+```
+
+### 影响说明
+- 修复后 NIM sidecar 可正常构造 settings，不再因 dataclass slots descriptor 崩溃。
+- 用户仍需先把 `.env` 中 Markdown 污染 URL 改成纯 URL；`make env-config-audit` 会检测。
 
 ---
 
