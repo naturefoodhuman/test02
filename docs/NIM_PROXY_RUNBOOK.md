@@ -231,6 +231,44 @@ NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=600
 
 ---
 
+## Troubleshooting
+
+### NIM sidecar `/v1/chat/completions` returns HTTP 422 missing query `request`
+
+Symptom in Claude/Feishu:
+
+```text
+API Error: 504 {"detail":"Backend failed: HTTP 422: ... loc=["query","request"] ..."}
+```
+
+Meaning: FastAPI treated the handler argument named `request` as a query parameter
+instead of a `Request` object. This was fixed by exposing FastAPI `Request` in module
+globals before route registration. Verify your repo includes the fix:
+
+```bash
+grep -n 'globals()["Request"]' _infra/nim_proxy.py
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q
+```
+
+After restarting, `curl http://127.0.0.1:4010/stats` should show `request_count`
+increasing after a model request.
+
+### NIM sidecar shows `upstream_base_url` with brackets in copied chat text
+
+If terminal output is copied into a Markdown chat, URLs may be auto-rendered as
+`[https://...](https://...)`. Check the raw value with:
+
+```bash
+curl -s http://127.0.0.1:4010/stats | python3 -m json.tool | grep upstream_base_url
+make env-config-audit
+```
+
+If `make env-config-audit` reports pass, the raw `.env` is likely fine; the brackets
+may be only chat rendering.
+
+
+---
+
 ## 红线
 
 - 不做 key farm。

@@ -217,3 +217,32 @@ def test_nim_proxy_settings_from_env_uses_real_defaults(monkeypatch: pytest.Monk
     assert settings.primary_model == "z-ai/glm-5.2"
     assert settings.fallback_model == "deepseek-ai/DeepSeek-V4-Pro"
     assert settings.per_key_rpm == 35
+
+
+def test_create_app_chat_route_treats_request_as_fastapi_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    try:
+        from fastapi.testclient import TestClient
+    except Exception:  # pragma: no cover - optional dependency in minimal envs
+        pytest.skip("fastapi TestClient unavailable")
+
+    async def fake_forward(self, payload, headers=None):  # type: ignore[no-untyped-def]
+        assert payload["model"] == "z-ai/glm-5.2"
+        return 200, {"content-type": "application/json"}, b'{"ok":true}'
+
+    monkeypatch.setenv("NVIDIA_API_KEY_1", "k1")
+    monkeypatch.setenv("NIM_PROXY_API_KEY", "nim-proxy-local")
+    monkeypatch.setattr(NIMProxyService, "forward_non_stream", fake_forward)
+
+    from _infra.nim_proxy import create_app
+
+    client = TestClient(create_app())
+    response = client.post(
+        "/v1/chat/completions",
+        headers={"Authorization": "Bearer nim-proxy-local"},
+        json={"model": "z-ai/glm-5.2", "messages": [], "stream": False},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"ok": True}

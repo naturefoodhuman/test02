@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-06 19:10:00
+创建时间（北京时间）：2026-08-06 19:15:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,34 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 202 轮] 2026-08-06
+
+### 需求变动
+- **NIM sidecar 422 修复**：用户本机飞书请求经 Smart Proxy 到 NIM sidecar 后返回 `HTTP 422`，错误为 FastAPI 把 `request` 当成 query 参数：`missing loc=["query","request"]`。
+- **根因**：`_infra/nim_proxy.py` 使用 `from __future__ import annotations`，而 `Request` 是在 `create_app()` 内局部 import 的。FastAPI 注册路由时无法从模块 globals 解析 `Request` 类型，于是把 `request` 识别成普通 query 参数。
+- **修复**：在 `create_app()` 中把 FastAPI `Request` 暴露到 module globals 后再声明路由 handler，保证 `request: Request` 被识别为 FastAPI request object。
+- **回归测试**：新增 `create_app()` chat route 测试，确保 `/v1/chat/completions` 不再因缺少 query 参数 `request` 返回 422。
+
+### 文件影响
+- 修改：`_infra/nim_proxy.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q
+# 13 passed, 1 skipped（无 fastapi TestClient 时会 skip route test）
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py
+make docs-check
+```
+
+### 影响说明
+- 修复后，NIM sidecar 的 `/v1/chat/completions` 会进入 `forward_non_stream()`，`/stats.request_count` 应随请求增加。
+- 若仍 504，应继续检查 `/tmp/forge_nim_proxy.log` 和 `curl http://127.0.0.1:4010/stats`。
 
 ---
 

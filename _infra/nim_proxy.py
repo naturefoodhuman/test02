@@ -481,6 +481,12 @@ def create_app():
     from fastapi import FastAPI, Header, HTTPException, Request
     from fastapi.responses import Response, StreamingResponse
 
+    # With `from __future__ import annotations`, FastAPI resolves the `Request`
+    # annotation through module globals at route-registration time. The import is
+    # intentionally local to keep light unit tests from requiring FastAPI at module
+    # import, so expose the class globally before declaring route handlers.
+    globals()["Request"] = Request
+
     settings = NIMProxySettings.from_env()
     keys = load_indexed_nvidia_keys()
     service = NIMProxyService(NIMKeyPool(keys, settings), settings)
