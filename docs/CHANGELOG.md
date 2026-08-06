@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 13:35:00
+创建时间（北京时间）：2026-08-06 18:30:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,36 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 200 轮] 2026-08-06
+
+### 需求变动
+- **NIM/Smart Proxy 启动故障修复**：用户本机 `forge-start.sh` 启动时报 `.env` 多行 `command not found`、`${enabled,,}: bad substitution`，导致 NIM sidecar 4010 未启动，Smart Proxy 被 `FORGE_USE_NIM_PROXY=1` 改写后请求 4010 失败并返回 504 connect_error。
+- **bash 3.2 兼容**：`scripts/forge-start.sh` 去除 Bash 4 的 `${var,,}`，改为 `tr` 小写转换。
+- **安全 `.env` 加载**：`forge-start.sh` 与 `start-nim-proxy.sh` 不再 `source .env`，改为逐行解析 KEY=VALUE，自动剥离 CRLF，避免空行/CRLF/Markdown 污染导致 shell 执行错误。
+- **启动失败即停止**：`FORGE_USE_NIM_PROXY=1` 时如果 sidecar 未就绪，`forge-start.sh` 直接退出，不再继续启动会连接失败的 Smart Proxy。
+- **端口复查**：Smart Proxy 启动前再次清理 4000，降低旧进程占用导致新进程 bind 失败的概率。
+
+### 文件影响
+- 修改：`scripts/forge-start.sh`
+- 修改：`scripts/start-nim-proxy.sh`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py _infra/network/tests/unit/test_env_config_audit.py -q
+# 20 passed
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/env_config_audit.py
+bash -n scripts/forge-start.sh scripts/start-nim-proxy.sh _infra/start-litellm.sh
+make docs-check
+```
+
+### 影响说明
+- 根因不是 NVIDIA 上游不可达；用户直接 curl NVIDIA 4 分钟后 HTTP 200，说明上游慢但通。
+- 实际 504 来自本地 4010 sidecar 未启动：Smart Proxy 将 NVIDIA route 改写到 NIM proxy 后，连接本地 4010 失败。
 
 ---
 

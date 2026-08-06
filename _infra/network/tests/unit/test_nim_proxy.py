@@ -175,7 +175,9 @@ def test_smart_proxy_has_nim_route_rewrite_switch() -> None:
 def test_start_nim_proxy_loads_env_and_requires_indexed_keys() -> None:
     source = Path("scripts/start-nim-proxy.sh").read_text(encoding="utf-8")
 
-    assert 'source ".env"' in source
+    assert "load_env_file" in source
+    assert 'source ".env"' not in source
+    assert "tr -d" in source and "raw_line" in source
     assert "NVIDIA_API_KEY_${i}" in source
     assert "No NVIDIA NIM keys configured" in source
 
@@ -186,3 +188,15 @@ def test_smart_proxy_skips_global_rpm_guard_for_nim_sidecar_routes() -> None:
     assert "api_key_optional" in source
     assert "skip rpm_guard for api_key_optional routes" in source
     assert 'if not remote_route.get("api_key_optional"):' in source
+
+
+
+def test_forge_start_uses_bash3_safe_nim_enable_check() -> None:
+    source = Path("scripts/forge-start.sh").read_text(encoding="utf-8")
+
+    assert "${enabled,,}" not in source
+    assert "enabled_lc" in source
+    assert "tr '[:upper:]' '[:lower:]'" in source
+    assert 'source "$env_file"' not in source
+    assert "load_forge_env_file" in source
+    assert "start_nim_proxy_if_enabled || exit 1" in source

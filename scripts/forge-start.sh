@@ -14,16 +14,36 @@ NC='\033[0m'
 FORGE_ROOT="/Users/naturist/MusicProject/AI-Project-Incubation-Factory"
 SERVER_DIR="/Users/naturist/LocalAI/servers"
 
-# Load local .env once so optional sidecars (NIM proxy) see the same variables as smart_proxy.
-load_forge_env() {
-    local env_file="$FORGE_ROOT/.env"
-    if [ -f "$env_file" ]; then
-        echo -e "${BLUE}📦 加载 $env_file（仅本机，不提交）${NC}"
-        set -a
-        # shellcheck disable=SC1090
-        source "$env_file"
-        set +a
+# Load simple KEY=VALUE lines without sourcing .env. This avoids CRLF blank-line
+# `command not found` errors and prevents Markdown-polluted URLs from becoming shell code.
+load_forge_env_file() {
+    local env_file="$1"
+    if [ ! -f "$env_file" ]; then
+        return 0
     fi
+    echo -e "${BLUE}📦 加载 $env_file（仅本机，不提交）${NC}"
+    while IFS= read -r raw_line || [ -n "$raw_line" ]; do
+        raw_line=$(printf '%s' "$raw_line" | tr -d '
+')
+        case "$raw_line" in
+            ''|'#'*) continue ;;
+        esac
+        if [[ "$raw_line" != *=* ]]; then
+            continue
+        fi
+        local key="${raw_line%%=*}"
+        local value="${raw_line#*=}"
+        key=$(printf '%s' "$key" | sed -e 's/^export //' -e 's/[[:space:]]//g')
+        value=$(printf '%s' "$value" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        value=$(printf '%s' "$value" | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")
+        if [ -n "$key" ] && [ -z "${!key:-}" ]; then
+            export "$key=$value"
+        fi
+    done < "$env_file"
+}
+
+load_forge_env() {
+    load_forge_env_file "$FORGE_ROOT/.env"
 }
 
 load_forge_env
@@ -77,7 +97,9 @@ nim_key_count() {
 
 start_nim_proxy_if_enabled() {
     local enabled="${FORGE_USE_NIM_PROXY:-0}"
-    case "${enabled,,}" in
+    local enabled_lc
+    enabled_lc=$(printf '%s' "$enabled" | tr '[:upper:]' '[:lower:]')
+    case "$enabled_lc" in
         1|true|yes|on) ;;
         *)
             echo -e "${BLUE}ℹ️  NIM sidecar 未启用（FORGE_USE_NIM_PROXY=${enabled}）${NC}"
@@ -92,6 +114,14 @@ start_nim_proxy_if_enabled() {
         echo -e "${YELLOW}   请在 .env 中配置 NVIDIA_API_KEY_1 和 NVIDIA_API_KEY_2 后重试。${NC}"
         return 1
     fi
+
+    case "${NIM_PROXY_BASE_URL:-http://127.0.0.1:4010/v1}" in
+        *'['*|*']('*|*')'*)
+            echo -e "${RED}❌ NIM_PROXY_BASE_URL 看起来被 Markdown 污染，请改成纯 URL。${NC}"
+            echo -e "${YELLOW}   正确示例：NIM_PROXY_BASE_URL="http://127.0.0.1:4010/v1"${NC}"
+            return 1
+            ;;
+    esac
 
     stop_listening_port "$NIM_PROXY_PORT"
     echo -e "${BLUE}🚦 启动 NVIDIA NIM sidecar proxy (Port $NIM_PROXY_PORT, keys=$key_count)...${NC}"
@@ -189,7 +219,7 @@ stop_listening_port 4001
 
 # Optional NVIDIA NIM key-pool sidecar. When enabled, smart_proxy rewrites NVIDIA routes
 # to NIM_PROXY_BASE_URL so agents never hammer integrate.api.nvidia.com directly.
-start_nim_proxy_if_enabled
+start_nim_proxy_if_enabled || exit 1
 
 echo -e "${BLUE}📥 启动核心网关 (4001)...${NC}"
 cd "$FORGE_ROOT" && source .venv/bin/activate && nohup bash _infra/start-litellm.sh 4001 > /tmp/forge_litellm_4001.log 2>&1 &
@@ -203,8 +233,11 @@ for i in {1..10}; do
     sleep 1
 done
 
+# Ensure no process reclaimed 4000 between cleanup and launch.
+stop_listening_port 4000
+
 echo -e "${BLUE}🚀 启动智能看门人 (4000)...${NC}"
 nohup python3 _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
 
 echo -e "${GREEN}✅ 环境自检与智能网关部署完成！${NC}"
-echo -e "${BLUE}💡 系统现已准备好进行"按需加载"运行。${NC}"
+echo -e "${BLUE}💡 系统现已准备好进行\"按需加载\"运行。${NC}"
