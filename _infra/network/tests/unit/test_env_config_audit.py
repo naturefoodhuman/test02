@@ -75,3 +75,29 @@ def test_env_audit_detects_duplicate_keys_in_same_file(tmp_path: Path) -> None:
     assert report.status == "fail"
     assert any(issue.path and issue.path.endswith(".env") for issue in report.issues)
     assert any("multiple times" in issue.message for issue in report.issues)
+
+
+def test_env_audit_does_not_redact_non_secret_token_counts(tmp_path: Path) -> None:
+    (tmp_path / ".env").write_text(
+        "FORGE_CTX_SOFT_TOKENS=32000\nNIM_PROXY_UPSTREAM_BASE_URL=http://127.0.0.1:4010/v1\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "_infra").mkdir()
+
+    report = audit_env_files(tmp_path)
+
+    assert report.effective_values["FORGE_CTX_SOFT_TOKENS"] == "32000"
+    assert report.status == "pass"
+
+
+def test_env_audit_checks_nim_proxy_upstream_url(tmp_path: Path) -> None:
+    (tmp_path / ".env").write_text(
+        "NIM_PROXY_UPSTREAM_BASE_URL=[https://integrate.api.nvidia.com/v1](x)\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "_infra").mkdir()
+
+    report = audit_env_files(tmp_path)
+
+    assert report.status == "fail"
+    assert any(issue.key == "NIM_PROXY_UPSTREAM_BASE_URL" for issue in report.issues)

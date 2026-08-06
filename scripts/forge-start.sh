@@ -83,6 +83,48 @@ stop_listening_port() {
     fi
 }
 
+stop_smart_proxy_processes() {
+    local pids
+    pids=$(pgrep -f "_infra/smart_proxy.py" 2>/dev/null || true)
+    if [ -n "$pids" ]; then
+        echo -e "${BLUE}🧹 停止旧 Smart Proxy 进程: $pids${NC}"
+        kill $pids 2>/dev/null || true
+        sleep 0.5
+        pids=$(pgrep -f "_infra/smart_proxy.py" 2>/dev/null || true)
+        if [ -n "$pids" ]; then
+            kill -9 $pids 2>/dev/null || true
+        fi
+    fi
+}
+
+start_smart_proxy() {
+    for attempt in 1 2; do
+        stop_smart_proxy_processes
+        stop_listening_port 4000
+        echo -e "${BLUE}🚀 启动智能看门人 (4000)，attempt ${attempt}/2...${NC}"
+        cd "$FORGE_ROOT" && source .venv/bin/activate &&             nohup python3 _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
+        local proxy_pid=$!
+        echo "$proxy_pid" > /tmp/forge_smart_proxy.pid
+        for i in {1..30}; do
+            if ! kill -0 "$proxy_pid" 2>/dev/null; then
+                echo -e "${YELLOW}⚠️ Smart Proxy 进程已退出，准备重试。${NC}"
+                break
+            fi
+            if curl -fsS "http://127.0.0.1:4000/_forge/health" >/dev/null 2>&1; then
+                echo -e "${GREEN}✅ Smart Proxy (4000) 已就绪，pid=$proxy_pid${NC}"
+                return 0
+            fi
+            sleep 0.5
+        done
+        echo -e "${YELLOW}⚠️ Smart Proxy 未就绪，最近日志：${NC}"
+        tail -40 /tmp/forge_smart_proxy.log 2>/dev/null || true
+        stop_smart_proxy_processes
+        stop_listening_port 4000
+    done
+    echo -e "${RED}❌ Smart Proxy 启动失败，请看 /tmp/forge_smart_proxy.log${NC}"
+    return 1
+}
+
 nim_key_count() {
     local count=0
     for i in {1..10}; do
@@ -232,11 +274,8 @@ for i in {1..10}; do
     sleep 1
 done
 
-# Ensure no process reclaimed 4000 between cleanup and launch.
-stop_listening_port 4000
-
-echo -e "${BLUE}🚀 启动智能看门人 (4000)...${NC}"
-nohup python3 _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
+# Ensure no old process reclaimed 4000 between cleanup and launch.
+start_smart_proxy || exit 1
 
 echo -e "${GREEN}✅ 环境自检与智能网关部署完成！${NC}"
 echo -e "${BLUE}💡 系统现已准备好进行\"按需加载\"运行。${NC}"

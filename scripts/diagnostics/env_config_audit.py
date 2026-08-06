@@ -18,6 +18,7 @@ URL_KEYS = {
     "ANTHROPIC_BASE_URL",
     "OPENAI_BASE_URL",
     "NIM_PROXY_BASE_URL",
+    "NIM_PROXY_UPSTREAM_BASE_URL",
     "NETWORK_SEARCH_API_PROXY",
 }
 
@@ -208,7 +209,15 @@ def audit_env_files(root: Path | str = ".") -> EnvAuditReport:
 
 
 def _redact_value(key: str, value: str) -> str:
-    if "KEY" in key or "SECRET" in key or "TOKEN" in key or "PASSWORD" in key:
+    sensitive = (
+        key.endswith("_KEY")
+        or "API_KEY" in key
+        or "SECRET" in key
+        or key.endswith("_TOKEN")
+        or key in {"ANTHROPIC_AUTH_TOKEN", "NIM_PROXY_API_KEY"}
+        or "PASSWORD" in key
+    )
+    if sensitive:
         return f"<redacted:{len(value)}>" if value else ""
     return value
 

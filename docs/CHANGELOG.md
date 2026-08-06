@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-06 19:15:00
+创建时间（北京时间）：2026-08-06 19:40:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,31 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 203 轮] 2026-08-06
+
+### 需求变动
+- **Smart Proxy 启动竞态修复**：用户本机 `forge-start.sh` 虽然启动 4000，但 `/tmp/forge_smart_proxy.log` 显示新进程 bind 失败且旧进程仍在响应。新增 `start_smart_proxy()`，启动前清理旧 `_infra/smart_proxy.py` 进程，启动后同时校验新 pid 存活和 `/_forge/health`。
+- **配置审计修正**：`env-config-audit` 增加 `NIM_PROXY_UPSTREAM_BASE_URL` Markdown 污染检测；修正 redaction，`FORGE_CTX_SOFT_TOKENS` 等非 secret 数值不再被误红acted。
+- **回归测试**：新增 forge-start Smart Proxy pid/health 等待测试、NIM upstream URL 审计测试、非 secret token count 不 redaction 测试。
+
+### 文件影响
+- 修改：`scripts/forge-start.sh`
+- 修改：`scripts/diagnostics/env_config_audit.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`_infra/network/tests/unit/test_env_config_audit.py`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_env_config_audit.py _infra/network/tests/unit/test_nim_proxy_tuning.py -q
+# 24 passed, 1 skipped
+bash -n scripts/forge-start.sh scripts/start-nim-proxy.sh _infra/start-litellm.sh
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/env_config_audit.py scripts/diagnostics/nim_proxy_tuning.py
+make docs-check
+```
 
 ---
 

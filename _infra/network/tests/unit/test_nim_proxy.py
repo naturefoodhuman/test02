@@ -246,3 +246,13 @@ def test_create_app_chat_route_treats_request_as_fastapi_request(
 
     assert response.status_code == 200
     assert response.json() == {"ok": True}
+
+
+def test_forge_start_waits_for_smart_proxy_pid_and_health() -> None:
+    source = Path("scripts/forge-start.sh").read_text(encoding="utf-8")
+
+    assert "start_smart_proxy" in source
+    assert "_infra/smart_proxy.py" in source
+    assert "/_forge/health" in source
+    assert "forge_smart_proxy.pid" in source
+    assert "attempt ${attempt}/2" in source
