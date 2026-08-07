@@ -77,9 +77,9 @@ class NIMProxySettings:
     queue_timeout_seconds: float = 900.0
     retry_after_cap_seconds: float = 900.0
     default_cooldown_seconds: float = 300.0
-    max_attempts_per_request: int = 2
+    max_attempts_per_request: int = 1
     connect_timeout_seconds: float = 30.0
-    read_timeout_seconds: float = 180.0
+    read_timeout_seconds: float = 120.0
     idle_ping_seconds: float = 10.0
     inbound_api_key: str | None = None
 
@@ -381,11 +381,14 @@ class NIMProxyService:
         self.request_count += 1
         session_id = session_id_from_request(payload, headers)
         decision = normalize_model_name_for_nim(str(payload.get("model", "")), self.settings)
-        attempted_fallback = False
+        fallback_used = False
         last_status = 503
         last_body = b""
         last_headers: dict[str, str] = {}
-        for attempt in range(max(1, self.settings.max_attempts_per_request)):
+        attempts_used_for_model = 0
+        max_attempts = max(1, self.settings.max_attempts_per_request)
+
+        while attempts_used_for_model < max_attempts:
             try:
                 key = await self.pool.acquire(session_id=session_id)
             except NoNIMKeyAvailable as exc:
@@ -395,7 +398,22 @@ class NIMProxyService:
                 ).encode("utf-8")
             try:
                 upstream_payload = build_upstream_payload(payload, decision)
-                status, response_headers, body = await self._post_bytes(key, upstream_payload)
+                try:
+                    status, response_headers, body = await self._post_bytes(key, upstream_payload)
+                except (httpx.TimeoutException, httpx.ConnectError, httpx.RemoteProtocolError) as exc:
+                    status = 504
+                    response_headers = {}
+                    body = json.dumps(
+                        {
+                            "error": {
+                                "message": str(exc),
+                                "type": type(exc).__name__,
+                                "model": decision.upstream_model,
+                            }
+                        },
+                        ensure_ascii=False,
+                    ).encode("utf-8")
+                attempts_used_for_model += 1
                 last_status, last_headers, last_body = status, response_headers, body
                 if status == 200:
                     key.mark_success()
@@ -408,15 +426,18 @@ class NIMProxyService:
                 else:
                     key.mark_retryable_error()
                     return status, response_headers, body
-                if self.settings.enable_fallback and not attempted_fallback:
-                    attempted_fallback = True
+                if self.settings.enable_fallback and not fallback_used:
+                    fallback_used = True
                     decision = ModelDecision(
                         requested_model=decision.requested_model,
                         upstream_model=self.settings.fallback_model,
                         used_fallback=True,
                     )
+                    attempts_used_for_model = 0
                     self.fallback_count += 1
-                await asyncio.sleep(min(_jitter_backoff(attempt), 5.0))
+                    continue
+                if attempts_used_for_model < max_attempts:
+                    await asyncio.sleep(min(_jitter_backoff(attempts_used_for_model - 1), 5.0))
             finally:
                 self.pool.release(key)
         return last_status, last_headers, last_body

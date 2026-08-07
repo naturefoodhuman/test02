@@ -21,11 +21,11 @@
 ## [第 204 轮] 2026-08-06
 
 ### 需求变动
-- **飞书长时间无回复修复**：用户本机简单消息 10-20 分钟无回复，NVIDIA 直连也出现约 5 分钟后 HTTP 504。降低 NIM sidecar 默认等待风险：`NIM_PROXY_READ_TIMEOUT_SECONDS=180`、`NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=2`，并建议高峰期可降到 120/1 或开启同级 fallback。
+- **飞书长时间无回复修复**：用户本机简单消息 10-20 分钟无回复，NVIDIA 直连也出现约 5 分钟后 HTTP 504。降低 NIM sidecar 默认等待风险：`NIM_PROXY_READ_TIMEOUT_SECONDS=120`、`NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1`，并建议高峰期建议保持 120/1，必要时开启同级 fallback。
 - **避免重试放大**：Smart Proxy 对 NIM sidecar route 不再做额外 remote retry/stream retry，避免 Smart Proxy retry × sidecar retry 叠加造成 10-20 分钟等待。
 - **selector 可用性**：远程工具选择器 8080 未监听时自动 `ensure_server`，减少 `stage1 network error` 后退回启发式兜底的概率。
 - **Smart Proxy PID 修复**：`forge-start.sh` 改为直接用 venv Python 启动 `_infra/smart_proxy.py` 并记录真实 Python PID，而不是记录 subshell/bash PID。
-- **NIM stream 统计修复**：stream 请求计入 `request_count`，并且只有完整读完才记 success；流中异常会记 error。
+- **NIM 非流式/stream 统计与超时修复**：stream 请求计入 `request_count`；非流式 upstream timeout 会快速返回 504 并可触发 fallback；stream 只有完整读完才记 success，流中异常会记 error。
 
 ### 文件影响
 - 修改：`_infra/nim_proxy.py`
@@ -39,7 +39,7 @@
 ### 验证
 ```bash
 python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q
-# 16 passed, 1 skipped
+# 18 passed, 1 skipped
 python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py
 bash -n scripts/forge-start.sh scripts/start-nim-proxy.sh
 make docs-check

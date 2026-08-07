@@ -106,8 +106,10 @@ start_smart_proxy() {
         if [ ! -x "$python_bin" ]; then
             python_bin="$(command -v python3)"
         fi
-        (cd "$FORGE_ROOT" && nohup "$python_bin" _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1) &
+        pushd "$FORGE_ROOT" >/dev/null || return 1
+        nohup "$python_bin" _infra/smart_proxy.py > /tmp/forge_smart_proxy.log 2>&1 &
         local proxy_pid=$!
+        popd >/dev/null || return 1
         echo "$proxy_pid" > /tmp/forge_smart_proxy.pid
         for i in {1..30}; do
             if ! kill -0 "$proxy_pid" 2>/dev/null; then

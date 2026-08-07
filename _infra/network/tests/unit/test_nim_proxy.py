@@ -266,8 +266,8 @@ def test_nim_proxy_defaults_fail_faster_than_upstream_five_minute_hang(
 
     settings = NIMProxySettings.from_env()
 
-    assert settings.max_attempts_per_request == 2
-    assert settings.read_timeout_seconds == 180.0
+    assert settings.max_attempts_per_request == 1
+    assert settings.read_timeout_seconds == 120.0
 
 
 def test_smart_proxy_sidecar_route_avoids_nested_retries_and_autostarts_selector() -> None:
@@ -277,3 +277,62 @@ def test_smart_proxy_sidecar_route_avoids_nested_retries_and_autostarts_selector
     assert "handles_retries=nim_sidecar_route" in source
     assert "stream_attempts = 1 if nim_sidecar_route" in source
     assert "await asyncio.to_thread(ensure_server, target_port)" in source
+
+
+
+def test_forward_non_stream_fallback_runs_even_with_one_attempt_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def scenario() -> None:
+        async def no_sleep(_seconds: float) -> None:
+            return None
+
+        monkeypatch.setattr(asyncio, "sleep", no_sleep)
+        fake = FakeClient(
+            [
+                httpx.Response(504, json={"error": "slow"}),
+                httpx.Response(200, json={"ok": True}),
+            ]
+        )
+        settings = _settings(enable_fallback=True, max_attempts_per_request=1)
+        service = NIMProxyService(
+            NIMKeyPool(["k1", "k2"], settings),
+            settings,
+            http_client=fake,  # type: ignore[arg-type]
+        )
+
+        status, _headers, body = await service.forward_non_stream(
+            {"model": "z-ai/glm-5.2", "messages": [], "stream": False}
+        )
+
+        assert status == 200
+        assert b"ok" in body
+        assert fake.payloads[0]["model"] == "z-ai/glm-5.2"
+        assert fake.payloads[1]["model"] == "deepseek-ai/DeepSeek-V4-Pro"
+        assert service.fallback_count == 1
+
+    asyncio.run(scenario())
+
+
+def test_forward_non_stream_timeout_returns_504_without_hanging() -> None:
+    class TimeoutClient:
+        async def post(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            raise httpx.ReadTimeout("slow upstream")
+
+    async def scenario() -> None:
+        settings = _settings(max_attempts_per_request=1)
+        service = NIMProxyService(
+            NIMKeyPool(["k1"], settings),
+            settings,
+            http_client=TimeoutClient(),  # type: ignore[arg-type]
+        )
+
+        status, _headers, body = await service.forward_non_stream(
+            {"model": "z-ai/glm-5.2", "messages": [], "stream": False}
+        )
+
+        assert status == 504
+        assert b"ReadTimeout" in body
+        assert service.retry_count == 1
+
+    asyncio.run(scenario())

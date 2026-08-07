@@ -58,8 +58,8 @@ export NIM_PROXY_PER_KEY_CONCURRENCY=2
 export NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=300
 export NIM_PROXY_RETRY_AFTER_CAP_SECONDS=900
 export NIM_PROXY_QUEUE_TIMEOUT_SECONDS=900
-export NIM_PROXY_READ_TIMEOUT_SECONDS=180
-export NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=2
+export NIM_PROXY_READ_TIMEOUT_SECONDS=120
+export NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
 
 export NIM_PRIMARY_MODEL="z-ai/glm-5.2"
 export NIM_PROXY_ENABLE_FALLBACK=0
@@ -248,9 +248,11 @@ Meaning: NIM free-tier queue/worker is overloaded. The sidecar now defaults to a
 shorter upstream read timeout and fewer nested attempts:
 
 ```bash
-NIM_PROXY_READ_TIMEOUT_SECONDS=180
-NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=2
+NIM_PROXY_READ_TIMEOUT_SECONDS=120
+NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
 ```
+
+Default changed to 120s/1 attempt to avoid Feishu/cc-connect waiting 10-20 minutes when NIM free-tier workers hang or return a late 504.
 
 Smart Proxy skips extra remote retries for NIM sidecar routes, so retry multiplication
 is avoided. If this still waits too long, reduce further:
