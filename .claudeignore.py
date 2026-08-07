@@ -1,0 +1,13 @@
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.aws/
+.ssh/
+.gnupg/
+.netrc
+.npmrc
