@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-05 12:10:00
+# 创建时间（北京时间）：2026-08-07 23:20:00
 
 """NVIDIA NIM OpenAI-compatible sidecar proxy.
 
@@ -73,14 +73,16 @@ class NIMProxySettings:
     fallback_model: str = "deepseek-ai/DeepSeek-V4-Pro"
     enable_fallback: bool = False
     per_key_rpm: int = 35
-    per_key_concurrency: int = 2
+    per_key_concurrency: int = 1
     queue_timeout_seconds: float = 900.0
     retry_after_cap_seconds: float = 900.0
     default_cooldown_seconds: float = 300.0
     max_attempts_per_request: int = 1
     connect_timeout_seconds: float = 30.0
     read_timeout_seconds: float = 120.0
+    request_wall_timeout_seconds: float = 180.0
     idle_ping_seconds: float = 10.0
+    session_affinity: bool = False
     inbound_api_key: str | None = None
 
     @classmethod
@@ -116,9 +118,16 @@ class NIMProxySettings:
             read_timeout_seconds=float(
                 os.getenv("NIM_PROXY_READ_TIMEOUT_SECONDS", str(defaults["read_timeout_seconds"]))
             ),
+            request_wall_timeout_seconds=float(
+                os.getenv(
+                    "NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS",
+                    str(defaults["request_wall_timeout_seconds"]),
+                )
+            ),
             idle_ping_seconds=float(
                 os.getenv("NIM_PROXY_IDLE_PING_SECONDS", str(defaults["idle_ping_seconds"]))
             ),
+            session_affinity=_env_bool("NIM_PROXY_SESSION_AFFINITY", bool(defaults["session_affinity"])),
             inbound_api_key=os.getenv("NIM_PROXY_API_KEY") or None,
         )
 
@@ -160,6 +169,7 @@ class NIMKeyState:
     consecutive_429: int = 0
     success_count: int = 0
     error_count: int = 0
+    in_flight: int = 0
     semaphore: asyncio.Semaphore = field(init=False)
 
     def __post_init__(self) -> None:
@@ -213,6 +223,7 @@ class NIMKeyState:
             "recent_rpm": len(self.request_times),
             "rpm_limit": self.rpm,
             "concurrency_limit": self.concurrency,
+            "in_flight": self.in_flight,
             "semaphore_locked": self.semaphore.locked(),
             "consecutive_429": self.consecutive_429,
             "success_count": self.success_count,
@@ -243,6 +254,7 @@ class NIMKeyPool:
             for index, key in enumerate(keys, start=1)
         ]
         self.affinity: dict[str, str] = {}
+        self._cursor = 0
 
     def snapshot(self) -> dict[str, Any]:
         return {
@@ -252,7 +264,7 @@ class NIMKeyPool:
         }
 
     def session_key(self, session_id: str | None) -> NIMKeyState | None:
-        if not session_id:
+        if not self.settings.session_affinity or not session_id:
             return None
         key_id = self.affinity.get(session_id)
         if not key_id:
@@ -266,9 +278,26 @@ class NIMKeyPool:
         candidates = [key for key in self.keys if key.can_send_now()]
         if not candidates:
             return None
-        candidates.sort(key=lambda key: (len(key.request_times), key.key_id))
-        selected = candidates[0]
-        if session_id:
+
+        # Do not sort only by key_id: when requests are spaced more than 60s
+        # apart, recent_rpm is often 0 for every key and key-1 wins forever.
+        # Prefer lower in-flight load, then lower recent RPM, then lower lifetime
+        # usage/error count so a cold key catches up quickly. A tiny round-robin
+        # cursor breaks perfect ties without exposing raw key material.
+        candidate_ids = {id(key) for key in candidates}
+        ordered = sorted(
+            ((index, key) for index, key in enumerate(self.keys) if id(key) in candidate_ids),
+            key=lambda item: (
+                item[1].in_flight,
+                len(item[1].request_times),
+                item[1].success_count + item[1].error_count,
+                item[1].error_count,
+                (item[0] - self._cursor) % len(self.keys),
+            ),
+        )
+        selected_index, selected = ordered[0]
+        self._cursor = (selected_index + 1) % len(self.keys)
+        if self.settings.session_affinity and session_id:
             self.affinity[session_id] = selected.key_id
         return selected
 
@@ -278,6 +307,7 @@ class NIMKeyPool:
             selected = self.pick_now(session_id)
             if selected is not None:
                 await selected.semaphore.acquire()
+                selected.in_flight += 1
                 selected.reserve()
                 return selected
             wait = min(key.available_in() for key in self.keys)
@@ -286,6 +316,7 @@ class NIMKeyPool:
             await asyncio.sleep(min(max(wait, 0.05), 5.0))
 
     def release(self, key: NIMKeyState) -> None:
+        key.in_flight = max(0, key.in_flight - 1)
         key.semaphore.release()
 
 
@@ -369,6 +400,10 @@ class NIMProxyService:
                 "enable_fallback": self.settings.enable_fallback,
                 "per_key_rpm": self.settings.per_key_rpm,
                 "per_key_concurrency": self.settings.per_key_concurrency,
+                "max_attempts_per_request": self.settings.max_attempts_per_request,
+                "read_timeout_seconds": self.settings.read_timeout_seconds,
+                "request_wall_timeout_seconds": self.settings.request_wall_timeout_seconds,
+                "session_affinity": self.settings.session_affinity,
             },
             "pool": self.pool.snapshot(),
         }
@@ -399,14 +434,22 @@ class NIMProxyService:
             try:
                 upstream_payload = build_upstream_payload(payload, decision)
                 try:
-                    status, response_headers, body = await self._post_bytes(key, upstream_payload)
-                except (httpx.TimeoutException, httpx.ConnectError, httpx.RemoteProtocolError) as exc:
+                    status, response_headers, body = await asyncio.wait_for(
+                        self._post_bytes(key, upstream_payload),
+                        timeout=self.settings.request_wall_timeout_seconds,
+                    )
+                except (
+                    asyncio.TimeoutError,
+                    httpx.TimeoutException,
+                    httpx.ConnectError,
+                    httpx.RemoteProtocolError,
+                ) as exc:
                     status = 504
                     response_headers = {}
                     body = json.dumps(
                         {
                             "error": {
-                                "message": str(exc),
+                                "message": str(exc) or repr(exc),
                                 "type": type(exc).__name__,
                                 "model": decision.upstream_model,
                             }
@@ -462,45 +505,112 @@ class NIMProxyService:
         self.request_count += 1
         session_id = session_id_from_request(payload, headers)
         decision = normalize_model_name_for_nim(str(payload.get("model", "")), self.settings)
-        try:
-            key = await self.pool.acquire(session_id=session_id)
-        except NoNIMKeyAvailable as exc:
-            payload_json = json.dumps({"error": str(exc)}, ensure_ascii=False)
+        fallback_used = False
+        last_error: dict[str, Any] | None = None
+
+        while True:
+            try:
+                key = await self.pool.acquire(session_id=session_id)
+            except NoNIMKeyAvailable as exc:
+                payload_json = json.dumps(
+                    {"error": {"message": str(exc), "type": "rate_limit"}},
+                    ensure_ascii=False,
+                )
+                yield f"event: error\ndata: {payload_json}\n\n".encode()
+                return
+
+            should_try_fallback = False
+            emitted_any = False
+            try:
+                upstream_payload = build_upstream_payload(payload, decision)
+                try:
+                    async with self.http_client.stream(
+                        "POST",
+                        f"{self.settings.upstream_base_url}/chat/completions",
+                        json=upstream_payload,
+                        headers={
+                            "Authorization": f"Bearer {key.api_key}",
+                            "Content-Type": "application/json",
+                        },
+                    ) as response:
+                        if response.status_code == 200:
+                            try:
+                                deadline = _now() + self.settings.request_wall_timeout_seconds
+                                byte_iter = response.aiter_bytes().__aiter__()
+                                while True:
+                                    remaining = deadline - _now()
+                                    if remaining <= 0:
+                                        raise asyncio.TimeoutError(
+                                            f"stream exceeded {self.settings.request_wall_timeout_seconds:.0f}s wall timeout"
+                                        )
+                                    try:
+                                        chunk = await asyncio.wait_for(byte_iter.__anext__(), timeout=remaining)
+                                    except StopAsyncIteration:
+                                        break
+                                    if chunk:
+                                        emitted_any = True
+                                        yield chunk
+                                key.mark_success()
+                                return
+                            except Exception as exc:
+                                self.retry_count += 1
+                                key.mark_retryable_error()
+                                last_error = {
+                                    "error": {
+                                        "message": str(exc) or repr(exc),
+                                        "type": type(exc).__name__,
+                                        "model": decision.upstream_model,
+                                    }
+                                }
+                                should_try_fallback = not emitted_any
+                        else:
+                            body = await response.aread()
+                            body_text = body.decode("utf-8", errors="ignore")
+                            self.retry_count += 1
+                            if response.status_code == 429:
+                                key.mark_429(response.headers.get("Retry-After"))
+                            else:
+                                key.mark_retryable_error()
+                            last_error = {
+                                "error": {
+                                    "message": body_text,
+                                    "type": f"HTTP{response.status_code}",
+                                    "model": decision.upstream_model,
+                                }
+                            }
+                            should_try_fallback = response.status_code in {429, 502, 503, 504}
+                except (
+                    asyncio.TimeoutError,
+                    httpx.TimeoutException,
+                    httpx.ConnectError,
+                    httpx.RemoteProtocolError,
+                ) as exc:
+                    self.retry_count += 1
+                    key.mark_retryable_error()
+                    last_error = {
+                        "error": {
+                            "message": str(exc) or repr(exc),
+                            "type": type(exc).__name__,
+                            "model": decision.upstream_model,
+                        }
+                    }
+                    should_try_fallback = True
+            finally:
+                self.pool.release(key)
+
+            if self.settings.enable_fallback and should_try_fallback and not fallback_used:
+                fallback_used = True
+                decision = ModelDecision(
+                    requested_model=decision.requested_model,
+                    upstream_model=self.settings.fallback_model,
+                    used_fallback=True,
+                )
+                self.fallback_count += 1
+                continue
+
+            payload_json = json.dumps(last_error or {"error": {"message": "unknown stream error"}}, ensure_ascii=False)
             yield f"event: error\ndata: {payload_json}\n\n".encode()
             return
-        try:
-            upstream_payload = build_upstream_payload(payload, decision)
-            async with self.http_client.stream(
-                "POST",
-                f"{self.settings.upstream_base_url}/chat/completions",
-                json=upstream_payload,
-                headers={
-                    "Authorization": f"Bearer {key.api_key}",
-                    "Content-Type": "application/json",
-                },
-            ) as response:
-                if response.status_code == 429:
-                    key.mark_429(response.headers.get("Retry-After"))
-                elif response.status_code != 200:
-                    key.mark_retryable_error()
-                if response.status_code != 200:
-                    body = await response.aread()
-                    body_text = body.decode("utf-8", errors="ignore")
-                    yield f"event: error\ndata: {body_text}\n\n".encode()
-                    return
-                try:
-                    async for chunk in response.aiter_bytes():
-                        if chunk:
-                            yield chunk
-                    key.mark_success()
-                except Exception as exc:
-                    key.mark_retryable_error()
-                    error = {"error": {"message": str(exc), "type": type(exc).__name__}}
-                    payload_json = json.dumps(error, ensure_ascii=False)
-                    yield f"event: error\ndata: {payload_json}\n\n".encode()
-                    return
-        finally:
-            self.pool.release(key)
 
 
 def _jitter_backoff(attempt: int) -> float:

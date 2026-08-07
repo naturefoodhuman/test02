@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-05 12:10:00
+创建时间（北京时间）：2026-08-07 23:20:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -54,12 +54,15 @@ export NIM_PROXY_BASE_URL="http://127.0.0.1:4010/v1"
 export NIM_PROXY_API_KEY="nim-proxy-local"
 
 export NIM_PROXY_PER_KEY_RPM=35
-export NIM_PROXY_PER_KEY_CONCURRENCY=2
+export NIM_PROXY_PER_KEY_CONCURRENCY=1
 export NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=300
 export NIM_PROXY_RETRY_AFTER_CAP_SECONDS=900
 export NIM_PROXY_QUEUE_TIMEOUT_SECONDS=900
 export NIM_PROXY_READ_TIMEOUT_SECONDS=120
+export NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=180
 export NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
+export NIM_PROXY_SESSION_AFFINITY=0
+export FORGE_REMOTE_MAX_CONCURRENCY=2
 
 export NIM_PRIMARY_MODEL="z-ai/glm-5.2"
 export NIM_PROXY_ENABLE_FALLBACK=0
@@ -180,7 +183,8 @@ make nim-proxy-tuning
 | 现象 | 建议 |
 |---|---|
 | 任一 key `in_cooldown=true` | 降低 `NIM_PROXY_PER_KEY_RPM`，例如 35 → 30；冷却改 600s |
-| `semaphore_locked=true` 或 error_count 上升 | 把 `NIM_PROXY_PER_KEY_CONCURRENCY=1` |
+| `semaphore_locked=true` 或 error_count 上升 | 把 `NIM_PROXY_PER_KEY_CONCURRENCY=1`，并把 `FORGE_REMOTE_MAX_CONCURRENCY=2` |
+| 只有 key-1 有 success/error，key-2 一直 0 | 确认 `NIM_PROXY_SESSION_AFFINITY=0`，拉取新版并重启 4010/4000 |
 | 只有 1 个 key | 先加第 2 个自用 key，而不是提 RPM |
 | fallback_count > 0 | 检查 DeepSeek-V4-Pro 输出质量；不满意则关闭 fallback |
 | stats 健康但仍慢 | 优先裁剪 prompt / 开 tool selection / 降 max_tokens，而不是加 key |
@@ -189,8 +193,10 @@ make nim-proxy-tuning
 
 ```bash
 NIM_PROXY_PER_KEY_RPM=35
-NIM_PROXY_PER_KEY_CONCURRENCY=2
+NIM_PROXY_PER_KEY_CONCURRENCY=1
 NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=300
+NIM_PROXY_SESSION_AFFINITY=0
+FORGE_REMOTE_MAX_CONCURRENCY=2
 ```
 
 如果 429 仍频繁：
@@ -223,13 +229,38 @@ NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=600
 
 - `NVIDIA_API_KEY_1..NVIDIA_API_KEY_10` indexed key pool。
 - 每 key 滑窗 RPM，默认 35。
-- 每 key 并发限制，默认 2。
-- session affinity：`x-forge-session-id` / `metadata.session_id` / `user` / prompt hash。
+- 每 key 并发限制，默认 1（免费档安全起步值）。
+- key pool 默认关闭 session affinity（`NIM_PROXY_SESSION_AFFINITY=0`），避免同一 VS Code/cc-connect 会话永远打 key-1；如确需粘滞会话，可显式设为 1。
 - `Retry-After` 解析，支持秒数和 HTTP-date。
 - 429 key cooldown，默认 300 秒，cap 900 秒。
 - 可配置 fallback：默认关闭，启用后可切 `deepseek-ai/DeepSeek-V4-Pro`。
 - `/stats` 暴露 key 状态，但不输出真实 key。
 - Smart Proxy 可通过 `FORGE_USE_NIM_PROXY=1` 改写 NIM remote route 到 sidecar。
+
+---
+
+## VS Code / Claude Code 长会话压测后的典型诊断
+
+如果看到：
+
+```json
+"active_requests": 13,
+"retry_counters": {"504": 15},
+"key-1": {"success_count": 30, "error_count": 15},
+"key-2": {"success_count": 0, "error_count": 0}
+```
+
+含义不是 Feishu 或 cc-connect 单点故障，而是 Claude Code for VS Code 在长会话里持续发起大 body / streaming 请求，NVIDIA GLM free-tier 出现 ReadTimeout/504/RemoteProtocolError，并且旧 key picker 由于粘滞/排序导致 key-1 被长期偏置。
+
+处理顺序：
+
+1. 拉取新版；
+2. 设置 `NIM_PROXY_SESSION_AFFINITY=0`、`NIM_PROXY_PER_KEY_CONCURRENCY=1`、`FORGE_REMOTE_MAX_CONCURRENCY=2`；
+3. 可接受降级时设置 `NIM_PROXY_ENABLE_FALLBACK=1`；
+4. 杀掉旧 4000/4010 后重启 `bash scripts/forge-start.sh`；
+5. 用 `/stats` 确认 key-1/key-2 都开始有 `success_count` 或 `error_count`。
+
+新版还会把 streaming 入口处的 `httpx.ReadTimeout` 序列化为 SSE error，不再让 FastAPI 打出 `Exception in ASGI application` 并留下空挂请求。
 
 ---
 
@@ -249,17 +280,21 @@ shorter upstream read timeout and fewer nested attempts:
 
 ```bash
 NIM_PROXY_READ_TIMEOUT_SECONDS=120
+NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=180
 NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
 ```
 
-Default changed to 120s/1 attempt to avoid Feishu/cc-connect waiting 10-20 minutes when NIM free-tier workers hang or return a late 504.
+Default changed to 120s read timeout + 180s wall timeout + 1 attempt to avoid Feishu/cc-connect waiting 10-20 minutes when NIM free-tier workers hang or return a late 504.
 
 Smart Proxy skips extra remote retries for NIM sidecar routes, so retry multiplication
 is avoided. If this still waits too long, reduce further:
 
 ```bash
 NIM_PROXY_READ_TIMEOUT_SECONDS=120
+NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=180
 NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
+NIM_PROXY_PER_KEY_CONCURRENCY=1
+FORGE_REMOTE_MAX_CONCURRENCY=2
 NIM_PROXY_ENABLE_FALLBACK=1   # only if DeepSeek-V4-Pro quality is acceptable
 ```
 

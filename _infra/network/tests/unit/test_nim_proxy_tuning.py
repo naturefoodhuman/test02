@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-05 12:55:00
+# 创建时间（北京时间）：2026-08-07 23:20:00
 
 """NIM proxy tuning recommendation tests."""
 
@@ -62,6 +62,26 @@ def test_tuning_recommends_concurrency_one_on_errors() -> None:
     assert report.suggested_env["NIM_PROXY_PER_KEY_CONCURRENCY"] == "1"
 
 
+def test_tuning_detects_imbalanced_key_usage() -> None:
+    report = build_tuning_report(
+        {
+            "settings": {"per_key_rpm": 35, "per_key_concurrency": 1, "enable_fallback": False},
+            "pool": {
+                "key_count": 2,
+                "keys": [
+                    {"key_id": "key-1", "in_cooldown": False, "recent_rpm": 0, "success_count": 30, "error_count": 15},
+                    {"key_id": "key-2", "in_cooldown": False, "recent_rpm": 0, "success_count": 0, "error_count": 0},
+                ],
+            },
+        }
+    )
+
+    assert report.status == "tune_down"
+    assert report.suggested_env["NIM_PROXY_SESSION_AFFINITY"] == "0"
+    assert report.suggested_env["FORGE_REMOTE_MAX_CONCURRENCY"] == "2"
+    assert report.suggested_env["NIM_PROXY_ENABLE_FALLBACK"] == "1"
+
+
 def test_tuning_reports_healthy_when_no_pressure() -> None:
     report = build_tuning_report(
         {
@@ -69,7 +89,8 @@ def test_tuning_reports_healthy_when_no_pressure() -> None:
             "pool": {
                 "key_count": 2,
                 "keys": [
-                    {"key_id": "key-1", "in_cooldown": False, "recent_rpm": 5, "error_count": 0},
+                    {"key_id": "key-1", "in_cooldown": False, "recent_rpm": 5, "success_count": 5, "error_count": 0},
+                    {"key_id": "key-2", "in_cooldown": False, "recent_rpm": 4, "success_count": 4, "error_count": 0},
                 ],
             },
         }

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-05 12:10:00
+# 创建时间（北京时间）：2026-08-07 23:20:00
 
 import os
 import sys
@@ -257,9 +257,9 @@ class RPMGuard:
 
 rpm_guard = RPMGuard(max_rpm=int(os.getenv("FORGE_RPM_MAX", "15")))
 
-# 远程上游并发上限（NIM 免费档实测并发 ~5，20 并发 → 15×429/5×200）。
-# 用信号量从源头卡并发，比 RPM 更关键——NIM 对并发比对 RPM 更敏感。
-FORGE_REMOTE_MAX_CONCURRENCY = int(os.getenv("FORGE_REMOTE_MAX_CONCURRENCY", "5"))
+# 远程上游并发上限。NIM 免费档对并发比对 RPM 更敏感；默认 2，
+# 让 2 个自用 key 以每 key 1 并发起步，避免 VS Code/Feishu 多请求叠加。
+FORGE_REMOTE_MAX_CONCURRENCY = int(os.getenv("FORGE_REMOTE_MAX_CONCURRENCY", "2"))
 _remote_concurrency = asyncio.Semaphore(FORGE_REMOTE_MAX_CONCURRENCY)
 
 
@@ -345,6 +345,8 @@ _STREAM_RETRYABLE_EXC_TYPES = {
 # 429/502/503/504 触发重试的累计计数（流式+非流式合计），供 /stats 观测重试是否在生效。
 _retry_counters = {"429": 0, "502": 0, "503": 0, "504": 0}
 
+FORGE_TRACKER_FINISHED_TTL_SECONDS = float(os.getenv("FORGE_TRACKER_FINISHED_TTL_SECONDS", "5"))
+
 # 上下文预算 guard 计数，供 /stats 观测压缩是否在生效。
 _ctx_budget_counters = {"pass": 0, "compacted": 0, "rejected": 0}
 _ctx_budget_last = {"action": "pass", "est_before": 0, "est_after": 0}
@@ -359,6 +361,16 @@ class ActiveTracker:
         self._lock = asyncio.Lock()
         self.total_requests = 0
         self.total_errors = 0
+
+    def _prune_finished_locked(self, now: float) -> None:
+        ttl = max(0.0, FORGE_TRACKER_FINISHED_TTL_SECONDS)
+        stale = [
+            rid for rid, req in self.requests.items()
+            if req.get("status") in {"done", "error"}
+            and now - float(req.get("finished_at", req.get("last", now))) > ttl
+        ]
+        for rid in stale:
+            self.requests.pop(rid, None)
 
     async def start(self, rid, model, target, is_remote):
         async with self._lock:
@@ -381,13 +393,15 @@ class ActiveTracker:
                 r["bytes"] += delta
                 r["chunks"] += 1
                 r["last"] = time.time()
-                if r["status"] != "done" and r["status"] != "error":
+                if r["status"] not in {"done", "error"}:
                     r["status"] = "generating"
 
     async def finish(self, rid, success=True):
         async with self._lock:
             if rid in self.requests:
                 self.requests[rid]["status"] = "done" if success else "error"
+                self.requests[rid]["finished_at"] = time.time()
+                self.requests[rid]["last"] = time.time()
             if not success:
                 self.total_errors += 1
 
@@ -395,9 +409,16 @@ class ActiveTracker:
         async with self._lock:
             self.requests.pop(rid, None)
 
+    async def active_count(self):
+        async with self._lock:
+            now = time.time()
+            self._prune_finished_locked(now)
+            return sum(1 for r in self.requests.values() if r.get("status") not in {"done", "error"})
+
     async def snapshot(self):
         async with self._lock:
             now = time.time()
+            self._prune_finished_locked(now)
             out = []
             for r in self.requests.values():
                 elapsed = now - r["start"]
@@ -1312,11 +1333,12 @@ async def _stream_line_producer(target_url, forward_payload, headers, port_ctx, 
 @app.get("/_forge/status")
 async def forge_status():
     active = await tracker.snapshot()
+    active_count = sum(1 for item in active if item.get("status") not in {"done", "error"})
     with _last_reduction_lock:
         last_reduction = dict(_last_reduction_info)
     return JSONResponse({
         "proxy": "FORGE Smart Proxy v9.0-patched",
-        "active_requests": len(active),
+        "active_requests": active_count,
         "requests": active,
         "total_requests": tracker.total_requests,
         "total_errors": tracker.total_errors,
@@ -1365,7 +1387,7 @@ async def forge_status():
 
 @app.get("/_forge/health")
 async def forge_health():
-    return JSONResponse({"status": "ok", "active": len(tracker.requests)})
+    return JSONResponse({"status": "ok", "active": await tracker.active_count()})
 
 
 # ============================================================
@@ -1731,6 +1753,9 @@ async def smart_gateway(request: Request, path: str):
                                 chunk = json.loads(raw)
                             except Exception:
                                 continue
+                            if isinstance(chunk, dict) and chunk.get("error") and not chunk.get("choices"):
+                                stream_error = chunk.get("error") or chunk
+                                break
 
                             usage_chunk = chunk.get("usage")
                             if isinstance(usage_chunk, dict):

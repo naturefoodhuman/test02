@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-06 22:55:00
+创建时间（北京时间）：2026-08-07 23:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,38 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 205 轮] 2026-08-07
+
+### 需求变动
+- **Claude Code for VS Code 长会话 NIM 堆积修复**：用户本机运行一段时间后 `/_forge/status` 显示 13 个旧请求、多个 `HTTP 504`/`ReadTimeout`/`RemoteProtocolError`，且 NIM `/stats` 中 key-1 有 30 success/15 error、key-2 为 0。根因是 GLM free-tier 对大 body streaming 不稳定，且旧 key picker 在 recent RPM 归零时按 key_id 排序导致 key-1 偏置。
+- **key pool 均衡修复**：NIM sidecar 默认关闭 session affinity（`NIM_PROXY_SESSION_AFFINITY=0`），按 in-flight、recent RPM、生命周期使用量/error 均衡选择 key，避免同一 VS Code/cc-connect 会话长期只打 key-1。
+- **streaming 超时与错误收口**：NIM sidecar 新增总墙钟超时 `NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=180`；stream 入口/读流阶段的 `httpx.ReadTimeout` 会序列化为 SSE error，并可触发 fallback，不再冒泡为 `Exception in ASGI application`。
+- **Smart Proxy 状态自清理**：`/_forge/status` / `/_forge/health` 不再把已 `done/error` 的旧请求长期算作 active；并识别 sidecar SSE error JSON，避免空内容 success。
+- **免费档并发下调**：Smart Proxy 默认 `FORGE_REMOTE_MAX_CONCURRENCY=2`，`.env.example` 推荐 `NIM_PROXY_PER_KEY_CONCURRENCY=1`。
+- **调参建议增强**：`make nim-proxy-tuning` 现在会识别 key 使用不均衡，并建议 `NIM_PROXY_SESSION_AFFINITY=0`、`FORGE_REMOTE_MAX_CONCURRENCY=2`、必要时启用 fallback。
+
+### 文件影响
+- 修改：`_infra/nim_proxy.py`
+- 修改：`_infra/smart_proxy.py`
+- 修改：`scripts/diagnostics/nim_proxy_tuning.py`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy_tuning.py`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_env_config_audit.py _infra/network/tests/unit/test_nim_proxy_tuning.py -q
+# 32 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/env_config_audit.py scripts/diagnostics/nim_proxy_tuning.py
+bash -n scripts/forge-start.sh scripts/start-nim-proxy.sh _infra/start-litellm.sh
+make docs-check
+# Blockers: 0; Warnings: 1（fallback/model 架构敏感词提示，已复核无需新增 ADR）
+```
 
 ---
 

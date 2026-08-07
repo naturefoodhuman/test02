@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-05 12:10:00
+# 创建时间（北京时间）：2026-08-07 23:20:00
 
 """NVIDIA NIM sidecar proxy unit tests."""
 
@@ -91,6 +91,32 @@ def test_key_pool_session_affinity_and_cooldown() -> None:
     second = pool.pick_now("session-a")
     assert second is not None
     assert second.key_id != first.key_id
+
+
+def test_key_pool_balances_repeated_requests_without_affinity() -> None:
+    settings = _settings(session_affinity=False, per_key_rpm=100)
+    pool = NIMKeyPool(["k1", "k2"], settings)
+
+    first = pool.pick_now("same-session")
+    assert first is not None
+    first.mark_success()
+    second = pool.pick_now("same-session")
+
+    assert second is not None
+    assert second.key_id != first.key_id
+
+
+def test_key_pool_can_keep_session_affinity_when_enabled() -> None:
+    settings = _settings(session_affinity=True, per_key_rpm=100)
+    pool = NIMKeyPool(["k1", "k2"], settings)
+
+    first = pool.pick_now("same-session")
+    assert first is not None
+    first.mark_success()
+    second = pool.pick_now("same-session")
+
+    assert second is not None
+    assert second.key_id == first.key_id
 
 
 def test_forward_non_stream_retries_after_429_with_next_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -217,6 +243,9 @@ def test_nim_proxy_settings_from_env_uses_real_defaults(monkeypatch: pytest.Monk
     assert settings.primary_model == "z-ai/glm-5.2"
     assert settings.fallback_model == "deepseek-ai/DeepSeek-V4-Pro"
     assert settings.per_key_rpm == 35
+    assert settings.per_key_concurrency == 1
+    assert settings.request_wall_timeout_seconds == 180.0
+    assert settings.session_affinity is False
 
 
 def test_create_app_chat_route_treats_request_as_fastapi_request(
@@ -334,5 +363,39 @@ def test_forward_non_stream_timeout_returns_504_without_hanging() -> None:
         assert status == 504
         assert b"ReadTimeout" in body
         assert service.retry_count == 1
+
+    asyncio.run(scenario())
+
+
+
+def test_forward_stream_timeout_is_serialized_as_sse_error() -> None:
+    class RaisingStream:
+        async def __aenter__(self):
+            raise httpx.ReadTimeout("slow stream")
+
+        async def __aexit__(self, *args):  # type: ignore[no-untyped-def]
+            return False
+
+    class TimeoutStreamClient:
+        def stream(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            return RaisingStream()
+
+    async def scenario() -> None:
+        settings = _settings(max_attempts_per_request=1)
+        service = NIMProxyService(
+            NIMKeyPool(["k1"], settings),
+            settings,
+            http_client=TimeoutStreamClient(),  # type: ignore[arg-type]
+        )
+
+        chunks = [chunk async for chunk in service.forward_stream(
+            {"model": "z-ai/glm-5.2", "messages": [], "stream": True}
+        )]
+        body = b"".join(chunks)
+
+        assert b"event: error" in body
+        assert b"ReadTimeout" in body
+        assert service.retry_count == 1
+        assert service.stats()["pool"]["keys"][0]["error_count"] == 1
 
     asyncio.run(scenario())
