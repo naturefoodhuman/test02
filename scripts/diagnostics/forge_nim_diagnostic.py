@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-08 18:35:00
+# 创建时间（北京时间）：2026-08-08 23:05:00
 
 """FORGE Smart Proxy / NIM sidecar diagnostic runner.
 
@@ -755,13 +755,15 @@ def summarize_models_response(result: dict[str, Any], wanted_model: str) -> dict
     return out
 
 
-def run_direct_upstream_probes(root: Path, output_dir: Path, *, model: str, timeout: int) -> list[dict[str, Any]]:
+def run_direct_upstream_probes(root: Path, output_dir: Path, *, model: str, timeout: int, key_limit: int | None = None) -> list[dict[str, Any]]:
     keys = load_indexed_nvidia_keys_from_env(root)
     results: list[dict[str, Any]] = []
     if not keys:
         result = {"error": "No NVIDIA_API_KEY_1..10 found in .env"}
         (output_dir / "direct_upstream_probes.json").write_text(json.dumps([result], ensure_ascii=False, indent=2), encoding="utf-8")
         return [result]
+    if key_limit is not None and key_limit > 0:
+        keys = keys[:key_limit]
     for key_id, api_key in keys:
         auth = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         models_result = http_probe(
@@ -972,6 +974,7 @@ class Args:
     direct_upstream_probes: bool
     direct_timeout: int
     direct_model: str
+    direct_key_limit: int
     vscode_watch: bool
     watch_seconds: int
     interval: int
@@ -993,6 +996,7 @@ def parse_args(argv: list[str]) -> Args:
     parser.add_argument("--direct-upstream-probes", action="store_true", help="probe NVIDIA /v1/models and /v1/chat/completions directly with indexed keys")
     parser.add_argument("--direct-timeout", type=int, default=90)
     parser.add_argument("--direct-model", default="z-ai/glm-5.2")
+    parser.add_argument("--direct-key-limit", type=int, default=0, help="0 means all indexed keys; use 1 for long one-key probes")
     parser.add_argument("--vscode-watch", action="store_true", help="interactive VS Code fixed-window watcher")
     parser.add_argument("--watch-seconds", type=int, default=1500)
     parser.add_argument("--interval", type=int, default=15)
@@ -1012,6 +1016,7 @@ def parse_args(argv: list[str]) -> Args:
         direct_upstream_probes=bool(ns.direct_upstream_probes),
         direct_timeout=int(ns.direct_timeout),
         direct_model=str(ns.direct_model),
+        direct_key_limit=int(ns.direct_key_limit),
         vscode_watch=bool(ns.vscode_watch),
         watch_seconds=int(ns.watch_seconds),
         interval=int(ns.interval),
@@ -1082,7 +1087,13 @@ def main(argv: list[str] | None = None) -> int:
     direct_results = None
     if args.direct_upstream_probes:
         print("Running direct NVIDIA upstream probes: /v1/models and /v1/chat/completions ...")
-        direct_results = run_direct_upstream_probes(args.root, output_dir, model=args.direct_model, timeout=args.direct_timeout)
+        direct_results = run_direct_upstream_probes(
+            args.root,
+            output_dir,
+            model=args.direct_model,
+            timeout=args.direct_timeout,
+            key_limit=args.direct_key_limit or None,
+        )
 
     vscode_result = None
     if args.vscode_watch:

@@ -171,6 +171,14 @@ make forge-nim-upstream-probe
 
 该命令会直接用本机 `NVIDIA_API_KEY_1..` 调 NVIDIA `/v1/models` 和 `/v1/chat/completions`，只上传脱敏结果。
 
+若 90 秒直连也只是 read timeout，但 `/v1/models` 确认 `z-ai/glm-5.2` 存在，可再执行单 key 长等待探针，避免两个 key 串行等待过久：
+
+```bash
+make forge-nim-upstream-long
+```
+
+默认参数是 `DIRECT_TIMEOUT=360 DIRECT_KEY_LIMIT=1`。
+
 最小 OpenAI-compatible 请求：
 
 ```bash

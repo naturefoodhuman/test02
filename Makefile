@@ -1,7 +1,7 @@
 # FORGE Factory Makefile
 # 常用操作单命令完成
 
-.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning env-config-audit forge-nim-diagnostic forge-nim-timeout-a forge-nim-vscode-watch forge-nim-push-existing forge-nim-upstream-probe
+.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning env-config-audit forge-nim-diagnostic forge-nim-timeout-a forge-nim-vscode-watch forge-nim-push-existing forge-nim-upstream-probe forge-nim-upstream-long
 
 # 日常开发
 start-gateway:    # 启动 LiteLLM 网关
@@ -115,4 +115,7 @@ forge-nim-push-existing:
 	@python3 scripts/diagnostics/forge_nim_diagnostic.py --push-existing "$${DIAG_DIR}" --push-sanitized-artifact
 
 forge-nim-upstream-probe:
-	@python3 scripts/diagnostics/forge_nim_diagnostic.py --direct-upstream-probes --direct-timeout $${DIRECT_TIMEOUT:-90} --push-sanitized-artifact
+	@python3 scripts/diagnostics/forge_nim_diagnostic.py --direct-upstream-probes --direct-timeout $${DIRECT_TIMEOUT:-90} --direct-key-limit $${DIRECT_KEY_LIMIT:-0} --push-sanitized-artifact
+
+forge-nim-upstream-long:
+	@python3 scripts/diagnostics/forge_nim_diagnostic.py --direct-upstream-probes --direct-timeout $${DIRECT_TIMEOUT:-360} --direct-key-limit $${DIRECT_KEY_LIMIT:-1} --push-sanitized-artifact
