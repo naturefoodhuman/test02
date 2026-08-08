@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-08 23:30:00
+创建时间（北京时间）：2026-08-09 10:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,28 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 212 轮] 2026-08-09
+
+### 需求变动
+- **诊断 artifact 补推失败修复**：用户执行 `DIAG_DIR=... make forge-nim-push-existing` 时，`git checkout --orphan diagnostics/forge-nim-...` 因本地残留同名 diagnostics 分支返回 128。`push_sanitized_artifact()` 现在会在创建 orphan 分支前删除本地同名 diagnostics 分支并执行 `git worktree prune`。
+- **本地 env 副本泄漏处置**：基于用户已推送的 `chore: remove local env copy from git`，继续规范 `.gitignore` 中 `.env_*`、`.env-*`、`*.env.bak` 的忽略规则，防止本地环境副本再次被 `git add .` 加入。
+
+### 文件影响
+- 修改：`scripts/diagnostics/forge_nim_diagnostic.py`
+- 修改：`.gitignore`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_forge_nim_diagnostic.py -q
+# 7 passed
+python3 -m py_compile scripts/diagnostics/forge_nim_diagnostic.py
+make docs-check
+# Blockers: 0; Warnings: 0
+```
 
 ---
 

@@ -82,9 +82,8 @@ mcp-servers/
 .forge/feos/renderer_profiles/
 
 .env.*
+.env_*
+.env-*
+*.env.bak
 
 !.env.example
-
-.env_*
-.env-* 
-*.env.bak

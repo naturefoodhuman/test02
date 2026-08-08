@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-08 23:30:00
+# 创建时间（北京时间）：2026-08-09 10:20:00
 
 """FORGE Smart Proxy / NIM sidecar diagnostic runner.
 
@@ -943,6 +943,13 @@ def push_sanitized_artifact(root: Path, output_dir: Path, branch: str | None = N
     if worktree.exists():
         shutil.rmtree(worktree)
     try:
+        # A previous failed artifact push can leave a local diagnostics/* branch
+        # behind. Delete that local branch before creating the orphan branch
+        # again; remote state is handled by the final force-push.
+        existing = run_cmd(["git", "show-ref", "--verify", "--quiet", f"refs/heads/{branch_name}"], cwd=root, timeout=30)
+        if existing.returncode == 0:
+            run_checked_logged(["git", "branch", "-D", branch_name], cwd=root, timeout=120, log_path=push_log)
+        run_cmd(["git", "worktree", "prune"], cwd=root, timeout=120)
         run_checked_logged(["git", "worktree", "add", "--detach", str(worktree), "HEAD"], cwd=root, timeout=120, log_path=push_log)
         run_checked_logged(["git", "checkout", "--orphan", branch_name], cwd=worktree, timeout=120, log_path=push_log)
         run_cmd(["git", "rm", "-rf", "."], cwd=worktree, timeout=120)
