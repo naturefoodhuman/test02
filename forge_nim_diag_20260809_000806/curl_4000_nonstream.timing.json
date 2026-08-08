@@ -1,0 +1,8 @@
+{
+  "name": "curl_4000_nonstream",
+  "trace": "TRACE-CURL4000-20260809-001408",
+  "start_local": "2026-08-09 00:14:08 +0800",
+  "end_local": "2026-08-09 00:20:08 +0800",
+  "elapsed_s": 360.302,
+  "curl_cmd_redacted": "curl -sS --max-time 690 -o /private/tmp/forge_nim_diag_20260809_000806/curl_4000_nonstream.response.json -H Content-Type: application/json -H x-api-key: sk-<redacted> -w http_code=%{http_code}\ntime_total=%{time_total}\ntime_starttransfer=%{time_starttransfer}\nremote_ip=%{remote_ip}\n http://127.0.0.1:4000/v1/messages --data-binary @/private/tmp/forge_nim_diag_20260809_000806/curl_4000_nonstream.payload.json"
+}

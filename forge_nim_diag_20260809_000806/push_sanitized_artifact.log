@@ -1,0 +1,15 @@
+$ git worktree add --detach /tmp/forge_diag_push_20260809_000806_23145 HEAD
+exit_code=0
+[stdout]
+HEAD 现在位于 0d00272 说明
+
+[stderr]
+准备工作区（分离头指针 0d00272）
+
+
+$ git checkout --orphan diagnostics/forge-nim-20260809_000806
+exit_code=0
+[stderr]
+切换到一个新分支 'diagnostics/forge-nim-20260809_000806'
+
+

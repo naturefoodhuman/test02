@@ -1,0 +1,265 @@
+{
+  "generated_local": "2026-08-09 00:20:08 +0800",
+  "generated_epoch": 1786206008.830583,
+  "root": "/Users/naturist/MusicProject/AI-Project-Incubation-Factory",
+  "profile": "glm-slow",
+  "applied_env_updates": {
+    "FORGE_USE_NIM_PROXY": "1",
+    "NIM_PROXY_READ_TIMEOUT_SECONDS": "360",
+    "NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS": "600",
+    "NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST": "1",
+    "NIM_PROXY_ENABLE_FALLBACK": "0",
+    "FORGE_REMOTE_MAX_CONCURRENCY": "1",
+    "NIM_PROXY_PER_KEY_CONCURRENCY": "1",
+    "FORGE_CTX_SOFT_TOKENS": "12000",
+    "FORGE_CTX_KEEP_RECENT_TURNS": "4",
+    "FORGE_CTX_TRUNC_TOOL_RESULT_CHARS": "800"
+  },
+  "git_head_before": "0d00272 (HEAD -> main) 说明",
+  "git_head_final": "0d00272 (HEAD -> main) 说明",
+  "selected_env_final": {
+    "BRAVE_API_KEY": "<redacted:0>",
+    "DEEPSEEK_API_KEY": "<redacted:70>",
+    "FORGE_COUNT_TOKENS_DIVISOR": "<redacted:1>",
+    "FORGE_CTX_KEEP_RECENT_TURNS": "4",
+    "FORGE_CTX_SOFT_TOKENS": "12000",
+    "FORGE_CTX_TRUNC_TOOL_RESULT_CHARS": "800",
+    "FORGE_LOCAL_DEFAULT_MAX_TOKENS": "<redacted:4>",
+    "FORGE_LOCAL_MAX_TOKENS": "<redacted:4>",
+    "FORGE_REMOTE_MAX_CONCURRENCY": "1",
+    "FORGE_REMOTE_MAX_TOKENS": "<redacted:5>",
+    "FORGE_REMOTE_SELECTOR_PORT": "8080",
+    "FORGE_REMOTE_TOOL_SELECTION": "1",
+    "FORGE_TOOL_SCHEMA_BYTE_BUDGET": "32768",
+    "FORGE_TOOL_SELECTION_MAX": "8",
+    "FORGE_TOOL_SELECTION_MAX_TOKENS": "<redacted:3>",
+    "FORGE_USE_NIM_PROXY": "1",
+    "GLM_API_KEY": "<redacted:70>",
+    "NIM_FALLBACK_MODEL": "deepseek-ai/DeepSeek-V4-Pro",
+    "NIM_PRIMARY_MODEL": "z-ai/glm-5.2",
+    "NIM_PROXY_API_KEY": "<redacted:15>",
+    "NIM_PROXY_BASE_URL": "http://127.0.0.1:4010/v1",
+    "NIM_PROXY_DEFAULT_COOLDOWN_SECONDS": "300",
+    "NIM_PROXY_ENABLE_FALLBACK": "0",
+    "NIM_PROXY_HOST": "127.0.0.1",
+    "NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST": "1",
+    "NIM_PROXY_PER_KEY_CONCURRENCY": "1",
+    "NIM_PROXY_PER_KEY_RPM": "35",
+    "NIM_PROXY_PORT": "4010",
+    "NIM_PROXY_QUEUE_TIMEOUT_SECONDS": "900",
+    "NIM_PROXY_READ_TIMEOUT_SECONDS": "360",
+    "NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS": "600",
+    "NIM_PROXY_RETRY_AFTER_CAP_SECONDS": "900",
+    "NIM_PROXY_SESSION_AFFINITY": "0",
+    "NVIDIA_API_KEY_1": "<redacted:70>",
+    "NVIDIA_API_KEY_2": "<redacted:70>",
+    "SERPER_API_KEY": "<redacted:40>",
+    "TAVILY_API_KEY": "<redacted:58>"
+  },
+  "curl_results": [
+    {
+      "name": "curl_4010_nonstream",
+      "trace": "TRACE-CURL4010-20260809-000807",
+      "start_local": "2026-08-09 00:08:07 +0800",
+      "end_local": "2026-08-09 00:14:08 +0800",
+      "elapsed_s": 360.251,
+      "metrics": {
+        "http_code": 504,
+        "time_total": 360.239478,
+        "time_starttransfer": 360.238974,
+        "remote_ip": "127.0.0.1"
+      },
+      "response_preview": "{\"error\": {\"message\": \"ReadTimeout('')\", \"type\": \"ReadTimeout\", \"model\": \"z-ai/glm-5.2\"}}",
+      "smart_delta_path": "curl_4010_nonstream.smart_delta.log",
+      "nim_delta_path": "curl_4010_nonstream.nim_delta.log"
+    },
+    {
+      "name": "curl_4000_nonstream",
+      "trace": "TRACE-CURL4000-20260809-001408",
+      "start_local": "2026-08-09 00:14:08 +0800",
+      "end_local": "2026-08-09 00:20:08 +0800",
+      "elapsed_s": 360.302,
+      "metrics": {
+        "http_code": 504,
+        "time_total": 360.289663,
+        "time_starttransfer": 360.288816,
+        "remote_ip": "127.0.0.1"
+      },
+      "response_preview": "{\"detail\":\"Backend failed: HTTP 504: {\\\"error\\\": {\\\"message\\\": \\\"ReadTimeout('')\\\", \\\"type\\\": \\\"ReadTimeout\\\", \\\"model\\\": \\\"z-ai/glm-5.2\\\"}}\"}",
+      "smart_delta_path": "curl_4000_nonstream.smart_delta.log",
+      "nim_delta_path": "curl_4000_nonstream.nim_delta.log"
+    }
+  ],
+  "direct_upstream_probes": [],
+  "vscode_watch": null,
+  "final_4010_stats": {
+    "request_count": 2,
+    "retry_count": 2,
+    "fallback_count": 0,
+    "settings": {
+      "upstream_base_url": "https://integrate.api.nvidia.com/v1",
+      "primary_model": "z-ai/glm-5.2",
+      "fallback_model": "deepseek-ai/DeepSeek-V4-Pro",
+      "enable_fallback": false,
+      "per_key_rpm": 35,
+      "per_key_concurrency": 1,
+      "max_attempts_per_request": 1,
+      "read_timeout_seconds": 360.0,
+      "request_wall_timeout_seconds": 600.0,
+      "session_affinity": false
+    },
+    "pool": {
+      "key_count": 2,
+      "keys": [
+        {
+          "key_id": "key-1",
+          "available_in_seconds": 0.0,
+          "in_cooldown": false,
+          "recent_rpm": 0,
+          "rpm_limit": 35,
+          "concurrency_limit": 1,
+          "in_flight": 0,
+          "semaphore_locked": false,
+          "consecutive_429": 0,
+          "success_count": 0,
+          "error_count": 1
+        },
+        {
+          "key_id": "key-2",
+          "available_in_seconds": 0.0,
+          "in_cooldown": false,
+          "recent_rpm": 0,
+          "rpm_limit": 35,
+          "concurrency_limit": 1,
+          "in_flight": 0,
+          "semaphore_locked": false,
+          "consecutive_429": 0,
+          "success_count": 0,
+          "error_count": 1
+        }
+      ],
+      "affinity_size": 0
+    }
+  },
+  "final_4000_status": {
+    "proxy": "FORGE Smart Proxy v9.0-patched",
+    "active_requests": 0,
+    "requests": [],
+    "total_requests": 1,
+    "total_errors": 1,
+    "rpm_guard": {
+      "max_rpm": 35,
+      "active_keys": {}
+    },
+    "local_models": {
+      "mtplx-qwen36-27b": 8080,
+      "mtplx-gemma4": 8082,
+      "local-deepseek-r1": 11434,
+      "qwopus-35b": 8084,
+      "claude-haiku-4-5": 8080,
+      "claude-haiku-4-5-20260101": 8080
+    },
+    "remote_models": [
+      "glm-5",
+      "deepseek-pro",
+      "claude-opus-4-8",
+      "claude-opus-4-8-1m",
+      "claude-opus-4-8-1m-20260101",
+      "claude-opus-4-8-20260101",
+      "claude-3-5-sonnet-20241022",
+      "claude-3-5-sonnet-latest",
+      "claude-opus-4-1",
+      "claude-opus-4-1-20250805",
+      "claude-opus-4-20250514",
+      "claude-opus-4-0",
+      "claude-sonnet-4-20250514",
+      "claude-sonnet-4-5",
+      "claude-sonnet-4-5-20250929",
+      "claude-3-7-sonnet-20250219",
+      "claude-3-5-haiku-20241022",
+      "claude-sonnet-4-6",
+      "claude-sonnet-4-6-1m",
+      "claude-sonnet-4-6-20260101",
+      "claude-sonnet-4-6-1m-20260101"
+    ],
+    "tool_selection": {
+      "enabled": true,
+      "threshold": 8,
+      "max": 8,
+      "core_tools": [
+        "Read",
+        "Bash",
+        "Edit",
+        "Grep",
+        "Glob",
+        "LS"
+      ],
+      "schema_byte_budget": 32768,
+      "policy_version": "v2",
+      "cache": {
+        "size": 0,
+        "max_size": 1000,
+        "hits": 0,
+        "misses": 0
+      },
+      "last_reduction": {
+        "ts": 1786205648.27053,
+        "original": 0,
+        "final": 0,
+        "selected": [],
+        "mode": "remote_no_tools"
+      },
+      "remote_tool_selection": true,
+      "remote_selector_port": 8080
+    },
+    "retry": {
+      "local_retry_count": 0,
+      "remote_retry_count": 2,
+      "stream_remote_retry_count": 2,
+      "retryable_status_codes": [
+        429,
+        502,
+        503,
+        504
+      ],
+      "retry_counters": {
+        "429": 0,
+        "502": 0,
+        "503": 0,
+        "504": 1
+      }
+    },
+    "circuit_breaker": {
+      "state": "closed",
+      "consecutive_429": 0,
+      "trip_threshold": 2,
+      "cooldown_seconds": 45.0,
+      "opened_at": 0.0
+    },
+    "remote_concurrency": {
+      "max": 1
+    },
+    "context_budget": {
+      "max_tokens": 202752,
+      "soft_tokens": 12000,
+      "soft_ratio": 0.8,
+      "hard_ratio": 0.95,
+      "keep_recent_turns": 4,
+      "trunc_tool_result_chars": 800,
+      "counters": {
+        "pass": 1,
+        "compacted": 0,
+        "rejected": 0
+      },
+      "last": {
+        "action": "pass",
+        "est_before": 28,
+        "est_after": 28
+      }
+    },
+    "routing": {
+      "allow_unknown_model_fallback": false
+    },
+    "serialize_local_ports": true
+  }
+}
