@@ -130,6 +130,31 @@ curl http://127.0.0.1:4010/healthz
 curl http://127.0.0.1:4010/stats
 ```
 
+### 自动诊断脚本
+
+后续排查不要再手工复制多段命令。统一使用：
+
+```bash
+# 当前配置下，仅跑 4010/4000 最小 non-stream 探针
+make forge-nim-diagnostic
+
+# 实验 A：不启用 fallback；临时把 NIM read timeout 拉到 300s、wall timeout 拉到 360s，重启后跑 4010/4000 探针，并把脱敏产物推送到 diagnostics/* 分支
+make forge-nim-timeout-a
+
+# VS Code 固定窗口观测：脚本会打印 TRACE 句子；你在 VS Code 发出后立刻回终端按 Enter，脚本自动采样，不再等待 UI 返回
+WATCH_SECONDS=1500 INTERVAL=15 make forge-nim-vscode-watch
+```
+
+脚本输出末尾会包含：
+
+```text
+DIAG_OUTPUT_DIR=...
+DIAG_TARBALL=...
+PUSHED_BRANCH=diagnostics/forge-nim-...
+```
+
+把 `PUSHED_BRANCH` 发给排查方即可；完整脱敏证据在该分支中。
+
 最小 OpenAI-compatible 请求：
 
 ```bash

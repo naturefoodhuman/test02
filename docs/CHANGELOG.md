@@ -18,6 +18,35 @@
 
 ---
 
+## [第 206 轮] 2026-08-08
+
+### 需求变动
+- **测试流程规范化**：用户要求后续不要再给分散的复制粘贴命令；改为提交自动诊断脚本，只有 VS Code 发消息这类不可自动化步骤需要用户配合。
+- **615aab2 作为基线**：先 fetch 并 fast-forward 到用户本机一致的 `615aab2`，后续诊断脚本基于该提交追加。
+- **自动诊断脚本**：新增 `scripts/diagnostics/forge_nim_diagnostic.py`，支持当前配置 curl 探针、实验 A 长 timeout 探针、VS Code 固定窗口观测、状态采样、日志增量截取、脱敏 artifact 分支推送。
+- **实验约束**：实验 B fallback 不执行；所有 profile 默认保持 `NIM_PROXY_ENABLE_FALLBACK=0`。
+
+### 文件影响
+- 新增：`scripts/diagnostics/forge_nim_diagnostic.py`
+- 新增：`_infra/network/tests/unit/test_forge_nim_diagnostic.py`
+- 修改：`Makefile`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_forge_nim_diagnostic.py _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py -q
+# 32 passed, 1 skipped
+python3 -m py_compile scripts/diagnostics/forge_nim_diagnostic.py scripts/diagnostics/nim_proxy_tuning.py _infra/nim_proxy.py _infra/smart_proxy.py
+make -n forge-nim-diagnostic
+make -n forge-nim-timeout-a
+make -n forge-nim-vscode-watch
+make docs-check
+# Blockers: 0; Warnings: 1（fallback/privacy 架构敏感词提示，已复核无需新增 ADR）
+```
+
+---
+
 ## [第 205 轮] 2026-08-07
 
 ### 需求变动
