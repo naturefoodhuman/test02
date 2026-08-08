@@ -84,3 +84,7 @@ mcp-servers/
 .env.*
 
 !.env.example
+
+.env_*
+.env-* 
+*.env.bak
