@@ -248,6 +248,7 @@ def truncate_logs() -> None:
 
 def kill_processes(root: Path, output_dir: Path) -> None:
     commands = [
+        "pids=$(pgrep -f 'scripts/forge-start.sh' 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
         "pids=$(pgrep -f '_infra/smart_proxy.py' 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
         "pids=$(pgrep -f '_infra/nim_proxy.py' 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
         "pids=$(lsof -tiTCP:4000 -sTCP:LISTEN 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
