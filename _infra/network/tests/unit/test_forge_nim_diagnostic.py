@@ -60,6 +60,20 @@ def test_timeout_a_profile_keeps_fallback_disabled() -> None:
     assert profile["FORGE_REMOTE_MAX_CONCURRENCY"] == "1"
 
 
+def test_glm_slow_profile_is_no_fallback_long_timeout_and_smaller_context() -> None:
+    profile = PROFILES["glm-slow"]
+
+    assert profile["FORGE_USE_NIM_PROXY"] == "1"
+    assert profile["NIM_PROXY_READ_TIMEOUT_SECONDS"] == "360"
+    assert profile["NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS"] == "600"
+    assert profile["NIM_PROXY_ENABLE_FALLBACK"] == "0"
+    assert profile["FORGE_REMOTE_MAX_CONCURRENCY"] == "1"
+    assert profile["NIM_PROXY_PER_KEY_CONCURRENCY"] == "1"
+    assert profile["FORGE_CTX_SOFT_TOKENS"] == "12000"
+    assert profile["FORGE_CTX_KEEP_RECENT_TURNS"] == "4"
+    assert profile["FORGE_CTX_TRUNC_TOOL_RESULT_CHARS"] == "800"
+
+
 def test_payload_builders_embed_trace() -> None:
     openai_payload = make_openai_payload("TRACE-X", "z-ai/glm-5.2")
     anthropic_payload = make_anthropic_payload("TRACE-Y")

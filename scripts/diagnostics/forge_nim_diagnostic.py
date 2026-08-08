@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-08 23:05:00
+# 创建时间（北京时间）：2026-08-08 23:30:00
 
 """FORGE Smart Proxy / NIM sidecar diagnostic runner.
 
@@ -72,6 +72,18 @@ PROFILES: dict[str, dict[str, str]] = {
         "NIM_PROXY_ENABLE_FALLBACK": "0",
         "FORGE_REMOTE_MAX_CONCURRENCY": "1",
         "NIM_PROXY_PER_KEY_CONCURRENCY": "1",
+    },
+    "glm-slow": {
+        "FORGE_USE_NIM_PROXY": "1",
+        "NIM_PROXY_READ_TIMEOUT_SECONDS": "360",
+        "NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS": "600",
+        "NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST": "1",
+        "NIM_PROXY_ENABLE_FALLBACK": "0",
+        "FORGE_REMOTE_MAX_CONCURRENCY": "1",
+        "NIM_PROXY_PER_KEY_CONCURRENCY": "1",
+        "FORGE_CTX_SOFT_TOKENS": "12000",
+        "FORGE_CTX_KEEP_RECENT_TURNS": "4",
+        "FORGE_CTX_TRUNC_TOOL_RESULT_CHARS": "800",
     },
     "context-c": {
         "NIM_PROXY_ENABLE_FALLBACK": "0",

@@ -179,6 +179,20 @@ make forge-nim-upstream-long
 
 默认参数是 `DIRECT_TIMEOUT=360 DIRECT_KEY_LIMIT=1`。
 
+若确认 GLM-5.2 最小 direct 请求会在 360s 内返回，但速度约数分钟，可在“不启用 fallback”的前提下验证慢速工作档：
+
+```bash
+# 应用 GLM 慢速无 fallback profile，快速重启 4010/4000，跑 4010 与 4000 最小 non-stream smoke。
+# 预计耗时约 8-12 分钟。
+make forge-nim-glm-slow-smoke
+
+# VS Code 固定窗口观测；脚本打印 TRACE 后，你在 VS Code 发出并立刻回终端按 Enter。
+# 不预跑 curl smoke，避免测试前额外等待。
+WATCH_SECONDS=1800 INTERVAL=15 make forge-nim-vscode-glm-slow-watch
+```
+
+`glm-slow` profile 固定保持 `NIM_PROXY_ENABLE_FALLBACK=0`，并设置：`NIM_PROXY_READ_TIMEOUT_SECONDS=360`、`NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=600`、`FORGE_REMOTE_MAX_CONCURRENCY=1`、`NIM_PROXY_PER_KEY_CONCURRENCY=1`、`FORGE_CTX_SOFT_TOKENS=12000`、`FORGE_CTX_KEEP_RECENT_TURNS=4`、`FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=800`。
+
 最小 OpenAI-compatible 请求：
 
 ```bash
