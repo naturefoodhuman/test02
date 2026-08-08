@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-08 12:45:00
+# 创建时间（北京时间）：2026-08-08 17:55:00
 
 """FORGE Smart Proxy / NIM sidecar diagnostic runner.
 
@@ -65,6 +65,7 @@ LONG_SECRET_RE = re.compile(r"(?<![A-Za-z0-9])[A-Za-z0-9_\-]{48,}(?![A-Za-z0-9])
 PROFILES: dict[str, dict[str, str]] = {
     "current": {},
     "timeout-a": {
+        "FORGE_USE_NIM_PROXY": "1",
         "NIM_PROXY_READ_TIMEOUT_SECONDS": "300",
         "NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS": "360",
         "NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST": "1",
@@ -79,6 +80,7 @@ PROFILES: dict[str, dict[str, str]] = {
         "FORGE_CTX_TRUNC_TOOL_RESULT_CHARS": "800",
     },
     "timeout-a-context-c": {
+        "FORGE_USE_NIM_PROXY": "1",
         "NIM_PROXY_READ_TIMEOUT_SECONDS": "300",
         "NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS": "360",
         "NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST": "1",
@@ -259,7 +261,90 @@ def kill_processes(root: Path, output_dir: Path) -> None:
     log.write_text(redact_text("\n".join(chunks)), encoding="utf-8")
 
 
-def restart_services(root: Path, output_dir: Path, timeout: int) -> None:
+def wait_json_url(url: str, *, timeout_s: float, interval_s: float = 0.5) -> tuple[bool, dict[str, Any]]:
+    deadline = time.time() + timeout_s
+    last: dict[str, Any] = {}
+    while time.time() < deadline:
+        last = read_json_url(url, timeout=min(5, max(1, int(interval_s + 1))))
+        if last and not last.get("_error"):
+            return True, last
+        time.sleep(interval_s)
+    return False, last
+
+
+def _popen_detached(
+    args: list[str],
+    *,
+    cwd: Path,
+    log_path: Path,
+    env: dict[str, str] | None = None,
+) -> subprocess.Popen[Any]:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_handle = log_path.open("ab", buffering=0)
+    try:
+        return subprocess.Popen(
+            args,
+            cwd=str(cwd),
+            stdout=log_handle,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+            env=env,
+            close_fds=True,
+            start_new_session=True,
+        )
+    finally:
+        # The child process owns the duplicated fd; close the parent's handle.
+        log_handle.close()
+
+
+def _python_bin(root: Path) -> str:
+    venv_python = root / ".venv" / "bin" / "python"
+    if venv_python.exists() and os.access(venv_python, os.X_OK):
+        return str(venv_python)
+    return shutil.which("python3") or sys.executable
+
+
+def restart_services_fast(root: Path, output_dir: Path, timeout: int) -> None:
+    """Restart only NIM sidecar and Smart Proxy; skip forge-start full model self-check.
+
+    The diagnostic probes only need ports 4010 and 4000. The full forge-start.sh
+    script cold-starts local model ports for self-check and can legitimately take
+    many minutes, which makes timeout experiments look stuck before probes run.
+    """
+
+    kill_processes(root, output_dir)
+    truncate_logs()
+    start = time.time()
+    events: list[dict[str, Any]] = []
+
+    nim_log = Path("/tmp/forge_nim_proxy.log")
+    smart_log = Path("/tmp/forge_smart_proxy.log")
+
+    nim_proc = _popen_detached(["bash", "scripts/start-nim-proxy.sh"], cwd=root, log_path=nim_log)
+    events.append({"event": "nim_start", "pid": nim_proc.pid, "local_time": local_time()})
+    Path("/tmp/forge_nim_proxy.pid").write_text(str(nim_proc.pid), encoding="utf-8")
+    ok, payload = wait_json_url("http://127.0.0.1:4010/healthz", timeout_s=45)
+    events.append({"event": "nim_health", "ok": ok, "payload": payload, "local_time": local_time()})
+    if not ok:
+        events.append({"event": "nim_log_tail", "tail": tail_from_line(nim_log, max(1, line_count(nim_log) - 80))})
+        (output_dir / "restart_fast.json").write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
+        raise RuntimeError("NIM sidecar did not become healthy on 4010 within 45s")
+
+    smart_proc = _popen_detached([_python_bin(root), "_infra/smart_proxy.py"], cwd=root, log_path=smart_log)
+    events.append({"event": "smart_start", "pid": smart_proc.pid, "local_time": local_time()})
+    Path("/tmp/forge_smart_proxy.pid").write_text(str(smart_proc.pid), encoding="utf-8")
+    ok, payload = wait_json_url("http://127.0.0.1:4000/_forge/health", timeout_s=45)
+    events.append({"event": "smart_health", "ok": ok, "payload": payload, "local_time": local_time()})
+    if not ok:
+        events.append({"event": "smart_log_tail", "tail": tail_from_line(smart_log, max(1, line_count(smart_log) - 80))})
+        (output_dir / "restart_fast.json").write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
+        raise RuntimeError("Smart Proxy did not become healthy on 4000 within 45s")
+
+    events.append({"event": "restart_done", "elapsed_s": round(time.time() - start, 3), "local_time": local_time()})
+    (output_dir / "restart_fast.json").write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def restart_services_full(root: Path, output_dir: Path, timeout: int) -> None:
     kill_processes(root, output_dir)
     truncate_logs()
     start = time.time()
@@ -276,6 +361,13 @@ def restart_services(root: Path, output_dir: Path, timeout: int) -> None:
         ),
         encoding="utf-8",
     )
+
+
+def restart_services(root: Path, output_dir: Path, timeout: int, mode: str = "fast") -> None:
+    if mode == "full":
+        restart_services_full(root, output_dir, timeout)
+    else:
+        restart_services_fast(root, output_dir, timeout)
 
 
 def snapshot(root: Path, name: str, output_dir: Path) -> dict[str, Any]:
@@ -715,6 +807,7 @@ class Args:
     profile: str
     restart: bool
     restart_timeout: int
+    restart_mode: str
     truncate_logs: bool
     curl_probes: bool
     vscode_watch: bool
@@ -729,8 +822,9 @@ def parse_args(argv: list[str]) -> Args:
     parser = argparse.ArgumentParser(description="Run FORGE Smart Proxy / NIM diagnostics")
     parser.add_argument("--root", default=os.getcwd(), help="FORGE repo root")
     parser.add_argument("--profile", choices=sorted(PROFILES), default="current")
-    parser.add_argument("--restart", action="store_true", help="kill 4000/4010 and run scripts/forge-start.sh")
+    parser.add_argument("--restart", action="store_true", help="restart 4000/4010 before probes")
     parser.add_argument("--restart-timeout", type=int, default=900)
+    parser.add_argument("--restart-mode", choices=["fast", "full"], default="fast", help="fast skips forge-start full local-model self-check")
     parser.add_argument("--truncate-logs", action="store_true", help="truncate /tmp/forge_* logs before restart")
     parser.add_argument("--curl-probes", action="store_true", help="run 4010 and 4000 non-stream curl probes")
     parser.add_argument("--vscode-watch", action="store_true", help="interactive VS Code fixed-window watcher")
@@ -745,6 +839,7 @@ def parse_args(argv: list[str]) -> Args:
         profile=ns.profile,
         restart=bool(ns.restart),
         restart_timeout=int(ns.restart_timeout),
+        restart_mode=str(ns.restart_mode),
         truncate_logs=bool(ns.truncate_logs),
         curl_probes=bool(ns.curl_probes),
         vscode_watch=bool(ns.vscode_watch),
@@ -777,8 +872,11 @@ def main(argv: list[str] | None = None) -> int:
         truncate_logs()
 
     if args.restart:
-        print("Restarting 4000/4010 via scripts/forge-start.sh ...")
-        restart_services(args.root, output_dir, timeout=args.restart_timeout)
+        if args.restart_mode == "full":
+            print("Restarting 4000/4010 via scripts/forge-start.sh full self-check ...")
+        else:
+            print("Fast restarting only NIM sidecar 4010 and Smart Proxy 4000 (skips forge-start full model self-check) ...")
+        restart_services(args.root, output_dir, timeout=args.restart_timeout, mode=args.restart_mode)
 
     snapshot(args.root, "before", output_dir)
     curl_results: list[ProbeResult] = []

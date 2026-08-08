@@ -53,6 +53,7 @@ def test_upsert_env_lines_updates_existing_and_appends_missing() -> None:
 def test_timeout_a_profile_keeps_fallback_disabled() -> None:
     profile = PROFILES["timeout-a"]
 
+    assert profile["FORGE_USE_NIM_PROXY"] == "1"
     assert profile["NIM_PROXY_READ_TIMEOUT_SECONDS"] == "300"
     assert profile["NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS"] == "360"
     assert profile["NIM_PROXY_ENABLE_FALLBACK"] == "0"

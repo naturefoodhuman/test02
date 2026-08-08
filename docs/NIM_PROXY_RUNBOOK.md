@@ -138,7 +138,9 @@ curl http://127.0.0.1:4010/stats
 # 当前配置下，仅跑 4010/4000 最小 non-stream 探针
 make forge-nim-diagnostic
 
-# 实验 A：不启用 fallback；临时把 NIM read timeout 拉到 300s、wall timeout 拉到 360s，重启后跑 4010/4000 探针，并把脱敏产物推送到 diagnostics/* 分支
+# 实验 A：不启用 fallback；临时把 NIM read timeout 拉到 300s、wall timeout 拉到 360s。
+# 诊断脚本只快速重启 4010 NIM sidecar 和 4000 Smart Proxy，跳过 forge-start 全量本地模型自检，避免测试开始前卡住。
+# 随后自动跑 4010/4000 探针，并把脱敏产物推送到 diagnostics/* 分支。
 make forge-nim-timeout-a
 
 # VS Code 固定窗口观测：脚本会打印 TRACE 句子；你在 VS Code 发出后立刻回终端按 Enter，脚本自动采样，不再等待 UI 返回
