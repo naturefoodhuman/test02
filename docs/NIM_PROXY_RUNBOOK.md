@@ -163,6 +163,14 @@ DIAG_DIR=/private/tmp/forge_nim_diag_YYYYMMDD_HHMMSS make forge-nim-push-existin
 
 然后把新的 `PUSHED_BRANCH` 发给排查方。
 
+若实验 A 返回的是快速 `HTTP 404`（不是 120/300 秒 ReadTimeout），说明当前要先判断 NVIDIA 上游是否仍接受 `z-ai/glm-5.2`。执行：
+
+```bash
+make forge-nim-upstream-probe
+```
+
+该命令会直接用本机 `NVIDIA_API_KEY_1..` 调 NVIDIA `/v1/models` 和 `/v1/chat/completions`，只上传脱敏结果。
+
 最小 OpenAI-compatible 请求：
 
 ```bash

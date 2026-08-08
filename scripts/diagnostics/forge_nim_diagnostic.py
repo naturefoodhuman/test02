@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-08 18:15:00
+# 创建时间（北京时间）：2026-08-08 18:35:00
 
 """FORGE Smart Proxy / NIM sidecar diagnostic runner.
 
@@ -682,6 +682,126 @@ def run_vscode_watch(root: Path, output_dir: Path, watch_seconds: int, interval:
     }
 
 
+def load_indexed_nvidia_keys_from_env(root: Path) -> list[tuple[str, str]]:
+    env = parse_env_file(root / ".env")
+    keys: list[tuple[str, str]] = []
+    for index in range(1, 11):
+        key = env.get(f"NVIDIA_API_KEY_{index}")
+        if key:
+            keys.append((f"key-{index}", key))
+    return keys
+
+
+def http_probe(
+    *,
+    method: str,
+    url: str,
+    headers: dict[str, str],
+    body: bytes | None,
+    timeout: int,
+) -> dict[str, Any]:
+    started = time.time()
+    request = urllib.request.Request(url, data=body, method=method, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - diagnostic URL from caller
+            raw = response.read()
+            status = response.status
+            response_headers = dict(response.headers.items())
+            error = ""
+    except urllib.error.HTTPError as exc:
+        raw = exc.read()
+        status = exc.code
+        response_headers = dict(exc.headers.items())
+        error = f"HTTPError: {exc}"
+    except Exception as exc:
+        raw = b""
+        status = None
+        response_headers = {}
+        error = f"{type(exc).__name__}: {exc}"
+    elapsed = time.time() - started
+    body_text = raw.decode("utf-8", errors="replace")
+    return {
+        "method": method,
+        "url": url,
+        "status": status,
+        "elapsed_s": round(elapsed, 3),
+        "error": redact_text(error),
+        "headers": {k: redact_text(v) for k, v in response_headers.items() if k.lower() in {
+            "content-type", "retry-after", "x-request-id", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"
+        }},
+        "body_preview": redact_text(body_text[:12000]),
+        "body_bytes": len(raw),
+    }
+
+
+def summarize_models_response(result: dict[str, Any], wanted_model: str) -> dict[str, Any]:
+    body = result.get("body_preview") or ""
+    out: dict[str, Any] = {"wanted_model": wanted_model, "wanted_present": False, "glm_like_ids": []}
+    try:
+        data = json.loads(body)
+    except Exception:
+        return out
+    items = data.get("data") if isinstance(data, dict) else None
+    ids: list[str] = []
+    if isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict) and item.get("id"):
+                ids.append(str(item["id"]))
+            elif isinstance(item, str):
+                ids.append(item)
+    out["wanted_present"] = wanted_model in ids
+    out["glm_like_ids"] = [item for item in ids if "glm" in item.lower() or "z-ai" in item.lower()][:50]
+    out["model_count"] = len(ids)
+    return out
+
+
+def run_direct_upstream_probes(root: Path, output_dir: Path, *, model: str, timeout: int) -> list[dict[str, Any]]:
+    keys = load_indexed_nvidia_keys_from_env(root)
+    results: list[dict[str, Any]] = []
+    if not keys:
+        result = {"error": "No NVIDIA_API_KEY_1..10 found in .env"}
+        (output_dir / "direct_upstream_probes.json").write_text(json.dumps([result], ensure_ascii=False, indent=2), encoding="utf-8")
+        return [result]
+    for key_id, api_key in keys:
+        auth = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        models_result = http_probe(
+            method="GET",
+            url="https://integrate.api.nvidia.com/v1/models",
+            headers={"Authorization": f"Bearer {api_key}"},
+            body=None,
+            timeout=min(timeout, 60),
+        )
+        chat_trace = f"TRACE-DIRECT-{key_id}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        chat_payload = json.dumps(
+            {
+                "model": model,
+                "messages": [{"role": "user", "content": f"{chat_trace} ping，只回答 pong"}],
+                "stream": False,
+                "max_tokens": 16,
+            },
+            ensure_ascii=False,
+        ).encode("utf-8")
+        chat_result = http_probe(
+            method="POST",
+            url="https://integrate.api.nvidia.com/v1/chat/completions",
+            headers=auth,
+            body=chat_payload,
+            timeout=timeout,
+        )
+        results.append(
+            {
+                "key_id": key_id,
+                "model": model,
+                "models_endpoint": models_result,
+                "models_summary": summarize_models_response(models_result, model),
+                "chat_trace": chat_trace,
+                "chat_completions": chat_result,
+            }
+        )
+    (output_dir / "direct_upstream_probes.json").write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+    return results
+
+
 def make_summary(
     root: Path,
     output_dir: Path,
@@ -689,6 +809,7 @@ def make_summary(
     profile: str,
     applied_updates: dict[str, str],
     curl_results: list[ProbeResult],
+    direct_results: list[dict[str, Any]] | None,
     vscode_result: dict[str, Any] | None,
 ) -> dict[str, Any]:
     before = json.loads((output_dir / "before_snapshot.json").read_text(encoding="utf-8"))
@@ -716,6 +837,7 @@ def make_summary(
             }
             for item in curl_results
         ],
+        "direct_upstream_probes": direct_results or [],
         "vscode_watch": vscode_result,
         "final_4010_stats": final.get("stats_4010", {}),
         "final_4000_status": final.get("status_4000", {}),
@@ -752,6 +874,8 @@ def make_summary(
                 "",
             ]
         )
+    if direct_results:
+        lines.extend(["## Direct NVIDIA upstream probes", "", "```json", json.dumps(direct_results, ensure_ascii=False, indent=2)[:8000], "```", ""])
     if vscode_result:
         lines.extend(
             [
@@ -845,6 +969,9 @@ class Args:
     restart_mode: str
     truncate_logs: bool
     curl_probes: bool
+    direct_upstream_probes: bool
+    direct_timeout: int
+    direct_model: str
     vscode_watch: bool
     watch_seconds: int
     interval: int
@@ -863,6 +990,9 @@ def parse_args(argv: list[str]) -> Args:
     parser.add_argument("--restart-mode", choices=["fast", "full"], default="fast", help="fast skips forge-start full local-model self-check")
     parser.add_argument("--truncate-logs", action="store_true", help="truncate /tmp/forge_* logs before restart")
     parser.add_argument("--curl-probes", action="store_true", help="run 4010 and 4000 non-stream curl probes")
+    parser.add_argument("--direct-upstream-probes", action="store_true", help="probe NVIDIA /v1/models and /v1/chat/completions directly with indexed keys")
+    parser.add_argument("--direct-timeout", type=int, default=90)
+    parser.add_argument("--direct-model", default="z-ai/glm-5.2")
     parser.add_argument("--vscode-watch", action="store_true", help="interactive VS Code fixed-window watcher")
     parser.add_argument("--watch-seconds", type=int, default=1500)
     parser.add_argument("--interval", type=int, default=15)
@@ -879,6 +1009,9 @@ def parse_args(argv: list[str]) -> Args:
         restart_mode=str(ns.restart_mode),
         truncate_logs=bool(ns.truncate_logs),
         curl_probes=bool(ns.curl_probes),
+        direct_upstream_probes=bool(ns.direct_upstream_probes),
+        direct_timeout=int(ns.direct_timeout),
+        direct_model=str(ns.direct_model),
         vscode_watch=bool(ns.vscode_watch),
         watch_seconds=int(ns.watch_seconds),
         interval=int(ns.interval),
@@ -946,6 +1079,11 @@ def main(argv: list[str] | None = None) -> int:
         print("Running curl probes: 4010 non-stream, then 4000 non-stream ...")
         curl_results = run_curl_probes(args.root, output_dir)
 
+    direct_results = None
+    if args.direct_upstream_probes:
+        print("Running direct NVIDIA upstream probes: /v1/models and /v1/chat/completions ...")
+        direct_results = run_direct_upstream_probes(args.root, output_dir, model=args.direct_model, timeout=args.direct_timeout)
+
     vscode_result = None
     if args.vscode_watch:
         vscode_result = run_vscode_watch(args.root, output_dir, args.watch_seconds, args.interval)
@@ -956,6 +1094,7 @@ def main(argv: list[str] | None = None) -> int:
         profile=args.profile,
         applied_updates=applied_updates,
         curl_results=curl_results,
+        direct_results=direct_results,
         vscode_result=vscode_result,
     )
     tarball = create_tarball(output_dir)

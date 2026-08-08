@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-08 18:15:00
+创建时间（北京时间）：2026-08-08 18:35:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,27 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 209 轮] 2026-08-08
+
+### 需求变动
+- **实验 A 结果分析**：`diagnostics/forge-nim-20260808_180125` 显示 300s timeout profile 生效，但 4010 最小请求 0.826s 即返回 `HTTP 404`，4000 随后返回 `Backend failed: HTTP 404`。这不是 timeout 过短，而是当前 NVIDIA 上游对 `z-ai/glm-5.2` 返回模型/接口级 404。
+- **上游直连探针**：新增 `make forge-nim-upstream-probe`，直接调用 NVIDIA `/v1/models` 与 `/v1/chat/completions`，用于确认 `z-ai/glm-5.2` 是否仍在当前账号/key 的模型列表中、以及 direct chat 是否也 404。
+
+### 文件影响
+- 修改：`scripts/diagnostics/forge_nim_diagnostic.py`
+- 修改：`Makefile`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_forge_nim_diagnostic.py -q
+python3 -m py_compile scripts/diagnostics/forge_nim_diagnostic.py
+make -n forge-nim-upstream-probe
+```
 
 ---
 
