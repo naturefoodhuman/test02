@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-09 10:20:00
+创建时间（北京时间）：2026-08-09 10:45:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,31 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 213 轮] 2026-08-09
+
+### 需求变动
+- **方向 A 固化**：用户选择继续使用 GLM-5.2，并接受“数分钟等待 + 偶发 360s 失败”，不启用 fallback。基于 direct / smoke / VS Code watch 结果，把推荐配置固化为 `NIM_PROXY_READ_TIMEOUT_SECONDS=360`、`NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=600`、`FORGE_REMOTE_MAX_CONCURRENCY=1`、`NIM_PROXY_PER_KEY_CONCURRENCY=1`、`FORGE_CTX_SOFT_TOKENS=12000`、`FORGE_CTX_KEEP_RECENT_TURNS=4`、`FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=800`。
+- **fast restart PID/端口一致性修复**：诊断脚本快速重启模式现在会确认 4000/4010 listener PID 必须等于刚启动的进程 PID，避免 health check 命中旧进程后误判就绪。清理阶段也会显式杀端口并等待端口关闭。
+- **参数文档说明**：更新 NIM Proxy runbook 与 `.env.example`，说明方向 A 下 read timeout 与 wall timeout 的取值原因。
+
+### 文件影响
+- 修改：`scripts/diagnostics/forge_nim_diagnostic.py`
+- 修改：`_infra/network/tests/unit/test_forge_nim_diagnostic.py`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_forge_nim_diagnostic.py -q
+# 9 passed
+python3 -m py_compile scripts/diagnostics/forge_nim_diagnostic.py
+make docs-check
+# Blockers: 0; Warnings: 1（fallback 架构敏感词提示，已复核无需新增 ADR）
+```
 
 ---
 

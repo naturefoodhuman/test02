@@ -17,6 +17,7 @@ from scripts.diagnostics.forge_nim_diagnostic import (  # noqa: E402
     make_anthropic_payload,
     make_openai_payload,
     parse_curl_metrics,
+    parse_pid_lines,
     redact_text,
     selected_env_snapshot,
     upsert_env_lines,
@@ -93,6 +94,18 @@ def test_parse_curl_metrics_parses_numbers_and_strings() -> None:
     assert metrics["http_code"] == 504
     assert metrics["time_total"] == 120.231161
     assert metrics["remote_ip"] == "127.0.0.1"
+
+
+def test_parse_pid_lines_ignores_noise() -> None:
+    assert parse_pid_lines("123\nabc\n 456 \n\n") == [123, 456]
+
+
+def test_diagnostic_source_checks_port_owner_before_health() -> None:
+    source = Path("scripts/diagnostics/forge_nim_diagnostic.py").read_text(encoding="utf-8")
+
+    assert "wait_service_owned_by_pid" in source
+    assert "expected_pid in last_pids" in source
+    assert "still has listeners after cleanup" in source
 
 
 def test_selected_env_snapshot_redacts_indexed_keys(tmp_path: Path) -> None:

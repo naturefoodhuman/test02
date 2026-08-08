@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-07 23:20:00
+创建时间（北京时间）：2026-08-09 10:45:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -58,11 +58,14 @@ export NIM_PROXY_PER_KEY_CONCURRENCY=1
 export NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=300
 export NIM_PROXY_RETRY_AFTER_CAP_SECONDS=900
 export NIM_PROXY_QUEUE_TIMEOUT_SECONDS=900
-export NIM_PROXY_READ_TIMEOUT_SECONDS=120
-export NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=180
+export NIM_PROXY_READ_TIMEOUT_SECONDS=360
+export NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=600
 export NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
 export NIM_PROXY_SESSION_AFFINITY=0
-export FORGE_REMOTE_MAX_CONCURRENCY=2
+export FORGE_REMOTE_MAX_CONCURRENCY=1
+export FORGE_CTX_SOFT_TOKENS=12000
+export FORGE_CTX_KEEP_RECENT_TURNS=4
+export FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=800
 
 export NIM_PRIMARY_MODEL="z-ai/glm-5.2"
 export NIM_PROXY_ENABLE_FALLBACK=0
@@ -246,7 +249,7 @@ make nim-proxy-tuning
 | 现象 | 建议 |
 |---|---|
 | 任一 key `in_cooldown=true` | 降低 `NIM_PROXY_PER_KEY_RPM`，例如 35 → 30；冷却改 600s |
-| `semaphore_locked=true` 或 error_count 上升 | 把 `NIM_PROXY_PER_KEY_CONCURRENCY=1`，并把 `FORGE_REMOTE_MAX_CONCURRENCY=2` |
+| `semaphore_locked=true` 或 error_count 上升 | 把 `NIM_PROXY_PER_KEY_CONCURRENCY=1`，并把 `FORGE_REMOTE_MAX_CONCURRENCY=1` |
 | 只有 key-1 有 success/error，key-2 一直 0 | 确认 `NIM_PROXY_SESSION_AFFINITY=0`，拉取新版并重启 4010/4000 |
 | 只有 1 个 key | 先加第 2 个自用 key，而不是提 RPM |
 | fallback_count > 0 | 检查 DeepSeek-V4-Pro 输出质量；不满意则关闭 fallback |
@@ -258,8 +261,13 @@ make nim-proxy-tuning
 NIM_PROXY_PER_KEY_RPM=35
 NIM_PROXY_PER_KEY_CONCURRENCY=1
 NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=300
+NIM_PROXY_READ_TIMEOUT_SECONDS=360
+NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=600
 NIM_PROXY_SESSION_AFFINITY=0
-FORGE_REMOTE_MAX_CONCURRENCY=2
+FORGE_REMOTE_MAX_CONCURRENCY=1
+FORGE_CTX_SOFT_TOKENS=12000
+FORGE_CTX_KEEP_RECENT_TURNS=4
+FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=800
 ```
 
 如果 429 仍频繁：
@@ -318,7 +326,7 @@ NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=600
 处理顺序：
 
 1. 拉取新版；
-2. 设置 `NIM_PROXY_SESSION_AFFINITY=0`、`NIM_PROXY_PER_KEY_CONCURRENCY=1`、`FORGE_REMOTE_MAX_CONCURRENCY=2`；
+2. 设置 `NIM_PROXY_SESSION_AFFINITY=0`、`NIM_PROXY_PER_KEY_CONCURRENCY=1`、`FORGE_REMOTE_MAX_CONCURRENCY=1`；
 3. 可接受降级时设置 `NIM_PROXY_ENABLE_FALLBACK=1`；
 4. 杀掉旧 4000/4010 后重启 `bash scripts/forge-start.sh`；
 5. 用 `/stats` 确认 key-1/key-2 都开始有 `success_count` 或 `error_count`。
@@ -338,28 +346,23 @@ Symptom:
 NVIDIA direct curl returns HTTP 504 after ~5 minutes, or Feishu waits 10-20 minutes.
 ```
 
-Meaning: NIM free-tier queue/worker is overloaded. The sidecar now defaults to a
-shorter upstream read timeout and fewer nested attempts:
+Meaning: NIM free-tier queue/worker is overloaded. For the chosen direction A
+(GLM-5.2 remains primary and fallback stays disabled), use a long enough read timeout
+to avoid cutting off successful-but-slow responses, while keeping one-attempt/no-fallback behavior:
 
 ```bash
-NIM_PROXY_READ_TIMEOUT_SECONDS=120
-NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=180
+NIM_PROXY_READ_TIMEOUT_SECONDS=360
+NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=600
 NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
-```
-
-Default changed to 120s read timeout + 180s wall timeout + 1 attempt to avoid Feishu/cc-connect waiting 10-20 minutes when NIM free-tier workers hang or return a late 504.
-
-Smart Proxy skips extra remote retries for NIM sidecar routes, so retry multiplication
-is avoided. If this still waits too long, reduce further:
-
-```bash
-NIM_PROXY_READ_TIMEOUT_SECONDS=120
-NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=180
-NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
+NIM_PROXY_ENABLE_FALLBACK=0
 NIM_PROXY_PER_KEY_CONCURRENCY=1
-FORGE_REMOTE_MAX_CONCURRENCY=2
-NIM_PROXY_ENABLE_FALLBACK=1   # only if DeepSeek-V4-Pro quality is acceptable
+FORGE_REMOTE_MAX_CONCURRENCY=1
+FORGE_CTX_SOFT_TOKENS=12000
+FORGE_CTX_KEEP_RECENT_TURNS=4
+FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=800
 ```
+
+Why: direct upstream testing showed GLM-5.2 can succeed after ~236s, but smoke tests can still fail at 360s. Therefore 360s read timeout avoids the previously guaranteed 120s cutoff, while still bounding bad turns to about six minutes. Smart Proxy skips extra remote retries for NIM sidecar routes, so retry multiplication is avoided. Fallback remains disabled by policy.
 
 ### Smart Proxy pid file points to `bash scripts/forge-start.sh`
 

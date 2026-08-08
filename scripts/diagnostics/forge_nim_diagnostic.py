@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-09 10:20:00
+# 创建时间（北京时间）：2026-08-09 10:45:00
 
 """FORGE Smart Proxy / NIM sidecar diagnostic runner.
 
@@ -18,6 +18,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tarfile
@@ -290,20 +291,130 @@ def truncate_logs() -> None:
             pass
 
 
+def parse_pid_lines(text: str) -> list[int]:
+    pids: list[int] = []
+    for raw in text.splitlines():
+        item = raw.strip()
+        if not item or not item.isdigit():
+            continue
+        pids.append(int(item))
+    return pids
+
+
+def port_listener_pids(root: Path, port: int) -> list[int]:
+    result = run_cmd(
+        ["bash", "-lc", f"lsof -tiTCP:{port} -sTCP:LISTEN 2>/dev/null || true"],
+        cwd=root,
+        timeout=10,
+    )
+    return parse_pid_lines(result.stdout)
+
+
+def process_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def append_restart_log(log: Path, message: str) -> None:
+    with log.open("a", encoding="utf-8") as handle:
+        handle.write(message.rstrip() + "\n")
+
+
+def kill_pid_list(pids: list[int], *, sig: signal.Signals, log: Path, label: str) -> None:
+    if not pids:
+        append_restart_log(log, f"{label}: no pids")
+        return
+    append_restart_log(log, f"{label}: kill -{sig.name} {pids}")
+    for pid in pids:
+        try:
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            append_restart_log(log, f"{label}: pid {pid} already gone")
+        except PermissionError as exc:
+            append_restart_log(log, f"{label}: pid {pid} permission error: {exc}")
+
+
+def pattern_pids(root: Path, pattern: str) -> list[int]:
+    result = run_cmd(["pgrep", "-f", pattern], cwd=root, timeout=10)
+    return parse_pid_lines(result.stdout)
+
+
+def stop_pattern(root: Path, pattern: str, *, log: Path) -> None:
+    pids = pattern_pids(root, pattern)
+    kill_pid_list(pids, sig=signal.SIGTERM, log=log, label=f"pattern {pattern}")
+    if pids:
+        time.sleep(0.5)
+        remaining = [pid for pid in pids if process_alive(pid)]
+        kill_pid_list(remaining, sig=signal.SIGKILL, log=log, label=f"pattern {pattern} remaining")
+
+
+def stop_port(root: Path, port: int, *, log: Path, timeout_s: float = 8.0) -> None:
+    pids = port_listener_pids(root, port)
+    kill_pid_list(pids, sig=signal.SIGTERM, log=log, label=f"port {port}")
+    deadline = time.time() + timeout_s
+    escalated = False
+    last_pids = pids
+    while time.time() < deadline:
+        last_pids = port_listener_pids(root, port)
+        if not last_pids:
+            append_restart_log(log, f"port {port}: closed")
+            return
+        if not escalated and time.time() + 2.0 < deadline:
+            time.sleep(0.2)
+            continue
+        escalated = True
+        kill_pid_list(last_pids, sig=signal.SIGKILL, log=log, label=f"port {port} remaining")
+        time.sleep(0.2)
+    last_pids = port_listener_pids(root, port)
+    if last_pids:
+        raise RuntimeError(f"port {port} still has listeners after cleanup: {last_pids}")
+    append_restart_log(log, f"port {port}: closed")
+
+
 def kill_processes(root: Path, output_dir: Path) -> None:
-    commands = [
-        "pids=$(pgrep -f 'scripts/forge-start.sh' 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
-        "pids=$(pgrep -f '_infra/smart_proxy.py' 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
-        "pids=$(pgrep -f '_infra/nim_proxy.py' 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
-        "pids=$(lsof -tiTCP:4000 -sTCP:LISTEN 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
-        "pids=$(lsof -tiTCP:4010 -sTCP:LISTEN 2>/dev/null); [ -n \"$pids\" ] && kill -9 $pids || true",
-    ]
     log = output_dir / "restart_kill.log"
-    chunks: list[str] = []
-    for command in commands:
-        result = run_cmd(["bash", "-lc", command], cwd=root, timeout=30)
-        chunks.append(f"$ {command}\n{result.stdout}{result.stderr}\n")
-    log.write_text(redact_text("\n".join(chunks)), encoding="utf-8")
+    log.write_text("", encoding="utf-8")
+    stop_pattern(root, "scripts/forge-start.sh", log=log)
+    stop_pattern(root, "_infra/smart_proxy.py", log=log)
+    stop_pattern(root, "_infra/nim_proxy.py", log=log)
+    stop_port(root, 4000, log=log)
+    stop_port(root, 4010, log=log)
+
+
+def wait_service_owned_by_pid(
+    root: Path,
+    *,
+    port: int,
+    expected_pid: int,
+    health_url: str,
+    timeout_s: float,
+    label: str,
+) -> tuple[bool, dict[str, Any], list[int], str]:
+    deadline = time.time() + timeout_s
+    last_payload: dict[str, Any] = {}
+    last_pids: list[int] = []
+    last_reason = "not checked"
+    while time.time() < deadline:
+        last_pids = port_listener_pids(root, port)
+        alive = process_alive(expected_pid)
+        if expected_pid in last_pids:
+            last_payload = read_json_url(health_url, timeout=5)
+            if last_payload and not last_payload.get("_error"):
+                return True, last_payload, last_pids, "ok"
+            last_reason = f"{label} owns port {port}, health not ready: {last_payload}"
+        else:
+            health_payload = read_json_url(health_url, timeout=2) if last_pids else {}
+            last_reason = (
+                f"{label} expected pid {expected_pid}, listener_pids={last_pids}, "
+                f"expected_alive={alive}, health_payload={health_payload}"
+            )
+            if not alive and not last_pids:
+                return False, health_payload, last_pids, last_reason
+        time.sleep(0.5)
+    return False, last_payload, last_pids, last_reason
 
 
 def wait_json_url(url: str, *, timeout_s: float, interval_s: float = 0.5) -> tuple[bool, dict[str, Any]]:
@@ -368,22 +479,52 @@ def restart_services_fast(root: Path, output_dir: Path, timeout: int) -> None:
     nim_proc = _popen_detached(["bash", "scripts/start-nim-proxy.sh"], cwd=root, log_path=nim_log)
     events.append({"event": "nim_start", "pid": nim_proc.pid, "local_time": local_time()})
     Path("/tmp/forge_nim_proxy.pid").write_text(str(nim_proc.pid), encoding="utf-8")
-    ok, payload = wait_json_url("http://127.0.0.1:4010/healthz", timeout_s=45)
-    events.append({"event": "nim_health", "ok": ok, "payload": payload, "local_time": local_time()})
+    ok, payload, listener_pids, reason = wait_service_owned_by_pid(
+        root,
+        port=4010,
+        expected_pid=nim_proc.pid,
+        health_url="http://127.0.0.1:4010/healthz",
+        timeout_s=45,
+        label="nim",
+    )
+    events.append({
+        "event": "nim_health",
+        "ok": ok,
+        "payload": payload,
+        "listener_pids": listener_pids,
+        "expected_pid": nim_proc.pid,
+        "reason": reason,
+        "local_time": local_time(),
+    })
     if not ok:
         events.append({"event": "nim_log_tail", "tail": tail_from_line(nim_log, max(1, line_count(nim_log) - 80))})
         (output_dir / "restart_fast.json").write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
-        raise RuntimeError("NIM sidecar did not become healthy on 4010 within 45s")
+        raise RuntimeError(f"NIM sidecar did not become healthy on 4010 with pid {nim_proc.pid}: {reason}")
 
     smart_proc = _popen_detached([_python_bin(root), "_infra/smart_proxy.py"], cwd=root, log_path=smart_log)
     events.append({"event": "smart_start", "pid": smart_proc.pid, "local_time": local_time()})
     Path("/tmp/forge_smart_proxy.pid").write_text(str(smart_proc.pid), encoding="utf-8")
-    ok, payload = wait_json_url("http://127.0.0.1:4000/_forge/health", timeout_s=45)
-    events.append({"event": "smart_health", "ok": ok, "payload": payload, "local_time": local_time()})
+    ok, payload, listener_pids, reason = wait_service_owned_by_pid(
+        root,
+        port=4000,
+        expected_pid=smart_proc.pid,
+        health_url="http://127.0.0.1:4000/_forge/health",
+        timeout_s=45,
+        label="smart",
+    )
+    events.append({
+        "event": "smart_health",
+        "ok": ok,
+        "payload": payload,
+        "listener_pids": listener_pids,
+        "expected_pid": smart_proc.pid,
+        "reason": reason,
+        "local_time": local_time(),
+    })
     if not ok:
         events.append({"event": "smart_log_tail", "tail": tail_from_line(smart_log, max(1, line_count(smart_log) - 80))})
         (output_dir / "restart_fast.json").write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
-        raise RuntimeError("Smart Proxy did not become healthy on 4000 within 45s")
+        raise RuntimeError(f"Smart Proxy did not become healthy on 4000 with pid {smart_proc.pid}: {reason}")
 
     events.append({"event": "restart_done", "elapsed_s": round(time.time() - start, 3), "local_time": local_time()})
     (output_dir / "restart_fast.json").write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
