@@ -228,8 +228,10 @@ def apply_profile(root: Path, profile: str, output_dir: Path) -> dict[str, str]:
     original = env_path.read_text(encoding="utf-8", errors="replace") if env_path.exists() else ""
     backup_path = output_dir / f"env_backup_before_{profile}.env.redacted.txt"
     backup_path.write_text(redact_text(original), encoding="utf-8")
-    raw_backup_path = output_dir / f"env_backup_before_{profile}.path.txt"
-    raw_backup_path.write_text(str(env_path), encoding="utf-8")
+    raw_backup_path = Path("/tmp") / f"forge_env_backup_before_{profile}_{output_dir.name}.env"
+    raw_backup_path.write_text(original, encoding="utf-8")
+    raw_backup_marker = output_dir / f"env_backup_before_{profile}.raw_backup_path.txt"
+    raw_backup_marker.write_text(str(raw_backup_path), encoding="utf-8")
     env_path.write_text(upsert_env_lines(original, updates), encoding="utf-8")
     return updates
 
@@ -682,8 +684,8 @@ def push_sanitized_artifact(root: Path, output_dir: Path, branch: str | None = N
         run_cmd(["git", "rm", "-rf", "."], cwd=worktree, timeout=120)
         dest = worktree / output_dir.name
         shutil.copytree(output_dir, dest)
-        # Remove raw path markers if present; redacted env backups are safe.
-        for raw_path in dest.glob("*.path.txt"):
+        # Remove raw backup/path markers if present; redacted env backups are safe.
+        for raw_path in list(dest.glob("*.path.txt")) + list(dest.glob("*raw_backup_path.txt")):
             raw_path.unlink()
         run_cmd(["git", "add", "."], cwd=worktree, timeout=120, check=True)
         run_cmd(
