@@ -1,0 +1,10 @@
+{
+  "model": "claude-opus-4-8",
+  "max_tokens": 64,
+  "messages": [
+    {
+      "role": "user",
+      "content": "TRACE-CURL4000-20260808-180129 现在北京时间是多少？只回答一句。"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "event": "nim_start",
+    "pid": 93366,
+    "local_time": "2026-08-08 18:01:26 +0800"
+  },
+  {
+    "event": "nim_health",
+    "ok": true,
+    "payload": {
+      "status": "ok",
+      "key_count": 2
+    },
+    "local_time": "2026-08-08 18:01:27 +0800"
+  },
+  {
+    "event": "smart_start",
+    "pid": 94183,
+    "local_time": "2026-08-08 18:01:27 +0800"
+  },
+  {
+    "event": "smart_health",
+    "ok": true,
+    "payload": {
+      "status": "ok",
+      "active": 0
+    },
+    "local_time": "2026-08-08 18:01:28 +0800"
+  },
+  {
+    "event": "restart_done",
+    "elapsed_s": 2.037,
+    "local_time": "2026-08-08 18:01:28 +0800"
+  }
+]

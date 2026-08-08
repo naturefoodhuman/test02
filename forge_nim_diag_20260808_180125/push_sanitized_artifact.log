@@ -1,0 +1,15 @@
+$ git worktree add --detach /tmp/forge_diag_push_20260808_180125_97938 HEAD
+exit_code=0
+[stdout]
+HEAD 现在位于 f19aa33 fix(infra): make nim diagnostic artifact push robust
+
+[stderr]
+准备工作区（分离头指针 f19aa33）
+
+
+$ git checkout --orphan diagnostics/forge-nim-20260808_180125
+exit_code=0
+[stderr]
+切换到一个新分支 'diagnostics/forge-nim-20260808_180125'
+
+

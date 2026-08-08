@@ -1,0 +1,8 @@
+{
+  "name": "curl_4010_nonstream",
+  "trace": "TRACE-CURL4010-20260808-180128",
+  "start_local": "2026-08-08 18:01:28 +0800",
+  "end_local": "2026-08-08 18:01:29 +0800",
+  "elapsed_s": 0.838,
+  "curl_cmd_redacted": "curl -sS --max-time 450 -o /private/tmp/forge_nim_diag_20260808_180125/curl_4010_nonstream.response.json -H Authorization: Bearer <redacted> -H Content-Type: application/json -w http_code=%{http_code}\ntime_total=%{time_total}\ntime_starttransfer=%{time_starttransfer}\nremote_ip=%{remote_ip}\n http://127.0.0.1:4010/v1/chat/completions --data-binary @/private/tmp/forge_nim_diag_20260808_180125/curl_4010_nonstream.payload.json"
+}

@@ -1,0 +1,11 @@
+{
+  "model": "z-ai/glm-5.2",
+  "stream": false,
+  "max_tokens": 64,
+  "messages": [
+    {
+      "role": "user",
+      "content": "TRACE-CURL4010-20260808-180128 现在北京时间是多少？只回答一句。"
+    }
+  ]
+}
