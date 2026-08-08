@@ -1,0 +1,257 @@
+{
+  "generated_local": "2026-08-08 23:17:00 +0800",
+  "generated_epoch": 1786202220.509491,
+  "root": "/Users/naturist/MusicProject/AI-Project-Incubation-Factory",
+  "profile": "current",
+  "applied_env_updates": {},
+  "git_head_before": "782f7eb (HEAD -> main) 说明",
+  "git_head_final": "782f7eb (HEAD -> main) 说明",
+  "selected_env_final": {
+    "BRAVE_API_KEY": "<redacted:0>",
+    "DEEPSEEK_API_KEY": "<redacted:70>",
+    "FORGE_COUNT_TOKENS_DIVISOR": "<redacted:1>",
+    "FORGE_CTX_SOFT_TOKENS": "32000",
+    "FORGE_LOCAL_DEFAULT_MAX_TOKENS": "<redacted:4>",
+    "FORGE_LOCAL_MAX_TOKENS": "<redacted:4>",
+    "FORGE_REMOTE_MAX_CONCURRENCY": "1",
+    "FORGE_REMOTE_MAX_TOKENS": "<redacted:5>",
+    "FORGE_REMOTE_SELECTOR_PORT": "8080",
+    "FORGE_REMOTE_TOOL_SELECTION": "1",
+    "FORGE_TOOL_SCHEMA_BYTE_BUDGET": "32768",
+    "FORGE_TOOL_SELECTION_MAX": "8",
+    "FORGE_TOOL_SELECTION_MAX_TOKENS": "<redacted:3>",
+    "FORGE_USE_NIM_PROXY": "1",
+    "GLM_API_KEY": "<redacted:70>",
+    "NIM_FALLBACK_MODEL": "deepseek-ai/DeepSeek-V4-Pro",
+    "NIM_PRIMARY_MODEL": "z-ai/glm-5.2",
+    "NIM_PROXY_API_KEY": "<redacted:15>",
+    "NIM_PROXY_BASE_URL": "http://127.0.0.1:4010/v1",
+    "NIM_PROXY_DEFAULT_COOLDOWN_SECONDS": "300",
+    "NIM_PROXY_ENABLE_FALLBACK": "0",
+    "NIM_PROXY_HOST": "127.0.0.1",
+    "NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST": "1",
+    "NIM_PROXY_PER_KEY_CONCURRENCY": "1",
+    "NIM_PROXY_PER_KEY_RPM": "35",
+    "NIM_PROXY_PORT": "4010",
+    "NIM_PROXY_QUEUE_TIMEOUT_SECONDS": "900",
+    "NIM_PROXY_READ_TIMEOUT_SECONDS": "300",
+    "NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS": "360",
+    "NIM_PROXY_RETRY_AFTER_CAP_SECONDS": "900",
+    "NIM_PROXY_SESSION_AFFINITY": "0",
+    "NVIDIA_API_KEY_1": "<redacted:70>",
+    "NVIDIA_API_KEY_2": "<redacted:70>",
+    "SERPER_API_KEY": "<redacted:40>",
+    "TAVILY_API_KEY": "<redacted:58>"
+  },
+  "curl_results": [],
+  "direct_upstream_probes": [
+    {
+      "key_id": "key-1",
+      "model": "z-ai/glm-5.2",
+      "models_endpoint": {
+        "method": "GET",
+        "url": "https://integrate.api.nvidia.com/v1/models",
+        "status": 200,
+        "elapsed_s": 0.387,
+        "error": "",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_preview": "{\"object\":\"list\",\"data\":[{\"id\":\"01-ai/yi-large\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"01-ai\"},{\"id\":\"adept/fuyu-8b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"adept\"},{\"id\":\"ai21labs/jamba-1.5-large-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"ai21labs\"},{\"id\":\"aisingapore/sea-lion-7b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"aisingapore\"},{\"id\":\"baai/bge-m3\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"baai\"},{\"id\":\"bigcode/starcoder2-15b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"bigcode\"},{\"id\":\"databricks/dbrx-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"databricks\"},{\"id\":\"deepseek-ai/deepseek-coder-6.7b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"deepseek-ai\"},{\"id\":\"deepseek-ai/deepseek-v4-flash-0731\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"deepseek-ai\"},{\"id\":\"google/codegemma-1.1-7b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/codegemma-7b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/deplot\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/diffusiongemma-26b-a4b-it\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/gemma-2b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/gemma-3-12b-it\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/gemma-3-4b-it\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/gemma-4-31b-it\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"google/recurrentgemma-2b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"google\"},{\"id\":\"ibm/granite-3.0-3b-a800m-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"ibm\"},{\"id\":\"ibm/granite-3.0-8b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"ibm\"},{\"id\":\"ibm/granite-34b-code-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"ibm\"},{\"id\":\"ibm/granite-8b-code-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"ibm\"},{\"id\":\"meta/codellama-70b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-3.1-70b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-3.1-8b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-3.2-11b-vision-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-3.2-1b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-3.2-3b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-3.2-90b-vision-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-3.3-70b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama-guard-4-12b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"meta/llama2-70b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"meta\"},{\"id\":\"microsoft/kosmos-2\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"microsoft\"},{\"id\":\"microsoft/phi-3-vision-128k-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"microsoft\"},{\"id\":\"microsoft/phi-3.5-moe-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"microsoft\"},{\"id\":\"minimaxai/minimax-m3\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"minimaxai\"},{\"id\":\"mistralai/codestral-22b-instruct-v0.1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"mistralai\"},{\"id\":\"mistralai/mistral-7b-instruct-v0.3\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"mistralai\"},{\"id\":\"mistralai/mistral-large\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"mistralai\"},{\"id\":\"mistralai/mistral-large-2-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"mistralai\"},{\"id\":\"mistralai/mistral-nemotron\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"mistralai\"},{\"id\":\"mistralai/mixtral-8x22b-v0.1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"mistralai\"},{\"id\":\"moonshotai/kimi-k2.6\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"moonshotai\"},{\"id\":\"nv-mistralai/mistral-nemo-12b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nv-mistralai\"},{\"id\":\"nvidia/ai-synthetic-video-detector\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/cosmos-reason2-8b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/embed-qa-4\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/ising-calibration-1.5-31b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemoguard-8b-content-safety\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemoguard-8b-topic-control\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemotron-51b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemotron-70b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemotron-nano-8b-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemotron-nano-vl-8b-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemotron-safety-guard-8b-v3\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.1-nemotron-ultra-253b-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.2-nemoretriever-1b-vlm-embed-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.2-nv-embedqa-1b-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.3-nemotron-super-49b-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-3.3-nemotron-super-49b-v1.5\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-nemotron-embed-1b-v2\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama-nemotron-embed-vl-1b-v2\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/llama3-chatqa-1.5-70b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/mistral-nemo-minitron-8b-8k-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemoretriever-parse\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-3-embed-1b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-3-nano-30b-a3b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-3-nano-omni-30b-a3b-reasoning\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-3-super-120b-a12b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-3-ultra-550b-a55b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-3.5-content-safety\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-4-340b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-4-340b-reward\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-mini-4b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-nano-12b-v2-vl\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-nano-3-30b-a3b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nemotron-parse\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/neva-22b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nv-embed-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nv-embedcode-7b-v1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nv-embedqa-e5-v5\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nv-embedqa-mistral-7b-v2\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nvclip\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/nvidia-nemotron-nano-9b-v2\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/riva-translate-4b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/riva-translate-4b-instruct-v1.1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/riva-translate-4b-instruct-v2\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"nvidia/vila\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"nvidia\"},{\"id\":\"openai/gpt-oss-120b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"openai\"},{\"id\":\"openai/gpt-oss-20b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"openai\"},{\"id\":\"poolside/laguna-xs-2.1\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"poolside\"},{\"id\":\"snowflake/arctic-embed-l\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"snowflake\"},{\"id\":\"stepfun-ai/step-3.7-flash\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"stepfun-ai\"},{\"id\":\"thinkingmachines/inkling\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"thinkingmachines\"},{\"id\":\"writer/palmyra-creative-122b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"writer\"},{\"id\":\"writer/palmyra-fin-70b-32k\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"writer\"},{\"id\":\"writer/palmyra-med-70b\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"writer\"},{\"id\":\"writer/palmyra-med-70b-32k\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"writer\"},{\"id\":\"z-ai/glm-5.2\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"z-ai\"},{\"id\":\"zyphra/zamba2-7b-instruct\",\"object\":\"model\",\"created\":735790403,\"owned_by\":\"zyphra\"}]}\n",
+        "body_bytes": 9569
+      },
+      "models_summary": {
+        "wanted_model": "z-ai/glm-5.2",
+        "wanted_present": true,
+        "glm_like_ids": [
+          "z-ai/glm-5.2"
+        ],
+        "model_count": 100
+      },
+      "chat_trace": "TRACE-DIRECT-key-1-20260808-231304",
+      "chat_completions": {
+        "method": "POST",
+        "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "status": 200,
+        "elapsed_s": 236.327,
+        "error": "",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body_preview": "{\"id\":\"chatcmpl-89cf4831-c1a0-4544-b655-72f767792be3\",\"choices\":[{\"index\":0,\"message\":{\"content\":\"pong\",\"role\":\"assistant\",\"reasoning_content\":null},\"finish_reason\":\"stop\",\"logprobs\":null}],\"created\":1786202219,\"model\":\"z-ai/glm-5.2\",\"service_tier\":null,\"system_fingerprint\":null,\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":26,\"completion_tokens\":2,\"total_tokens\":28}}",
+        "body_bytes": 376
+      }
+    }
+  ],
+  "vscode_watch": null,
+  "final_4010_stats": {
+    "request_count": 2,
+    "retry_count": 2,
+    "fallback_count": 0,
+    "settings": {
+      "upstream_base_url": "https://integrate.api.nvidia.com/v1",
+      "primary_model": "z-ai/glm-5.2",
+      "fallback_model": "deepseek-ai/DeepSeek-V4-Pro",
+      "enable_fallback": false,
+      "per_key_rpm": 35,
+      "per_key_concurrency": 1,
+      "max_attempts_per_request": 1,
+      "read_timeout_seconds": 300.0,
+      "request_wall_timeout_seconds": 360.0,
+      "session_affinity": false
+    },
+    "pool": {
+      "key_count": 2,
+      "keys": [
+        {
+          "key_id": "key-1",
+          "available_in_seconds": 0.0,
+          "in_cooldown": false,
+          "recent_rpm": 0,
+          "rpm_limit": 35,
+          "concurrency_limit": 1,
+          "in_flight": 0,
+          "semaphore_locked": false,
+          "consecutive_429": 0,
+          "success_count": 0,
+          "error_count": 1
+        },
+        {
+          "key_id": "key-2",
+          "available_in_seconds": 0.0,
+          "in_cooldown": false,
+          "recent_rpm": 0,
+          "rpm_limit": 35,
+          "concurrency_limit": 1,
+          "in_flight": 0,
+          "semaphore_locked": false,
+          "consecutive_429": 0,
+          "success_count": 0,
+          "error_count": 1
+        }
+      ],
+      "affinity_size": 0
+    }
+  },
+  "final_4000_status": {
+    "proxy": "FORGE Smart Proxy v9.0-patched",
+    "active_requests": 0,
+    "requests": [],
+    "total_requests": 1,
+    "total_errors": 1,
+    "rpm_guard": {
+      "max_rpm": 35,
+      "active_keys": {}
+    },
+    "local_models": {
+      "mtplx-qwen36-27b": 8080,
+      "mtplx-gemma4": 8082,
+      "local-deepseek-r1": 11434,
+      "qwopus-35b": 8084,
+      "claude-haiku-4-5": 8080,
+      "claude-haiku-4-5-20260101": 8080
+    },
+    "remote_models": [
+      "glm-5",
+      "deepseek-pro",
+      "claude-opus-4-8",
+      "claude-opus-4-8-1m",
+      "claude-opus-4-8-1m-20260101",
+      "claude-opus-4-8-20260101",
+      "claude-3-5-sonnet-20241022",
+      "claude-3-5-sonnet-latest",
+      "claude-opus-4-1",
+      "claude-opus-4-1-20250805",
+      "claude-opus-4-20250514",
+      "claude-opus-4-0",
+      "claude-sonnet-4-20250514",
+      "claude-sonnet-4-5",
+      "claude-sonnet-4-5-20250929",
+      "claude-3-7-sonnet-20250219",
+      "claude-3-5-haiku-20241022",
+      "claude-sonnet-4-6",
+      "claude-sonnet-4-6-1m",
+      "claude-sonnet-4-6-20260101",
+      "claude-sonnet-4-6-1m-20260101"
+    ],
+    "tool_selection": {
+      "enabled": true,
+      "threshold": 8,
+      "max": 8,
+      "core_tools": [
+        "Read",
+        "Bash",
+        "Edit",
+        "Grep",
+        "Glob",
+        "LS"
+      ],
+      "schema_byte_budget": 32768,
+      "policy_version": "v2",
+      "cache": {
+        "size": 0,
+        "max_size": 1000,
+        "hits": 0,
+        "misses": 0
+      },
+      "last_reduction": {
+        "ts": 1786183289.2853692,
+        "original": 0,
+        "final": 0,
+        "selected": [],
+        "mode": "remote_no_tools"
+      },
+      "remote_tool_selection": true,
+      "remote_selector_port": 8080
+    },
+    "retry": {
+      "local_retry_count": 0,
+      "remote_retry_count": 2,
+      "stream_remote_retry_count": 2,
+      "retryable_status_codes": [
+        429,
+        502,
+        503,
+        504
+      ],
+      "retry_counters": {
+        "429": 0,
+        "502": 0,
+        "503": 0,
+        "504": 0
+      }
+    },
+    "circuit_breaker": {
+      "state": "closed",
+      "consecutive_429": 0,
+      "trip_threshold": 2,
+      "cooldown_seconds": 45.0,
+      "opened_at": 0.0
+    },
+    "remote_concurrency": {
+      "max": 1
+    },
+    "context_budget": {
+      "max_tokens": 202752,
+      "soft_tokens": 32000,
+      "soft_ratio": 0.8,
+      "hard_ratio": 0.95,
+      "keep_recent_turns": 8,
+      "trunc_tool_result_chars": 2000,
+      "counters": {
+        "pass": 1,
+        "compacted": 0,
+        "rejected": 0
+      },
+      "last": {
+        "action": "pass",
+        "est_before": 28,
+        "est_after": 28
+      }
+    },
+    "routing": {
+      "allow_unknown_model_fallback": false
+    },
+    "serialize_local_ports": true
+  }
+}
