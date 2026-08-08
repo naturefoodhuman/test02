@@ -155,7 +155,13 @@ DIAG_TARBALL=...
 PUSHED_BRANCH=diagnostics/forge-nim-...
 ```
 
-把 `PUSHED_BRANCH` 发给排查方即可；完整脱敏证据在该分支中。
+把 `PUSHED_BRANCH` 发给排查方即可；完整脱敏证据在该分支中。如果探针已经跑完但 artifact push 失败，不要重跑慢探针，可直接执行：
+
+```bash
+DIAG_DIR=/private/tmp/forge_nim_diag_YYYYMMDD_HHMMSS make forge-nim-push-existing
+```
+
+然后把新的 `PUSHED_BRANCH` 发给排查方。
 
 最小 OpenAI-compatible 请求：
 

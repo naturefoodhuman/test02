@@ -1,7 +1,7 @@
 # FORGE Factory Makefile
 # 常用操作单命令完成
 
-.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning env-config-audit forge-nim-diagnostic forge-nim-timeout-a forge-nim-vscode-watch
+.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning env-config-audit forge-nim-diagnostic forge-nim-timeout-a forge-nim-vscode-watch forge-nim-push-existing
 
 # 日常开发
 start-gateway:    # 启动 LiteLLM 网关
@@ -109,3 +109,7 @@ forge-nim-timeout-a:
 
 forge-nim-vscode-watch:
 	@python3 scripts/diagnostics/forge_nim_diagnostic.py --profile timeout-a --restart --curl-probes --vscode-watch --watch-seconds $${WATCH_SECONDS:-1500} --interval $${INTERVAL:-15} --push-sanitized-artifact
+
+forge-nim-push-existing:
+	@test -n "$${DIAG_DIR:-}" || (echo "Usage: DIAG_DIR=/private/tmp/forge_nim_diag_YYYYMMDD_HHMMSS make forge-nim-push-existing" >&2; exit 2)
+	@python3 scripts/diagnostics/forge_nim_diagnostic.py --push-existing "$${DIAG_DIR}" --push-sanitized-artifact
