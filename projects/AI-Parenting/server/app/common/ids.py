@@ -45,4 +45,4 @@ def parse_ulid(value: str) -> _ulid.ULID:
     return _ulid.ULID.from_str(value)
 
 
-__all__ = ["new_id", "is_valid_ulid", "parse_ulid", "ULID_RE"]
+__all__ = ["ULID_RE", "is_valid_ulid", "new_id", "parse_ulid"]

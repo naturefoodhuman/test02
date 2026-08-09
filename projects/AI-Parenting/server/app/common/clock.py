@@ -14,10 +14,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Protocol
+from datetime import UTC, datetime
+from typing import Protocol, runtime_checkable
 
 
+@runtime_checkable
 class Clock(Protocol):
     """时钟协议：返回当前 timezone-aware datetime（UTC）。"""
 
@@ -28,7 +29,7 @@ class SystemClock:
     """系统时钟实现，返回 UTC aware datetime。"""
 
     def now(self) -> datetime:
-        return datetime.now(tz=timezone.utc)
+        return datetime.now(tz=UTC)
 
 
 # 默认时钟单例（进程级）。测试应通过 DI 注入替身，不直接改此全局。
@@ -57,15 +58,15 @@ def ensure_aware(dt: datetime) -> datetime:
     防御性辅助：外部输入（如 DB 反序列化偶发）可能为 naive，统一在此归一。
     """
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
+        return dt.replace(tzinfo=UTC)
     return dt
 
 
 __all__ = [
     "Clock",
     "SystemClock",
-    "get_clock",
-    "set_default_clock",
-    "now_utc",
     "ensure_aware",
+    "get_clock",
+    "now_utc",
+    "set_default_clock",
 ]
