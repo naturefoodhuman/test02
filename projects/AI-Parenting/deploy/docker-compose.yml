@@ -1,0 +1,96 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-10 00:00:00
+#
+# deploy/docker-compose.yml —— AI Parenting Copilot 本地开发基础设施。
+# 依据：ENGINEERING_DESIGN §1.3（进程拓扑）、§4（服务边界）、§14（落地约束 Bootstrap 顺序）；
+#       ARCHITECTURE_FINAL §7（存储）、§9（同步）、§13（消息总线）；TASK_BACKLOG APC-T003。
+# 设计：仅本地开发栈（PostgreSQL 权威源 + Mosquitto 消息总线 + PowerSync 同步服务）。
+#       生产部署不在本文件范围；应用进程（FastAPI + workers）由 launchd 管理，不在此 compose。
+# Bootstrap 顺序（§14.6）：docker compose up -d → alembic upgrade head → seed_family.py → FastAPI + workers。
+
+# 变量从 deploy/.env 读取（gitignored；样例见 deploy/.env.example）。
+# 缺省值仅用于本地 dev，prod 必须通过 .env 覆盖。
+
+services:
+  # ---- PostgreSQL 15+：权威关系型存储（架构 §7）----
+  postgres:
+    image: postgres:15-alpine
+    container_name: parenting-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-parenting}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parenting}
+      POSTGRES_DB: ${POSTGRES_DB:-AI_parenting_dev}
+      # 时区统一 UTC，避免 naive datetime（与 common/clock.py 对齐）。
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - parenting-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-parenting} -d ${POSTGRES_DB:-AI_parenting_dev}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---- Eclipse Mosquitto 2.x：家庭物联网消息总线（架构 §13）----
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: parenting-mosquitto
+    restart: unless-stopped
+    ports:
+      - "${MOSQUITTO_PORT:-1883}:1883"
+    volumes:
+      # 允许匿名监听（仅本地 dev；prod 通过 _infra 注入 ACL 与 TLS）。
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - parenting-mqtt-data:/mosquitto/data
+      - parenting-mqtt-log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h 127.0.0.1 -p 1883 -t '$$SYS/#' -C 1 -W 2 >/dev/null 2>&1 || exit 0"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---- PowerSync Service：多端同步（架构 §9，复用官方镜像，不自研同步）----
+  # sync rules（config/sync-rules.yaml）依赖核心 Schema，待 APC-T004 表结构定型后填充。
+  # 当前为可启动占位：连到 postgres，sync rules 为空（不同步任何表），验证连通性。
+  powersync:
+    image: journeyapps/powersync-service:latest
+    container_name: parenting-powersync
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # PowerSync 连接 PG（容器内网，走 postgres 服务名）。
+      POWERSYNC_DB_HOST: postgres
+      POWERSYNC_DB_PORT: 5432
+      POWERSYNC_DB_NAME: ${POSTGRES_DB:-AI_parenting_dev}
+      POWERSYNC_DB_USER: ${POSTGRES_USER:-parenting}
+      POWERSYNC_DB_PASSWORD: ${POSTGRES_PASSWORD:-parenting}
+    volumes:
+      - ../config/powersync/config.yaml:/config/config.yaml:ro
+      - ../config/powersync/sync-rules.yaml:/config/sync-rules.yaml:ro
+    ports:
+      - "${POWERSYNC_PORT:-8080}:8080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  parenting-pg-data:
+  parenting-mqtt-data:
+  parenting-mqtt-log:

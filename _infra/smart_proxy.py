@@ -1,5 +1,7 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
 # 创建时间（北京时间）：2026-08-07 23:20:00
+# 修改本文件中的配置比如“FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))“ 后
+# 要重启 bash scripts/forge-start.sh 以使新配置生效
 
 import os
 import sys
@@ -95,7 +97,7 @@ FORGE_COUNT_TOKENS_DIVISOR = int(os.getenv("FORGE_COUNT_TOKENS_DIVISOR", "4"))
 #    body 289KB/25 工具的请求易 429；soft 降到 ~32K tokens ≈ 128KB body）。
 #  - HARD 阈值：对齐上游 GLM 5.2 硬上限 202752，超此即使压缩后仍超则拒绝（400 不可重试）。
 # 与 count_tokens 端点同口径（_json_bytes // FORGE_COUNT_TOKENS_DIVISOR）。
-FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "202752"))
+FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))
 FORGE_CTX_SOFT_RATIO = float(os.getenv("FORGE_CTX_SOFT_RATIO", "0.80"))
 FORGE_CTX_HARD_RATIO = float(os.getenv("FORGE_CTX_HARD_RATIO", "0.95"))
 # SOFT 直接指定（优先于 ratio）：防 429 用 ~32K tokens；设 >0 则覆盖 ratio 计算。

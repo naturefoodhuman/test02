@@ -73,9 +73,29 @@ infra-up: ## 启动本地基础设施（postgres/mosquitto/powersync）
 infra-down: ## 停止本地基础设施
 	cd deploy && docker compose down
 
+.PHONY: infra-logs
+infra-logs: ## 查看基础设施日志（follow）
+	cd deploy && docker compose logs -f
+
+.PHONY: infra-reset
+infra-reset: ## 停止并删除卷，重建基础设施（数据清空）
+	cd deploy && docker compose down -v
+
 .PHONY: db-migrate
 db-migrate: ## Alembic 升级到 head
 	$(VENV)/bin/alembic upgrade head
+
+.PHONY: db-current
+db-current: ## 显示当前 Alembic 版本
+	$(VENV)/bin/alembic current
+
+.PHONY: db-history
+db-history: ## 显示 Alembic 迁移历史
+	$(VENV)/bin/alembic history --verbose
+
+.PHONY: db-revision
+db-revision: ## 生成 Alembic 迁移（autogenerate）；用法 make db-revision m="add baby table"
+	$(VENV)/bin/alembic revision --autogenerate -m "$(m)"
 
 .PHONY: db-seed
 db-seed: ## 初始化默认家庭/父母/宝宝档案

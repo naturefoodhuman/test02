@@ -1,0 +1,89 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-11 00:00:00
+#
+# PowerSync sync rules（架构 §9.2 同步与冲突规则；APC-T012 填充）。
+# 依据：ARCHITECTURE_FINAL §9.2（按 family_id 分桶、离线 pending_sync、冲突软提示由应用层）；
+#       ENGINEERING_DESIGN §6.1（核心表）、§6.3（同步契约字段）。
+# 设计：
+#   - 按 family_id 分桶：家庭成员只能同步自家数据（最小权限，架构 §19）。
+#   - observation_event 及各 *_log 派生表随 baby → family 分桶。
+#   - 冲突合并不在同步层（架构 §4：powersync-service 不做业务级冲突裁决），
+#     由应用层监听 PG 变更按 §9.2 规则生成软提示（contract_validator + conflict detector）。
+#   - 软删除（is_deleted）随行同步，客户端据此隐藏但保留审计（架构 §5.1 不物理删除）。
+# 语法：PowerSync sync rules v2（bucket + select + where）。
+
+# 全局参数：客户端传 family_id 作为 bucket 参数。
+parameters:
+  family_id: ""
+
+buckets:
+  # 每个家庭一个 bucket，客户端用 family_id 订阅自家数据。
+  family_bucket:
+    parameters:
+      family_id: ""
+    data:
+      # 家庭成员可读自家 family/user/baby/device 档案。
+      family:
+        select: |
+          SELECT id, name, timezone, created_at, updated_at, is_deleted
+          FROM family
+          WHERE id = bucket.family_id AND is_deleted = false
+      user:
+        select: |
+          SELECT id, family_id, role, display_name, created_at, updated_at, is_deleted
+          FROM "user"
+          WHERE family_id = bucket.family_id AND is_deleted = false
+      baby:
+        select: |
+          SELECT id, family_id, birth_date, gestational_age_weeks, is_preterm,
+                 birth_weight_g, current_weight_g, current_weight_at, sex,
+                 vaccine_region, allergies, created_at, updated_at, is_deleted
+          FROM baby
+          WHERE family_id = bucket.family_id AND is_deleted = false
+      device:
+        select: |
+          SELECT id, family_id, kind, fcm_token, meta, created_at, updated_at, is_deleted
+          FROM device
+          WHERE family_id = bucket.family_id AND is_deleted = false
+      # 事件溯源核心：observation_event 按 family_id 分桶，离线写入 pending_sync。
+      # 同步契约字段（架构 §6.3）随行同步，客户端据此重建本地 SQLite。
+      observation_event:
+        select: |
+          SELECT id AS event_id, baby_id, family_id, user_id, device_id, event_type,
+                 start_time, end_time, client_created_at, server_received_at,
+                 raw_input, normalized_payload, confidence, source, attachments,
+                 correction_of, is_deleted, sync_status, processing_status,
+                 created_at, updated_at
+          FROM observation_event
+          WHERE family_id = bucket.family_id
+      # 各领域派生表（normalization 生成，随 baby → family 分桶）。
+      feeding_log:
+        select: |
+          SELECT id, event_id, baby_id, family_id, amount_ml, unit, feeding_type,
+                 start_time, end_time, created_at, updated_at, is_deleted
+          FROM feeding_log
+          WHERE family_id = bucket.family_id
+      diaper_log:
+        select: |
+          SELECT id, event_id, baby_id, family_id, type, start_time,
+                 created_at, updated_at, is_deleted
+          FROM diaper_log
+          WHERE family_id = bucket.family_id
+      sleep_log:
+        select: |
+          SELECT id, event_id, baby_id, family_id, start_time, end_time,
+                 created_at, updated_at, is_deleted
+          FROM sleep_log
+          WHERE family_id = bucket.family_id
+      temperature_log:
+        select: |
+          SELECT id, event_id, baby_id, family_id, value_c, route, start_time,
+                 created_at, updated_at, is_deleted
+          FROM temperature_log
+          WHERE family_id = bucket.family_id
+      # derived_baby_state：当前快照，客户端 Today 首页直接读。
+      derived_baby_state:
+        select: |
+          SELECT baby_id AS id, baby_id, family_id, snapshot, computed_at
+          FROM derived_baby_state
+          WHERE family_id = bucket.family_id

@@ -35,8 +35,8 @@ class DatabaseSettings(BaseSettings):
     """PostgreSQL 连接配置（架构 §7 存储架构）。"""
 
     url: str = Field(
-        default="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/parenting",
-        description="SQLAlchemy async URL",
+        default="postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/AI_parenting_dev",
+        description="SQLAlchemy async URL（独立库 AI_parenting_dev，与兄弟项目 parenting 库隔离）",
     )
     echo: bool = Field(default=False, description="SQL 回显（dev 调试用）")
     pool_size: int = Field(default=5, ge=1)
@@ -105,6 +105,44 @@ class ObservabilitySettings(BaseSettings):
     metrics_path: str = "/metrics"
     tracing_enabled: bool = False
     otlp_endpoint: str | None = None
+    # OTel Resource service.name（§10.3 tracing）。
+    service_name: str = "parenting"
+
+
+class AuthSettings(BaseSettings):
+    """认证/鉴权配置（架构 §19 权限体系、§20 安全、§8.3 密钥管理）。
+
+    JWT 用 HS256（对称签名，``auth.service.jwt.Hs256JwtService``）；密钥来自
+    ``PARENTING_AUTH__JWT_SECRET``（``.env`` / ``_infra/.env``，gitignored，§8.3）。
+    dev 默认占位密钥便于本地启动；prod 必须显式配置（fail-fast，见 ``Hs256JwtService``）。
+    """
+
+    jwt_secret: str = Field(
+        default="dev-insecure-jwt-secret-change-me",
+        description="HS256 签名密钥；prod 必须显式配置（§8.3，gitignored）",
+    )
+    jwt_algorithm: str = Field(default="HS256", description="JWT 签名算法（仅支持 HS256）")
+    access_ttl_seconds: int = Field(
+        default=3600, ge=60, description="access token 有效期（秒），默认 1 小时"
+    )
+    # PBKDF2 密码哈希迭代次数（§20 安全；与 auth.service.password.Pbkdf2PasswordHasher 对齐）。
+    password_iterations: int = Field(
+        default=310_000, ge=10_000, description="PBKDF2 迭代次数（NIST SP 800-132 建议 ≥ 10000）"
+    )
+
+
+class EventsSettings(BaseSettings):
+    """事件总线配置（架构 §7.1 PG LISTEN/NOTIFY；APC-T011）。
+
+    ``pg_listen_enabled``：是否启用真实 PG LISTEN/NOTIFY 事件总线。
+    默认关闭——dev/mock 模式用 ``InMemoryEventBus``（无 DB 可启动，APC-T002 验收）；
+    显式开启时 lifespan 构造 ``PgListenEventBus`` + ``EventWorker`` 订阅 ``events.changed``。
+    """
+
+    pg_listen_enabled: bool = Field(
+        default=False,
+        description="启用 PG LISTEN/NOTIFY 事件总线（需真实 DB；dev 默认关闭用 InMemoryEventBus）",
+    )
 
 
 class Settings(BaseSettings):
@@ -116,6 +154,7 @@ class Settings(BaseSettings):
         PARENTING_MQTT__HOST=127.0.0.1
         PARENTING_HTTP__PORT=8000
         PARENTING_MODELS__USE_FAKE_CLIENT=true
+        PARENTING_AUTH__JWT_SECRET=...
     """
 
     model_config = SettingsConfigDict(
@@ -137,6 +176,8 @@ class Settings(BaseSettings):
     privacy: PrivacySettings = Field(default_factory=PrivacySettings)
     notification: NotificationSettings = Field(default_factory=NotificationSettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
+    auth: AuthSettings = Field(default_factory=AuthSettings)
+    events: EventsSettings = Field(default_factory=EventsSettings)
 
     @field_validator("env")
     @classmethod
@@ -170,6 +211,7 @@ __all__ = [
     "CONFIG_DIR",
     "PROJECT_ROOT",
     "RUNTIME_DIR",
+    "AuthSettings",
     "DatabaseSettings",
     "HttpSettings",
     "ModelsSettings",

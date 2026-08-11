@@ -5,32 +5,44 @@
 # 依据：ENGINEERING_DESIGN §5（核心抽象与接口设计，Protocol + DI）；
 #       ARCHITECTURE_FINAL §3（模块划分与职责边界）；TASK_BACKLOG APC-T002。
 # 设计：进程级单例容器 + FastAPI Depends 请求作用域工厂。
-#       T002 只装配基础依赖（Settings/Clock/EventBus），业务模块在各自任务接入。
-#       测试可替换容器内任意组件（注入替身）。
+#       T002 装配基础依赖（Settings/Clock/EventBus）；T007 装配 Auth 无状态单例
+#       （JwtService/PasswordHasher）；业务请求作用域依赖（Repository/AuthService）
+#       由 FastAPI Depends 按请求构造，不放入本容器。测试可替换容器内任意组件（注入替身）。
 
 """依赖装配（Dependency Injection）。
 
 架构（ENGINEERING_DESIGN §5）：所有抽象以 ``Protocol`` + DI 实现，测试可注入替身。
 本模块提供进程级单例容器（``Container``）与 FastAPI ``Depends`` 工厂。
 
-APC-T002 只装配基础依赖（Settings / Clock / EventBus），业务模块
-（Repository / Orchestrator / RuleModule / NotificationChannel 等）在各自任务接入，
+APC-T002 装配基础依赖（Settings / Clock / EventBus）；APC-T007 装配 Auth 无状态单例
+（``JwtService`` / ``PasswordHasher``）。请求作用域依赖（``UserRepository`` / ``AuthService``）
+由 FastAPI ``Depends`` 按请求构造，不放入本容器（架构 §5.2：Repository 请求作用域）。
+业务模块（Orchestrator / RuleModule / NotificationChannel 等）在各自任务接入，
 通过 ``Container`` 扩展，不改内核（开闭原则）。
 """
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator, AsyncIterator
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
-from fastapi import Request
+from fastapi import Depends, Request
 
+from .auth.domain import JwtService, PasswordHasher, Principal
+from .auth.service.auth_service import AuthService
+from .auth.service.jwt import Hs256JwtService
+from .auth.service.password import Pbkdf2PasswordHasher
 from .common.clock import Clock, SystemClock
+from .common.errors import AuthError
 from .common.event_bus import EventBus, InMemoryEventBus
 from .settings import Settings, get_settings
 
 if TYPE_CHECKING:
-    pass
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from .events.service.idempotency import EventService
+    from .observability.audit import AuditService
 
 
 @dataclass
@@ -44,6 +56,10 @@ class Container:
     settings: Settings
     clock: Clock
     event_bus: EventBus
+    # Auth 无状态单例（APC-T007）：JwtService / PasswordHasher，跨请求复用。
+    # 请求作用域的 UserRepository / AuthService 由 FastAPI Depends 按请求构造，不放入本容器。
+    jwt_service: JwtService
+    password_hasher: PasswordHasher
     # 预留：model_client / rule_modules / notification_channels 等，后续任务填充。
     _extras: dict[str, object] = field(default_factory=dict)
 
@@ -70,7 +86,18 @@ def build_container(settings: Settings | None = None) -> Container:
     clock: Clock = SystemClock()
     # dev 模式默认进程内事件总线；prod 在 APC-T003+ 替换为 PG LISTEN/NOTIFY。
     event_bus: EventBus = InMemoryEventBus()
-    return Container(settings=s, clock=clock, event_bus=event_bus)
+    # Auth 无状态单例（APC-T007）：HS256 JWT + PBKDF2 密码哈希。
+    jwt_service: JwtService = Hs256JwtService(
+        secret=s.auth.jwt_secret, access_ttl_seconds=s.auth.access_ttl_seconds
+    )
+    password_hasher: PasswordHasher = Pbkdf2PasswordHasher(iterations=s.auth.password_iterations)
+    return Container(
+        settings=s,
+        clock=clock,
+        event_bus=event_bus,
+        jwt_service=jwt_service,
+        password_hasher=password_hasher,
+    )
 
 
 def get_container() -> Container:
@@ -99,7 +126,7 @@ def reset_container() -> None:
 
 def _container_from_request(request: Request) -> Container:
     """从 app.state 取容器（lifespan 中挂载，运行时存在）。"""
-    return request.app.state.container  # type: ignore[no-any-return]
+    return request.app.state.container
 
 
 def get_settings_dep(request: Request) -> Settings:
@@ -117,12 +144,121 @@ def get_event_bus_dep(request: Request) -> EventBus:
     return _container_from_request(request).event_bus
 
 
+# ---- Auth 依赖工厂（APC-T008：请求作用域 AuthService + 鉴权 Principal）----
+
+
+async def get_session_dep(request: Request) -> AsyncIterator[AsyncSession]:
+    """FastAPI 依赖：按请求提供 async session（自动关闭）。
+
+    从 container.settings 取 DB 配置，复用进程级 session factory（架构 §5.2 请求作用域）。
+    """
+    from .db import get_session_factory  # 延迟导入避免循环依赖
+
+    container = _container_from_request(request)
+    factory = get_session_factory(container.settings)
+    async with factory() as session:
+        yield session
+
+
+async def get_auth_service_dep(request: Request) -> AsyncGenerator[AuthService, None]:
+    """FastAPI 依赖：按请求构造 AuthService（注入 session + 无状态单例）。
+
+    ``UserRepository`` / ``DeviceRepository`` / ``AuthService`` 均请求作用域
+    （持有请求级 session）；``PasswordHasher`` / ``JwtService`` 从 container 取无状态单例（APC-T007）。
+    ``session`` 传入 AuthService 以便 mutating 方法 commit（事务边界在 service，架构 §5.2）。
+    """
+    from .auth.infra.repository import SqlAlchemyDeviceRepository, SqlAlchemyUserRepository
+    from .db import get_session_factory
+
+    container = _container_from_request(request)
+    factory = get_session_factory(container.settings)
+    async with factory() as session:
+        yield AuthService(
+            repository=SqlAlchemyUserRepository(session),
+            password_hasher=container.password_hasher,
+            jwt_service=container.jwt_service,
+            clock=container.clock,
+            access_ttl_seconds=container.settings.auth.access_ttl_seconds,
+            device_repository=SqlAlchemyDeviceRepository(session),
+            session=session,
+        )
+
+
+def get_principal_dep(
+    request: Request,
+    auth_service: Annotated[AuthService, Depends(get_auth_service_dep)],
+) -> Principal:
+    """FastAPI 依赖：从 Authorization: Bearer <token> 解析 Principal。
+
+    缺失/非法 token → ``AuthError``（401，由全局异常处理器映射）。
+    用法（受保护端点）::
+
+        @router.get("/me")
+        async def me(principal: Annotated[Principal, Depends(get_principal_dep)]):
+            ...
+    """
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        raise AuthError("Missing or malformed Authorization header")
+    token = header[len("Bearer ") :].strip()
+    if not token:
+        raise AuthError("Empty bearer token")
+    return auth_service.authenticate_token(token)
+
+
+# ---- Events 依赖工厂（APC-T010：请求作用域 EventService + AuditService 共享 session）----
+
+
+@dataclass
+class EventContext:
+    """Events 请求作用域上下文（EventService + AuditService 共享同一 session）。
+
+    ``EventService`` 与 ``AuditService`` 共享请求级 ``AsyncSession``，确保 mutating 操作
+    与审计写入在同一事务内提交（§10.4 不可绕过；避免 T008 阶段 audit 与业务跨 session
+    的不一致窗口）。路由通过 ``EventContextDep`` 单次注入解构使用。
+    """
+
+    event_service: EventService
+    audit_service: AuditService
+
+
+async def get_event_context_dep(request: Request) -> AsyncGenerator[EventContext, None]:
+    """FastAPI 依赖：按请求构造 EventContext（EventService + AuditService 共享 session）。
+
+    ``SqlAlchemyObservationEventRepository`` / ``EventService`` / ``AuditService`` 均请求作用域
+    （持有同一请求级 session）；``Clock`` 从 container 取进程级单例。
+    ``session`` 传入 EventService 以便 mutating 方法 commit（事务边界在 service，架构 §5.2）；
+    AuditService 共享同一 session，审计与业务在同一事务提交（§10.4）。
+    """
+    from .db import get_session_factory
+    from .events.infra.repository import SqlAlchemyObservationEventRepository
+    from .events.service.idempotency import EventService
+    from .observability.audit import AuditService
+
+    container = _container_from_request(request)
+    factory = get_session_factory(container.settings)
+    async with factory() as session:
+        yield EventContext(
+            event_service=EventService(
+                repository=SqlAlchemyObservationEventRepository(session),
+                clock=container.clock,
+                session=session,
+            ),
+            audit_service=AuditService(session, container.clock),
+        )
+
+
 __all__ = [
     "Container",
+    "EventContext",
     "build_container",
+    "get_auth_service_dep",
     "get_clock_dep",
     "get_container",
     "get_event_bus_dep",
+    "get_event_context_dep",
+    "get_principal_dep",
+    "get_session_dep",
     "get_settings_dep",
     "reset_container",
     "set_container",

@@ -1,0 +1,12 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-10 00:00:00
+#
+# PowerSync Service 本地开发配置（架构 §9）。
+# 数据库连接参数由 docker-compose 环境变量注入（POWERSYNC_DB_*）。
+# sync rules 见 sync-rules.yaml，待 APC-T004 核心 Schema 定型后填充。
+
+instance_name: parenting-local
+sync_rules: /config/sync-rules.yaml
+# 本地 dev：API 监听 8080，无鉴权（prod 通过 _infra 注入）。
+api:
+  port: 8080

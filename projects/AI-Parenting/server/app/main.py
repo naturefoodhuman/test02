@@ -22,10 +22,9 @@ dev/mock 模式未配 DB 亦可启动（APC-T002 验收标准）。
 
 from __future__ import annotations
 
-import logging
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from contextlib import asynccontextmanager
-from typing import Any, Coroutine
+from typing import Any
 
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -33,9 +32,14 @@ from pydantic import BaseModel
 from .common.event_bus import EventBus
 from .di import Container, build_container
 from .gateway.exception_handlers import register_exception_handlers
+from .gateway.middleware.logging import add_request_logging
+from .health.api import register_health_routes
+from .observability.logger import configure_logging as configure_structlog
+from .observability.logger import get_logger as get_structlog_logger
+from .observability.tracing import configure_tracing
 from .settings import Settings, get_settings
 
-logger = logging.getLogger(__name__)
+logger = get_structlog_logger(__name__)
 
 # ---- Worker 注册接口（预留，APC-T002 不实现业务 worker） ----
 # Worker 协议：async 启动协程，返回 None；lifespan 在 startup 阶段以 TaskGroup 调度。
@@ -101,12 +105,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             s.http.port,
             s.models.use_fake_client,
         )
-        if s.is_dev:
+        if s.is_dev and not s.events.pg_listen_enabled:
             logger.info("dev/mock 模式：EventBus=InMemoryEventBus，未接真实 DB/MQTT（APC-T002）")
 
-        # 启动事件总线（dev 用 InMemoryEventBus，no-op）。
+        # 启动事件总线。
+        # APC-T011：若 events.pg_listen_enabled，用 PgListenEventBus（真实 PG LISTEN/NOTIFY）
+        # + EventWorker 订阅 events.changed；否则用 InMemoryEventBus（dev/mock no-op）。
         event_bus: EventBus = container.event_bus
-        await event_bus.start()
+        event_worker = None
+        if s.events.pg_listen_enabled:
+            from .common.event_bus import PgListenEventBus
+            from .db import get_session_factory
+            from .events.service.event_worker import EventWorker
+
+            dsn = s.database.url.replace("postgresql+asyncpg://", "postgresql://")
+            pg_bus = PgListenEventBus(dsn)
+            event_worker = EventWorker(bus=pg_bus, session_factory=get_session_factory(s))
+            await event_worker.start()
+            event_bus = pg_bus  # 供 shutdown 停止
+            logger.info("PG LISTEN/NOTIFY 事件总线已启用（APC-T011），订阅 events.changed")
+        else:
+            await event_bus.start()
 
         # 调度已注册 worker（T002 无业务 worker，TaskGroup 为空即立即结束上下文管理）。
         # 使用 anyio TaskGroup 风格：保持引用以便 shutdown 取消。
@@ -131,6 +150,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     pass
                 except Exception:
                     logger.exception("worker exited with error during shutdown")
+            if event_worker is not None:
+                await event_worker.stop()
             await event_bus.stop()
             logger.info("parenting-server stopped")
 
@@ -147,38 +168,43 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # 全局异常处理器
     register_exception_handlers(app)
 
+    # 请求日志中间件（§10.1 trace_id/request_id 贯穿）
+    add_request_logging(app)
+
     # ---- 健康检查端点 ----
     @app.get("/healthz", tags=["health"], summary="健康检查")
     async def healthz() -> HealthResponse:
-        """存活探针：返回应用与依赖健康状态。
+        """存活探针：进程存活即健康（不依赖外部依赖）。
 
-        T002 仅返回进程存活 + env/version；DB/MQTT 探活在各自任务接入 checks。
         dev/mock 模式无 DB 连接，status=ok（进程存活即健康）。
         """
         checks: dict[str, str] = {"event_bus": "ok"}
         return HealthResponse(status="ok", env=s.env, version="0.1.0", checks=checks)
 
-    @app.get("/readyz", tags=["health"], summary="就绪检查")
-    async def readyz() -> HealthResponse:
-        """就绪探针：依赖就绪判定。
+    # /readyz（DB + EventBus 探活）与 /metrics（Prometheus）在 health/api.py 注册
+    register_health_routes(app, s)
 
-        T002 占位：dev 模式直接 ready；prod 在各自任务接入 DB/MQTT 探活。
-        """
-        return HealthResponse(status="ok", env=s.env, version="0.1.0", checks={"event_bus": "ok"})
+    # Auth API（APC-T008）：/api/v1/auth/login、/refresh、/register-device、/me。
+    from .auth.api.routes import router as auth_router
+
+    app.include_router(auth_router)
+
+    # Events API（APC-T010）：/api/v1/events（create/list/correct/soft-delete）。
+    from .events.api.routes import router as events_router
+
+    app.include_router(events_router)
 
     return app
 
 
 def _configure_logging(settings: Settings) -> None:
-    """按 settings.observability 配置根日志（架构 §22）。
+    """按 settings.observability 配置结构化日志（structlog JSON，架构 §22/§10.1）。
 
-    T002 用标准 logging；structlog/prometheus 在可观测性任务接入。
+    APC-T005 起用 structlog（JSON → stdout）；tracing 按 tracing_enabled 配置。
     """
-    level = getattr(logging, settings.observability.log_level.upper(), logging.INFO)
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-    )
+    configure_structlog(level=settings.observability.log_level)
+    if settings.observability.tracing_enabled:
+        configure_tracing()
 
 
 # 模块级 app 单例：供 `uvicorn server.app.main:app` 启动（APC-T002 验收）。

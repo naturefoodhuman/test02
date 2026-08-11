@@ -2,14 +2,15 @@
 # 创建时间（北京时间）：2026-08-07 20:15:20
 #
 # gateway/exception_handlers.py —— 全局异常处理器（领域异常 → HTTP 错误信封）。
-# 依据：TASK_BACKLOG APC-T002（全局异常格式 {code,message,evidence,trace_id}）；
-#       ENGINEERING_DESIGN §5（领域异常层次）；ARCHITECTURE_FINAL §15（API 风格）。
-# 设计：领域层抛 DomainError 子类（不感知 HTTP）；本模块统一映射为 HTTP 状态 + ErrorEnvelope。
+# 依据：ENGINEERING_DESIGN §9.1（异常层次，类名以本文档为准）；
+#       TASK_BACKLOG APC-T002（全局异常格式 {code,message,evidence,trace_id}）；
+#       ARCHITECTURE_FINAL §15（API 风格）。
+# 设计：领域层抛 ParentingError 子类（不感知 HTTP）；本模块统一映射为 HTTP 状态 + ErrorEnvelope。
 #       FastAPI 自带异常（RequestValidationError 等）也归一为同一信封，保证响应格式一致。
 
 """全局异常处理器（领域异常 → HTTP 错误信封）。
 
-领域层只抛 ``DomainError`` 子类（不感知 HTTP）；本模块统一映射为
+领域层只抛 ``ParentingError`` 子类（不感知 HTTP）；本模块统一映射为
 HTTP 状态码 + ``ErrorEnvelope``（``{code,message,evidence,trace_id}``）。
 FastAPI 自带异常（``RequestValidationError`` 等）也归一为同一信封，
 保证响应格式一致（架构 §15 API 风格）。
@@ -18,14 +19,15 @@ FastAPI 自带异常（``RequestValidationError`` 等）也归一为同一信封
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from ..common.errors import DomainError, ErrorEnvelope
+from ..common.errors import ErrorEnvelope, ParentingError
 from ..common.ids import new_id
 
 logger = logging.getLogger(__name__)
@@ -49,7 +51,7 @@ def _envelope(
     return JSONResponse(status_code=http_status, content=env.model_dump())
 
 
-async def domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+async def parenting_error_handler(request: Request, exc: ParentingError) -> JSONResponse:
     """处理领域异常：按 exc.http_status / exc.code 映射。"""
     logger.info(
         "domain_error code=%s status=%s trace_id=%s path=%s",
@@ -123,7 +125,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     """
     # Starlette handler 宽签名：Callable[[Request, Exception], JSONResponse | Response]
     Handler = Callable[[Request, Exception], Any]
-    app.add_exception_handler(DomainError, cast(Handler, domain_error_handler))
+    app.add_exception_handler(ParentingError, cast(Handler, parenting_error_handler))
     app.add_exception_handler(
         RequestValidationError, cast(Handler, request_validation_error_handler)
     )
@@ -132,8 +134,8 @@ def register_exception_handlers(app: FastAPI) -> None:
 
 
 __all__ = [
-    "domain_error_handler",
     "http_exception_handler",
+    "parenting_error_handler",
     "register_exception_handlers",
     "request_validation_error_handler",
     "unhandled_exception_handler",

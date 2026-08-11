@@ -57,8 +57,17 @@ def container(settings):
 
 @pytest.fixture
 def client(settings) -> Iterator[TestClient]:
-    """FastAPI TestClient（无业务 worker）。"""
+    """FastAPI TestClient（无业务 worker）。
+
+    每个 TestClient 跑在独立事件循环上；reset_db() 确保进程级 engine 按当前
+    循环重建，避免上一测试（如 test_migration_apply 的 asyncio.run）遗留的
+    engine 绑定到已关闭循环，导致 /readyz 的 check_db 拿到死连接 → degraded → 503。
+    """
+    from server.app import db as db_module
+
     clear_workers()
+    db_module.reset_db()
     app = create_app(settings)
     with TestClient(app) as c:
         yield c
+    db_module.reset_db()

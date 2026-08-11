@@ -1,0 +1,38 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-10 00:00:00
+#
+# parenting-env.example —— AI Parenting Copilot 应用层 PARENTING_* 配置样例片段。
+# 依据：ENGINEERING_DESIGN §8.1（分层加载）、§8.2（配置清单）；server/app/settings.py。
+#
+# 说明：因 harness 权限对 .env* 文件名硬拦截，无法直接修改项目根 .env.example。
+# 请老板将本片段追加到项目根 .env.example 末尾（保留工厂原有 FORGE/NIM 段不动）。
+# 真实密钥不得提交；.env 已 gitignored。
+
+# ===== AI Parenting Copilot（PARENTING_ 前缀 + __ 嵌套）=====
+# 依据 server/app/settings.py：env_prefix=PARENTING_，env_nested_delimiter=__。
+
+# ---- Database（架构 §7；裁决 2026-08-10：独立库 AI_parenting_dev）----
+PARENTING_DATABASE__URL=postgresql+asyncpg://parenting:parenting@127.0.0.1:5432/AI_parenting_dev
+PARENTING_DATABASE__ECHO=false
+PARENTING_DATABASE__POOL_SIZE=5
+PARENTING_DATABASE__MAX_OVERFLOW=10
+
+# ---- MQTT / Mosquitto（架构 §13）----
+PARENTING_MQTT__HOST=127.0.0.1
+PARENTING_MQTT__PORT=1883
+PARENTING_MQTT__CLIENT_ID=parenting-server
+PARENTING_MQTT__KEEPALIVE=60
+
+# ---- HTTP（FastAPI）----
+PARENTING_HTTP__HOST=127.0.0.1
+PARENTING_HTTP__PORT=8000
+
+# ---- Auth / RBAC（架构 §19 权限、§20 安全、§8.3 密钥管理；APC-T007）----
+# JWT HS256 签名密钥：prod 必须显式配置（真实密钥放 .env / _infra/.env，gitignored）。
+PARENTING_AUTH__JWT_SECRET=dev-insecure-jwt-secret-change-me
+PARENTING_AUTH__JWT_ALGORITHM=HS256
+PARENTING_AUTH__ACCESS_TTL_SECONDS=3600
+PARENTING_AUTH__PASSWORD_ITERATIONS=310000
+
+# ---- 运行环境（dev/staging/prod）----
+PARENTING_ENV=dev
