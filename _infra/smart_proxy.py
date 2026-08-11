@@ -1247,7 +1247,10 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
             logger.warning(f"⚠️ 可重试状态码 {resp.status_code}，第 {attempt + 1}/{max_attempts} 次")
             _retry_counters[str(resp.status_code)] = _retry_counters.get(str(resp.status_code), 0) + 1
             # 429 喂熔断器：连续 429 达阈值即熔断，打破"重试也 429"的恶性循环。
-            if resp.status_code == 429 and is_remote:
+            # NIM sidecar routes own key-pool/cooldown locally; their 429/503 may
+            # mean local busy capacity, so do not trip the Smart Proxy global
+            # circuit breaker for handles_retries=True routes.
+            if resp.status_code == 429 and is_remote and not handles_retries:
                 await circuit_breaker.on_429()
             if attempt < max_attempts - 1:
                 wait = _retry_after_seconds(resp, default=_backoff_with_jitter(attempt))

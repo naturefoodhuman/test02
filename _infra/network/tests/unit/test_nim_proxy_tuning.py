@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-07 23:20:00
+# 创建时间（北京时间）：2026-08-11 18:20:00
 
 """NIM proxy tuning recommendation tests."""
 
@@ -60,6 +60,7 @@ def test_tuning_recommends_concurrency_one_on_errors() -> None:
     )
 
     assert report.suggested_env["NIM_PROXY_PER_KEY_CONCURRENCY"] == "1"
+    assert report.suggested_env["FORGE_REMOTE_MAX_CONCURRENCY"] == "1"
 
 
 def test_tuning_detects_imbalanced_key_usage() -> None:
@@ -78,8 +79,8 @@ def test_tuning_detects_imbalanced_key_usage() -> None:
 
     assert report.status == "tune_down"
     assert report.suggested_env["NIM_PROXY_SESSION_AFFINITY"] == "0"
-    assert report.suggested_env["FORGE_REMOTE_MAX_CONCURRENCY"] == "2"
-    assert report.suggested_env["NIM_PROXY_ENABLE_FALLBACK"] == "1"
+    assert report.suggested_env["FORGE_REMOTE_MAX_CONCURRENCY"] == "1"
+    assert "NIM_PROXY_ENABLE_FALLBACK" not in report.suggested_env
 
 
 def test_tuning_reports_healthy_when_no_pressure() -> None:

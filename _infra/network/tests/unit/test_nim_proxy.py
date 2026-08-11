@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-07 23:20:00
+# 创建时间（北京时间）：2026-08-11 18:20:00
 
 """NVIDIA NIM sidecar proxy unit tests."""
 
@@ -117,6 +117,26 @@ def test_key_pool_can_keep_session_affinity_when_enabled() -> None:
 
     assert second is not None
     assert second.key_id == first.key_id
+
+
+def test_forward_non_stream_returns_busy_when_all_keys_are_locked() -> None:
+    async def scenario() -> None:
+        settings = _settings(per_key_concurrency=1, queue_timeout_seconds=0.01)
+        pool = NIMKeyPool(["k1"], settings)
+        locked = await pool.acquire()
+        try:
+            service = NIMProxyService(pool, settings, http_client=FakeClient([]))  # type: ignore[arg-type]
+            status, headers, body = await service.forward_non_stream(
+                {"model": "z-ai/glm-5.2", "messages": [], "stream": False}
+            )
+        finally:
+            pool.release(locked)
+
+        assert status == 503
+        assert float(headers["retry-after"]) >= 1.0
+        assert b"busy" in body
+
+    asyncio.run(scenario())
 
 
 def test_forward_non_stream_retries_after_429_with_next_key(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -306,6 +326,7 @@ def test_smart_proxy_sidecar_route_avoids_nested_retries_and_autostarts_selector
     assert "handles_retries=nim_sidecar_route" in source
     assert "stream_attempts = 1 if nim_sidecar_route" in source
     assert "await asyncio.to_thread(ensure_server, target_port)" in source
+    assert "resp.status_code == 429 and is_remote and not handles_retries" in source
 
 
 

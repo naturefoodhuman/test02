@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-07 23:20:00
+# 创建时间（北京时间）：2026-08-11 18:20:00
 
 """NVIDIA NIM OpenAI-compatible sidecar proxy.
 
@@ -232,9 +232,10 @@ class NIMKeyState:
 
 
 class NoNIMKeyAvailable(RuntimeError):
-    def __init__(self, wait_seconds: float) -> None:
+    def __init__(self, wait_seconds: float, reason: str = "rate_limit") -> None:
         super().__init__(f"No NVIDIA NIM key available; retry after {wait_seconds:.1f}s")
         self.wait_seconds = wait_seconds
+        self.reason = reason
 
 
 class NIMKeyPool:
@@ -310,9 +311,26 @@ class NIMKeyPool:
                 selected.in_flight += 1
                 selected.reserve()
                 return selected
-            wait = min(key.available_in() for key in self.keys)
-            if _now() + wait > deadline:
-                raise NoNIMKeyAvailable(wait)
+
+            current = _now()
+            waits = [key.available_in(current) for key in self.keys]
+            # If a key is otherwise available but its semaphore is locked, the
+            # bottleneck is local busy capacity, not NVIDIA Retry-After/RPM. Poll
+            # briefly so a finishing request frees the key quickly. If this lasts
+            # beyond queue_timeout_seconds, return a clear busy error instead of
+            # misleading retry-after: 0.0.
+            busy_capacity = any(
+                wait <= 0.0 and key.semaphore.locked()
+                for key, wait in zip(self.keys, waits)
+            )
+            if busy_capacity:
+                wait = 1.0
+                reason = "busy"
+            else:
+                wait = min(waits)
+                reason = "rate_limit"
+            if current + wait > deadline:
+                raise NoNIMKeyAvailable(max(wait, 1.0), reason=reason)
             await asyncio.sleep(min(max(wait, 0.05), 5.0))
 
     def release(self, key: NIMKeyState) -> None:
@@ -427,8 +445,9 @@ class NIMProxyService:
             try:
                 key = await self.pool.acquire(session_id=session_id)
             except NoNIMKeyAvailable as exc:
-                return 429, {"retry-after": str(round(exc.wait_seconds, 3))}, json.dumps(
-                    {"error": {"message": str(exc), "type": "rate_limit"}},
+                status_code = 503 if exc.reason == "busy" else 429
+                return status_code, {"retry-after": str(round(max(exc.wait_seconds, 1.0), 3))}, json.dumps(
+                    {"error": {"message": str(exc), "type": exc.reason}},
                     ensure_ascii=False,
                 ).encode("utf-8")
             try:
@@ -513,7 +532,7 @@ class NIMProxyService:
                 key = await self.pool.acquire(session_id=session_id)
             except NoNIMKeyAvailable as exc:
                 payload_json = json.dumps(
-                    {"error": {"message": str(exc), "type": "rate_limit"}},
+                    {"error": {"message": str(exc), "type": exc.reason}},
                     ensure_ascii=False,
                 )
                 yield f"event: error\ndata: {payload_json}\n\n".encode()

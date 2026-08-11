@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-07 23:20:00
+# 创建时间（北京时间）：2026-08-11 18:20:00
 
 """Recommend NVIDIA NIM sidecar tuning from /stats output."""
 
@@ -73,10 +73,10 @@ def build_tuning_report(stats: dict[str, Any]) -> NIMProxyTuningReport:
         recs.append("Concurrency pressure/errors observed; try per-key concurrency 1.")
         env["NIM_PROXY_PER_KEY_CONCURRENCY"] = "1"
     if error_keys:
-        env.setdefault("FORGE_REMOTE_MAX_CONCURRENCY", str(max(1, min(key_count or 1, 2))))
+        env.setdefault("FORGE_REMOTE_MAX_CONCURRENCY", "1")
+        recs.append("Upstream errors were observed; keep total remote concurrency 1 for GLM-5.2 slow mode.")
         if not enable_fallback:
-            recs.append("Upstream errors were observed; enable fallback only if DeepSeek-V4-Pro quality is acceptable.")
-            env.setdefault("NIM_PROXY_ENABLE_FALLBACK", "1")
+            recs.append("Fallback is disabled; keep NIM_PROXY_ENABLE_FALLBACK=0 unless the user explicitly accepts model switching.")
     if fallback_count > 0:
         recs.append("Fallback was used; review quality before keeping fallback enabled.")
     if not recs:

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-09 10:45:00
+创建时间（北京时间）：2026-08-11 18:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,32 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 214 轮] 2026-08-11
+
+### 需求变动
+- **NIM key busy 误报 429 修复**：用户运行 GLM-5.2 慢速模式时，两个 key 同时 `in_flight=1`，新请求最终返回 `HTTP 429: No NVIDIA NIM key available; retry after 0.0s`，并触发 Smart Proxy circuit breaker。根因是 sidecar 将“本地 key 并发已满/排队超时”误表达为 rate-limit 429。
+- **busy 语义区分**：NIM sidecar 现在区分 `reason=busy` 与 `reason=rate_limit`。本地容量忙返回 `503` + `Retry-After>=1` + `type=busy`，不再返回 `retry-after: 0.0`。
+- **Smart Proxy 熔断修正**：对 `handles_retries=True` 的 NIM sidecar route，Smart Proxy 不再把 sidecar 本地 429/503 喂给全局 circuit breaker，避免本地 key busy 被误判为上游 429 风暴。
+- **调参建议修正**：`nim-proxy-tuning` 在方向 A 下不再自动建议 `NIM_PROXY_ENABLE_FALLBACK=1` 或 `FORGE_REMOTE_MAX_CONCURRENCY=2`；遇到错误时建议保持总远程并发 1。
+
+### 文件影响
+- 修改：`_infra/nim_proxy.py`
+- 修改：`_infra/smart_proxy.py`
+- 修改：`scripts/diagnostics/nim_proxy_tuning.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy_tuning.py`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py _infra/network/tests/unit/test_forge_nim_diagnostic.py -q
+# 36 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/forge_nim_diagnostic.py
+```
 
 ---
 

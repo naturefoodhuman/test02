@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-09 10:45:00
+创建时间（北京时间）：2026-08-11 18:20:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -277,6 +277,25 @@ NIM_PROXY_PER_KEY_RPM=30
 NIM_PROXY_PER_KEY_CONCURRENCY=1
 NIM_PROXY_DEFAULT_COOLDOWN_SECONDS=600
 ```
+
+如果选择“方向 A：继续使用 GLM-5.2、禁用 fallback、接受慢响应”，推荐：
+
+```bash
+NIM_PROXY_READ_TIMEOUT_SECONDS=900
+NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=1200
+NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
+NIM_PROXY_ENABLE_FALLBACK=0
+NIM_PROXY_PER_KEY_CONCURRENCY=1
+FORGE_REMOTE_MAX_CONCURRENCY=1
+FORGE_CTX_MAX_TOKENS=902752
+FORGE_CTX_SOFT_TOKENS=162201
+FORGE_CTX_KEEP_RECENT_TURNS=4
+FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=1200
+```
+
+注意：`NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1` 很重要。若 `read_timeout=900` 且 attempts=2，坏请求最坏会占用 key 约 30 分钟，容易导致 “No NVIDIA NIM key available”。
+
+当所有 key 都被长请求占用时，新请求现在会返回 `503 busy` + `Retry-After`，而不是误导性的 `429 retry-after: 0.0`；Smart Proxy 也不会因 NIM sidecar 的本地 busy/429 触发全局 circuit breaker。
 
 
 ---
