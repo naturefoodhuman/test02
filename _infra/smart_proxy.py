@@ -95,9 +95,10 @@ FORGE_COUNT_TOKENS_DIVISOR = int(os.getenv("FORGE_COUNT_TOKENS_DIVISOR", "4"))
 # 估算 forward_payload["messages"] 的 token 数（= 整个会话多轮历史，cc-connect 每次全量带上）。
 #  - SOFT 阈值：会话膨胀到此就压缩历史，防 NIM 大请求 429 + 降 TTFB（2026-08-04 实测
 #    body 289KB/25 工具的请求易 429；soft 降到 ~32K tokens ≈ 128KB body）。
-#  - HARD 阈值：对齐上游 GLM 5.2 硬上限 202752，超此即使压缩后仍超则拒绝（400 不可重试）。
+#  - HARD 阈值： 硬上限 1000000，超此即使压缩后仍超则拒绝（400 不可重试）。如果 .env / 环境变量里有 FORGE_CTX_MAX_TOKENS，就用环境变量；
+# 否则用代码默认 1000000。
 # 与 count_tokens 端点同口径（_json_bytes // FORGE_COUNT_TOKENS_DIVISOR）。
-FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))
+FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "1000000"))
 FORGE_CTX_SOFT_RATIO = float(os.getenv("FORGE_CTX_SOFT_RATIO", "0.80"))
 FORGE_CTX_HARD_RATIO = float(os.getenv("FORGE_CTX_HARD_RATIO", "0.95"))
 # SOFT 直接指定（优先于 ratio）：防 429 用 ~32K tokens；设 >0 则覆盖 ratio 计算。
