@@ -63,8 +63,9 @@ services:
         max-file: "3"
 
   # ---- PowerSync Service：多端同步（架构 §9，复用官方镜像，不自研同步）----
-  # sync rules（config/sync-rules.yaml）依赖核心 Schema，待 APC-T004 表结构定型后填充。
-  # 当前为可启动占位：连到 postgres，sync rules 为空（不同步任何表），验证连通性。
+  # PowerSync Service（架构 §9）：sync rules 见 config/sync-rules.yaml（APC-T012 已填充，
+  # 按 family_id 分桶：family/user/baby/device/observation_event + 各 *_log + derived_baby_state）。
+  # 冲突合并不在同步层（架构 §4），由应用层 contract_validator + conflict_detector 处理（APC-T012）。
   powersync:
     image: journeyapps/powersync-service:latest
     container_name: parenting-powersync

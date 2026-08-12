@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-13 · Round 13 · APC-T012 PowerSync 适配、同步契约校验与冲突软提示完成（contract_validator + conflict_detector + sync-rules + 55 测试，Milestone 2 全部 DONE）
 - 2026-08-12 · Round 12 · APC-T012 PowerSync 适配半成品修复（contract_validator mypy 修复 + 文档补齐 T010/T011 外部记忆）
 - 2026-08-12 · Round 11 · APC-T011 PG LISTEN/NOTIFY 事件总线与事件变更触发器补记（代码 2026-08-11 已落地，本轮补文档）
 - 2026-08-12 · Round 10 · APC-T010 Events API 补记 + T007 JwtService.parse 时钟不对称修复（代码 2026-08-11 已落地，本轮补文档 + 修跨天测试失败）
@@ -24,6 +25,46 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 13 · 2026-08-13 · APC-T012 PowerSync 适配、同步契约校验与冲突软提示完成
+
+### 背景
+
+Round 12 将 T012 记为半成品（contract_validator/conflict_detector 已写但无测试、未接入、未文档化）。本轮补齐缺口至 DoD 满足，Milestone 2（APC-T007 ~ T012）全部完成。
+
+### 交付
+
+- **`server/tests/unit/sync/test_contract_validator.py`**（33 项）：合法记录 → ObservationEvent（synced/pending）；缺 7 个必填字段各一例 + 多缺字段列出 missing；ULID 非法（3 字段）；source 非法 + 6 合法值；payload 非 dict/null；confidence 越界/类型错 + 边界值；datetime ISO 字符串/datetime 对象/非法/缺失；非 dict record；非法记录不进入业务（验收）。
+- **`server/tests/unit/sync/test_conflict_detector.py`**（14 项）：5 分钟内 + amount 接近 → ConflictHint；边界（恰好 5 分钟 / 差 30ml）；新旧顺序无关；超窗口 / amount 差 > 30 / 非 feeding / 缺 amount → None；既有缺 amount 跳过继续找；软删除跳过；自身跳过；空列表；命中不修改事件（§9.2 不自动删）；多条取首个命中。
+- **`server/tests/integration/test_sync_contract_integration.py`**（3 项，真实 PG）：合法记录经 validator → EventService.record 写入 PG，双状态字段（synced/pending）读回一致；非法记录（缺 payload）被 validator 拦截，DB 无新行；ULID 非法被拦。含 `_reset_db` autouse fixture（与 test_event_repository 一致，避免跨 asyncio.run 死连接）。
+- **`server/app/sync/service/contract_validator.py`** 修复：`server_received_at` 占位从 naive `datetime.fromtimestamp(0)` 改为 `datetime.fromtimestamp(0, tz=UTC)`（避免依赖本地时区）。
+- **`deploy/docker-compose.yml`** 注释更新：sync-rules.yaml 已填充（非占位），按 family_id 分桶，冲突由应用层处理。
+
+### 决策与权衡
+
+- **契约校验为纯函数，不包成 DI 类**：`validate_sync_contract` / `detect_duplicate_feeding` 无状态，调用方在 Normalization（T013）或 sync 入口直接调用，无需容器托管。与架构 §5 "Protocol + DI" 不冲突——DI 用于有状态/依赖资源的组件，纯函数不必强行包装。
+- **集成测试验证"validator → EventService"链路而非单独 API**：T012 无 API 端点（PowerSync 上行入口在 T047 Android sync），验收"非法同步事件不进入业务"的最佳验证点是 validator 与 EventService 之间的契约——合法记录经 validator 后能被 service 写入、非法记录在 service 之前被拦且 DB 无新行。
+- **`_reset_db` autouse fixture**：集成测试各自 `asyncio.run` 创建独立事件循环，进程级 engine 绑定到首个循环后，后续循环拿死连接。与 test_event_repository 同模式（每个测试前后 `reset_db()` 重建 engine）。
+- **sync_status 传入而非默认**：`EventService.record` 的 `sync_status` 默认 `PENDING`，但同步上行的记录已是 `synced`（PowerSync 上行成功）。集成测试显式传 `sync_status=ev.sync_status`，反映真实链路（validator 产出 synced，service 据实写入）。
+
+### 测试与验收
+
+- 单元测试：47 项通过（contract_validator 33 + conflict_detector 14）。
+- 集成测试：3 项通过（真实 PG `AI_parenting_dev`）。
+- 全量：285 passed（191 unit 原 + 52 unit sync + 39 integration 原 + 3 integration sync），ruff/mypy 干净。
+- 验收标准达成：PowerSync 服务可读取 sync-rules.yaml 启动；非法同步事件不会进入业务处理（validator 拦截 + 集成测试覆盖）；pending_sync 与 processing_status 独立推进。
+
+### 红线与边界
+
+- 未读取/操作 `.env`；集成测试连 `AI_parenting_dev` 独立库；未碰 `AI-Parenting-Copilot/`。
+- 未改变架构边界（sync 模块为 §9 PowerSync 适配层，纯校验/检测，不含业务规则）。
+- 未引入新依赖、新迁移。
+
+### 下一步
+
+APC-T013 — Normalization 表单/语音文本解析与领域派生表写入（依赖 T009,T011；均已满足）。
 
 ---
 

@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.12.0] - 2026-08-13 - APC-T012 PowerSync 适配、同步契约校验与冲突软提示（Milestone 2 全部完成）
 - [0.11.0] - 2026-08-12 - APC-T011 PG LISTEN/NOTIFY 事件总线与事件变更触发器（补记，代码 2026-08-11 落地）
 - [0.10.0] - 2026-08-12 - APC-T010 Events API：创建、查询、纠错、软删除（补记，代码 2026-08-11 落地）
 - [0.7.1] - 2026-08-12 - APC-T007 修订：JwtService.parse 时钟不对称修复（注入 Clock，与 issue 对称）
@@ -26,6 +27,32 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.12.0] - 2026-08-13
+
+### Added — APC-T012 PowerSync 适配、同步契约校验与冲突软提示
+
+- **`server/app/sync/service/contract_validator.py`**（已存在，本轮补测试 + 修复）：`validate_sync_contract(record) -> ObservationEvent`——校验 §6.3 同步契约必填字段、ULID、source、payload、confidence；`payload`（契约名）→ `normalized_payload`（领域名）；产出 `sync_status=synced`、`processing_status=pending`（独立状态机）。非法记录抛 `ValidationError`，不进入 EventService。修复 `server_received_at` 占位为 `datetime.fromtimestamp(0, tz=UTC)`（原 naive 依赖本地时区）。
+- **`server/app/sync/service/conflict_detector.py`**（已存在，本轮补测试）：`detect_duplicate_feeding(new, recent) -> ConflictHint | None`——5 分钟内 + amount 差 ≤ 30ml → 软提示（§9.2 不自动删，不修改事件）。
+- **`config/powersync/sync-rules.yaml`**（已存在，T012 阶段确认填充完整）：按 `family_id` 分桶，冲突由应用层处理（§4）。
+- **`deploy/docker-compose.yml`**：sync-rules.yaml 挂载确认，注释更新（非占位）。
+- **测试**：
+  - `server/tests/unit/sync/test_contract_validator.py`（33 项）。
+  - `server/tests/unit/sync/test_conflict_detector.py`（14 项）。
+  - `server/tests/integration/test_sync_contract_integration.py`（3 项，真实 PG：validator → EventService 链路，非法记录被拦 DB 无新行）。
+
+### Decisions
+
+- 契约校验为纯函数，不包成 DI 类（无状态，调用方直接调用）。
+- 集成测试验证"validator → EventService"链路（T012 无 API 端点，PowerSync 上行入口在 T047）。
+- 集成测试 `_reset_db` autouse fixture（与 test_event_repository 一致，避免跨 asyncio.run 死连接）。
+
+### Verified
+
+- ruff / mypy 干净；285 passed（191 unit 原 + 52 unit sync + 39 integration 原 + 3 integration sync）。
+- Milestone 2（APC-T007 ~ T012）全部完成。
 
 ---
 

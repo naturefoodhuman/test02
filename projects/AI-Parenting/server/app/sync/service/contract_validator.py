@@ -37,7 +37,7 @@ pending_sync 与 processing_status 独立（APC-T012）：上行成功 → sync_
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from ...common.errors import ValidationError
@@ -127,7 +127,7 @@ def validate_sync_contract(record: dict[str, Any]) -> ObservationEvent:
         end_time=_parse_dt(record, "end_time", required=False),
         client_created_at=client_created_at,
         # server_received_at 由 EventService.record 用 Clock 覆盖；此处占位，service 会重置。
-        server_received_at=datetime.fromtimestamp(0),
+        server_received_at=datetime.fromtimestamp(0, tz=UTC),
         raw_input=record.get("raw_input"),
         normalized_payload=payload,
         confidence=float(confidence),

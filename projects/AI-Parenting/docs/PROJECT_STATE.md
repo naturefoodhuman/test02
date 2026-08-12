@@ -12,10 +12,10 @@
 
 ## 0. 当前里程碑
 
-**Milestone 2 — P0-M1 事件溯源与同步**（APC-T007 ~ APC-T012，进行中）
+**Milestone 2 — P0-M1 事件溯源与同步**（APC-T007 ~ APC-T012）✅ 全部完成
 
-> Milestone 1（APC-T001 ~ APC-T006）已完成；当前进入 Epic E02 事件层。
-> T010/T011 代码已落地（2026-08-11），本轮（2026-08-12）补齐文档与静态检查修复。
+> Milestone 1（APC-T001 ~ APC-T006）已完成；Milestone 2（Auth/事件/同步）已完成。
+> 下一步进入 Epic E02 剩余（Normalization + Baby State Engine，APC-T013 ~ T017）。
 
 ---
 
@@ -34,7 +34,7 @@
 | APC-T009 | ObservationEvent Domain、Repository 与幂等写入 | ✅ DONE | ObservationEvent Pydantic 契约 + Source/SyncStatus/ProcessingStatus 枚举 + SqlAlchemyObservationEventRepository（event_id 幂等 upsert）+ EventService(record/correct/soft_delete)；ruff/mypy 干净，207 测试通过 |
 | APC-T010 | Events API：创建、查询、纠错、软删除 | ✅ DONE | /api/v1/events POST/GET/{id}/correct/DELETE + RBAC(event:write/read) + EventContext(EventService+AuditService 共享 session) + @audit 留痕；ruff/mypy 干净，230 测试通过 |
 | APC-T011 | PG LISTEN/NOTIFY 事件总线与事件变更触发器 | ✅ DONE | 0004 迁移(observation_event AFTER INSERT/UPDATE/DELETE → pg_notify events.changed) + PgListenEventBus(asyncpg add_listener) + EventWorker(订阅+recover_pending 崩溃恢复) + EventsSettings.pg_listen_enabled；ruff/mypy 干净，230 测试通过 |
-| APC-T012 | PowerSync 适配、同步契约校验与冲突软提示基础 | 🔄 IN_PROGRESS | contract_validator.py + conflict_detector.py 已写，但未接入 DI/main、无测试、未文档化；2026-08-12 修复 contract_validator mypy 错误。待补：测试 + DI 装配 + 文档 |
+| APC-T012 | PowerSync 适配、同步契约校验与冲突软提示基础 | ✅ DONE | contract_validator（§6.3 契约校验 → ObservationEvent，synced/pending）+ conflict_detector（5 分钟内重复 feeding 软提示，§9.2 不自动删）+ sync-rules.yaml（按 family_id 分桶）+ 55 测试（52 unit + 3 integration）；ruff/mypy 干净，285 测试通过 |
 | APC-T013 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
@@ -125,28 +125,29 @@
   - `server/app/main.py` lifespan：`pg_listen_enabled` 时构造 PgListenEventBus + EventWorker 启动/停止；否则 InMemoryEventBus no-op。
   - 测试：`server/tests/integration/test_event_notify.py`（真实 PG：插入/更新/删除 observation_event 后收到 NOTIFY、payload 解析、worker 订阅消费、recover_pending 崩溃恢复）+ `server/tests/unit/events/test_event_bus.py`。
   - 验收：本地 dev 启用 `pg_listen_enabled` 后 worker 能订阅并打印事件变更日志；崩溃恢复扫描 pending 事件可补处理。
+- **APC-T012**：PowerSync 适配、同步契约校验与冲突软提示基础：
+  - `server/app/sync/service/contract_validator.py`：`validate_sync_contract(record) -> ObservationEvent`——校验 §6.3 同步契约必填字段（event_id/baby_id/family_id/event_type/client_created_at/payload/source）、ULID 合法性、source 合法值、payload 为 dict、confidence ∈ [0,1]；`payload`（契约名）映射 `normalized_payload`（领域名）；`server_received_at` 由服务端覆盖（占位 epoch）；产出 `sync_status=synced`、`processing_status=pending`（独立状态机，§6.2）。非法记录抛 `ValidationError`（400），不进入 EventService。
+  - `server/app/sync/service/conflict_detector.py`：`detect_duplicate_feeding(new, recent) -> ConflictHint | None`——同 baby + feeding + start_time 间隔 ≤ 5 分钟 + amount 差 ≤ 30ml → `ConflictHint`（软提示，§9.2 不自动删，不修改事件）；软删除/自身/缺 amount 跳过。
+  - `config/powersync/sync-rules.yaml`：按 `family_id` 分桶（family/user/baby/device/observation_event + feeding/diaper/sleep/temperature_log + derived_baby_state），冲突合并不在同步层（§4，应用层 conflict_detector 处理）。
+  - `deploy/docker-compose.yml`：sync-rules.yaml 已挂载，注释更新（T012 已填充，非占位）。
+  - 测试：`server/tests/unit/sync/test_contract_validator.py`（33 项：合法/缺字段/ULID/source/payload/confidence 边界/datetime 解析）+ `test_conflict_detector.py`（14 项：命中/边界/不命中/跳过/不修改）+ `server/tests/integration/test_sync_contract_integration.py`（3 项：合法记录经 validator→EventService 写入 PG 双状态字段正确；非法记录被拦 DB 无新行；ULID 非法被拦）。
+  - 验收：PowerSync 服务可读取 sync-rules.yaml 启动；非法同步事件不会进入业务处理（validator 拦截 + 集成测试覆盖）；pending_sync（sync_status）与 processing_status 独立推进。
 
 ---
 
 ## 3. 进行中
 
-**APC-T012 — PowerSync 适配、同步契约校验与冲突软提示基础**（半成品）：
-
-- 已写：`server/app/sync/service/contract_validator.py`（同步契约校验：必填字段 event_id/baby_id/family_id/event_type/start_time/client_created_at/source/payload、confidence 越界、构造 ObservationEvent）、`server/app/sync/service/conflict_detector.py`（5 分钟内疑似重复喂奶 → 软提示，不自动删除）。
-- 2026-08-12 修复 `contract_validator.py` mypy 错误（`_parse_dt` 返回 `datetime | None` 与 `ObservationEvent` 必填字段类型不匹配，加 assert 收窄）。
-- **缺口**（待补齐才算 T012 DONE）：
-  - 无测试（`server/app/sync/tests/` 空目录；TASK_BACKLOG 要求 `test_contract_validator.py`）。
-  - 未接入 DI / main.py（无 API 端点、无 PowerSync 配置加载入口）。
-  - `config/powersync/sync-rules.yaml` 仍为占位（T003 留待 T012 填充）。
-  - 未文档化（DEV_LOG/CHANGELOG 无 T012 记录）。
+无。APC-T012 已完成，Milestone 2（APC-T007 ~ APC-T012）全部 DONE。进入 Epic E02 剩余（Normalization + State Engine）。
 
 ---
 
 ## 4. 下一步
 
-1. **补齐 APC-T012**（当前半成品）：写 `test_contract_validator.py`（契约缺字段拒绝、confidence 越界、合法事件构造）+ `test_conflict_detector.py`（5 分钟内重复 feeding 生成 conflict hint）；接入 DI；填充 `sync-rules.yaml`；补 DEV_LOG/CHANGELOG。
-2. **APC-T013** — Normalization 表单/语音文本解析与领域派生表写入（依赖 T009,T011；均已满足）。
-3. **APC-T014** — 去重、纠错链处理与 Normalization Worker（依赖 T013）。
+按 MVP 路径（TASK_BACKLOG §4）推进 Epic E02 剩余：
+
+1. **APC-T013** — Normalization 表单/语音文本解析与领域派生表写入（依赖 T009,T011；均已满足）。
+2. **APC-T014** — 去重、纠错链处理与 Normalization Worker（依赖 T013）。
+3. **APC-T015** — Baby State Engine P0 Projection（依赖 T013）。
 
 ---
 
