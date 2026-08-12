@@ -30,6 +30,38 @@
 
 ---
 
+## 0.5 工作纪律铁律（用户 2026-08-12 授权，后续会话必须遵守）
+
+本项目开发采用**高度自主**模式，Agent 不得在任务中途停下来请示用户，除非满足下列停止条件之一：
+
+### 自主推进范围（一律自行处理，不请示）
+
+- 按 TASK_BACKLOG §4 MVP 路径顺序推进任务，逐个做到 DoD 满足。
+- 实现、测试、静态检查（ruff/mypy）、文档同步（PROJECT_STATE/DEV_LOG/CHANGELOG）。
+- 修复测试失败、lint/typecheck 错误、代码与文档脱节。
+- **Git 提交**：开发过程中有必要时**直接提交，不必向用户请示**。遵循 §3 Git 纪律（先 `git status`/`git fetch`、不覆盖用户提交、不 force push main、不提交 secrets/.env）。
+- 跨任务的小幅重构、命名对齐、依赖更新（无架构边界变更）。
+
+### 仅在以下情况停止并向用户汇报/请示
+
+1. **上下文接近 900K tokens**：强制触发——先更新所有维护文档（PROJECT_STATE/DEV_LOG/CHANGELOG/TASK_BACKLOG 状态）形成完整外部记忆快照，**再**暂停开发并向用户汇报当前进度与下一步。不要在 900K 之前因"任务做完一个"就停。
+2. **重大决策需用户裁决**：例如架构边界变更（需 ADR 但用户未授权）、引入新基础设施/新依赖、与 `AI-Parenting-Copilot/` 的隔离边界冲突、安全/隐私铁律的例外、用户先前指令相互矛盾。这类情况先写清问题与选项再请示，不要自行拍板。
+3. **遇到红线阻断**：如 harness 拦截 `.env` 操作、本地环境不可恢复的冲突、需要用户机器上的凭据/权限——已尝试合理绕过仍无法推进时，汇报阻塞点。
+
+### 禁止行为
+
+- **禁止**做完一个任务就停下问"是否继续/是否提交"——这违背自主推进授权。
+- **禁止**在未触达停止条件时提前汇报"本轮完成"并等待——应继续下一个任务。
+- **禁止**用请示掩盖本可自行决策的犹豫——能查文档/代码确认的不确定，先查再动手。
+
+### 提交节奏建议
+
+- 每个任务达到 DoD（功能+测试+静态检查+文档）后提交一次，commit message 遵循项目风格（`feat(t0xx):` / `fix(t0xx):` / `docs:` 等）。
+- 文档补齐/静态检查修复可单独提交，或与对应代码改动合并提交。
+- 提交前 `git status --short --branch` + `git fetch origin main`；本地有领先提交时保留，不 force push。
+
+---
+
 ## 1. 项目定位与关键边界
 
 - **项目实体**：`projects/AI-Parenting/`（本目录），从零重建。
@@ -53,7 +85,7 @@
 
 ---
 
-## 2. 当前真实状态（2026-08-02）
+## 2. 当前真实状态（2026-08-12）
 
 ### 已完成
 - 项目目录骨架（`server/app/` 下全部子模块、`android/`、`firmware/esp32c6/`、
@@ -61,18 +93,21 @@
 - `pyproject.toml`（依赖 + ruff + mypy + pytest 配置，Python 3.11+）。
 - `Makefile`（test/lint/typecheck/docs-check/governance-check/run-dev/infra-up/db-migrate）。
 - `.env.example`（PARENTING_ 前缀，分层加载）。
-- `docs/HANDOFF.md`（本文件）。
+- `docs/HANDOFF.md`、`docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/ADR/`。
+- **Milestone 1（APC-T001 ~ APC-T006）全部 DONE**：骨架、FastAPI 壳、Docker Compose + Alembic、28 表核心 Schema、结构化日志/metrics/tracing/health、审计服务 + @audit 装饰器。
+- **Milestone 2 进行中**：
+  - APC-T007 ~ APC-T011 **DONE**：Auth/RBAC Domain + JWT（HS256 标准库）、Auth API + 设备注册 + seed_family、ObservationEvent Domain + 幂等 upsert、Events API（create/list/correct/soft-delete）、PG LISTEN/NOTIFY 事件总线 + EventWorker 崩溃恢复。
+  - 全量 230 passed（191 unit + 39 integration），ruff/mypy 干净。
+  - 2026-08-12 修复 T007 遗留的 `JwtService.parse` 时钟不对称 bug（parse 持有注入 Clock，与 issue 对称）。
 
 ### 进行中
-- **APC-T001 初始化项目目录与工程元数据**（TaskList #1，in_progress）。
-  - 还差：`.gitignore`、`README.md`、`docs/PROJECT_STATE.md`、`docs/DEV_LOG.md`、
-    `docs/CHANGELOG.md`、`docs/ADR/ADR-001-project-bootstrap.md`、
-    `server/app/__init__.py` 等占位 `__init__.py`、`runtime/.gitkeep`。
-  - 验证：`make lint` 不因空项目失败；`make docs-check` 可运行。
+- **APC-T012 PowerSync 适配、同步契约校验与冲突软提示基础**（半成品）：
+  - 已写：`server/app/sync/service/contract_validator.py`（同步契约校验）、`conflict_detector.py`（5 分钟内重复 feeding 软提示）。
+  - 缺口：无测试、未接入 DI/main、`sync-rules.yaml` 仍占位、未文档化。2026-08-12 修复 contract_validator mypy 错误。
+  - 待补齐才算 DONE：测试 + DI 装配 + sync-rules.yaml + 文档。
 
 ### 未开始
-- APC-T002 ~ APC-T006（地基阶段，TaskList #2~#6，依赖关系已设置）。
-- APC-T007 ~ APC-T059（后续里程碑）。
+- APC-T013 ~ APC-T059（后续里程碑，见 TASK_BACKLOG）。
 
 ---
 
@@ -164,10 +199,13 @@ Markdown 用 `<!-- -->` 注释块。JSON 用 `_forge_trace` 字段。人类手�
 
 ## 8. 接手第一步
 
-1. 读本文件 + `docs/PROJECT_STATE.md` + `docs/TASK_BACKLOG.md`。
-2. 查 TaskList 确认当前 in_progress 任务（当前为 APC-T001）。
-3. 按 TASK_BACKLOG §4 MVP 路径顺序推进，每完成一个任务：
+1. 读本文件（含 **§0.5 工作纪律铁律**）+ `docs/PROJECT_STATE.md` + `docs/TASK_BACKLOG.md`。
+2. 查 TaskList 确认当前 in_progress 任务（当前为 **APC-T012**，半成品，缺口见 PROJECT_STATE §3）。
+3. 按 TASK_BACKLOG §4 MVP 路径顺序**自主推进**（见 §0.5，勿中途请示），每完成一个任务：
    - 更新 `docs/PROJECT_STATE.md` 与 `docs/TASK_BACKLOG.md` 状态。
    - 在 `docs/DEV_LOG.md` 记一轮，`docs/CHANGELOG.md` 记变更。
    - 满足 DoD（功能+测试+静态检查+文档+验收标准）后才标 DONE。
+   - **直接提交**（§0.5 授权，不必请示）。
 4. **不碰** `projects/AI-Parenting-Copilot/`，**不写**工厂根 docs。
+5. **外部记忆纪律**：代码落地后必须同步 PROJECT_STATE/DEV_LOG/CHANGELOG，避免"代码已提交但文档脱节"（T010/T011 曾出现此情况，2026-08-12 已补齐）。
+6. **停止条件**：仅当上下文接近 900K、遇重大决策需裁决、或红线阻断时才暂停汇报（详见 §0.5）。

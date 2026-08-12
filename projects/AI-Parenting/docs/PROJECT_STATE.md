@@ -15,6 +15,7 @@
 **Milestone 2 — P0-M1 事件溯源与同步**（APC-T007 ~ APC-T012，进行中）
 
 > Milestone 1（APC-T001 ~ APC-T006）已完成；当前进入 Epic E02 事件层。
+> T010/T011 代码已落地（2026-08-11），本轮（2026-08-12）补齐文档与静态检查修复。
 
 ---
 
@@ -28,12 +29,13 @@
 | APC-T004 | 核心数据库 Schema 初版 | ✅ DONE | 28 表 ORM + 初始迁移已应用，91 测试通过 |
 | APC-T005 | 结构化日志 / Metrics / Tracing / 健康端点 | ✅ DONE | structlog JSON + PII mask、Prometheus /metrics、OTel no-op tracing、/readyz 增强探活；ruff/mypy 干净，104 测试通过 |
 | APC-T006 | 审计日志服务与 @audit 装饰器 | ✅ DONE | AuditService append-only + @audit 装饰器 + 0002/0003 迁移（timestamptz + append trigger）；ruff/mypy 干净，118 测试通过 |
-| APC-T007 | Auth/RBAC Domain、Repository 与 JWT 服务 | ✅ DONE | Role(Admin/Caregiver/Viewer/System)+Principal+TokenClaims+权限表、PBKDF2 密码哈希、HS256 JWT（标准库）、AuthService(登录/RBAC/建家建人)、SqlAlchemyUserRepository；ruff/mypy 干净，160 测试通过 |
+| APC-T007 | Auth/RBAC Domain、Repository 与 JWT 服务 | ✅ DONE | Role(Admin/Caregiver/Viewer/System)+Principal+TokenClaims+权限表、PBKDF2 密码哈希、HS256 JWT（标准库）、AuthService(登录/RBAC/建家建人)、SqlAlchemyUserRepository；ruff/mypy 干净，160 测试通过。2026-08-12 修复 JwtService.parse 时钟不对称（注入 Clock，与 issue 对称） |
 | APC-T008 | Auth API、设备注册与 seed_family 脚本 | ✅ DONE | /api/v1/auth login/refresh/register-device/me + get_principal_dep 鉴权依赖 + DeviceRepository + seed_family.py；ruff/mypy 干净，169 测试通过 |
 | APC-T009 | ObservationEvent Domain、Repository 与幂等写入 | ✅ DONE | ObservationEvent Pydantic 契约 + Source/SyncStatus/ProcessingStatus 枚举 + SqlAlchemyObservationEventRepository（event_id 幂等 upsert）+ EventService(record/correct/soft_delete)；ruff/mypy 干净，207 测试通过 |
-| APC-T010 | Events API：创建、查询、纠错、软删除 | ✅ DONE | /api/v1/events POST/GET/{id}/correct/DELETE + RBAC(event:write/read) + EventContext(EventService+AuditService 共享 session) + @audit 留痕；ruff/mypy 干净，217 测试通过 |
+| APC-T010 | Events API：创建、查询、纠错、软删除 | ✅ DONE | /api/v1/events POST/GET/{id}/correct/DELETE + RBAC(event:write/read) + EventContext(EventService+AuditService 共享 session) + @audit 留痕；ruff/mypy 干净，230 测试通过 |
 | APC-T011 | PG LISTEN/NOTIFY 事件总线与事件变更触发器 | ✅ DONE | 0004 迁移(observation_event AFTER INSERT/UPDATE/DELETE → pg_notify events.changed) + PgListenEventBus(asyncpg add_listener) + EventWorker(订阅+recover_pending 崩溃恢复) + EventsSettings.pg_listen_enabled；ruff/mypy 干净，230 测试通过 |
-| APC-T012 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T012 | PowerSync 适配、同步契约校验与冲突软提示基础 | 🔄 IN_PROGRESS | contract_validator.py + conflict_detector.py 已写，但未接入 DI/main、无测试、未文档化；2026-08-12 修复 contract_validator mypy 错误。待补：测试 + DI 装配 + 文档 |
+| APC-T013 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -106,21 +108,45 @@
   - `server/app/settings.py` 增 `AuthSettings`（jwt_secret/jwt_algorithm/access_ttl_seconds/password_iterations）；`server/app/di.py` 装配 `JwtService`/`PasswordHasher` 无状态单例；`parenting-env.example` 增 `PARENTING_AUTH__*` 样例。
   - 测试：`server/tests/unit/auth/`（test_password 7 + test_jwt 10 + test_auth_service 22，含 RBAC allow/deny、密码哈希、JWT 签发解析篡改/过期/alg=none 防御）+ `server/tests/integration/test_auth.py` 3（端到端建家建人哈希存储、authenticate 成功/失败、JWT 往返），160 passed。
   - 验收：可创建 family/user；Admin 可通过鉴权依赖获得 Principal；非授权角色访问受限方法被拒（ForbiddenError）；密码不得明文存储（PBKDF2）；JWT 含 user_id/family_id/role/device_id。
+  - **2026-08-12 修复**：`Hs256JwtService.parse` 原硬读 `datetime.now()` 做过期校验，与 `issue` 用注入 Clock 不对称——FixedClock 签发的 token 跨天后被 wall clock 误判过期（`test_issue_and_authenticate_token_roundtrip` 失败）。改为 `parse` 持有注入 Clock（构造函数加 `clock` 参数，默认 SystemClock），与 `issue` 对称；DI 装配传 container.clock；测试 fixture 传同一 FixedClock。详见 DEV_LOG Round 10 与 CHANGELOG [0.7.1]。
+- **APC-T010**：Events API（创建/查询/纠错/软删除）：
+  - `server/app/events/api/routes.py`（`/api/v1/events` POST/GET/`{id}/correct`/DELETE `{id}`）：POST 以 event_id 幂等（架构 §505）；correct 走 correction 链（软删除旧 + 新事件 correction_of 指向旧）；DELETE 置 is_deleted=true（不物理删除，§5.1）；GET 按 start_time DESC、默认排除软删除、支持 baby_id/family_id/event_type 过滤。
+  - `server/app/di.py` 增 `EventContext`（dataclass：EventService + AuditService 共享同一请求 session，§10.4 不可绕过，避免 T008 阶段 audit 与业务跨 session 的不一致窗口）+ `get_event_context_dep`（按请求构造，yield 后 dispose）。
+  - RBAC：`event:write`（POST/DELETE/correct）、`event:read`（GET），deny → ForbiddenError 403；`AuthService.authorize` 判定。
+  - 审计：mutating 操作（record/correct/soft_delete）经 `EventService` 接 `ctx.audit_service` 留痕（与 EventService 共享 session，同事务提交）。
+  - `server/app/main.py` 注册 events 路由。
+  - 测试：`server/tests/integration/test_events_api.py`（HTTP 流程：create/幂等/list 过滤排序/correction 链/soft delete/RBAC deny/audit 留痕，含 Fake 替身与真实 PG 两类）。
+  - 验收：同一 family/baby 可查询事件时间线；软删除事件不出现在普通查询但审计可追溯；所有 mutating 操作有审计。
+- **APC-T011**：PG LISTEN/NOTIFY 事件总线与事件变更触发器：
+  - `server/migrations/versions/0004_event_notify_trigger.py`：`observation_event` AFTER INSERT/UPDATE/DELETE 触发 `pg_notify('events.changed', json)`，payload 含 event_id/baby_id/operation（用 `pg_notify` 而非 `NOTIFY` 语句以携带 JSON）。
+  - `server/app/common/event_bus.py` 增 `PgListenEventBus`（asyncpg 独立连接 `add_listener` 订阅 `events.changed`，不与 SQLAlchemy 池混用；通知投递到 asyncio queue 供消费循环处理）。
+  - `server/app/events/service/event_worker.py`：`EventWorker`（订阅 events.changed + `recover_pending` 崩溃恢复——扫描 `processing_status=pending` 事件重新投递，NOTIFY 不持久化靠状态扫描补偿；at-least-once 投递，业务幂等由消费方保证）。
+  - `server/app/settings.py` 增 `EventsSettings.pg_listen_enabled`（dev 默认 False 用 InMemoryEventBus，prod/集成测试置 True 启用 PgListenEventBus）。
+  - `server/app/main.py` lifespan：`pg_listen_enabled` 时构造 PgListenEventBus + EventWorker 启动/停止；否则 InMemoryEventBus no-op。
+  - 测试：`server/tests/integration/test_event_notify.py`（真实 PG：插入/更新/删除 observation_event 后收到 NOTIFY、payload 解析、worker 订阅消费、recover_pending 崩溃恢复）+ `server/tests/unit/events/test_event_bus.py`。
+  - 验收：本地 dev 启用 `pg_listen_enabled` 后 worker 能订阅并打印事件变更日志；崩溃恢复扫描 pending 事件可补处理。
 
 ---
 
 ## 3. 进行中
 
-无。APC-T007 已完成，进入 Epic E02（权限、事件、同步与派生状态）。
+**APC-T012 — PowerSync 适配、同步契约校验与冲突软提示基础**（半成品）：
+
+- 已写：`server/app/sync/service/contract_validator.py`（同步契约校验：必填字段 event_id/baby_id/family_id/event_type/start_time/client_created_at/source/payload、confidence 越界、构造 ObservationEvent）、`server/app/sync/service/conflict_detector.py`（5 分钟内疑似重复喂奶 → 软提示，不自动删除）。
+- 2026-08-12 修复 `contract_validator.py` mypy 错误（`_parse_dt` 返回 `datetime | None` 与 `ObservationEvent` 必填字段类型不匹配，加 assert 收窄）。
+- **缺口**（待补齐才算 T012 DONE）：
+  - 无测试（`server/app/sync/tests/` 空目录；TASK_BACKLOG 要求 `test_contract_validator.py`）。
+  - 未接入 DI / main.py（无 API 端点、无 PowerSync 配置加载入口）。
+  - `config/powersync/sync-rules.yaml` 仍为占位（T003 留待 T012 填充）。
+  - 未文档化（DEV_LOG/CHANGELOG 无 T012 记录）。
 
 ---
 
 ## 4. 下一步
 
-按 MVP 路径（TASK_BACKLOG §4）推进 Epic E02：
-
-1. **APC-T008** — Auth API、设备注册与 seed_family 脚本（依赖 T004,T007；T007 已满足）。
-2. **APC-T009** — ObservationEvent Domain、Repository 与幂等写入（依赖 T004,T008）。
+1. **补齐 APC-T012**（当前半成品）：写 `test_contract_validator.py`（契约缺字段拒绝、confidence 越界、合法事件构造）+ `test_conflict_detector.py`（5 分钟内重复 feeding 生成 conflict hint）；接入 DI；填充 `sync-rules.yaml`；补 DEV_LOG/CHANGELOG。
+2. **APC-T013** — Normalization 表单/语音文本解析与领域派生表写入（依赖 T009,T011；均已满足）。
+3. **APC-T014** — 去重、纠错链处理与 Normalization Worker（依赖 T013）。
 
 ---
 

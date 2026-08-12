@@ -12,6 +12,9 @@
 
 ## Latest Index
 
+- 2026-08-12 · Round 12 · APC-T012 PowerSync 适配半成品修复（contract_validator mypy 修复 + 文档补齐 T010/T011 外部记忆）
+- 2026-08-12 · Round 11 · APC-T011 PG LISTEN/NOTIFY 事件总线与事件变更触发器补记（代码 2026-08-11 已落地，本轮补文档）
+- 2026-08-12 · Round 10 · APC-T010 Events API 补记 + T007 JwtService.parse 时钟不对称修复（代码 2026-08-11 已落地，本轮补文档 + 修跨天测试失败）
 - 2026-08-11 · Round 09 · APC-T009 ObservationEvent Domain、Repository 与幂等写入完成（ObservationEvent Pydantic 契约 + Source/SyncStatus/ProcessingStatus 枚举 + SqlAlchemyObservationEventRepository event_id 幂等 upsert + EventService record/correct/soft_delete）
 - 2026-08-11 · Round 08 · APC-T008 Auth API、设备注册与 seed_family 脚本完成（/api/v1/auth login/refresh/register-device/me + 鉴权依赖 + DeviceRepository + seed 脚本）
 - 2026-08-11 · Round 07 · APC-T007 Auth/RBAC Domain、Repository 与 JWT 服务完成（进入 Epic E02；PBKDF2 密码哈希 + HS256 JWT 标准库实现 + RBAC 权限表）
@@ -21,6 +24,102 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 12 · 2026-08-12 · APC-T012 PowerSync 适配半成品修复与外部记忆补齐
+
+### 背景
+
+接手时发现 T010/T011 代码已于 2026-08-11 落地并提交（`5721e4e`），但 PROJECT_STATE/DEV_LOG/CHANGELOG 只记到 T009；T012 的 contract_validator/conflict_detector 已写但未接入、无测试、未文档化，且有 mypy 错误。本轮目标：补齐外部记忆体系 + 修复静态检查 + 记录 T012 半成品状态。
+
+### 交付
+
+- **T012 contract_validator mypy 修复**：`server/app/sync/service/contract_validator.py` 的 `ObservationEvent` 构造中 `start_time`/`client_created_at` 来自 `_parse_dt`（返回 `datetime | None`），与必填字段类型不匹配。改为先提取局部变量 + `assert is not None` 收窄（`required=True` 缺失已抛 ValidationError，assert 是 mypy 收窄而非运行时新分支）。
+- **pyproject mypy override 补 `server.tests.*`**：原 `[[tool.mypy.overrides]] module = "tests.*"` 不匹配实际测试路径 `server/tests/`（模块名 `server.tests.*`），导致 T010/T011 测试文件的 mypy 错误未被忽略。补 `server.tests.*` override（与 `tests.*` 一致 `ignore_errors = true`，符合项目渐进式收紧策略）。
+- **外部记忆补齐**：PROJECT_STATE 任务表补 T010/T011 DONE + T012 IN_PROGRESS；已完成能力补 T010/T011 详情；进行中改为 T012 半成品（列缺口）；下一步改为补齐 T012 → T013。DEV_LOG 加 Round 10/11/12。CHANGELOG 加 [0.7.1]/[0.10.0]/[0.11.0]。
+
+### 决策与权衡
+
+- **T012 不在本轮标 DONE**：contract_validator/conflict_detector 代码虽写，但无测试、未接入 DI/main、sync-rules.yaml 仍占位、未文档化——不满足通用 DoD（测试 + 接入 + 文档）。记为 IN_PROGRESS 并列明缺口，避免"代码存在即 DONE"的虚假完成。
+- **mypy override 用 `ignore_errors` 而非逐个修测试类型**：测试替身（`_FakeAuditService` 等）与生产 Protocol/具体类的类型差异是测试常见模式，逐个加 `type: ignore` 易冗余且触发 `warn_unused_ignores`。整体 ignore 与项目"渐进式收紧"（`disallow_untyped_defs = false`）一致；后续可单独收紧测试类型。
+
+### 测试与验收
+
+- `make lint` ✅（ruff check + format check，121 文件）；`make typecheck` ✅（mypy，116 source files no issues）。
+- `pytest server/tests/`：**230 passed**（191 unit + 39 integration），与 T011 记录一致。
+
+### 红线与边界
+
+- 未读取/操作 `.env`；未碰 `AI-Parenting-Copilot/`；未写入工厂根 docs。
+- 未改变架构边界（sync 模块为 §9 PowerSync 适配层，contract_validator 是同步契约校验，非业务逻辑）。
+
+### 下一步
+
+补齐 APC-T012（测试 + DI 接入 + sync-rules.yaml + 文档），然后 APC-T013 Normalization。
+
+---
+
+## Round 11 · 2026-08-12 · APC-T011 PG LISTEN/NOTIFY 事件总线补记
+
+### 背景
+
+T011 代码于 2026-08-11 落地并提交（`5721e4e`），但 DEV_LOG/CHANGELOG 未记录。本轮补记以保持外部记忆与代码一致。
+
+### 交付（代码 2026-08-11 已落地）
+
+- **`server/migrations/versions/0004_event_notify_trigger.py`**：`observation_event` AFTER INSERT/UPDATE/DELETE 触发 `pg_notify('events.changed', json)`，payload 含 event_id/baby_id/operation（用 `pg_notify` 而非 `NOTIFY` 语句以携带 JSON payload；原生 NOTIFY 只支持字符串）。
+- **`server/app/common/event_bus.py` 增 `PgListenEventBus`**：asyncpg 独立连接 `add_listener` 订阅 `events.changed`（不与 SQLAlchemy 池混用，避免连接池语义冲突）；通知投递到 asyncio queue 供消费循环处理；at-least-once 投递，业务幂等由消费方保证。
+- **`server/app/events/service/event_worker.py`**：`EventWorker`（订阅 events.changed + `recover_pending` 崩溃恢复——扫描 `processing_status=pending` 事件重新投递给 handler；NOTIFY 不持久化，错过的通知靠状态扫描补偿；handler 当前记录结构化日志，Normalization 消费方在 T013+ 接入）。
+- **`server/app/settings.py` 增 `EventsSettings.pg_listen_enabled`**：dev 默认 False（用 InMemoryEventBus no-op），prod/集成测试置 True 启用 PgListenEventBus。
+- **`server/app/main.py` lifespan**：`pg_listen_enabled` 时构造 PgListenEventBus + EventWorker 启动/停止；否则 InMemoryEventBus。/readyz 健康检查含 `event_bus` 状态。
+- 测试：`server/tests/integration/test_event_notify.py`（真实 PG：插入/更新/删除后收到 NOTIFY、payload 解析、worker 订阅消费、recover_pending 崩溃恢复）+ `server/tests/unit/events/test_event_bus.py`。
+
+### 决策与权衡
+
+- **asyncpg 独立连接而非 SQLAlchemy 事件**：SQLAlchemy 的 `pg_listen` 封装在 async 池语义下较重且与 ORM session 生命周期耦合；asyncpg `add_listener` 轻量、独立连接、回调式，适合长连接监听场景。与架构 §4.1 "PG LISTEN/NOTIFY 事件总线"一致。
+- **崩溃恢复用 processing_status=pending 扫描**：NOTIFY 不持久化（PG 重启或 worker 离线期间的通知会丢失），靠 `processing_status=pending` 状态扫描补偿——这是架构 §11 "at-least-once + 幂等消费 + 崩溃恢复用 processing_status" 的标准做法。消费方（Normalization）必须幂等（按 event_id 去重 + 状态推进）。
+- **dev 默认关闭 pg_listen**：dev/mock 环境无需真实 PG NOTIFY，InMemoryEventBus no-op 即可；集成测试显式置 True。避免 dev 启动强依赖 PG。
+
+### 验证
+
+- `pytest server/tests/`：230 passed（含 test_event_notify.py 集成 + test_event_bus.py 单元）。
+- 验收：本地 dev 启用 `pg_listen_enabled` 后 worker 能订阅并打印事件变更日志；崩溃恢复扫描 pending 事件可补处理。
+
+---
+
+## Round 10 · 2026-08-12 · APC-T010 Events API 补记 + T007 JwtService.parse 时钟不对称修复
+
+### 背景
+
+T010 代码于 2026-08-11 落地并提交（`5721e4e`），但 DEV_LOG/CHANGELOG 未记录；且接手时 `make test` 有 1 个失败 `test_issue_and_authenticate_token_roundtrip`（TokenExpiredError）。本轮补记 T010 + 修复 T007 遗留的时钟不对称 bug。
+
+### 交付
+
+#### T010 Events API（代码 2026-08-11 已落地）
+
+- **`server/app/events/api/routes.py`**：`/api/v1/events` POST/GET/`{id}/correct`/DELETE `{id}`。POST 以 event_id 幂等（架构 §505）；correct 走 correction 链（软删除旧 + 新事件 correction_of 指向旧）；DELETE 置 is_deleted=true（不物理删除，§5.1）；GET 按 start_time DESC、默认排除软删除、支持 baby_id/family_id/event_type 过滤。
+- **`server/app/di.py` 增 `EventContext`**（dataclass：EventService + AuditService 共享同一请求 session，§10.4 不可绕过，避免 T008 阶段 audit 与业务跨 session 的不一致窗口）+ `get_event_context_dep`（按请求构造，yield 后 dispose）。
+- RBAC：`event:write`（POST/DELETE/correct）、`event:read`（GET），deny → ForbiddenError 403。
+- 审计：mutating 操作经 `EventService` 接 `ctx.audit_service` 留痕（共享 session，同事务提交）。
+- 测试：`server/tests/integration/test_events_api.py`。
+
+#### T007 JwtService.parse 时钟不对称修复（2026-08-12）
+
+- **问题**：`Hs256JwtService.parse` 原硬读 `datetime.now(tz=UTC)` 做过期校验，而 `issue` 用注入 Clock（AuthService 持有 `self._clock`）。测试 fixture `clock=FixedClock(2026-08-11 12:00)` 签发 token（exp=13:00），但今天真实日期 2026-08-12，`parse` 用 wall clock 校验 → 过期 → `test_issue_and_authenticate_token_roundtrip` 失败。
+- **修复**：`Hs256JwtService` 构造函数加 `clock: Clock | None = None`（默认 SystemClock），`parse` 用 `self._clock.now()` 过期校验，与 `issue` 对称。Protocol `JwtService.parse` 签名不变（向后兼容）。DI 装配传 container.clock；测试 fixture `jwt_svc` 传同一 FixedClock。
+- 文件：`server/app/auth/service/jwt.py`、`server/app/di.py`、`server/tests/unit/auth/test_auth_service.py`。
+
+### 决策与权衡
+
+- **修 JWT 时钟而非调测试 fixture 时间**：根因是 `parse` 与 `issue` 时钟来源不对称（设计缺陷），不是测试时间设置问题。改 fixture 用真实 now 会让测试依赖 wall clock（flaky）。正确修法是让 `parse` 也接受注入 Clock，测试可控、生产路径仍用 SystemClock，与项目"测试通过注入替身控制时间，不依赖系统时钟"（common/clock.py docstring）原则一致。
+- **Protocol 不变**：`JwtService.parse(token) -> TokenClaims` 签名不变，只实现类构造函数加参数，向后兼容，不影响其他实现/测试。
+
+### 验证
+
+- 修复前：`make test` 1 failed（test_issue_and_authenticate_token_roundtrip TokenExpiredError）。
+- 修复后：`make lint` ✅、`make typecheck` ✅、`pytest server/tests/` **230 passed**。
+- 验收 T010：同一 family/baby 可查询事件时间线；软删除事件不出现在普通查询但审计可追溯；所有 mutating 操作有审计。
 
 ---
 
