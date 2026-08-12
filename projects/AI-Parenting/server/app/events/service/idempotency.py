@@ -114,9 +114,7 @@ class EventService:
         if not is_valid_ulid(baby_id):
             raise ValidationError("Invalid baby_id", evidence={"baby_id": baby_id})
         if not is_valid_ulid(family_id):
-            raise ValidationError(
-                "Invalid family_id", evidence={"family_id": family_id}
-            )
+            raise ValidationError("Invalid family_id", evidence={"family_id": family_id})
 
         event = ObservationEvent(
             event_id=event_id,
@@ -191,9 +189,7 @@ class EventService:
             )
         original = await self._repo.get(correction_of)
         if original is None:
-            raise NotFoundError(
-                "Original event not found", evidence={"event_id": correction_of}
-            )
+            raise NotFoundError("Original event not found", evidence={"event_id": correction_of})
 
         # 软删除旧事件（不物理删除，§5.1）。
         await self._repo.soft_delete(correction_of)

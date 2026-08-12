@@ -135,16 +135,12 @@ class ObservationEvent(BaseModel):
     raw_input: dict[str, Any] | None = Field(
         default=None, description="原始输入（语音文本/图片/OCR/表单），可能含 PII"
     )
-    normalized_payload: dict[str, Any] = Field(
-        description="归一化载荷（结构化，payload 承载处）"
-    )
+    normalized_payload: dict[str, Any] = Field(description="归一化载荷（结构化，payload 承载处）")
     confidence: float = Field(
         default=1.0, ge=0.0, le=1.0, description="置信度（0.0-1.0，manual=1.0）"
     )
     source: Source = Field(description="事件来源（架构 §6.2/§6.3）")
-    attachments: list[str] = Field(
-        default_factory=list, description="附件 media_asset ULID 列表"
-    )
+    attachments: list[str] = Field(default_factory=list, description="附件 media_asset ULID 列表")
     correction_of: str | None = Field(
         default=None, description="被纠正事件的 event_id（correction 链，§5.1）"
     )

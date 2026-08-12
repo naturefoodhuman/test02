@@ -100,6 +100,10 @@ exclude = ["server/migrations/versions/", "android/", "firmware/"]
 module = "tests.*"
 ignore_errors = true
 
+[[tool.mypy.overrides]]
+module = "server.tests.*"
+ignore_errors = true
+
 # ============================================================
 # Pytest
 # ============================================================

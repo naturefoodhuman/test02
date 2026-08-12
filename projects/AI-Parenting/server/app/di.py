@@ -87,8 +87,9 @@ def build_container(settings: Settings | None = None) -> Container:
     # dev 模式默认进程内事件总线；prod 在 APC-T003+ 替换为 PG LISTEN/NOTIFY。
     event_bus: EventBus = InMemoryEventBus()
     # Auth 无状态单例（APC-T007）：HS256 JWT + PBKDF2 密码哈希。
+    # JwtService 过期校验用同一 clock（与 AuthService.issue_token 对称）。
     jwt_service: JwtService = Hs256JwtService(
-        secret=s.auth.jwt_secret, access_ttl_seconds=s.auth.access_ttl_seconds
+        secret=s.auth.jwt_secret, access_ttl_seconds=s.auth.access_ttl_seconds, clock=clock
     )
     password_hasher: PasswordHasher = Pbkdf2PasswordHasher(iterations=s.auth.password_iterations)
     return Container(

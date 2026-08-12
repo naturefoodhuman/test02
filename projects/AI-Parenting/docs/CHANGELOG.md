@@ -13,6 +13,9 @@
 
 ## Latest Index
 
+- [0.11.0] - 2026-08-12 - APC-T011 PG LISTEN/NOTIFY 事件总线与事件变更触发器（补记，代码 2026-08-11 落地）
+- [0.10.0] - 2026-08-12 - APC-T010 Events API：创建、查询、纠错、软删除（补记，代码 2026-08-11 落地）
+- [0.7.1] - 2026-08-12 - APC-T007 修订：JwtService.parse 时钟不对称修复（注入 Clock，与 issue 对称）
 - [0.9.0] - 2026-08-11 - APC-T009 ObservationEvent Domain、Repository 与幂等写入
 - [0.8.0] - 2026-08-11 - APC-T008 Auth API、设备注册与 seed_family 脚本
 - [0.7.0] - 2026-08-11 - APC-T007 Auth/RBAC Domain、Repository 与 JWT 服务（进入 Epic E02）
@@ -23,6 +26,66 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.11.0] - 2026-08-12
+
+### Added — APC-T011 PG LISTEN/NOTIFY 事件总线与事件变更触发器（补记）
+
+- **`server/migrations/versions/0004_event_notify_trigger.py`**：`observation_event` AFTER INSERT/UPDATE/DELETE → `pg_notify('events.changed', json)`，payload 含 event_id/baby_id/operation（用 `pg_notify` 携带 JSON）。
+- **`server/app/common/event_bus.py` 增 `PgListenEventBus`**：asyncpg 独立连接 `add_listener` 订阅 `events.changed`，通知投递到 asyncio queue；at-least-once 投递，业务幂等由消费方保证。
+- **`server/app/events/service/event_worker.py`**：`EventWorker`（订阅 events.changed + `recover_pending` 崩溃恢复——扫描 `processing_status=pending` 事件重新投递；NOTIFY 不持久化靠状态扫描补偿）。
+- **`server/app/settings.py` 增 `EventsSettings.pg_listen_enabled`**：dev 默认 False（InMemoryEventBus no-op），prod/集成测试置 True。
+- **`server/app/main.py` lifespan**：`pg_listen_enabled` 时构造 PgListenEventBus + EventWorker 启动/停止；/readyz 含 `event_bus` 状态。
+- 测试：`server/tests/integration/test_event_notify.py` + `server/tests/unit/events/test_event_bus.py`。
+
+### Decisions
+
+- **asyncpg 独立连接**：长连接监听场景，避免与 SQLAlchemy 池语义耦合（架构 §4.1）。
+- **崩溃恢复用 processing_status=pending 扫描**：NOTIFY 不持久化，靠状态扫描补偿（架构 §11 at-least-once + 幂等）。
+- **dev 默认关闭 pg_listen**：dev/mock 无需真实 PG NOTIFY，避免启动强依赖 PG。
+
+### Verified
+
+- ruff / mypy 干净；230 passed（含 test_event_notify 集成 + test_event_bus 单元）。
+
+---
+
+## [0.10.0] - 2026-08-12
+
+### Added — APC-T010 Events API：创建、查询、纠错、软删除（补记）
+
+- **`server/app/events/api/routes.py`**（`/api/v1/events`）：
+  - `POST /events`：创建事件（event_id 幂等，架构 §505；需 event:write）。
+  - `GET /events`：查询时间线（按 start_time DESC、默认排除软删除、支持 baby_id/family_id/event_type 过滤；需 event:read）。
+  - `POST /events/{event_id}/correct`：纠错（correction 链，软删除旧 + 新事件 correction_of 指向旧；需 event:write）。
+  - `DELETE /events/{event_id}`：软删除（is_deleted=true，不物理删除，§5.1；需 event:write）。
+- **`server/app/di.py` 增 `EventContext`**（EventService + AuditService 共享同一请求 session，§10.4 不可绕过，避免 T008 阶段 audit 与业务跨 session 不一致窗口）+ `get_event_context_dep`。
+- RBAC：`event:write`/`event:read`，deny → ForbiddenError 403；审计：mutating 操作经 EventService 接 ctx.audit_service 留痕（同事务提交）。
+- 测试：`server/tests/integration/test_events_api.py`（HTTP 流程：create/幂等/list 过滤排序/correction 链/soft delete/RBAC deny/audit 留痕）。
+
+### Verified
+
+- ruff / mypy 干净；230 passed。
+
+---
+
+## [0.7.1] - 2026-08-12
+
+### Fixed — APC-T007 修订：JwtService.parse 时钟不对称
+
+- **问题**：`Hs256JwtService.parse` 原硬读 `datetime.now(tz=UTC)` 做过期校验，与 `issue` 用注入 Clock 不对称。测试用 `FixedClock(2026-08-11 12:00)` 签发 token（exp=13:00），跨天后真实时间 2026-08-12 校验 → `TokenExpiredError`，`test_issue_and_authenticate_token_roundtrip` 失败。
+- **修复**：`Hs256JwtService` 构造函数加 `clock: Clock | None = None`（默认 SystemClock），`parse` 用 `self._clock.now()` 过期校验，与 `issue` 对称。Protocol `JwtService.parse` 签名不变（向后兼容）。DI 装配传 container.clock；测试 fixture 传同一 FixedClock。
+- 文件：`server/app/auth/service/jwt.py`、`server/app/di.py`、`server/tests/unit/auth/test_auth_service.py`。
+
+### Decisions
+
+- 修 JWT 时钟而非调测试 fixture 时间：根因是 `parse`/`issue` 时钟来源不对称（设计缺陷），改 fixture 用真实 now 会让测试依赖 wall clock（flaky）。正确修法是让 `parse` 接受注入 Clock，与 `common/clock.py` "测试通过注入替身控制时间" 原则一致。
+
+### Verified
+
+- 修复前：1 failed（test_issue_and_authenticate_token_roundtrip）；修复后：230 passed，ruff/mypy 干净。
 
 ---
 

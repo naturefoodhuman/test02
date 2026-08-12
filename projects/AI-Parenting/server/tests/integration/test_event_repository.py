@@ -95,9 +95,7 @@ def test_upsert_writes_event_end_to_end():
             # 读回验证。
             from server.app.models.events import ObservationEvent as Orm
 
-            row = (
-                await session.execute(select(Orm).where(Orm.id == event_id))
-            ).scalar_one()
+            row = (await session.execute(select(Orm).where(Orm.id == event_id))).scalar_one()
         return {
             "event_id": row.id,
             "event_type": row.event_type,
@@ -189,9 +187,7 @@ def test_correct_chain_soft_deletes_original_and_links_correction_of():
                 await session.execute(select(Orm).where(Orm.id == original_id))
             ).scalar_one()
             corrected_row = (
-                await session.execute(
-                    select(Orm).where(Orm.id == corrected.event_id)
-                )
+                await session.execute(select(Orm).where(Orm.id == corrected.event_id))
             ).scalar_one()
         return {
             "original_deleted": original_row.is_deleted,
@@ -230,9 +226,7 @@ def test_soft_delete_marks_is_deleted_not_physical():
             await session.commit()
             from server.app.models.events import ObservationEvent as Orm
 
-            row = (
-                await session.execute(select(Orm).where(Orm.id == event_id))
-            ).scalar_one()
+            row = (await session.execute(select(Orm).where(Orm.id == event_id))).scalar_one()
             # get 应过滤软删除 → None。
             repo = SqlAlchemyObservationEventRepository(session)
             visible = await repo.get(event_id)
@@ -310,6 +304,7 @@ def test_dual_status_fields_persist():
             await session.commit()
             repo = SqlAlchemyObservationEventRepository(session)
             ev = await repo.get(event_id)
+            assert ev is not None, "事件应已写入"
         return {
             "sync_status": ev.sync_status.value,
             "processing_status": ev.processing_status.value,

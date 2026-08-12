@@ -120,13 +120,15 @@ def hasher() -> PasswordHasher:
 
 
 @pytest.fixture
-def jwt_svc() -> JwtService:
-    return Hs256JwtService(secret="test-secret", access_ttl_seconds=3600)
+def clock() -> FixedClock:
+    return FixedClock(datetime(2026, 8, 11, 12, 0, tzinfo=UTC))
 
 
 @pytest.fixture
-def clock() -> FixedClock:
-    return FixedClock(datetime(2026, 8, 11, 12, 0, tzinfo=UTC))
+def jwt_svc(clock: FixedClock) -> JwtService:
+    # parse 的过期校验用同一注入时钟，与 issue 对称；
+    # 避免 FixedClock 签发的 token 被 wall clock 跨天误判过期。
+    return Hs256JwtService(secret="test-secret", access_ttl_seconds=3600, clock=clock)
 
 
 @pytest.fixture

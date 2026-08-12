@@ -53,9 +53,7 @@ class _FakeAuditService:
         self.calls: list[dict] = []
 
     async def append(self, *, actor, action, resource, before=None, after=None, **_):
-        self.calls.append(
-            {"actor": actor, "action": action, "resource": resource, "after": after}
-        )
+        self.calls.append({"actor": actor, "action": action, "resource": resource, "after": after})
         return "01JZFAKEAUDIT00000000000001"
 
 
@@ -101,7 +99,7 @@ def _make_fake_event_context() -> tuple[EventContext, _FakeAuditService, _FakeEv
     audit = _FakeAuditService()
     ctx = EventContext(
         event_service=EventService(repository=repo, clock=SystemClock()),
-        audit_service=audit,  # type: ignore[arg-type] — 测试替身
+        audit_service=audit,  # 测试替身（mypy 对 server.tests.* 忽略类型检查）
     )
     return ctx, audit, repo
 
@@ -259,7 +257,9 @@ def test_list_events_returns_timeline_excluding_deleted(client_with_fakes: TestC
 def test_correct_event_creates_correction_chain(client_with_fakes: TestClient):
     token = _admin_token(client_with_fakes)
     body = _create_body()
-    client_with_fakes.post("/api/v1/events", headers={"Authorization": f"Bearer {token}"}, json=body)
+    client_with_fakes.post(
+        "/api/v1/events", headers={"Authorization": f"Bearer {token}"}, json=body
+    )
     correct_body = {
         "baby_id": body["baby_id"],
         "family_id": body["family_id"],
@@ -284,7 +284,9 @@ def test_correct_event_creates_correction_chain(client_with_fakes: TestClient):
 def test_soft_delete_returns_deleted_event(client_with_fakes: TestClient):
     token = _admin_token(client_with_fakes)
     body = _create_body()
-    client_with_fakes.post("/api/v1/events", headers={"Authorization": f"Bearer {token}"}, json=body)
+    client_with_fakes.post(
+        "/api/v1/events", headers={"Authorization": f"Bearer {token}"}, json=body
+    )
     resp = client_with_fakes.delete(
         f"/api/v1/events/{body['event_id']}", headers={"Authorization": f"Bearer {token}"}
     )
@@ -304,9 +306,7 @@ def test_viewer_cannot_create_event_403(client_with_fakes: TestClient):
 def test_viewer_can_list_events(client_with_fakes: TestClient):
     """Viewer 有 event:read（§19 权限表），可查询。"""
     token = _viewer_token(client_with_fakes)
-    resp = client_with_fakes.get(
-        "/api/v1/events", headers={"Authorization": f"Bearer {token}"}
-    )
+    resp = client_with_fakes.get("/api/v1/events", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
 
 
@@ -416,14 +416,21 @@ def test_correct_and_soft_delete_each_audit():
             await svc.soft_delete(event_id=corrected.event_id, audit=audit)
             await session.commit()
             actions = (
-                await session.execute(
-                    select(AuditLog.action).where(
-                        AuditLog.resource.in_(
-                            [f"observation_event/{original_id}", f"observation_event/{corrected.event_id}"]
+                (
+                    await session.execute(
+                        select(AuditLog.action).where(
+                            AuditLog.resource.in_(
+                                [
+                                    f"observation_event/{original_id}",
+                                    f"observation_event/{corrected.event_id}",
+                                ]
+                            )
                         )
                     )
                 )
-            ).scalars().all()
+                .scalars()
+                .all()
+            )
         return {"actions": sorted(actions)}
 
     r = asyncio.run(run())

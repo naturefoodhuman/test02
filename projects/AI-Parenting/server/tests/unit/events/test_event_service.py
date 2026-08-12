@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -121,7 +122,7 @@ class TestRecord:
     async def test_record_idempotent_same_event_id(
         self, svc: EventService, repo: FakeEventRepository
     ):
-        kwargs = dict(
+        kwargs: dict[str, Any] = dict(
             event_id=EID,
             baby_id=BABY,
             family_id=FAM,
@@ -142,10 +143,8 @@ class TestRecord:
         "field,value",
         [("event_id", "not-ulid"), ("baby_id", "x"), ("family_id", "x")],
     )
-    async def test_record_invalid_ulid_raises(
-        self, svc: EventService, field: str, value: str
-    ):
-        kwargs = dict(
+    async def test_record_invalid_ulid_raises(self, svc: EventService, field: str, value: str):
+        kwargs: dict[str, Any] = dict(
             event_id=EID,
             baby_id=BABY,
             family_id=FAM,
@@ -224,9 +223,7 @@ class TestCorrect:
 
 
 class TestSoftDelete:
-    async def test_soft_delete_marks_deleted(
-        self, svc: EventService, repo: FakeEventRepository
-    ):
+    async def test_soft_delete_marks_deleted(self, svc: EventService, repo: FakeEventRepository):
         await svc.record(
             event_id=EID,
             baby_id=BABY,
@@ -247,9 +244,7 @@ class TestSoftDelete:
 
 
 class TestQuery:
-    async def test_query_excludes_soft_deleted(
-        self, svc: EventService, repo: FakeEventRepository
-    ):
+    async def test_query_excludes_soft_deleted(self, svc: EventService, repo: FakeEventRepository):
         await svc.record(
             event_id=EID,
             baby_id=BABY,

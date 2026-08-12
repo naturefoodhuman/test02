@@ -31,6 +31,7 @@ import hmac
 import json
 from datetime import UTC, datetime
 
+from ...common.clock import Clock, SystemClock
 from ...common.errors import AuthError
 from ...common.ids import new_id
 from ..domain import Role, TokenClaims
@@ -101,12 +102,22 @@ class Hs256JwtService:
     生命周期：进程级单例（无状态，仅依赖密钥与 TTL，可安全复用）。
     """
 
-    def __init__(self, *, secret: str, access_ttl_seconds: int) -> None:
+    def __init__(
+        self,
+        *,
+        secret: str,
+        access_ttl_seconds: int,
+        clock: Clock | None = None,
+    ) -> None:
         if not secret:
             # 密钥缺失是部署错误，fail-fast 暴露（§8.3）。
             raise AuthConfigError("JWT secret is not configured")
         self._secret = secret
         self._access_ttl_seconds = access_ttl_seconds
+        # 过期校验用注入时钟（与 issue 对称：签发用 AuthService 的 Clock，
+        # 解析用本 Clock）。默认 SystemClock；测试注入 FixedClock 控制时间，
+        # 避免 wall clock 跨天后 FixedClock 签发的 token 误判过期。
+        self._clock: Clock = clock or SystemClock()
 
     def issue(self, claims: TokenClaims) -> str:
         """签发 JWT 字符串（含签名）。"""
@@ -165,7 +176,7 @@ class Hs256JwtService:
         if not isinstance(exp_raw, int):
             raise TokenInvalidError("Missing exp claim")
         exp = _from_epoch(exp_raw)
-        if datetime.now(tz=UTC) >= exp:
+        if self._clock.now() >= exp:
             raise TokenExpiredError("Token expired")
 
         # claims 完整性（SSOT：user_id/family_id/role/device_id）。

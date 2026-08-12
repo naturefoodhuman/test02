@@ -146,9 +146,7 @@ class SqlAlchemyObservationEventRepository:
         limit: int = 100,
     ) -> list[ObservationEvent]:
         """按过滤条件查询未删除事件（按 start_time DESC，§6.1 索引）。"""
-        stmt = select(ObservationEventOrm).where(
-            ObservationEventOrm.is_deleted.is_(False)
-        )
+        stmt = select(ObservationEventOrm).where(ObservationEventOrm.is_deleted.is_(False))
         if baby_id is not None:
             stmt = stmt.where(ObservationEventOrm.baby_id == baby_id)
         if family_id is not None:

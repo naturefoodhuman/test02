@@ -86,9 +86,7 @@ def validate_sync_contract(record: dict[str, Any]) -> ObservationEvent:
     # 2. ULID 校验（event_id/baby_id/family_id）。
     for field in ("event_id", "baby_id", "family_id"):
         if not is_valid_ulid(record[field]):
-            raise ValidationError(
-                f"Invalid ULID for {field}", evidence={field: record[field]}
-            )
+            raise ValidationError(f"Invalid ULID for {field}", evidence={field: record[field]})
 
     # 3. source 合法性。
     source_raw = record["source"]
@@ -101,9 +99,7 @@ def validate_sync_contract(record: dict[str, Any]) -> ObservationEvent:
     # 4. payload 必须是 dict（映射到 normalized_payload）。
     payload = record["payload"]
     if not isinstance(payload, dict):
-        raise ValidationError(
-            f"payload must be a JSON object, got {type(payload).__name__}"
-        )
+        raise ValidationError(f"payload must be a JSON object, got {type(payload).__name__}")
 
     # 5. confidence 越界检查（可选字段，默认 1.0）。
     confidence = record.get("confidence", 1.0)
@@ -113,6 +109,13 @@ def validate_sync_contract(record: dict[str, Any]) -> ObservationEvent:
         )
 
     # 6. 构造 ObservationEvent（server_received_at 由服务端覆盖，sync_status=synced）。
+    # start_time 可选，缺失则回退到 client_created_at（必填，required=True 缺失即抛异常）。
+    start_time = _parse_dt(record, "start_time", required=False) or _parse_dt(
+        record, "client_created_at", required=True
+    )
+    client_created_at = _parse_dt(record, "client_created_at", required=True)
+    assert start_time is not None  # client_created_at required=True 缺失已抛异常
+    assert client_created_at is not None
     return ObservationEvent(
         event_id=record["event_id"],
         baby_id=record["baby_id"],
@@ -120,9 +123,9 @@ def validate_sync_contract(record: dict[str, Any]) -> ObservationEvent:
         user_id=record.get("user_id"),
         device_id=record.get("device_id"),
         event_type=record["event_type"],
-        start_time=_parse_dt(record, "start_time", required=False) or _parse_dt(record, "client_created_at", required=True),
+        start_time=start_time,
         end_time=_parse_dt(record, "end_time", required=False),
-        client_created_at=_parse_dt(record, "client_created_at", required=True),
+        client_created_at=client_created_at,
         # server_received_at 由 EventService.record 用 Clock 覆盖；此处占位，service 会重置。
         server_received_at=datetime.fromtimestamp(0),
         raw_input=record.get("raw_input"),
