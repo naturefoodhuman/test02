@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-13 · Round 14 · APC-T013 Normalization 表单/语音文本解析与领域派生表写入完成（form/voice parser + NormalizationService + LogWriter + update_processing_status + 44 测试）
 - 2026-08-13 · Round 13 · APC-T012 PowerSync 适配、同步契约校验与冲突软提示完成（contract_validator + conflict_detector + sync-rules + 55 测试，Milestone 2 全部 DONE）
 - 2026-08-12 · Round 12 · APC-T012 PowerSync 适配半成品修复（contract_validator mypy 修复 + 文档补齐 T010/T011 外部记忆）
 - 2026-08-12 · Round 11 · APC-T011 PG LISTEN/NOTIFY 事件总线与事件变更触发器补记（代码 2026-08-11 已落地，本轮补文档）
@@ -25,6 +26,51 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 14 · 2026-08-13 · APC-T013 Normalization 表单/语音文本解析与领域派生表写入
+
+### 背景
+
+T012 完成后进入 Normalization（C07）。T013 目标：将 manual/voice_text ObservationEvent 归一化为 feeding/diaper/sleep/temperature/supplement P0 派生表，推进 processing_status=normalized，保留 event_id FK 溯源。Worker 接入留 T014。
+
+### 交付
+
+- **`server/app/normalization/domain.py`**：`P0_EVENT_TYPES`（feeding/diaper/sleep/temperature/supplement）+ `EVENT_TYPE_TO_TABLE` 映射 + `NormalizedRecord`（event_id/baby_id 溯源 + table + structured + payload + confidence）。
+- **`server/app/normalization/parsers/form.py`**：`parse_form`（manual 表单，normalized_payload 已结构化 → 直接映射，confidence=1.0；缺关键字段降级 0.6；amount_ml 类型转换含 bool 排除；feeding_log 提取结构化列 amount_ml/feeding_type/started_at/ended_at，其余 log 无结构化列业务字段入 payload）。
+- **`server/app/normalization/parsers/voice.py`**：`parse_voice`（中文规则/模板解析，confidence<1.0；feeding "喂了90ml奶"→90/diaper wet-dirty-mixed/temperature "38度5"→38.5/supplement 名称；normalized_payload 已有字段优先不从文本重复解析；解析失败降级 0.7；不调用 LLM，LLM 留 T027+ Logger Copilot）。
+- **`server/app/normalization/service.py`**：`NormalizationService.normalize(event)` 按 source 路由（manual→form, voice_text→voice, camera/sensor/ai/system→None）→ 写派生表 + 推进 processing_status=normalized；幂等（log_writer.exists 按 event_id 去重，仍推进状态保证最终一致）；不识别事件保留 observation_event 不推进；事件不存在 → NotFoundError。`LogWriter` Protocol。
+- **`server/app/normalization/infra/log_writer.py`**：`SqlAlchemyLogWriter`（feeding_log 结构化列 + payload；其余 log 用 _LogBase 共享列 event_id/baby_id/payload；exists 按 event_id 去重；id=new_id() 应用层赋值——ULIDPrimaryKey 无 DB default）。
+- **`server/app/events/domain/observation_event.py` + `infra/repository.py`**：`ObservationEventRepository.update_processing_status(event_id, status)`（推进 processing_status，与 sync_status 独立，§6.2 双状态机；只更新 processing_status 不动 sync_status；软删除事件不推进）。
+- 测试：`server/tests/unit/normalization/`（form 15 + voice 18 + service 6 = 39）+ `server/tests/integration/test_normalization.py`（5：manual→feeding_log 结构化列 + voice 文本解析 amount + 幂等无重复 + 非 P0 不写不推进 + diaper→diaper_log payload）。
+
+### 决策与权衡
+
+- **P0 voice parser 用规则/模板而非 LLM**：架构 §7.1 App 本地 Logger 解析，P0 用正则解析中文常见量级（喂奶量/尿布类型/体温/补剂名）即可覆盖端到端；LLM 通过 ModelClient 在 T027+ Logger Copilot 接入，避免 P0 引入 LLM 依赖与延迟。
+- **confidence 分级**：manual=1.0（表单采集结构化）、voice full=0.9（关键字段齐全）、voice partial=0.7（缺关键字段或解析失败）。降级不抛异常（架构 §7.1 不丢记录），保留事件 + 标记 processing_status 供下游判断。
+- **幂等在 service 层而非 DB 层**：log_writer.exists 按 event_id 查表去重，service 据此决定是否 write；重复 normalize 同一 event_id 跳过写入但仍推进 processing_status（保证崩溃恢复后最终一致）。与架构 §11 at-least-once + 幂等消费一致。
+- **update_processing_status 加到 Repository Protocol**：processing_status 推进是 normalization/state engine 的核心操作，属于仓储职责（与 sync_status 推进对称）。不另起 service 方法，保持仓储协议完整。
+- **集成测试数据隔离**：每个测试用独立 new_id() + 只查本 event_id 的 log（避免其他测试残留干扰）；_reset_db autouse 重置 engine（与 test_event_repository 一致，避免跨 asyncio.run 死连接）。
+- **ULIDPrimaryKey id 应用层赋值**：ORM 无 DB default，log_writer.write 显式 `id=new_id()`（与 auth repository 的 Family/User/Baby 赋值模式一致）。
+
+### 测试与验收
+
+- 单元：39 passed（form 15 + voice 18 + service 6）。
+- 集成：5 passed（真实 PG AI_parenting_dev）。
+- 全量：329 passed，ruff/mypy 干净。
+- 验收：P0 记录类型可归一化（feeding/diaper/sleep/temperature/supplement）；派生表可追溯 event_id（FK RESTRICT）；confidence manual=1.0/voice<1.0；不识别事件保留 observation_event 标记 processing_status。
+
+### 红线与边界
+
+- 未读取/操作 `.env`；集成测试连独立库 AI_parenting_dev；未碰 `AI-Parenting-Copilot/`。
+- 未改变架构边界（normalization 为 §2 M05 归一化层，不做医疗判断/不产生告警）。
+- 未引入新依赖、新迁移（派生表 ORM 在 T004 已建）。
+- Worker 接入（订阅 events.changed → NormalizationService）留 T014，不在 T013 范围。
+
+### 下一步
+
+APC-T014 — 去重、纠错链处理与 Normalization Worker（常驻 worker 订阅 events.changed → 调 NormalizationService；去重策略；纠错/软删除对派生表处理）。
 
 ---
 

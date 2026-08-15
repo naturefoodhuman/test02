@@ -178,5 +178,29 @@ class SqlAlchemyObservationEventRepository:
         await self._session.flush()
         return _from_orm(row)
 
+    async def update_processing_status(
+        self, event_id: str, status: ProcessingStatus
+    ) -> ObservationEvent | None:
+        """推进 ``processing_status``（架构 §6.2 双状态机，APC-T013/T015）。
+
+        与 ``sync_status`` 独立：只更新 ``processing_status``，不动 ``sync_status``。
+        返回更新后的事件；不存在或已删除则返回 None。
+        """
+        stmt = (
+            update(ObservationEventOrm)
+            .where(
+                ObservationEventOrm.id == event_id,
+                ObservationEventOrm.is_deleted.is_(False),
+            )
+            .values(processing_status=status.value)
+            .returning(ObservationEventOrm)
+        )
+        result = await self._session.execute(stmt)
+        row = result.scalar_one_or_none()
+        if row is None:
+            return None
+        await self._session.flush()
+        return _from_orm(row)
+
 
 __all__ = ["SqlAlchemyObservationEventRepository"]

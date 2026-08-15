@@ -196,3 +196,14 @@ class ObservationEventRepository(Protocol):
         返回更新后的事件；不存在则返回 None。
         """
         ...
+
+    async def update_processing_status(
+        self, event_id: str, status: ProcessingStatus
+    ) -> ObservationEvent | None:
+        """推进 ``processing_status``（架构 §6.2：pending → normalized → projected）。
+
+        供 Normalization（APC-T013）推进到 ``normalized``、State Engine（APC-T015+）
+        推进到 ``projected``。与 ``sync_status`` 独立（§6.2 双状态机）。
+        返回更新后的事件；不存在则返回 None。
+        """
+        ...
