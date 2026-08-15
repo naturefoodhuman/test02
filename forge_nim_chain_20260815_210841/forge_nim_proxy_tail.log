@@ -1,0 +1,177 @@
+INFO:     Started server process [89358]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:4010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58915 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58917 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58918 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58920 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58921 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59451 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59451 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:59451 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:59451 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:59451 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:60502 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:60962 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60971 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:61119 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62643 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62643 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63102 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63102 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63570 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:49484 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:49743 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:49935 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:49935 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:52504 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:54387 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:54387 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55395 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55397 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55436 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55438 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55511 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55513 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55565 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55567 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55571 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55573 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55575 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55577 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55582 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55584 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55588 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55590 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55592 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55594 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55598 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55600 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55602 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55604 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55608 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55610 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55612 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55614 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55618 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55620 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55622 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55624 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55628 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55630 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55633 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55635 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55637 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55639 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55643 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55645 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55651 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55653 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55705 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55707 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55745 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55747 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55822 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55824 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55872 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55874 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55878 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55880 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55882 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55884 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:55887 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55889 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55895 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55897 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55899 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55901 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55905 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55907 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55915 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55917 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55921 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55923 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55925 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55927 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55931 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55933 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55938 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55940 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55944 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55946 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55949 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55951 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55956 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55958 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55960 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55962 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54856 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:55971 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55973 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56020 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56022 - "GET /stats HTTP/1.1" 200 OK

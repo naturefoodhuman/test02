@@ -1,0 +1,15 @@
+$ git worktree add --detach /tmp/forge_diag_push_forge_nim_chain_20260815_210841_11700 HEAD
+exit_code=0
+[stdout]
+HEAD 现在位于 8d021ca feat(t013): Normalization 表单/语音解析与派生表写入
+
+[stderr]
+准备工作区（分离头指针 8d021ca）
+
+
+$ git checkout --orphan diagnostics/forge-nim-forge_nim_chain_20260815_210841
+exit_code=0
+[stderr]
+切换到一个新分支 'diagnostics/forge-nim-forge_nim_chain_20260815_210841'
+
+
