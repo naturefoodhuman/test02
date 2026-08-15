@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-11 18:20:00
+# 创建时间（北京时间）：2026-08-15 17:20:00
 
 """NVIDIA NIM sidecar proxy unit tests."""
 
@@ -324,10 +324,31 @@ def test_smart_proxy_sidecar_route_avoids_nested_retries_and_autostarts_selector
 
     assert "nim_sidecar_route" in source
     assert "handles_retries=nim_sidecar_route" in source
-    assert "stream_attempts = 1 if nim_sidecar_route" in source
+    assert "stream_auto_continue" in source
+    assert "1 + FORGE_AUTO_CONTINUE_MAX_ATTEMPTS" in source
     assert "await asyncio.to_thread(ensure_server, target_port)" in source
     assert "resp.status_code == 429 and is_remote and not handles_retries" in source
 
+
+
+def test_smart_proxy_has_auto_continue_for_nim_sidecar_api_errors() -> None:
+    source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
+
+    assert "FORGE_AUTO_CONTINUE_ON_API_ERROR" in source
+    assert "FORGE_AUTO_CONTINUE_MAX_ATTEMPTS" in source
+    assert "FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS" in source
+    assert "FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS" in source
+    assert "auto-continue" in source
+    assert "1 + FORGE_AUTO_CONTINUE_MAX_ATTEMPTS" in source
+    assert "上下文接近超限，请新开会话" in source
+
+
+def test_smart_proxy_auto_continue_uses_retry_after_without_short_cap() -> None:
+    source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
+
+    assert "cap=wait_cap" in source
+    assert "FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS if auto_continue else None" in source
+    assert "_retry_after_seconds_from_error_payload" in source
 
 
 def test_forward_non_stream_fallback_runs_even_with_one_attempt_budget(

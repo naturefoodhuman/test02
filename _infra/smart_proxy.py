@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-07 23:20:00
+# 创建时间（北京时间）：2026-08-15 17:20:00
 # 修改本文件中的配置比如“FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))“ 后
 # 要重启 bash scripts/forge-start.sh 以使新配置生效
 
@@ -142,6 +142,24 @@ FORGE_STREAM_PING_INTERVAL_SECONDS = float(os.getenv("FORGE_STREAM_PING_INTERVAL
 # 流式路径在"尚未向客户端发出任何内容"时，对 429/502/503/504 的有限重试次数。
 # 一旦已发出正文（emitted_text=True）绝不重试（文档 §12），避免重复/错乱。
 FORGE_STREAM_REMOTE_RETRY_COUNT = int(os.getenv("FORGE_STREAM_REMOTE_RETRY_COUNT", "2"))
+
+# API Error auto-continue: do not drive VS Code/Feishu/terminal UI directly.
+# Instead, when the NIM sidecar reports a transient API error before any content
+# was emitted, the Smart Proxy waits according to Retry-After and replays the
+# same request once. This is equivalent to the user typing “继续” after a
+# transient gateway error, but keeps it client-agnostic and auditable.
+FORGE_AUTO_CONTINUE_ON_API_ERROR = _env_bool("FORGE_AUTO_CONTINUE_ON_API_ERROR", True)
+FORGE_AUTO_CONTINUE_MAX_ATTEMPTS = int(os.getenv("FORGE_AUTO_CONTINUE_MAX_ATTEMPTS", "1"))
+FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS = float(os.getenv("FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS", "900"))
+FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS = int(
+    os.getenv("FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS", "902752")
+)
+FORGE_AUTO_CONTINUE_STATUS_CODES = {
+    int(item.strip())
+    for item in os.getenv("FORGE_AUTO_CONTINUE_STATUS_CODES", "429,503,504").split(",")
+    if item.strip().isdigit()
+}
+_auto_continue_counters = {"attempts": 0, "blocked_by_context": 0}
 
 # 429/503 退避封顶（秒），防止上游给出过大 Retry-After 导致请求长时间挂起。
 _RETRY_AFTER_CAP_SECONDS = 30.0
@@ -1186,23 +1204,46 @@ def ensure_server(port: int) -> bool:
 # ============================================================
 # 退避辅助：从上游 429/503 响应读 Retry-After，无则指数退避，统一封顶。
 # ============================================================
-def _retry_after_seconds_from_value(ra, default: float) -> float:
-    """从已提取的 Retry-After 头值计算退避秒数；非法或缺失返回 default。封顶 _RETRY_AFTER_CAP_SECONDS。"""
+def _retry_after_seconds_from_value(ra, default: float, cap: float | None = None) -> float:
+    """从已提取的 Retry-After 头值计算退避秒数；非法或缺失返回 default。"""
+    limit = _RETRY_AFTER_CAP_SECONDS if cap is None else cap
     if ra:
         try:
-            return min(float(ra), _RETRY_AFTER_CAP_SECONDS)
+            return min(max(0.0, float(ra)), limit)
         except (ValueError, TypeError):
             pass  # HTTP-date 格式不解析，走 default
-    return min(default, _RETRY_AFTER_CAP_SECONDS)
+    return min(max(0.0, default), limit)
 
 
-def _retry_after_seconds(resp, default: float) -> float:
+def _retry_after_seconds(resp, default: float, cap: float | None = None) -> float:
     """从 httpx 响应对象读 Retry-After 头；无则返回 default。"""
     try:
         ra = resp.headers.get("Retry-After") or resp.headers.get("retry-after")
     except Exception:
         ra = None
-    return _retry_after_seconds_from_value(ra, default)
+    return _retry_after_seconds_from_value(ra, default, cap=cap)
+
+
+def _retry_after_seconds_from_error_payload(item, default: float) -> float:
+    """从 sidecar SSE error payload 里解析 'retry after 124.9s'。"""
+    if isinstance(item, dict):
+        message = str(item.get("message") or item.get("error") or item)
+    else:
+        message = str(item or "")
+    match = re.search(r"retry after\s+([0-9]+(?:\.[0-9]+)?)s?", message, re.IGNORECASE)
+    if match:
+        return min(float(match.group(1)), FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS)
+    return min(default, FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS)
+
+
+def _auto_continue_context_too_large(forward_payload: dict) -> tuple[bool, int]:
+    if FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS <= 0:
+        return False, 0
+    messages = forward_payload.get("messages")
+    if not isinstance(messages, list):
+        return False, 0
+    est = _estimate_messages_tokens(messages)
+    return est >= FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS, est
 
 
 # ============================================================
@@ -1210,7 +1251,18 @@ def _retry_after_seconds(resp, default: float) -> float:
 # ============================================================
 async def _forward_with_retries(target_url: str, forward_payload: dict, headers: dict,
                                  is_remote: bool, target_port, handles_retries: bool = False):
-    retry_count = 0 if handles_retries else (FORGE_REMOTE_RETRY_COUNT if is_remote else FORGE_LOCAL_RETRY_COUNT)
+    auto_continue = bool(
+        handles_retries
+        and is_remote
+        and FORGE_AUTO_CONTINUE_ON_API_ERROR
+        and FORGE_AUTO_CONTINUE_MAX_ATTEMPTS > 0
+    )
+    context_too_large, context_est = _auto_continue_context_too_large(forward_payload)
+    retry_count = (
+        FORGE_AUTO_CONTINUE_MAX_ATTEMPTS
+        if auto_continue and not context_too_large
+        else 0 if handles_retries else (FORGE_REMOTE_RETRY_COUNT if is_remote else FORGE_LOCAL_RETRY_COUNT)
+    )
     max_attempts = max(1, retry_count + 1)
     last_exception = None
     resp = None
@@ -1247,6 +1299,15 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
 
             logger.warning(f"⚠️ 可重试状态码 {resp.status_code}，第 {attempt + 1}/{max_attempts} 次")
             _retry_counters[str(resp.status_code)] = _retry_counters.get(str(resp.status_code), 0) + 1
+            if auto_continue and context_too_large:
+                _auto_continue_counters["blocked_by_context"] += 1
+                last_exception = (
+                    f"上下文接近超限，请新开会话 "
+                    f"(estimated={context_est}, limit={FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS})"
+                )
+                break
+            if auto_continue and resp.status_code not in FORGE_AUTO_CONTINUE_STATUS_CODES:
+                break
             # 429 喂熔断器：连续 429 达阈值即熔断，打破"重试也 429"的恶性循环。
             # NIM sidecar routes own key-pool/cooldown locally; their 429/503 may
             # mean local busy capacity, so do not trip the Smart Proxy global
@@ -1254,8 +1315,16 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
             if resp.status_code == 429 and is_remote and not handles_retries:
                 await circuit_breaker.on_429()
             if attempt < max_attempts - 1:
-                wait = _retry_after_seconds(resp, default=_backoff_with_jitter(attempt))
-                logger.info(f"   退避 {wait:.1f}s 后重试")
+                wait_cap = FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS if auto_continue else None
+                wait = _retry_after_seconds(resp, default=_backoff_with_jitter(attempt), cap=wait_cap)
+                if auto_continue:
+                    _auto_continue_counters["attempts"] += 1
+                    logger.warning(
+                        f"🔁 auto-continue: upstream status {resp.status_code}, "
+                        f"wait {wait:.1f}s then replay request ({attempt + 2}/{max_attempts})"
+                    )
+                else:
+                    logger.info(f"   退避 {wait:.1f}s 后重试")
                 await asyncio.sleep(wait)
 
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError) as e:
@@ -1369,6 +1438,14 @@ async def forge_status():
             "stream_remote_retry_count": FORGE_STREAM_REMOTE_RETRY_COUNT,
             "retryable_status_codes": sorted(RETRYABLE_STATUS_CODES),
             "retry_counters": dict(_retry_counters),
+        },
+        "auto_continue": {
+            "enabled": FORGE_AUTO_CONTINUE_ON_API_ERROR,
+            "max_attempts": FORGE_AUTO_CONTINUE_MAX_ATTEMPTS,
+            "max_wait_seconds": FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS,
+            "context_limit_tokens": FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS,
+            "status_codes": sorted(FORGE_AUTO_CONTINUE_STATUS_CODES),
+            "counters": dict(_auto_continue_counters),
         },
         "circuit_breaker": circuit_breaker.stats(),
         "remote_concurrency": {
@@ -1617,6 +1694,54 @@ async def smart_gateway(request: Request, path: str):
         if isinstance(msgs_now, list):
             forward_payload["messages"] = [_compact_hint_msg] + msgs_now
 
+    auto_ctx_too_large, auto_ctx_est = _auto_continue_context_too_large(forward_payload)
+    if auto_ctx_too_large:
+        notice_text = (
+            "上下文接近超限，请新开会话"
+            f"（estimated={auto_ctx_est}, limit={FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS}）。"
+        )
+        _auto_continue_counters["blocked_by_context"] += 1
+        await tracker.finish(request_id, success=False)
+        await tracker.remove(request_id)
+        if is_anthropic:
+            if wants_stream:
+                async def context_limit_event_stream():
+                    msg_id = f"msg_{uuid.uuid4().hex}"
+                    yield _anthropic_sse("message_start", {
+                        "type": "message_start",
+                        "message": {
+                            "id": msg_id, "type": "message", "role": "assistant", "model": model_name,
+                            "content": [], "stop_reason": None, "stop_sequence": None,
+                            "usage": {"input_tokens": int(auto_ctx_est), "output_tokens": 0},
+                        },
+                    })
+                    yield _anthropic_sse("content_block_start", {
+                        "type": "content_block_start", "index": 0,
+                        "content_block": {"type": "text", "text": ""},
+                    })
+                    yield _anthropic_sse("content_block_delta", {
+                        "type": "content_block_delta", "index": 0,
+                        "delta": {"type": "text_delta", "text": notice_text},
+                    })
+                    yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
+                    yield _anthropic_sse("message_delta", {
+                        "type": "message_delta",
+                        "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+                        "usage": {"output_tokens": max(1, len(notice_text) // 4)},
+                    })
+                    yield _anthropic_sse("message_stop", {"type": "message_stop"})
+                return StreamingResponse(context_limit_event_stream(), media_type="text/event-stream")
+            return JSONResponse({
+                "id": f"msg_{uuid.uuid4().hex}",
+                "type": "message",
+                "role": "assistant",
+                "model": model_name,
+                "content": [{"type": "text", "text": notice_text}],
+                "stop_reason": "end_turn",
+                "usage": {"input_tokens": int(auto_ctx_est), "output_tokens": max(1, len(notice_text) // 4)},
+            })
+        raise HTTPException(status_code=400, detail=notice_text)
+
     # ============ 流式响应 ============
     if is_anthropic and forward_payload.get("stream"):
         await tracker.update(request_id, status="connecting")
@@ -1668,7 +1793,18 @@ async def smart_gateway(request: Request, path: str):
             stream_error = None
 
             port_ctx = _local_port_guard(target_port) if (not is_remote) else _NullContext()
-            stream_attempts = 1 if nim_sidecar_route else ((FORGE_STREAM_REMOTE_RETRY_COUNT + 1) if is_remote else 1)
+            stream_context_too_large, stream_context_est = _auto_continue_context_too_large(forward_payload)
+            stream_auto_continue = bool(
+                nim_sidecar_route
+                and FORGE_AUTO_CONTINUE_ON_API_ERROR
+                and FORGE_AUTO_CONTINUE_MAX_ATTEMPTS > 0
+                and not stream_context_too_large
+            )
+            stream_attempts = (
+                1 + FORGE_AUTO_CONTINUE_MAX_ATTEMPTS
+                if stream_auto_continue
+                else 1 if nim_sidecar_route else ((FORGE_STREAM_REMOTE_RETRY_COUNT + 1) if is_remote else 1)
+            )
 
             try:
                 for _stream_attempt in range(stream_attempts):
@@ -1760,7 +1896,28 @@ async def smart_gateway(request: Request, path: str):
                             except Exception:
                                 continue
                             if isinstance(chunk, dict) and chunk.get("error") and not chunk.get("choices"):
-                                stream_error = chunk.get("error") or chunk
+                                error_payload = chunk.get("error") or chunk
+                                can_retry_error_payload = (
+                                    not emitted_text
+                                    and not tool_calls_data
+                                    and stream_auto_continue
+                                    and _stream_attempt < stream_attempts - 1
+                                )
+                                if can_retry_error_payload:
+                                    wait = _retry_after_seconds_from_error_payload(
+                                        error_payload,
+                                        default=_backoff_with_jitter(_stream_attempt),
+                                    )
+                                    _auto_continue_counters["attempts"] += 1
+                                    logger.warning(
+                                        f"🔁 auto-continue: sidecar SSE error before content, "
+                                        f"wait {wait:.1f}s then replay stream "
+                                        f"({_stream_attempt + 2}/{stream_attempts})"
+                                    )
+                                    await asyncio.sleep(wait)
+                                    _stream_retry_pending = True
+                                    break
+                                stream_error = error_payload
                                 break
 
                             usage_chunk = chunk.get("usage")

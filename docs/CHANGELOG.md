@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-12 10:20:00
+创建时间（北京时间）：2026-08-15 17:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -17,6 +17,31 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 216 轮] 2026-08-15
+
+### 需求变动
+- **API Error 自动继续**：用户希望 Claude Code for VS Code / 飞书 / Claude Code 终端遇到 GLM-5.2 API Error 时自动“继续”。按最佳实践不做 UI 自动输入，而是在 Smart Proxy 层对 NIM sidecar 的瞬时错误（默认 429/503/504）执行一次 `Retry-After` 等待后的请求重放。
+- **上下文超限保护**：新增 `FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS`（默认 902752）。当当前请求估算上下文达到该阈值时，不自动继续，直接返回“上下文接近超限，请新开会话”。
+- **流式路径支持**：流式请求在未输出任何文本/tool call 前收到 sidecar SSE error 时，也会按 `retry after` 语义自动重放一次；已输出内容后不透明重放，避免重复工具调用。
+
+### 文件影响
+- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py -q
+# 24 passed, 1 skipped
+python3 -m py_compile _infra/smart_proxy.py
+make docs-check
+# Blockers: 0; Warnings: 1（fallback/model 架构敏感词提示，已复核无需新增 ADR）
+```
 
 ---
 

@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-12 10:20:00
+创建时间（北京时间）：2026-08-15 17:20:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -70,6 +70,12 @@ export FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=800
 export NIM_PRIMARY_MODEL="z-ai/glm-5.2"
 export NIM_PROXY_ENABLE_FALLBACK=0
 export NIM_FALLBACK_MODEL="deepseek-ai/DeepSeek-V4-Pro"
+
+export FORGE_AUTO_CONTINUE_ON_API_ERROR=1
+export FORGE_AUTO_CONTINUE_MAX_ATTEMPTS=1
+export FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS=900
+export FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS=902752
+export FORGE_AUTO_CONTINUE_STATUS_CODES="429,503,504"
 ```
 
 如需同级 fallback：
@@ -238,6 +244,27 @@ http://localhost:8000/
 
 
 ---
+
+
+### Auto-continue for Claude Code / Feishu API Error
+
+不要用 UI 自动输入来“发送继续”。最佳实践是在 Smart Proxy 层处理：当 NIM sidecar 在**尚未向客户端输出任何模型内容**之前返回瞬时 API Error（默认 429/503/504）时，Smart Proxy 按 `Retry-After` 等待，然后重放同一请求一次。这样对 Claude Code for VS Code、Claude Code 终端、cc-connect/飞书都生效，也不会依赖 GUI 自动化。
+
+```bash
+FORGE_AUTO_CONTINUE_ON_API_ERROR=1
+FORGE_AUTO_CONTINUE_MAX_ATTEMPTS=1
+FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS=900
+FORGE_AUTO_CONTINUE_STATUS_CODES="429,503,504"
+FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS=902752
+```
+
+如果当前请求估算上下文达到 `FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS`，Smart Proxy 不再自动继续，而是返回：
+
+```text
+上下文接近超限，请新开会话
+```
+
+限制：如果模型已经向客户端输出了文本或 tool call，Smart Proxy 不会透明重放，避免重复执行工具或打乱 transcript。
 
 ## 参数调优
 
