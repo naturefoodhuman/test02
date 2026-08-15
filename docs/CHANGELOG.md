@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-11 18:20:00
+创建时间（北京时间）：2026-08-12 10:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -15,6 +15,33 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 215 轮] 2026-08-12
+
+### 需求变动
+- **NIM 链路综合监控**：用户要求用脚本全面监控 Claude Code → Smart Proxy 4000 → NIM sidecar 4010 → NVIDIA GLM-5.2 链路，以区分本地配置、key busy/cooldown、上下文过大、NVIDIA 429/timeout 等根因。
+- **新增链路监控脚本**：新增 `scripts/diagnostics/forge_nim_chain_monitor.py`，采集 4000/4010 health/status/stats、关键 env（脱敏）、端口/PID、代理环境、日志尾部，并输出 `findings.json` / `SUMMARY.md`。支持单次快照与观察窗口，支持脱敏 diagnostics 分支推送。
+- **新增 Make 入口**：`make forge-nim-chain-snapshot` 与 `DURATION=600 INTERVAL=15 make forge-nim-chain-watch`。
+
+### 文件影响
+- 新增：`scripts/diagnostics/forge_nim_chain_monitor.py`
+- 新增：`_infra/network/tests/unit/test_forge_nim_chain_monitor.py`
+- 修改：`Makefile`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_forge_nim_chain_monitor.py _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py -q
+# 31 passed, 1 skipped
+python3 -m py_compile scripts/diagnostics/forge_nim_chain_monitor.py _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py
+make -n forge-nim-chain-snapshot
+make -n forge-nim-chain-watch
+make docs-check
+# Blockers: 0; Warnings: 1（circuit/privacy 架构敏感词提示，已复核无需新增 ADR）
+```
 
 ---
 

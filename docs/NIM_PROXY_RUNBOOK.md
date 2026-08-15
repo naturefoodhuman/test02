@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-11 18:20:00
+创建时间（北京时间）：2026-08-12 10:20:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -138,6 +138,12 @@ curl http://127.0.0.1:4010/stats
 后续排查不要再手工复制多段命令。统一使用：
 
 ```bash
+# 当前链路快照：采集 4000/4010 状态、关键配置、日志尾部并自动分类根因
+make forge-nim-chain-snapshot
+
+# 当前链路观察窗口：默认观察 10 分钟，每 15 秒采样一次；适合 Claude Code 卡住时运行
+DURATION=600 INTERVAL=15 make forge-nim-chain-watch
+
 # 当前配置下，仅跑 4010/4000 最小 non-stream 探针
 make forge-nim-diagnostic
 
@@ -296,6 +302,13 @@ FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=1200
 注意：`NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1` 很重要。若 `read_timeout=900` 且 attempts=2，坏请求最坏会占用 key 约 30 分钟，容易导致 “No NVIDIA NIM key available”。
 
 当所有 key 都被长请求占用时，新请求现在会返回 `503 busy` + `Retry-After`，而不是误导性的 `429 retry-after: 0.0`；Smart Proxy 也不会因 NIM sidecar 的本地 busy/429 触发全局 circuit breaker。
+
+链路分类说明：
+
+- `NVIDIA_UPSTREAM_429_COOLDOWN`：NVIDIA/免费档上游返回 429，key 被 cooldown，偏上游问题。
+- `NIM_KEYS_BUSY`：本地两个 key 正在等待长请求，后续请求会排队或 busy，偏本地容量/长请求问题。
+- `LONG_TIMEOUT_WITH_MULTIPLE_ATTEMPTS`：长 timeout 叠加多次 attempts，容易把 key 占用 20-30 分钟，建议 attempts=1。
+- `PROMPT_LARGE_OR_COMPACTED`：上下文过大，容易放大 GLM-5.2 延迟和 429。
 
 
 ---

@@ -1,7 +1,7 @@
 # FORGE Factory Makefile
 # 常用操作单命令完成
 
-.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning env-config-audit forge-nim-diagnostic forge-nim-timeout-a forge-nim-vscode-watch forge-nim-push-existing forge-nim-upstream-probe forge-nim-upstream-long forge-nim-glm-slow-smoke forge-nim-vscode-glm-slow-watch
+.PHONY: test test-unit test-integration lint format backup start-gateway start-ollama switch-plan compare-plans privacy-audit pre-upgrade-check release governance-check docs-check network-test feos-test install-governance-hooks run-nim-proxy nim-proxy-test nim-proxy-tuning env-config-audit forge-nim-diagnostic forge-nim-timeout-a forge-nim-vscode-watch forge-nim-push-existing forge-nim-upstream-probe forge-nim-upstream-long forge-nim-glm-slow-smoke forge-nim-vscode-glm-slow-watch forge-nim-chain-snapshot forge-nim-chain-watch
 
 # 日常开发
 start-gateway:    # 启动 LiteLLM 网关
@@ -125,3 +125,9 @@ forge-nim-glm-slow-smoke:
 
 forge-nim-vscode-glm-slow-watch:
 	@python3 scripts/diagnostics/forge_nim_diagnostic.py --profile glm-slow --restart --vscode-watch --watch-seconds $${WATCH_SECONDS:-1800} --interval $${INTERVAL:-15} --push-sanitized-artifact
+
+forge-nim-chain-snapshot:
+	@python3 scripts/diagnostics/forge_nim_chain_monitor.py --push-sanitized-artifact
+
+forge-nim-chain-watch:
+	@python3 scripts/diagnostics/forge_nim_chain_monitor.py --duration $${DURATION:-600} --interval $${INTERVAL:-15} --push-sanitized-artifact
