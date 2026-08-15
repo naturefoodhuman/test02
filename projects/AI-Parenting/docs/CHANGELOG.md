@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.14.0] - 2026-08-15 - APC-T014 去重、纠错链处理与 Normalization Worker
 - [0.13.0] - 2026-08-13 - APC-T013 Normalization 表单/语音文本解析与领域派生表写入
 - [0.12.0] - 2026-08-13 - APC-T012 PowerSync 适配、同步契约校验与冲突软提示（Milestone 2 全部完成）
 - [0.11.0] - 2026-08-12 - APC-T011 PG LISTEN/NOTIFY 事件总线与事件变更触发器（补记，代码 2026-08-11 落地）
@@ -28,6 +29,60 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.14.0] - 2026-08-15
+
+### Added — APC-T014 去重、纠错链处理与 Normalization Worker
+
+- **`server/app/normalization/worker.py`**：`NormalizationWorker`（`EventHandler` 协议，`__call__` 转发 `handle`，由 `EventWorker.add_handler` 注入）。按 `op` 分发：`insert`/`update`/`recover`/未知 → 加载事件 → 去重（`processing_status` 已 `normalized`/`projected` 跳过）→ 纠错链（`correction_of` 非空先软删除旧 event_id 派生行）→ `normalize`；`delete` → 软删除该 event_id 在所有 P0 派生表的行。每条消息独立 session + commit；异常隔离（单条失败记日志不阻断消费循环，at-least-once 靠 recover_pending 补偿）。
+- **`WorkerContext` Protocol + `SqlAlchemyWorkerContext`**：封装"加载事件/软删除派生行/归一化/提交"，使 worker 的 op 分发/去重/纠错链逻辑可注入内存替身纯单测（不依赖 DB）。
+- **`server/app/normalization/service.py` + `infra/log_writer.py`**：`LogWriter.soft_delete_by_event(event_id, table)`（置派生行 `is_deleted=true`，§5.1 不物理删除；纠错链/事件软删除时派生表排除）。
+- **`server/app/main.py`**：`pg_listen_enabled` 时 `EventWorker.add_handler(NormalizationWorker(...))` 装配。
+
+### Behavior
+
+- 双层去重：worker 层（`processing_status` 已推进跳过，避免重复 NOTIFY 重复处理）+ service 层（`log_writer.exists` 按 event_id 去重，崩溃恢复后最终一致）。
+- 纠错链：`correction_of` 非空时先软删除旧 event_id 在所有 P0 派生表的行，再归一化新事件（旧派生行失效，State Engine 重算时排除旧值）。
+- 软删除：事件 `delete` NOTIFY 触发派生表行 `is_deleted=true`（派生表排除，不物理删除）。
+
+### Tests
+
+- 单元：10 项（worker op 分发/路由/去重 normalized+projected/纠错链先软删除旧派生行/delete 软删除/event not found/缺 event_id/异常隔离/未知 op）。
+- 集成：5 项（真实 PG：insert 归一化+推进状态/重复 NOTIFY 去重/delete 软删除派生行/纠错链旧派生行软删除+新派生行生效/recover_pending 补处理 pending 事件）。
+- 全量：344 passed，ruff/mypy 干净。
+
+### Acceptance
+
+- `processing_status` 可从 pending 推进到 normalized；重复 NOTIFY 不重复写派生表；correction_of 触发旧派生记录失效；soft delete 触发派生表排除；崩溃恢复扫描 pending 事件可补处理。
+
+---
+
+## [0.13.0] - 2026-08-13
+
+### Added — APC-T013 Normalization 表单/语音文本解析与领域派生表写入
+
+- **`server/app/normalization/domain.py`**：`P0_EVENT_TYPES`（feeding/diaper/sleep/temperature/supplement）+ `EVENT_TYPE_TO_TABLE` 映射 + `NormalizedRecord`（event_id/baby_id 溯源 + table + structured + payload + confidence）。
+- **`server/app/normalization/parsers/form.py`**：`parse_form`（manual 表单，normalized_payload 已结构化 → 直接映射，confidence=1.0；缺关键字段降级 0.6；amount_ml 类型转换含 bool 排除；feeding_log 提取结构化列）。
+- **`server/app/normalization/parsers/voice.py`**：`parse_voice`（中文规则/模板解析，confidence<1.0；feeding 喂奶量/diaper wet-dirty-mixed/temperature 38度5/supplement 名称；normalized_payload 已有字段优先；解析失败降级 0.7；不调用 LLM）。
+- **`server/app/normalization/service.py`**：`NormalizationService.normalize(event)` 按 source 路由（manual→form, voice_text→voice, 其余→None）→ 写派生表 + 推进 processing_status=normalized；幂等（exists 去重，仍推进状态）；不识别事件保留 observation_event 不推进；事件不存在 → NotFoundError。`LogWriter` Protocol。
+- **`server/app/normalization/infra/log_writer.py`**：`SqlAlchemyLogWriter`（feeding_log 结构化列 + payload；其余 log 用 _LogBase 共享列；exists 按 event_id 去重；id=new_id() 应用层赋值）。
+- **`server/app/events/domain/observation_event.py` + `infra/repository.py`**：`ObservationEventRepository.update_processing_status(event_id, status)`（推进 processing_status，与 sync_status 独立，§6.2 双状态机）。
+
+### Behavior
+
+- P0 记录类型（feeding/diaper/sleep/temperature/supplement）可归一化为对应派生表；confidence manual=1.0/voice<1.0；不识别事件保留 observation_event 标记 processing_status（不丢记录，§7.1）。
+
+### Tests
+
+- 单元：39 项（form 15 + voice 18 + service 6）。
+- 集成：5 项（真实 PG：manual→feeding_log 结构化列 + voice 文本解析 amount + 幂等无重复 + 非 P0 不写不推进 + diaper→diaper_log payload）。
+- 全量：329 passed，ruff/mypy 干净。
+
+### Acceptance
+
+- P0 记录类型可归一化；派生表可追溯 event_id（FK RESTRICT）；confidence manual=1.0/voice<1.0；不识别事件保留 observation_event 标记 processing_status。
 
 ---
 

@@ -13,10 +13,11 @@
 ## 0. 当前里程碑
 
 **Milestone 2 — P0-M1 事件溯源与同步**（APC-T007 ~ APC-T012）✅ 全部完成
-**Milestone 3 — Normalization**（APC-T013）✅ 完成；T014/T015 进行中
+**Milestone 3 — Normalization**（APC-T013 ~ APC-T014）✅ 完成；T015 待开始
 
 > Milestone 1（地基）、Milestone 2（Auth/事件/同步）已完成；
-> T013 Normalization 解析与派生表写入已完成，下一步 T014 Worker + T015 State Engine。
+> T013 Normalization 解析与派生表写入、T014 Normalization Worker + 纠错链/软删除处理已完成，
+> 下一步 T015 Baby State Engine P0 Projection。
 
 ---
 
@@ -37,7 +38,8 @@
 | APC-T011 | PG LISTEN/NOTIFY 事件总线与事件变更触发器 | ✅ DONE | 0004 迁移(observation_event AFTER INSERT/UPDATE/DELETE → pg_notify events.changed) + PgListenEventBus(asyncpg add_listener) + EventWorker(订阅+recover_pending 崩溃恢复) + EventsSettings.pg_listen_enabled；ruff/mypy 干净，230 测试通过 |
 | APC-T012 | PowerSync 适配、同步契约校验与冲突软提示基础 | ✅ DONE | contract_validator（§6.3 契约校验 → ObservationEvent，synced/pending）+ conflict_detector（5 分钟内重复 feeding 软提示，§9.2 不自动删）+ sync-rules.yaml（按 family_id 分桶）+ 55 测试（52 unit + 3 integration）；ruff/mypy 干净，285 测试通过 |
 | APC-T013 | Normalization 表单/语音文本解析与领域派生表写入 | ✅ DONE | form parser（manual 结构化映射，confidence=1.0）+ voice parser（中文规则/模板解析，confidence<1.0）+ NormalizationService（按 source 路由 + 写派生表 + 推进 processing_status=normalized + 幂等）+ SqlAlchemyLogWriter（feeding_log 结构化列/其余 log payload jsonb）+ ObservationEventRepository.update_processing_status；44 测试（39 unit + 5 integration）；ruff/mypy 干净，329 测试通过 |
-| APC-T014 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T014 | 去重、纠错链处理与 Normalization Worker | ✅ DONE | NormalizationWorker（EventHandler，订阅 events.changed，按 op 分发 insert/update/recover→去重+纠错链+normalize / delete→软删除派生行）+ WorkerContext 协议（可注入纯单测）+ SqlAlchemyWorkerContext + LogWriter.soft_delete_by_event（派生行软删除）+ main.py 装配注入 EventWorker；双层去重（worker 层 processing_status 已推进跳过 + service 层 exists）；纠错链 correction_of 先软删除旧派生行；15 测试（10 unit + 5 integration）；ruff/mypy 干净，344 测试通过 |
+| APC-T015 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -143,12 +145,20 @@
   - `server/app/events/domain/observation_event.py` + `infra/repository.py`：`ObservationEventRepository.update_processing_status(event_id, status)`（推进 processing_status，与 sync_status 独立，§6.2 双状态机）。
   - 测试：`server/tests/unit/normalization/`（form 15 + voice 18 + service 6 = 39）+ `server/tests/integration/test_normalization.py`（5：manual→feeding_log 结构化列 + voice 文本解析 amount + 幂等无重复 + 非 P0 不写不推进 + diaper→diaper_log payload）。
   - 验收：P0 记录类型可归一化；派生表可追溯 event_id（FK RESTRICT）；confidence manual=1.0/voice<1.0；不识别事件保留 observation_event 标记 processing_status。
+- **APC-T014**：去重、纠错链处理与 Normalization Worker：
+  - `server/app/normalization/worker.py`：`NormalizationWorker`（`EventHandler` 协议，`__call__` 转发 `handle`，由 `EventWorker.add_handler` 注入）。按 `op` 分发：`insert`/`update`/`recover`/未知 → 加载事件 → 去重（`processing_status` 已 `normalized`/`projected` 跳过）→ 纠错链（`correction_of` 非空先软删除旧 event_id 派生行）→ `normalize`；`delete` → 软删除该 event_id 在所有 P0 派生表的行。每条消息独立 session + commit；异常隔离（单条失败记日志不阻断消费循环，at-least-once 靠 recover_pending 补偿）。
+  - `WorkerContext` Protocol + `SqlAlchemyWorkerContext`：封装"加载事件/软删除派生行/归一化/提交"，使 worker 的 op 分发/去重/纠错链逻辑可注入内存替身纯单测（不依赖 DB）。
+  - `server/app/normalization/service.py` + `infra/log_writer.py`：`LogWriter.soft_delete_by_event(event_id, table)`（置派生行 `is_deleted=true`，§5.1 不物理删除；纠错链/事件软删除时派生表排除）。
+  - `server/app/main.py`：`pg_listen_enabled` 时 `EventWorker.add_handler(NormalizationWorker(...))` 装配。
+  - 双层去重：worker 层（`processing_status` 已推进跳过，避免重复 NOTIFY 重复处理）+ service 层（`log_writer.exists` 按 event_id 去重，崩溃恢复后最终一致）。
+  - 测试：`server/tests/unit/normalization/test_normalization_worker.py`（10：insert/路由/去重 normalized+projected/纠错链先软删除旧派生行/delete 软删除/event not found/缺 event_id/异常隔离/未知 op）+ `server/tests/integration/test_normalization_worker.py`（5：insert 归一化+推进状态/重复 NOTIFY 去重/delete 软删除派生行/纠错链旧派生行软删除+新派生行生效/recover_pending 补处理 pending 事件）。
+  - 验收：`processing_status` 可从 pending 推进到 normalized；重复 NOTIFY 不重复写派生表；correction_of 触发旧派生记录失效；soft delete 触发派生表排除；崩溃恢复扫描 pending 事件可补处理。
 
 ---
 
 ## 3. 进行中
 
-无。APC-T013 已完成。下一步进入 Normalization Worker（T014）与 Baby State Engine（T015）。
+无。APC-T014 已完成。下一步进入 Baby State Engine（T015）。
 
 ---
 
@@ -156,9 +166,9 @@
 
 按 MVP 路径（TASK_BACKLOG §4）推进 Epic E02 剩余：
 
-1. **APC-T014** — 去重、纠错链处理与 Normalization Worker（依赖 T013；已满足）。常驻 worker 订阅 events.changed → 调 NormalizationService；去重策略；纠错/软删除对派生表处理。
-2. **APC-T015** — Baby State Engine P0 Projection（依赖 T013）。
-3. **APC-T016** — State Engine 投影规则与 derived_baby_state upsert（依赖 T015）。
+1. **APC-T015** — Baby State Engine P0 Projection（依赖 T013；已满足）。feeding/diaper/sleep/temperature/supplement P0 派生计算纯函数（距上次喂奶、24h 奶量/次数、湿/脏尿布数、24h 睡眠、当前会话、24h 最高温）；只计算不产生告警等级。
+2. **APC-T016** — State Engine 投影规则与 derived_baby_state upsert（依赖 T015）。
+3. **APC-T017** — 打通 Event → Normalization → State 集成链路（依赖 T010/T014/T016）。
 
 ---
 

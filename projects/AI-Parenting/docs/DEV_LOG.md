@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-15 · Round 15 · APC-T014 去重、纠错链处理与 Normalization Worker 完成（NormalizationWorker + WorkerContext + soft_delete_by_event + main 装配 + 15 测试）
 - 2026-08-13 · Round 14 · APC-T013 Normalization 表单/语音文本解析与领域派生表写入完成（form/voice parser + NormalizationService + LogWriter + update_processing_status + 44 测试）
 - 2026-08-13 · Round 13 · APC-T012 PowerSync 适配、同步契约校验与冲突软提示完成（contract_validator + conflict_detector + sync-rules + 55 测试，Milestone 2 全部 DONE）
 - 2026-08-12 · Round 12 · APC-T012 PowerSync 适配半成品修复（contract_validator mypy 修复 + 文档补齐 T010/T011 外部记忆）
@@ -26,6 +27,49 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 15 · 2026-08-15 · APC-T014 去重、纠错链处理与 Normalization Worker
+
+### 背景
+
+T013 完成归一化解析与派生表写入，但 worker 接入留 T014。T014 目标：Normalization 常驻 worker 订阅 `events.changed` → 调 NormalizationService；去重策略（重复 NOTIFY 不重复写派生表）；`correction_of` 触发旧派生记录失效；soft delete 触发派生表排除；崩溃恢复扫描 pending 事件可补处理。
+
+### 交付
+
+- **`server/app/normalization/worker.py`**：`NormalizationWorker`（`EventHandler` 协议，`__call__` 转发 `handle`，由 `EventWorker.add_handler` 注入）。按 `op` 分发：`insert`/`update`/`recover`/未知 → 加载事件 → 去重（`processing_status` 已 `normalized`/`projected` 跳过）→ 纠错链（`correction_of` 非空先软删除旧 event_id 派生行）→ `normalize`；`delete` → 软删除该 event_id 在所有 P0 派生表的行。每条消息独立 session + commit；异常隔离（单条失败记日志不阻断消费循环，at-least-once 靠 recover_pending 补偿）。
+- **`WorkerContext` Protocol + `SqlAlchemyWorkerContext`**：封装"加载事件/软删除派生行/归一化/提交"四步，使 worker 的 op 分发/去重/纠错链逻辑可注入内存替身纯单测（不依赖 DB）。
+- **`server/app/normalization/service.py` + `infra/log_writer.py`**：`LogWriter.soft_delete_by_event(event_id, table)`（置派生行 `is_deleted=true`，§5.1 不物理删除；纠错链/事件软删除时派生表排除）。
+- **`server/app/main.py`**：`pg_listen_enabled` 时 `EventWorker.add_handler(NormalizationWorker(...))` 装配。
+- 测试：`server/tests/unit/normalization/test_normalization_worker.py`（10）+ `server/tests/integration/test_normalization_worker.py`（5）。
+
+### 决策与权衡
+
+- **WorkerContext 抽象使核心逻辑可纯单测**：worker 的 op 分发/去重/纠错链调用顺序是 T014 核心，值得脱离 DB 纯单测。引入 `WorkerContext` Protocol（`get_event`/`soft_delete_event_logs`/`normalize`/`commit`），生产用 `SqlAlchemyWorkerContext`，测试注入内存替身。避免 worker 硬依赖具体类导致单测必须连 DB。
+- **`__call__` 转发 `handle`**：`EventWorker` 以 `await handler(payload)` 调用 handler（`EventHandler = Callable[[EventPayload], Awaitable[None]]`）。`NormalizationWorker` 实现 `__call__` 转发到命名方法 `handle`，既符合 EventHandler 协议，又保留可独立测试的命名方法。
+- **双层去重**：worker 层（`processing_status` 已 `normalized`/`projected` 跳过，避免重复 NOTIFY / recover 已处理事件重复处理）+ service 层（`log_writer.exists` 按 event_id 去重，崩溃恢复后最终一致）。worker 层去重是性能优化（避免无谓加载/normalize），service 层去重是正确性兜底。
+- **纠错链遍历所有 P0 表软删除**：一个 event_id 只写一张派生表（按 event_type），但纠错链/软删除时 worker 不知旧事件的 event_type（delete NOTIFY 的 OLD 跨进程不可靠），故遍历所有 P0 表软删除——无对应行的表返回 0，开销可忽略。比"先查 event_type 再定表"少一次查询。
+- **异常隔离不阻断消费循环**：worker `handle` 捕获所有异常记日志不抛。at-least-once 语义下，未推进 `processing_status` 的事件会被 `EventWorker.recover_pending` 重新投递补偿（APC-T011）。若抛出会阻断 EventBus 消费循环，影响后续事件处理。
+- **每条消息独立 session + commit**：worker 不复用请求 session（无 HTTP 请求上下文），每条 NOTIFY 开独立 session，handler 内 commit（事务边界在 handler，架构 §5.2）。失败不 commit，事件保持 pending 供 recover。
+
+### 测试与验收
+
+- 单元：10 passed（worker op 分发/路由/去重 normalized+projected/纠错链先软删除旧派生行/delete 软删除/event not found/缺 event_id/异常隔离/未知 op）。
+- 集成：5 passed（真实 PG AI_parenting_dev：insert 归一化+推进状态/重复 NOTIFY 去重/delete 软删除派生行/纠错链旧派生行软删除+新派生行生效/recover_pending 补处理 pending 事件）。
+- 全量：344 passed，ruff/mypy 干净。
+- 验收：`processing_status` 可从 pending 推进到 normalized；重复 NOTIFY 不重复写派生表；correction_of 触发旧派生记录失效；soft delete 触发派生表排除；崩溃恢复扫描 pending 事件可补处理。
+
+### 红线与边界
+
+- 未读取/操作 `.env`；集成测试连独立库 AI_parenting_dev；未碰 `AI-Parenting-Copilot/`。
+- 未改变架构边界（normalization 为 §2 M05 归一化层 + §7.1 worker 消费，不做医疗判断/不产生告警）。
+- 未引入新依赖、新迁移（派生表 `is_deleted` 在 T004 SoftDeleteMixin 已有）。
+- 顺带修复工厂根 `scripts/governance_check.py`（`datetime.UTC` 在系统 python3.9 不存在导致 pre-commit hook 崩溃；识别项目级 CHANGELOG；豁免 scripts/ 工具脚本）——此修复独立提交，使全仓库提交恢复。
+
+### 下一步
+
+APC-T015 — Baby State Engine P0 Projection（依赖 T013；已满足）。feeding/diaper/sleep/temperature/supplement P0 派生计算纯函数（距上次喂奶、24h 奶量/次数、湿/脏尿布数、24h 睡眠、当前会话、24h 最高温）；只计算不产生告警等级。
 
 ---
 
