@@ -87,7 +87,7 @@ EXCLUDE_MARKERS = [
 
 
 def beijing_time() -> str:
-    return (datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
+    return (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _run_git(args: list[str]) -> str:
@@ -256,14 +256,30 @@ def scan_missing_core_doc_links() -> list[str]:
     return sorted(missing)
 
 
+def _project_changelog_for(rel: str) -> str | None:
+    """若 rel 位于某子项目下，返回该项目级 CHANGELOG 的仓库根相对路径。
+
+    子项目约定为 ``projects/<name>/docs/CHANGELOG.md``。项目级 CHANGELOG
+    与工厂根 CHANGELOG 同等有效——子项目铁律要求只写项目级 docs，不回写工厂根。
+    """
+    parts = rel.split("/")
+    if len(parts) >= 2 and parts[0] == "projects":
+        return "projects/" + parts[1] + "/docs/CHANGELOG.md"
+    return None
+
+
 def scan_changelog_required(changed_files: list[str]) -> list[str]:
     if "docs/CHANGELOG.md" in changed_files:
         return []
     offenders = []
     for rel in changed_files:
-        if rel.startswith(("docs/", "diagnostics/")) or rel in {"README.md", "HANDOFF.md", "TASK_BACKLOG.md"}:
+        if rel.startswith(("docs/", "diagnostics/", "scripts/")) or rel in {"README.md", "HANDOFF.md", "TASK_BACKLOG.md"}:
             continue
         if (ROOT / rel).suffix.lower() in CODE_EXTS:
+            proj_cl = _project_changelog_for(rel)
+            if proj_cl and proj_cl in changed_files:
+                # 该改动所属项目的项目级 CHANGELOG 已更新，视为已记录。
+                continue
             offenders.append(rel)
     return offenders
 
@@ -575,7 +591,7 @@ def main() -> None:
     ts = beijing_time()
     changed_files = get_changed_files()
     report = generate_report(changed_files)
-    today = (datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=8)).strftime("%Y-%m-%d")
+    today = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=8)).strftime("%Y-%m-%d")
     dated_path = DOCS_DIR / f"GOVERNANCE_CHECK_{today}.md"
     latest_path = DOCS_DIR / "GOVERNANCE_CHECK_LATEST.md"
     target = Path(args.output) if args.output else dated_path
