@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...common.ids import new_id
@@ -96,6 +96,29 @@ class SqlAlchemyLogWriter:
             )
         self._session.add(row)
         await self._session.flush()
+
+    async def soft_delete_by_event(self, event_id: str, table: str) -> int:
+        """置 ``table`` 中 ``event_id`` 对应派生行 ``is_deleted=true``（APC-T014）。
+
+        供纠错链（``correction_of`` 触发旧派生行失效）与事件软删除（派生表排除）。
+        架构 §5.1 不物理删除——派生表行只置 ``is_deleted``，State Engine 重算时排除。
+        返回受影响行数（0 表示无对应派生行）。
+        """
+        orm_cls = _TABLE_TO_ORM.get(table)
+        if orm_cls is None:
+            return 0
+        stmt = (
+            update(orm_cls)
+            .where(
+                orm_cls.event_id == event_id,
+                orm_cls.is_deleted.is_(False),
+            )
+            .values(is_deleted=True)
+        )
+        result = await self._session.execute(stmt)
+        await self._session.flush()
+        # asyncpg 的 CursorResult 有 rowcount，但 mypy 的 Result 协议未声明；安全取值。
+        return int(getattr(result, "rowcount", 0) or 0)
 
 
 __all__ = ["SqlAlchemyLogWriter"]

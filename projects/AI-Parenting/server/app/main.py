@@ -121,6 +121,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             dsn = s.database.url.replace("postgresql+asyncpg://", "postgresql://")
             pg_bus = PgListenEventBus(dsn)
             event_worker = EventWorker(bus=pg_bus, session_factory=get_session_factory(s))
+            # APC-T014：注入 Normalization worker handler，订阅 events.changed →
+            # 归一化 + 纠错链/软删除对派生表的处理。
+            from .normalization.worker import NormalizationWorker
+
+            event_worker.add_handler(
+                NormalizationWorker(session_factory=get_session_factory(s))
+            )
             await event_worker.start()
             event_bus = pg_bus  # 供 shutdown 停止
             logger.info("PG LISTEN/NOTIFY 事件总线已启用（APC-T011），订阅 events.changed")

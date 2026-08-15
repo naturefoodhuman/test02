@@ -45,9 +45,11 @@ _logger = logging.getLogger(__name__)
 
 
 class LogWriter(Protocol):
-    """派生表写入协议（APC-T013）。
+    """派生表写入协议（APC-T013 / APC-T014）。
 
     按 ``NormalizedRecord.table`` 写对应 ``*_log`` 表；幂等（按 ``event_id`` 去重）。
+    APC-T014 增 ``soft_delete_by_event``：纠错链/软删除时置派生行 ``is_deleted=true``
+    （架构 §5.1 不物理删除；派生表行随事件软删除失效，State Engine 重算时排除）。
     实现见 ``normalization.infra.log_writer.SqlAlchemyLogWriter``。
     """
 
@@ -57,6 +59,14 @@ class LogWriter(Protocol):
 
     async def write(self, record: NormalizedRecord) -> None:
         """写 ``NormalizedRecord`` 到对应 ``*_log`` 表（幂等：已存在则跳过）。"""
+        ...
+
+    async def soft_delete_by_event(self, event_id: str, table: str) -> int:
+        """置 ``table`` 中 ``event_id`` 对应派生行 ``is_deleted=true``（APC-T014）。
+
+        供纠错链（``correction_of`` 触发旧派生行失效）与事件软删除（派生表排除）。
+        返回受影响行数（0 表示无对应派生行，调用方可忽略）。
+        """
         ...
 
 
