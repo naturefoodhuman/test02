@@ -1,0 +1,32 @@
+[
+  {
+    "level": "high",
+    "code": "NVIDIA_UPSTREAM_429_COOLDOWN",
+    "message": "At least one NVIDIA key is in cooldown or has consecutive upstream 429s.",
+    "evidence": {
+      "cooldown_keys": [
+        {
+          "key_id": "key-1",
+          "available_in_seconds": 202.99,
+          "consecutive_429": 1
+        },
+        {
+          "key_id": "key-2",
+          "available_in_seconds": 203.275,
+          "consecutive_429": 1
+        }
+      ],
+      "total_consecutive_429": 2
+    },
+    "recommendation": "Treat this as upstream NVIDIA/free-tier pressure. Keep fallback disabled if policy requires it; reduce prompt size and keep FORGE_REMOTE_MAX_CONCURRENCY=1. Do not increase RPM."
+  },
+  {
+    "level": "high",
+    "code": "SMART_SEES_429_FROM_NIM",
+    "message": "Smart Proxy has observed 429 responses from the NIM sidecar.",
+    "evidence": {
+      "smart_retry_429_counter": 18
+    },
+    "recommendation": "If running a version before abd6459, pull latest: NIM busy should be separated from true rate_limit. If still 429 after latest, inspect 4010 /stats cooldown fields."
+  }
+]

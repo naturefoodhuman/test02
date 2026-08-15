@@ -1,0 +1,332 @@
+2026-08-15 16:05:38,874 [INFO]: 📋 路由表加载完成: 6 本地, 21 远程
+INFO:     Started server process [86980]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
+📦 .env 加载了 59 个环境变量
+INFO:     127.0.0.1:57117 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57120 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57123 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:09:14,566 [INFO]: 📏 [ffca7abf824b] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=413287
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57351 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57353 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:09:24,816 [INFO]: HTTP Request: POST http://127.0.0.1:8080/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-15 16:09:24,816 [INFO]: 🎯 工具选择 mode=stage1 selected=[]
+2026-08-15 16:09:24,816 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=stage1, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:09:24,826 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57359 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57361 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:09:41,312 [INFO]: 📏 [d7380d39099c] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=423850
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:09:41,320 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:09:41,320 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:09:41,331 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57363 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57365 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:09:51,709 [INFO]: 📏 [5bd742029e6e] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=432018
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:09:51,722 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:09:51,722 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:09:51,743 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-15 16:10:05,096 [INFO]: 📏 [cf5f8ce67c2f] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=435129
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:10:05,106 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:10:05,107 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:10:05,121 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57372 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57374 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:10:10,114 [INFO]: 📏 [73cd198adb25] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=436190
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:10:10,127 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:10:10,127 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:10:10,144 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57377 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57379 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:10:30,301 [INFO]: 📏 [210f50811050] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=438467
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:10:30,313 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:10:30,314 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:10:30,326 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57383 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57385 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:10:43,991 [INFO]: 📏 [cd26286e1ae7] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=442229
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:10:44,002 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:10:44,002 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:10:44,013 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57387 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57389 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57393 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57395 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:11:08,546 [INFO]: 📏 [a5a40c622d47] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=443799
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:11:08,556 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:11:08,556 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:11:08,571 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57400 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57402 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57406 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57408 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57410 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57412 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:11:56,465 [INFO]: 📏 [34e9d423ca05] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=453104
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:11:56,474 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:11:56,475 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:11:56,485 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57421 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57423 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:12:09,843 [INFO]: 📏 [163e54972526] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=453977
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:12:09,857 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:12:09,857 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:12:09,871 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-15 16:12:18,273 [INFO]: 📏 [d683a7607ee9] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=455306
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:12:18,284 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:12:18,285 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:12:18,295 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57427 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57429 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:12:22,166 [INFO]: 📏 [9cbfc314962a] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=456055
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:12:22,179 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:12:22,180 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:12:22,198 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-15 16:12:30,233 [INFO]: 📏 [9b10da18c094] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=456979
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:12:30,245 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:12:30,246 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:12:30,262 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57432 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57434 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:12:38,651 [INFO]: 📏 [dc023f1f7fb9] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=457842
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:12:38,661 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:12:38,661 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:12:38,675 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57438 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57440 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:12:56,252 [INFO]: 📏 [ee39b0ea489b] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=459562
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:12:56,266 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:12:56,267 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:12:56,282 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57442 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57444 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:13:13,087 [INFO]: 📏 [287d4969de74] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=461519
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:13:13,099 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:13:13,099 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:13:13,114 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-15 16:13:17,762 [INFO]: 📏 [b13d60605870] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=473491
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:13:17,789 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:13:17,789 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:13:17,797 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57449 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57451 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:13:33,395 [INFO]: 📏 [89e34b730e60] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=485395
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:13:33,407 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:13:33,407 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:13:33,423 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57475 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57477 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57557 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57559 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57611 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57614 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57699 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57701 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:14:35,113 [INFO]: 📏 [e9e940e8fcec] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=498663
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:14:35,125 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:14:35,125 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:14:35,140 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57705 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57707 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:14:45,577 [INFO]: 📏 [9a595830d362] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=500316
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:14:45,591 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:14:45,592 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:14:45,608 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57709 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57711 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:14:56,833 [INFO]: 📏 [f0c98fcc67d6] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=502177
+INFO:     127.0.0.1:57306 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:14:56,847 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:14:56,847 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:14:56,864 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-15 16:14:57,146 [ERROR]: ❌ 后端流式错误: {'message': '{"status":429,"title":"Too Many Requests"}', 'type': 'HTTP429', 'model': 'z-ai/glm-5.2'}
+2026-08-15 16:14:57,183 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:14:57,184 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:14:57,185 [INFO]: 📏 [b59e3e109dce] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:14:57,426 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:14:57,427 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:14:57,427 [ERROR]: ❌ 转发最终失败: HTTP 429: {"status":429,"title":"Too Many Requests"}
+INFO:     127.0.0.1:57715 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:14:58,068 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:14:58,068 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:14:58,070 [INFO]: 📏 [2ff4640b4c1a] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:14:58,086 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:14:58,086 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:14:58,086 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 599.1s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57715 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:14:59,166 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:14:59,166 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:14:59,168 [INFO]: 📏 [31945cb2af2c] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:14:59,185 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:14:59,186 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:14:59,186 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 598.0s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57715 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:15:01,713 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:15:01,713 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:15:01,714 [INFO]: 📏 [0bad01fef50a] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:15:01,727 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:15:01,728 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:15:01,728 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 595.4s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57715 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:15:06,251 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:15:06,251 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:15:06,255 [INFO]: 📏 [e45d54ada9b2] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:15:06,278 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:15:06,278 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:15:06,278 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 590.9s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57715 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:57716 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57718 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:15:16,170 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:15:16,171 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:15:16,173 [INFO]: 📏 [10fafd47fcbf] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:15:16,193 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:15:16,194 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:15:16,194 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 580.9s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57720 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:57722 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57724 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:15:32,874 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:15:32,874 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:15:32,875 [INFO]: 📏 [7030f4a7be50] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:15:32,890 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:15:32,891 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:15:32,891 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 564.2s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57728 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:57730 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57732 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57734 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57736 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57743 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57745 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:16:07,221 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:16:07,222 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:16:07,224 [INFO]: 📏 [635ba2316330] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:16:07,240 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:16:07,240 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:16:07,240 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 529.9s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57747 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:57749 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57751 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57755 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57757 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:16:43,154 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:16:43,154 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:16:43,156 [INFO]: 📏 [218fc48073f0] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:16:43,173 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:16:43,174 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:16:43,174 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 494.0s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57759 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:57761 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57763 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57767 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57769 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:17:17,257 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:17:17,258 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:17:17,259 [INFO]: 📏 [b2c2e6466199] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:17:17,279 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:17:17,279 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:17:17,279 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 459.9s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57771 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:57773 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57775 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57777 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57779 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:17:49,481 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:17:49,481 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:17:49,483 [INFO]: 📏 [5e6afa782fad] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502163
+2026-08-15 16:17:49,502 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:17:49,503 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:17:49,503 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 427.7s", "type": "rate_limit"}}
+INFO:     127.0.0.1:57783 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:57785 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57787 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57791 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57793 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57801 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57803 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57825 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57827 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57882 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57884 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57927 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57929 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58016 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58018 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-15 16:20:33,219 [INFO]: 📏 [e5823ac992f1] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=502209
+INFO:     127.0.0.1:58031 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-15 16:20:33,230 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:20:33,231 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:20:33,237 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-15 16:20:33,237 [ERROR]: ❌ 后端流式错误: {'message': 'No NVIDIA NIM key available; retry after 263.9s', 'type': 'rate_limit'}
+2026-08-15 16:20:33,245 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:20:33,245 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:20:33,245 [INFO]: 📏 [8ad1175faded] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502195
+2026-08-15 16:20:33,251 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:20:33,252 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:20:33,252 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 263.9s", "type": "rate_limit"}}
+INFO:     127.0.0.1:58033 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:20:33,894 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:20:33,894 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:20:33,895 [INFO]: 📏 [b8c5eb807d04] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502195
+2026-08-15 16:20:33,913 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:20:33,914 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:20:33,914 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 263.2s", "type": "rate_limit"}}
+INFO:     127.0.0.1:58033 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:20:35,084 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:20:35,085 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:20:35,086 [INFO]: 📏 [827f4aa5e1ee] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502195
+2026-08-15 16:20:35,104 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:20:35,105 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:20:35,105 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 262.1s", "type": "rate_limit"}}
+INFO:     127.0.0.1:58033 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:20:37,524 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:20:37,525 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:20:37,526 [INFO]: 📏 [abf997f91e3f] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502195
+2026-08-15 16:20:37,540 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:20:37,541 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:20:37,541 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 259.6s", "type": "rate_limit"}}
+INFO:     127.0.0.1:58033 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:20:42,460 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:20:42,460 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:20:42,461 [INFO]: 📏 [42c8ea2495ed] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502195
+2026-08-15 16:20:42,478 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:20:42,478 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:20:42,479 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 254.7s", "type": "rate_limit"}}
+INFO:     127.0.0.1:58033 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:20:50,560 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:20:50,561 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:20:50,562 [INFO]: 📏 [3ed43601004e] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502195
+2026-08-15 16:20:50,583 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:20:50,583 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:20:50,583 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 246.6s", "type": "rate_limit"}}
+INFO:     127.0.0.1:58036 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-15 16:21:08,370 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-15 16:21:08,371 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-15 16:21:08,372 [INFO]: 📏 [7960bd2576c1] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=502195
+2026-08-15 16:21:08,391 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-15 16:21:08,392 [WARNING]: ⚠️ 可重试状态码 429，第 1/1 次
+2026-08-15 16:21:08,392 [ERROR]: ❌ 转发最终失败: HTTP 429: {"error": {"message": "No NVIDIA NIM key available; retry after 228.8s", "type": "rate_limit"}}
+INFO:     127.0.0.1:58042 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+INFO:     127.0.0.1:58051 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58053 - "GET /_forge/status HTTP/1.1" 200 OK
