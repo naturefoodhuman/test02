@@ -170,9 +170,7 @@ class NormalizationWorker:
                 # insert / update / recover / 未知 op 一律按"处理事件"路径（保守补处理）。
                 await self._handle_upsert(str(event_id), baby_id)
         except Exception:  # 异常隔离，不阻断消费循环。
-            _logger.exception(
-                "normalization.worker.error event_id=%s op=%s", event_id, op
-            )
+            _logger.exception("normalization.worker.error event_id=%s op=%s", event_id, op)
 
     async def _handle_upsert(self, event_id: str, baby_id: Any = None) -> None:
         """处理 insert/update/recover：去重 → 纠错链 → normalize → 触发 state 重算。"""

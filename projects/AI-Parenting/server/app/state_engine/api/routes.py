@@ -120,13 +120,9 @@ SessionDep = Annotated[AsyncSession, Depends(get_request_session_dep)]
 # ---- 路由 ----
 
 
-async def _check_baby_belongs(
-    session: AsyncSession, baby_id: str, family_id: str
-) -> None:
+async def _check_baby_belongs(session: AsyncSession, baby_id: str, family_id: str) -> None:
     """校验 baby 属于该 family；不存在/不属于则 404（不泄露存在性，§19）。"""
-    row = (
-        await session.execute(select(Baby).where(Baby.id == baby_id))
-    ).scalar_one_or_none()
+    row = (await session.execute(select(Baby).where(Baby.id == baby_id))).scalar_one_or_none()
     if row is None or row.family_id != family_id:
         raise NotFoundError(f"baby {baby_id} not found in your family")
 

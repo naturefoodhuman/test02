@@ -25,15 +25,11 @@ from ..domain import SupplementProjection
 from ._common import active_events, seconds_between
 
 
-def project_supplement(
-    events: Iterable[ObservationEvent], now: datetime
-) -> SupplementProjection:
+def project_supplement(events: Iterable[ObservationEvent], now: datetime) -> SupplementProjection:
     """计算补剂派生指标（P0，纯函数）。"""
     active = active_events(events, "supplement")
     if not active:
-        return SupplementProjection(
-            last_supplement_ago_seconds=None, last_supplement_name=None
-        )
+        return SupplementProjection(last_supplement_ago_seconds=None, last_supplement_name=None)
     last = active[-1]
     name = last.normalized_payload.get("name")
     name_str = str(name) if name is not None else None

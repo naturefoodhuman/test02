@@ -1,0 +1,63 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-16 00:00:00
+#
+# 示例规则包：triage（分诊体温阈值），APC-T018 golden 测试用。
+# 依据：ARCHITECTURE_FINAL §10.2（3 月龄以下 ≥38°C 强红线；趋势类双条件）。
+# 注意：本包为 kernel/loader/registry 的示例与测试夹具，真实分诊规则在 APC-T021 细化。
+
+policy_type: triage
+region: CN
+version: 1
+effective_from: 2026-08-16T00:00:00+08:00
+source: "示例规则（PRD §11.9/§11.10 摘要）"
+rule_text: |
+  3 月龄以下（baby_age_days < 90）体温 ≥38°C 为强红线（block + alert_level=red）。
+  3 月龄以上体温 ≥39°C 为橙色告警（warn + alert_level=orange）。
+  3 月龄以上体温 38~39°C 为黄色提醒（warn + alert_level=yellow）。
+display_text: |
+  婴儿体温分诊：3 月以下 ≥38°C 立即就医；3 月以上 ≥39°C 尽快就医；38~39°C 观察并咨询医生。
+rules:
+  - rule_id: fever_under_3mo_red
+    conditions:
+      - op: lt
+        field: baby_age_days
+        value: 90
+      - op: gte
+        field: variables.temperature_c
+        value: 38.0
+    action:
+      verdict: block
+      outputs:
+        alert_level: red
+      reason_code: fever_under_3mo_red
+      evidence_text: "3 月龄以下 ≥38°C 强红线（PRD §11.9）"
+
+  - rule_id: fever_over_3mo_orange
+    conditions:
+      - op: gte
+        field: baby_age_days
+        value: 90
+      - op: gte
+        field: variables.temperature_c
+        value: 39.0
+    action:
+      verdict: warn
+      outputs:
+        alert_level: orange
+      reason_code: fever_over_3mo_orange
+      evidence_text: "3 月龄以上 ≥39°C 橙色告警"
+
+  - rule_id: fever_over_3mo_yellow
+    conditions:
+      - op: gte
+        field: baby_age_days
+        value: 90
+      - op: range
+        field: variables.temperature_c
+        value: [38.0, 39.0]
+    action:
+      verdict: warn
+      outputs:
+        alert_level: yellow
+      reason_code: fever_over_3mo_yellow
+      evidence_text: "3 月龄以上 38~39°C 黄色提醒"

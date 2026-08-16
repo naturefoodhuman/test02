@@ -114,8 +114,12 @@ def test_feeding_last_ago_and_24h_volume_count():
 
 def test_feeding_excludes_outside_window_and_deleted():
     events = [
-        _ev_unique("feeding", start=NOW - timedelta(hours=30), payload={"amount_ml": 200}),  # 窗口外。
-        _ev_unique("feeding", start=NOW - timedelta(hours=2), payload={"amount_ml": 80}, is_deleted=True),  # 已删。
+        _ev_unique(
+            "feeding", start=NOW - timedelta(hours=30), payload={"amount_ml": 200}
+        ),  # 窗口外。
+        _ev_unique(
+            "feeding", start=NOW - timedelta(hours=2), payload={"amount_ml": 80}, is_deleted=True
+        ),  # 已删。
         _ev_unique("feeding", start=NOW - timedelta(hours=1), payload={"amount_ml": 60}),
     ]
     r = project_feeding(events, NOW)
@@ -129,7 +133,9 @@ def test_feeding_excludes_outside_window_and_deleted():
 def test_feeding_skips_missing_amount_and_bool():
     events = [
         _ev_unique("feeding", start=NOW - timedelta(hours=1), payload={}),  # 无 amount。
-        _ev_unique("feeding", start=NOW - timedelta(minutes=30), payload={"amount_ml": True}),  # bool 排除。
+        _ev_unique(
+            "feeding", start=NOW - timedelta(minutes=30), payload={"amount_ml": True}
+        ),  # bool 排除。
         _ev_unique("feeding", start=NOW - timedelta(minutes=10), payload={"amount_ml": 50}),
     ]
     r = project_feeding(events, NOW)
@@ -156,7 +162,9 @@ def test_diaper_wet_dirty_mixed_counts():
 def test_diaper_excludes_outside_window_and_unknown_type():
     events = [
         _ev_unique("diaper", start=NOW - timedelta(hours=30), payload={"type": "wet"}),  # 窗口外。
-        _ev_unique("diaper", start=NOW - timedelta(hours=1), payload={"type": "unknown"}),  # 未知 type 不计。
+        _ev_unique(
+            "diaper", start=NOW - timedelta(hours=1), payload={"type": "unknown"}
+        ),  # 未知 type 不计。
     ]
     r = project_diaper(events, NOW)
     assert r.wet_count_24h == 0
@@ -183,10 +191,18 @@ def test_temperature_empty_returns_none():
 
 def test_temperature_excludes_outside_window_and_invalid():
     events = [
-        _ev_unique("temperature", start=NOW - timedelta(hours=30), payload={"temperature_c": 39.0}),  # 窗口外。
-        _ev_unique("temperature", start=NOW - timedelta(hours=1), payload={"temperature_c": "abc"}),  # 非法。
-        _ev_unique("temperature", start=NOW - timedelta(minutes=30), payload={"temperature_c": True}),  # bool 排除。
-        _ev_unique("temperature", start=NOW - timedelta(minutes=10), payload={"temperature_c": 37.5}),
+        _ev_unique(
+            "temperature", start=NOW - timedelta(hours=30), payload={"temperature_c": 39.0}
+        ),  # 窗口外。
+        _ev_unique(
+            "temperature", start=NOW - timedelta(hours=1), payload={"temperature_c": "abc"}
+        ),  # 非法。
+        _ev_unique(
+            "temperature", start=NOW - timedelta(minutes=30), payload={"temperature_c": True}
+        ),  # bool 排除。
+        _ev_unique(
+            "temperature", start=NOW - timedelta(minutes=10), payload={"temperature_c": 37.5}
+        ),
     ]
     r = project_temperature(events, NOW)
     assert r.max_c_24h == 37.5
@@ -245,7 +261,9 @@ def test_supplement_empty():
 
 def test_supplement_excludes_deleted():
     events = [
-        _ev_unique("supplement", start=NOW - timedelta(hours=1), payload={"name": "维D"}, is_deleted=True),
+        _ev_unique(
+            "supplement", start=NOW - timedelta(hours=1), payload={"name": "维D"}, is_deleted=True
+        ),
         _ev_unique("supplement", start=NOW - timedelta(hours=5), payload={"name": "DHA"}),
     ]
     r = project_supplement(events, NOW)
@@ -258,7 +276,9 @@ def test_supplement_excludes_deleted():
 
 def test_project_state_aggregates_all_and_source_range():
     events = [
-        _ev_unique("feeding", start=NOW - timedelta(hours=30), payload={"amount_ml": 100}),  # 窗口外，最早。
+        _ev_unique(
+            "feeding", start=NOW - timedelta(hours=30), payload={"amount_ml": 100}
+        ),  # 窗口外，最早。
         _ev_unique("feeding", start=NOW - timedelta(hours=1), payload={"amount_ml": 120}),
         _ev_unique("diaper", start=NOW - timedelta(hours=2), payload={"type": "wet"}),
         _ev_unique("temperature", start=NOW - timedelta(hours=3), payload={"temperature_c": 37.8}),

@@ -33,9 +33,7 @@ from .projections import (
 )
 
 
-def project_state(
-    events: Iterable[ObservationEvent], now: datetime
-) -> DerivedBabyState:
+def project_state(events: Iterable[ObservationEvent], now: datetime) -> DerivedBabyState:
     """聚合 P0 projection → DerivedBabyState（纯函数，APC-T015）。
 
     Args:

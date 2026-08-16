@@ -36,6 +36,7 @@ from .auth.service.password import Pbkdf2PasswordHasher
 from .common.clock import Clock, SystemClock
 from .common.errors import AuthError
 from .common.event_bus import EventBus, InMemoryEventBus
+from .rule_engine.registry import RuleRegistry
 from .settings import Settings, get_settings
 
 if TYPE_CHECKING:
@@ -43,6 +44,7 @@ if TYPE_CHECKING:
 
     from .events.service.idempotency import EventService
     from .observability.audit import AuditService
+    from .rule_engine.evidence_repo import EvidencePolicyRepository
 
 
 @dataclass
@@ -60,7 +62,9 @@ class Container:
     # 请求作用域的 UserRepository / AuthService 由 FastAPI Depends 按请求构造，不放入本容器。
     jwt_service: JwtService
     password_hasher: PasswordHasher
-    # 预留：model_client / rule_modules / notification_channels 等，后续任务填充。
+    # RuleRegistry 进程级单例（APC-T018）：启动期注册 RuleModule（T020+ 接入），运行期只读。
+    rule_registry: RuleRegistry
+    # 预留：model_client / notification_channels 等，后续任务填充。
     _extras: dict[str, object] = field(default_factory=dict)
 
     def override(self, key: str, value: object) -> None:
@@ -92,12 +96,15 @@ def build_container(settings: Settings | None = None) -> Container:
         secret=s.auth.jwt_secret, access_ttl_seconds=s.auth.access_ttl_seconds, clock=clock
     )
     password_hasher: PasswordHasher = Pbkdf2PasswordHasher(iterations=s.auth.password_iterations)
+    # RuleRegistry 进程级单例（APC-T018）：启动期注册 RuleModule（T020+ 接入），运行期只读。
+    rule_registry = RuleRegistry()
     return Container(
         settings=s,
         clock=clock,
         event_bus=event_bus,
         jwt_service=jwt_service,
         password_hasher=password_hasher,
+        rule_registry=rule_registry,
     )
 
 
@@ -143,6 +150,15 @@ def get_clock_dep(request: Request) -> Clock:
 def get_event_bus_dep(request: Request) -> EventBus:
     """FastAPI 依赖：从 app.state 取 EventBus。"""
     return _container_from_request(request).event_bus
+
+
+def get_rule_registry_dep(request: Request) -> RuleRegistry:
+    """FastAPI 依赖：从 app.state 取进程级 RuleRegistry 单例（APC-T018）。
+
+    启动期注册 RuleModule（T020+），运行期只读。orchestrator/copilots 经此调用
+    ``registry.evaluate(domain, input, ctx)``（架构 §5.3 单一入口）。
+    """
+    return _container_from_request(request).rule_registry
 
 
 # ---- Auth 依赖工厂（APC-T008：请求作用域 AuthService + 鉴权 Principal）----
@@ -249,6 +265,27 @@ async def get_event_context_dep(request: Request) -> AsyncGenerator[EventContext
         )
 
 
+# ---- Rule Engine 依赖工厂（APC-T018：请求作用域 EvidencePolicyRepository）----
+
+
+async def get_evidence_policy_repo_dep(
+    request: Request,
+) -> AsyncGenerator[EvidencePolicyRepository, None]:
+    """FastAPI 依赖：按请求构造 SqlAlchemyEvidencePolicyRepository（APC-T018）。
+
+    请求作用域（持有请求级 ``AsyncSession``）；``Clock`` 从 container 取进程级单例。
+    供 T019 Rules Admin API（validate/activate/audit）与规则求值时取当前生效版本。
+    事务边界在调用方（service 层 commit，架构 §5.2）。
+    """
+    from .db import get_session_factory
+    from .rule_engine.evidence_repo import SqlAlchemyEvidencePolicyRepository
+
+    container = _container_from_request(request)
+    factory = get_session_factory(container.settings)
+    async with factory() as session:
+        yield SqlAlchemyEvidencePolicyRepository(session, clock=container.clock)
+
+
 __all__ = [
     "Container",
     "EventContext",
@@ -258,7 +295,9 @@ __all__ = [
     "get_container",
     "get_event_bus_dep",
     "get_event_context_dep",
+    "get_evidence_policy_repo_dep",
     "get_principal_dep",
+    "get_rule_registry_dep",
     "get_session_dep",
     "get_settings_dep",
     "reset_container",

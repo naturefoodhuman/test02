@@ -27,7 +27,9 @@ from ..domain import SleepProjection
 from ._common import WINDOW, active_events
 
 
-def _overlap_seconds(start: datetime, end: datetime, win_start: datetime, win_end: datetime) -> float:
+def _overlap_seconds(
+    start: datetime, end: datetime, win_start: datetime, win_end: datetime
+) -> float:
     """[start,end] 与 [win_start,win_end] 交集秒数。"""
     lo = max(start, win_start)
     hi = min(end, win_end)
@@ -36,9 +38,7 @@ def _overlap_seconds(start: datetime, end: datetime, win_start: datetime, win_en
     return (hi - lo).total_seconds()
 
 
-def project_sleep(
-    events: Iterable[ObservationEvent], now: datetime
-) -> SleepProjection:
+def project_sleep(events: Iterable[ObservationEvent], now: datetime) -> SleepProjection:
     """计算睡眠派生指标（P0，纯函数）。"""
     active = active_events(events, "sleep")
     win_start = now - WINDOW

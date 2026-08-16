@@ -97,12 +97,14 @@ def _from_snapshot(snapshot: dict, computed_at) -> DerivedBabyState:
     current_session_dt = None
     if current_session is not None:
         from datetime import datetime
+
         current_session_dt = datetime.fromisoformat(current_session)
 
     range_start = None
     range_end = None
     if isinstance(rng, list) and len(rng) == 2:
         from datetime import datetime
+
         if rng[0] is not None:
             range_start = datetime.fromisoformat(rng[0])
         if rng[1] is not None:

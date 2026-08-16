@@ -107,9 +107,7 @@ def _worker() -> NormalizationWorker:
 
 async def _active_feeding_logs(session, event_id) -> list[FeedingLog]:
     return (
-        (await session.execute(
-            select(FeedingLog).where(FeedingLog.event_id == event_id)
-        ))
+        (await session.execute(select(FeedingLog).where(FeedingLog.event_id == event_id)))
         .scalars()
         .all()
     )
@@ -203,12 +201,20 @@ def test_worker_correction_chain_soft_deletes_old_log():
         await worker.handle({"event_id": new_event_id, "op": "insert"})
         async with factory() as session:
             old_logs = (
-                (await session.execute(select(FeedingLog).where(FeedingLog.event_id == old_event_id)))
+                (
+                    await session.execute(
+                        select(FeedingLog).where(FeedingLog.event_id == old_event_id)
+                    )
+                )
                 .scalars()
                 .all()
             )
             new_logs = (
-                (await session.execute(select(FeedingLog).where(FeedingLog.event_id == new_event_id)))
+                (
+                    await session.execute(
+                        select(FeedingLog).where(FeedingLog.event_id == new_event_id)
+                    )
+                )
                 .scalars()
                 .all()
             )

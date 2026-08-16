@@ -96,9 +96,7 @@ def match_rule(rule: Rule, input_: RuleInput) -> bool:
     )
 
 
-def evaluate_pack(
-    pack: RulePack, input_: RuleInput, ctx: RuleContext
-) -> RuleResult:
+def evaluate_pack(pack: RulePack, input_: RuleInput, ctx: RuleContext) -> RuleResult:
     """求值规则包：首个匹配规则产出；无匹配返回默认 info。
 
     ``rule_version``：``<policy_type>@<version>``。

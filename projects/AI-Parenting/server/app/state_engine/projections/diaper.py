@@ -24,9 +24,7 @@ from ..domain import DiaperProjection
 from ._common import window_events
 
 
-def project_diaper(
-    events: Iterable[ObservationEvent], now: datetime
-) -> DiaperProjection:
+def project_diaper(events: Iterable[ObservationEvent], now: datetime) -> DiaperProjection:
     """计算尿布派生指标（P0，纯函数）。"""
     recent = window_events(events, "diaper", now)
     wet = 0

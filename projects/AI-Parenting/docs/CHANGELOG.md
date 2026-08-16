@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.18.0] - 2026-08-17 - APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo（进入 Epic E03）
 - [0.17.0] - 2026-08-16 - APC-T017 Event→Normalization→State 集成链路打通（Epic E02 全部完成）
 - [0.16.0] - 2026-08-16 - APC-T016 State Engine 增量重算 + Snapshot Repo + State API
 - [0.15.0] - 2026-08-16 - APC-T015 Baby State Engine P0 Projection
@@ -32,6 +33,34 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.18.0] - 2026-08-17
+
+### Added — APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo
+
+- **`server/app/rule_engine/domain/models.py`**：`RuleResult`（verdict/outputs/evidence/rule_version/reason_code，frozen）+ `RuleInput`/`RuleContext` + `RuleModule` Protocol（唯一医疗/剂量/阈值裁决者）+ `EvidenceRef` + `Rule`/`RuleCondition`/`RuleAction`/`RulePack` YAML schema（Pydantic，extra=forbid）。
+- **`server/app/rule_engine/kernel.py`**：纯函数求值——`match_rule`（conditions AND）+ `evaluate_pack`（首匹配产出/默认 info）；9 算子（eq/ne/lt/lte/gt/gte/in/not_in/range）+ 字段路径（顶层/`variables.xxx` 嵌套）；None 保守。
+- **`server/app/rule_engine/registry.py`**：`RuleRegistry` 按 domain 注册/调度 RuleModule（插件化，开闭原则）。
+- **`server/app/rule_engine/loader.py`**：`load_pack`（YAML→RulePack + sha256 hash 自校验）+ `validate_dir` + CLI `--validate`。
+- **`server/app/rule_engine/evidence_repo.py`**：`EvidencePolicyRepository` + `SqlAlchemyEvidencePolicyRepository`（upsert version 递增 + 旧版本自动关闭 + activate + get_current L1 TTLCache 5min + 写入即 invalidate 杜绝 stale rule）。
+- **`config/rules/triage/base-1.yaml`** + **`config/rules/README.md`**：示例规则包（体温分诊红线/橙/黄）+ 目录约定与新增流程。
+- **`server/app/di.py`**：Container 加 `rule_registry` 单例 + `get_rule_registry_dep` / `get_evidence_policy_repo_dep` 请求作用域工厂。
+- 测试：39 unit + 6 golden + 6 integration。
+
+### Fixed
+
+- `loader._compute_hash`：加 `_json_default` 处理 YAML `effective_from` 被解析为 datetime 后 json.dumps 报 TypeError；CLI 输出 `hash` 防 None 索引（mypy）。
+
+### Behavior
+
+- 规则求值为纯函数（kernel），规则域插件化经 RuleRegistry 调度；EvidencePolicy 版本化（强制递增 version，保留历史），当前生效 = effective_to IS NULL；医疗规则缓存写入/激活后立即失效（§11 杜绝 stale rule）。
+- `make rules-validate` 校验 config/rules/** 规则包（Pydantic + hash）。
+
+### Schema/API
+
+- 无 schema 变更（evidence_policy 表在 T004 已建）。无新 API（T019 建 `/api/v1/rules`）。新增 `make rules-validate` target（T018 前已加，本轮补示例包使其实际可用）。
 
 ---
 

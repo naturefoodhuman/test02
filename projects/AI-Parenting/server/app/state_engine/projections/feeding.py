@@ -26,15 +26,11 @@ from ..domain import FeedingProjection
 from ._common import active_events, seconds_between, window_events
 
 
-def project_feeding(
-    events: Iterable[ObservationEvent], now: datetime
-) -> FeedingProjection:
+def project_feeding(events: Iterable[ObservationEvent], now: datetime) -> FeedingProjection:
     """计算喂奶派生指标（P0，纯函数）。"""
     active = active_events(events, "feeding")
     if not active:
-        return FeedingProjection(
-            last_feeding_ago_seconds=None, volume_ml_24h=0.0, count_24h=0
-        )
+        return FeedingProjection(last_feeding_ago_seconds=None, volume_ml_24h=0.0, count_24h=0)
     last = active[-1]
     last_ago = seconds_between(last.start_time, now)
     recent = window_events(events, "feeding", now)

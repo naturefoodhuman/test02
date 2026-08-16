@@ -44,9 +44,7 @@ class RuleRegistry:
         """已注册 domain 列表。"""
         return sorted(self._modules.keys())
 
-    async def evaluate(
-        self, domain: RuleDomain, input_: RuleInput, ctx: RuleContext
-    ) -> RuleResult:
+    async def evaluate(self, domain: RuleDomain, input_: RuleInput, ctx: RuleContext) -> RuleResult:
         """按 domain 调用 RuleModule.evaluate（架构 §5.3）。"""
         module = self.get(domain)
         return await module.evaluate(input_, ctx)

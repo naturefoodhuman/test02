@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-17 · Round 19 · APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo 完成（domain models + 纯函数求值 kernel + 注册表 + YAML 加载器 + EvidencePolicy 仓储版本化+缓存失效 + 示例规则包 + DI 装配 + 45 unit/golden + 6 integration，进入 Epic E03）
 - 2026-08-16 · Round 18 · APC-T017 Event→Normalization→State 集成链路打通（worker state_recompute 回调 + main 装配 + 3 端到端集成测试，Epic E02 全部完成）
 - 2026-08-16 · Round 17 · APC-T016 State Engine 增量重算 + Snapshot Repo + State API 完成（StateEngine + snapshot_repo + EventLoader + GET /babies/{id}/state + state:read 权限 + 11 测试）
 - 2026-08-16 · Round 16 · APC-T015 Baby State Engine P0 Projection 完成（5 projection 纯函数 + domain + project_state 聚合 + 19 测试含 hypothesis 确定性）
@@ -30,6 +31,50 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 19 · 2026-08-17 · APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo
+
+### 背景
+
+Epic E02 全部完成后进入 Epic E03（Rule Engine、AI 编排与安全输出）。T018 是规则引擎地基：规则求值核心、YAML 加载、规则注册表、EvidencePolicy 版本化仓储。架构铁律：只有 RuleModule 可产出 dose/threshold/verdict（§5.3），LLM/copilots 不得计算；规则库变更强制递增 version（§18），保留历史版本用于审计追溯；医疗规则缓存写入时立即失效杜绝 stale rule（§11）。
+
+接手时发现上一轮会话已写好 domain/models.py、kernel.py、registry.py、loader.py、Makefile rules-validate target（文件头 2026-08-16），但缺 evidence_repo、config/rules 文档与示例包、全部测试、DI 装配、文档同步。本轮补齐收尾。
+
+### 交付
+
+- **`server/app/rule_engine/evidence_repo.py`**（新建）：`EvidencePolicyRepository` Protocol + `SqlAlchemyEvidencePolicyRepository`。`upsert`（version 严格递增校验 + 旧生效版本 effective_to=now 自动关闭 + UNIQUE 兜底）+ `activate`（旧版本关闭 + 目标版本 effective_to 置 NULL，事务内原子）+ `get_current`（effective_to IS NULL + L1 TTLCache 5min）+ `invalidate`（写入/激活后清缓存）。不可软删除（保留历史版本，§18）。
+- **`config/rules/triage/base-1.yaml`**（新建）：示例规则包（3 月龄以下 ≥38°C 红线 block / ≥39°C 橙 warn / 38~39°C 黄 warn），golden 测试夹具。
+- **`config/rules/README.md`**（新建）：目录约定 + YAML schema + 算子表 + 新增流程（§13.2）。
+- **`server/app/rule_engine/__init__.py`**：导出公共 API（RuleResult/RuleInput/RuleContext/RuleModule/RuleRegistry/load_pack/evaluate_pack/EvidencePolicyRepository 等）。
+- **`server/app/rule_engine/loader.py`** 修复：`_compute_hash` 加 `_json_default`（date/datetime → ISO），解决 YAML `effective_from` 被 safe_load 解析为 datetime 后 json.dumps 报 TypeError；CLI 输出 `hash` 用 `(p.hash or '')[:12]` 防 None 索引（mypy）。
+- **`server/app/di.py`**：Container 加 `rule_registry` 进程级单例 + `get_rule_registry_dep` / `get_evidence_policy_repo_dep`（请求作用域，供 T019 Admin API）。
+- 测试：`server/tests/unit/rule_engine/`（test_kernel 18 + test_loader 11 + test_registry 6 + test_evidence_repo 4 = 39）+ `server/tests/golden/rules/test_rule_pack_golden.py` 6 + `server/tests/integration/test_evidence_repo.py` 6。
+
+### 决策与权衡
+
+- **EvidencePolicy 不可软删除**：架构 §18 要求保留历史版本用于审计追溯。upsert/activate 只改 effective_to，不物理删除。与 audit_log append-only 同精神。
+- **version 严格递增校验在应用层**：DB UNIQUE (policy_type,region,version) 兜底重复，但应用层先校验递增（更清晰错误信息 + 避免关闭旧版本后才失败的不一致）。递增校验取 `max(version)`，新 version 必须 > max。
+- **L1 缓存写入即 invalidate**：§11 铁律"医疗规则缓存写入时立即失效，杜绝 stale rule"。upsert/activate 后调 `invalidate`，下次 `get_current` 强制查 DB。TTL 5min 仅作兜底（进程重启/缓存淘汰）。
+- **缓存测试拆分 unit/integration**：缓存命中/invalidate 逻辑用 Fake session 纯单测（不依赖 DB）；DB 持久化（upsert/activate/get_current 真实读写）放 integration（与 state_engine 同模式：sync `def test_xxx` 内 `asyncio.run(run())`，fixture 只 `reset_db`，表清理在 `run()` 开头共用同一循环，避免 fixture 里 asyncio.run 导致 engine 绑死循环）。
+- **evaluate_pack 是同步纯函数**：kernel 求值无 IO，同步函数；RuleModule.evaluate 是 async（Protocol 定义，未来规则域可能查 DB/缓存）。测试 accordingly：kernel 测试 sync，registry 测试 async。
+- **示例规则包用 triage 体温阈值**：对齐架构 §10.2（3 月龄以下 ≥38°C 强红线），既是 loader/golden 夹具，又为 T021 真实分诊规则铺路。真实分诊规则在 T021 细化（危险信号、趋势双条件）。
+- **ruff format 全量**：ruff 0.16.1 升级引入 format 漂移（单行能放下则单行），T014-T017 既有文件未跑 format check。本轮 `ruff format` 全量统一（16 文件纯格式无逻辑），让 `make lint` 通过。既有文件 format 漂移与 T018 代码改动合并提交（避免过度拆分；commit message 注明）。
+
+### 测试与验收
+
+- `make lint`（ruff check + format --check）全绿；`make typecheck`（mypy 102 文件）全绿。
+- `make test`（unit + golden，排除 integration）：345 passed。
+- integration（evidence_repo + state_engine smoke）：11 passed。
+- `make rules-validate`：1 rule pack(s) OK（triage/CN@v1 rules=3）。
+- 验收：`make rules-validate` 可校验规则包；RuleRegistry 按 domain 调用 RuleModule；EvidencePolicy 版本化 + 缓存写入即失效；非法/缺字段规则包被 Pydantic 拦截（test_loader 覆盖）。
+
+### 已知限制 / 下一步
+
+- T018 尚未注册任何具体 RuleModule（T020~T023 各规则域接入时 `registry.register`）；RuleRegistry 当前为空，`evaluate` 会抛 KeyError（符合预期，T020+ 填充）。
+- T019 将建 `/api/v1/rules` Admin API（validate/activate/audit），复用 `get_evidence_policy_repo_dep` + Admin 鉴权 + @audit。
+- 真实分诊/用药/疫苗/生长规则在 T020~T023 细化（示例 triage 包仅作夹具，T021 会替换为完整规则 + 危险信号 + 趋势双条件）。
 
 ---
 

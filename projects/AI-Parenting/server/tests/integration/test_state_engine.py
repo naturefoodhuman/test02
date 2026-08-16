@@ -63,7 +63,16 @@ async def _make_family_and_baby(session) -> tuple[str, str]:
     return family.id, baby.id
 
 
-async def _seed_event(session, family_id, baby_id, *, event_type="feeding", payload=None, processing_status=ProcessingStatus.NORMALIZED, start=None) -> str:
+async def _seed_event(
+    session,
+    family_id,
+    baby_id,
+    *,
+    event_type="feeding",
+    payload=None,
+    processing_status=ProcessingStatus.NORMALIZED,
+    start=None,
+) -> str:
     event_id = new_id()
     if start is None:
         start = NOW - timedelta(hours=1)
@@ -111,9 +120,7 @@ def test_recompute_upserts_snapshot_and_advances_projected():
             snap = (
                 await session.execute(select(DerivedOrm).where(DerivedOrm.baby_id == baby_id))
             ).scalar_one()
-            ev = (
-                await session.execute(select(Orm).where(Orm.id == eid))
-            ).scalar_one()
+            ev = (await session.execute(select(Orm).where(Orm.id == eid))).scalar_one()
             return {
                 "volume_ml": snap.snapshot["feeding"]["volume_ml_24h"],
                 "computed_at": snap.computed_at,
@@ -153,8 +160,10 @@ def test_recompute_idempotent_overwrites_snapshot():
             await session.commit()
         async with factory() as session:
             rows = (
-                await session.execute(select(DerivedOrm).where(DerivedOrm.baby_id == baby_id))
-            ).scalars().all()
+                (await session.execute(select(DerivedOrm).where(DerivedOrm.baby_id == baby_id)))
+                .scalars()
+                .all()
+            )
             return {"rows": len(rows)}
 
     assert asyncio.run(run())["rows"] == 1  # 单行 per baby（upsert 覆盖）。
@@ -202,7 +211,9 @@ def test_state_api_returns_snapshot_after_recompute(client_with_principal):
             session.add(baby)
             await session.flush()
             captured["family_id"] = family.id
-            await _seed_event(session, family.id, baby.id, start=datetime.now(UTC) - timedelta(hours=1))
+            await _seed_event(
+                session, family.id, baby.id, start=datetime.now(UTC) - timedelta(hours=1)
+            )
             await session.commit()
         # 释放 seed loop 的 engine，TestClient 请求时重建绑定其 loop（避免跨 loop）。
         await db_module.dispose_db()
@@ -236,7 +247,9 @@ def test_state_api_404_for_baby_not_in_family(client_with_principal):
             other_fam = Family(id=new_id(), name="fam2", timezone="Asia/Shanghai")
             session.add(other_fam)
             await session.flush()
-            other_baby = Baby(id=new_id(), family_id=other_fam.id, birth_date=date(2026, 6, 1), sex="male")
+            other_baby = Baby(
+                id=new_id(), family_id=other_fam.id, birth_date=date(2026, 6, 1), sex="male"
+            )
             session.add(other_baby)
             await session.flush()
             await session.commit()

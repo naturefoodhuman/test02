@@ -92,6 +92,7 @@ def _make_worker(ctx: FakeWorkerContext) -> NormalizationWorker:
 
     session_factory 用一个返回占位 session 的假工厂（FakeWorkerContext 忽略 session 参数）。
     """
+
     class _FakeSessionFactory:
         def __call__(self) -> _FakeSessionFactory:
             return self

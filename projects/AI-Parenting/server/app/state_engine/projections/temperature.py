@@ -23,9 +23,7 @@ from ..domain import TemperatureProjection
 from ._common import window_events
 
 
-def project_temperature(
-    events: Iterable[ObservationEvent], now: datetime
-) -> TemperatureProjection:
+def project_temperature(events: Iterable[ObservationEvent], now: datetime) -> TemperatureProjection:
     """计算体温派生指标（P0，纯函数）。"""
     recent = window_events(events, "temperature", now)
     max_c: float | None = None

@@ -27,6 +27,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -35,18 +36,25 @@ import yaml
 from .domain.models import RulePack
 
 
+def _json_default(obj: Any) -> Any:
+    """JSON 序列化兜底：YAML safe_load 会把日期/时间解析为 date/datetime，
+    需转 ISO 字符串才能进 canonical JSON（否则 json.dumps 抛 TypeError）。"""
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+
 def _compute_hash(pack_data: dict[str, Any]) -> str:
     """计算规则包内容 hash（sha256 of canonical JSON）。
 
     hash 覆盖策略内容字段（不含 hash 自身），用于校验完整性 + 版本一致性。
     canonical JSON：键排序、ensure_ascii=False，保证跨平台稳定。
+    date/datetime 经 ``_json_default`` 转 ISO 字符串（YAML 解析产物）。
     """
-    content = {
-        k: v
-        for k, v in pack_data.items()
-        if k != "hash"
-    }
-    canonical = json.dumps(content, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    content = {k: v for k, v in pack_data.items() if k != "hash"}
+    canonical = json.dumps(
+        content, sort_keys=True, ensure_ascii=False, separators=(",", ":"), default=_json_default
+    )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -63,9 +71,7 @@ def load_pack(path: Path) -> RulePack:
     computed = _compute_hash(raw)
     declared = raw.get("hash")
     if declared is not None and declared != computed:
-        raise ValueError(
-            f"rule pack {path} hash mismatch: declared={declared} computed={computed}"
-        )
+        raise ValueError(f"rule pack {path} hash mismatch: declared={declared} computed={computed}")
     raw["hash"] = computed
     return RulePack.model_validate(raw)
 
@@ -93,7 +99,9 @@ def main(argv: list[str] | None = None) -> int:
         packs = validate_dir(dir_path)
         print(f"rules-validate: {len(packs)} rule pack(s) OK")
         for p in packs:
-            print(f"  - {p.policy_type}/{p.region}@v{p.version} rules={len(p.rules)} hash={p.hash[:12]}")
+            print(
+                f"  - {p.policy_type}/{p.region}@v{p.version} rules={len(p.rules)} hash={(p.hash or '')[:12]}"
+            )
         return 0
     print("usage: python -m server.app.rule_engine.loader --validate <dir>", file=sys.stderr)
     return 2

@@ -15,10 +15,12 @@
 **Milestone 2 — P0-M1 事件溯源与同步**（APC-T007 ~ APC-T012）✅ 全部完成
 **Milestone 3 — Normalization**（APC-T013 ~ APC-T014）✅ 完成
 **Milestone 4 — State Engine**（APC-T015 ~ APC-T017）✅ 全部完成；Epic E02 收尾
+**Milestone 5 — Rule Engine Kernel**（APC-T018）✅ 完成；进入 Epic E03
 
 > Milestone 1（地基）、Milestone 2（Auth/事件/同步）、Milestone 3（Normalization）、Milestone 4（State Engine）已完成；
 > T013/T014 Normalization、T015 P0 Projection、T016 重算+State API、T017 Event→Normalization→State 端到端集成链路已完成。
-> Epic E02（权限、事件、同步与派生状态）全部完成。下一步进入 Epic E03（Rule Engine、AI 编排与安全输出）。
+> Epic E02（权限、事件、同步与派生状态）全部完成。Epic E03 已启动：T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo 完成。
+> 下一步推进 T019（规则 Admin API）→ T020~T023（规则域）。
 
 ---
 
@@ -43,7 +45,8 @@
 | APC-T015 | Baby State Engine P0 Projection | ✅ DONE | state_engine/projections/{feeding,diaper,sleep,temperature,supplement}.py 纯函数（距上次喂奶/24h 奶量次数/湿脏尿布数/24h 睡眠+当前会话/24h 最高温/上次补剂）+ domain.py（DerivedBabyState dataclass + to_snapshot）+ project.py 聚合入口（source_event_range）+ __init__ 导出；只派生不告警；过滤软删除+24h 窗口+bool 排除；19 单元测试（含 hypothesis 确定性 property）；ruff/mypy 干净，363 测试通过 |
 | APC-T016 | State Engine 增量重算 + Snapshot Repo + State API | ✅ DONE | state_engine/engine.py（StateEngine.recompute 幂等全量重算 + 推进 processing_status=projected + get_state 只读）+ snapshot_repo.py（SnapshotRepository Protocol + SqlAlchemySnapshotRepository upsert ON CONFLICT + get 反序列化）+ infra.py（SqlAlchemyEventLoader 按 baby 加载未删除事件）+ api/routes.py（GET /api/v1/babies/{id}/state 只读鉴权 state:read + baby 归属校验 404 + 懒重算）+ auth domain 加 state:read 权限 + common/clock FixedClock + main 注册 router；11 测试（6 engine unit + 5 integration：重算+upsert+projected/幂等/API 200/404 跨家/401 无 token）；ruff/mypy 干净，374 测试通过 |
 | APC-T017 | Event→Normalization→State 集成链路 | ✅ DONE | NormalizationWorker 加 state_recompute 回调（归一化/软删除成功后触发 StateEngine.recompute(baby_id)，打通链路）+ main 装配注入 _state_recompute 闭包（独立 session + commit）+ test_event_to_state_pipeline.py 3 集成测试（feeding event→feeding_log→derived_baby_state projected/soft delete 后 snapshot 更新/纠错链旧派生行软删除+新值）；ruff/mypy 干净，377 测试通过 |
-| APC-T018 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T018 | Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo | ✅ DONE | domain/models（RuleResult/RuleInput/RuleContext/RuleModule Protocol + Rule/RulePack YAML schema Pydantic）+ kernel（纯函数求值，9 算子+字段路径+evaluate_pack 首匹配）+ registry（按 domain 注册/调度 RuleModule）+ loader（YAML→RulePack+sha256 hash 自校验+CLI）+ evidence_repo（upsert version 递增校验+activate 旧版本自动关闭+get_current L1 TTLCache 5min+写入即 invalidate 杜绝 stale rule）+ config/rules/triage/base-1.yaml 示例包+README + DI 装配 RuleRegistry 单例 + get_evidence_policy_repo_dep 请求作用域工厂 + make rules-validate + 45 测试（39 unit+6 golden）+ 6 integration；ruff/mypy 干净，351 unit+golden / 11 integration 通过 |
+| APC-T019 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -180,12 +183,22 @@
   - `server/app/main.py`：装配 `_state_recompute` 闭包（独立 session + StateEngine.recompute + commit）注入 NormalizationWorker，打通 Event→Normalization→State 链路。
   - 测试：`server/tests/integration/test_event_to_state_pipeline.py`（3：feeding event→feeding_log→derived_baby_state projected/soft delete 后 snapshot 更新奶量 0/纠错链旧派生行软删除+新值 200）。不 mock DB，worker 手动驱动。
   - 验收：MVP 服务端记录链路自动完成（事件写入→归一化→派生状态）；soft delete 后 snapshot 更新；测试可重复运行无脏数据依赖。P0-M0 地基验收项。
+- **APC-T018**：Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo（进入 Epic E03）：
+  - `server/app/rule_engine/domain/models.py`：`RuleResult`（verdict/outputs/evidence/rule_version/reason_code，frozen）+ `RuleInput`（baby_id/baby_age_days/weight_kg/variables）+ `RuleContext`（policy_version/region/now）+ `RuleModule` Protocol（唯一医疗/剂量/阈值裁决者，架构 §5.3）+ `EvidenceRef` + `Rule`/`RuleCondition`/`RuleAction`/`RulePack` YAML schema（Pydantic，extra=forbid）。
+  - `server/app/rule_engine/kernel.py`：纯函数求值——`match_rule`（conditions 全满足 AND）+ `evaluate_pack`（首匹配产出，无匹配默认 info）；9 算子（eq/ne/lt/lte/gt/gte/in/not_in/range）+ 字段路径（顶层/`variables.xxx` 嵌套）；None 保守（除 ne/not_in）。
+  - `server/app/rule_engine/registry.py`：`RuleRegistry` 按 domain 注册/调度 RuleModule；插件化（新增域=实现 RuleModule+register，不改内核，开闭原则）；未注册抛 KeyError。
+  - `server/app/rule_engine/loader.py`：`load_pack`（YAML→RulePack Pydantic 校验 + sha256 canonical JSON hash 计算/自校验）+ `validate_dir` + CLI `--validate`（`make rules-validate`）；date/datetime 经 `_json_default` 转 ISO 进 canonical JSON。
+  - `server/app/rule_engine/evidence_repo.py`：`EvidencePolicyRepository` Protocol + `SqlAlchemyEvidencePolicyRepository`——`upsert`（version 严格递增校验 + 旧生效版本 effective_to=now 自动关闭 + 重复 UNIQUE 兜底）+ `activate`（旧版本关闭 + 目标版本 effective_to 置 NULL，事务内原子）+ `get_current`（effective_to IS NULL + L1 TTLCache 5min 命中）+ `invalidate`（写入/激活后清缓存，杜绝 stale rule，§11 铁律）；不可软删除（保留历史版本，§18）。
+  - `config/rules/triage/base-1.yaml`：示例规则包（3 月龄以下 ≥38°C 红线 block / ≥39°C 橙 warn / 38~39°C 黄 warn），golden 测试夹具。`config/rules/README.md`：目录约定 + YAML schema + 算子表 + 新增流程。
+  - `server/app/di.py`：Container 加 `rule_registry` 进程级单例（启动期注册 RuleModule，T020+ 接入）+ `get_rule_registry_dep` / `get_evidence_policy_repo_dep`（请求作用域，供 T019 Admin API）。
+  - 测试：`server/tests/unit/rule_engine/`（test_kernel 算子/字段/AND/首匹配 + test_loader YAML/hash/CLI + test_registry register/evaluate/KeyError + test_evidence_repo 缓存命中/invalidate）39 unit + `server/tests/golden/rules/test_rule_pack_golden.py` 6 golden（红/橙/黄/无匹配/边界/缺字段）+ `server/tests/integration/test_evidence_repo.py` 6（upsert 递增+旧版本关闭/拒绝非递增/get_current 缓存/activate 回滚旧版本/未知版本报错/invalidate 后重查）。
+  - 验收：`make rules-validate` 校验规则包通过；RuleRegistry 能按 domain 调用 RuleModule；EvidencePolicy 版本化 + 缓存写入即失效；非法/缺字段规则包被 Pydantic 拦截。
 
 ---
 
 ## 3. 进行中
 
-无。APC-T017 已完成，Epic E02（权限、事件、同步与派生状态）全部收尾。下一步进入 Epic E03（Rule Engine、AI 编排与安全输出）。
+无。APC-T018 已完成，Epic E03 已启动（Rule Engine Kernel 就绪）。下一步推进 T019（规则 Admin API）。
 
 ---
 
@@ -193,9 +206,9 @@
 
 按 MVP 路径（TASK_BACKLOG §4）推进 Epic E03 — Rule Engine、AI 编排与安全输出：
 
-1. **APC-T018** — Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo（依赖 T004；已满足）。规则引擎基础抽象、YAML 加载、EvidencePolicy 版本化。
-2. **APC-T019** — 规则求值与 EvidencePolicy 版本绑定（依赖 T018）。
-3. **APC-T020 ~ T023** — 用药/分诊/阈值/疫苗/生长规则域。
+1. **APC-T019** — 规则 Admin API：validate / activate / audit（依赖 T018，已满足）。`/api/v1/rules` 规则包验证、激活（旧版本 effective_to 自动关闭）、Admin 鉴权 + 审计。
+2. **APC-T020 ~ T023** — 用药/分诊/阈值/疫苗/生长规则域（各实现 RuleModule + 规则包 YAML + golden tests）。
+3. **APC-T024 ~ T030** — Model Gateway / Privacy / Memory / Orchestrator / Dose Interceptor / P0 Copilots。
 
 ---
 

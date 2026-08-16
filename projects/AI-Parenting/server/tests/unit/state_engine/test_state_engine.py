@@ -91,8 +91,18 @@ def _engine(
 
 async def test_recompute_upserts_snapshot_and_advances_projected():
     events = [
-        _ev("feeding", start=NOW - timedelta(hours=1), payload={"amount_ml": 120}, eid="01HZXKQW7P0QJ9V8R3M4N6H5A1"),
-        _ev("diaper", start=NOW - timedelta(hours=2), payload={"type": "wet"}, eid="01HZXKQW7P0QJ9V8R3M4N6H5A2"),
+        _ev(
+            "feeding",
+            start=NOW - timedelta(hours=1),
+            payload={"amount_ml": 120},
+            eid="01HZXKQW7P0QJ9V8R3M4N6H5A1",
+        ),
+        _ev(
+            "diaper",
+            start=NOW - timedelta(hours=2),
+            payload={"type": "wet"},
+            eid="01HZXKQW7P0QJ9V8R3M4N6H5A2",
+        ),
     ]
     engine, snap, repo = _engine(events)
 
@@ -111,7 +121,12 @@ async def test_recompute_upserts_snapshot_and_advances_projected():
 
 async def test_recompute_idempotent_same_input_same_output():
     events = [
-        _ev("feeding", start=NOW - timedelta(hours=1), payload={"amount_ml": 90}, eid="01HZXKQW7P0QJ9V8R3M4N6H5B1"),
+        _ev(
+            "feeding",
+            start=NOW - timedelta(hours=1),
+            payload={"amount_ml": 90},
+            eid="01HZXKQW7P0QJ9V8R3M4N6H5B1",
+        ),
     ]
     engine, snap, _ = _engine(events)
 
@@ -160,7 +175,12 @@ async def test_get_state_returns_none_when_no_snapshot():
 
 async def test_get_state_returns_upserted_snapshot():
     events = [
-        _ev("feeding", start=NOW - timedelta(hours=1), payload={"amount_ml": 100}, eid="01HZXKQW7P0QJ9V8R3M4N6H5D1")
+        _ev(
+            "feeding",
+            start=NOW - timedelta(hours=1),
+            payload={"amount_ml": 100},
+            eid="01HZXKQW7P0QJ9V8R3M4N6H5D1",
+        )
     ]
     engine, _, _ = _engine(events)
 

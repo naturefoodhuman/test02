@@ -116,14 +116,14 @@ def test_pipeline_feeding_event_to_derived_state():
         # 读回验证：feeding_log + derived_baby_state + processing_status。
         async with factory() as session:
             logs = (
-                await session.execute(select(FeedingLog).where(FeedingLog.event_id == event_id))
-            ).scalars().all()
+                (await session.execute(select(FeedingLog).where(FeedingLog.event_id == event_id)))
+                .scalars()
+                .all()
+            )
             snap = (
                 await session.execute(select(DerivedOrm).where(DerivedOrm.baby_id == baby_id))
             ).scalar_one_or_none()
-            ev = (
-                await session.execute(select(Orm).where(Orm.id == event_id))
-            ).scalar_one()
+            ev = (await session.execute(select(Orm).where(Orm.id == event_id))).scalar_one()
             return {
                 "log_count": len(logs),
                 "log_amount": logs[0].amount_ml if logs else None,
@@ -166,8 +166,10 @@ def test_pipeline_soft_delete_updates_snapshot():
         await worker.handle({"event_id": event_id, "baby_id": baby_id, "op": "delete"})
         async with factory() as session:
             all_logs = (
-                await session.execute(select(FeedingLog).where(FeedingLog.event_id == event_id))
-            ).scalars().all()
+                (await session.execute(select(FeedingLog).where(FeedingLog.event_id == event_id)))
+                .scalars()
+                .all()
+            )
             active_logs = [lg for lg in all_logs if not lg.is_deleted]
             snap = (
                 await session.execute(select(DerivedOrm).where(DerivedOrm.baby_id == baby_id))
@@ -218,8 +220,14 @@ def test_pipeline_correction_chain_updates_snapshot():
         await worker.handle({"event_id": new_event_id, "baby_id": baby_id, "op": "insert"})
         async with factory() as session:
             old_logs = (
-                await session.execute(select(FeedingLog).where(FeedingLog.event_id == old_event_id))
-            ).scalars().all()
+                (
+                    await session.execute(
+                        select(FeedingLog).where(FeedingLog.event_id == old_event_id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
             old_active = [lg for lg in old_logs if not lg.is_deleted]
             snap = (
                 await session.execute(select(DerivedOrm).where(DerivedOrm.baby_id == baby_id))

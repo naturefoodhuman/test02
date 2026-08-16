@@ -18,11 +18,7 @@ WINDOW = timedelta(hours=24)
 
 def active_events(events: Iterable[ObservationEvent], event_type: str) -> list[ObservationEvent]:
     """筛选未删除 + 指定 event_type 的事件（按 start_time 升序）。"""
-    selected = [
-        e
-        for e in events
-        if not e.is_deleted and e.event_type == event_type
-    ]
+    selected = [e for e in events if not e.is_deleted and e.event_type == event_type]
     selected.sort(key=lambda e: e.start_time)
     return selected
 
@@ -32,7 +28,9 @@ def in_window(event: ObservationEvent, now: datetime) -> bool:
     return event.start_time >= now - WINDOW and event.start_time <= now
 
 
-def window_events(events: Iterable[ObservationEvent], event_type: str, now: datetime) -> list[ObservationEvent]:
+def window_events(
+    events: Iterable[ObservationEvent], event_type: str, now: datetime
+) -> list[ObservationEvent]:
     """未删除 + 指定 event_type + 24h 窗口内事件（升序）。"""
     return [e for e in active_events(events, event_type) if in_window(e, now)]
 
