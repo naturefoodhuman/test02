@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-16 13:30:00
+创建时间（北京时间）：2026-08-16 21:10:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -17,6 +17,27 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 219 轮] 2026-08-16
+
+### 需求变动
+- **诊断快速重启 PID mismatch 修复**：用户执行 `python3 scripts/diagnostics/forge_nim_diagnostic.py --restart` 时，Smart Proxy 新进程 PID 与 4000 listener PID 不一致，health check 命中旧进程导致失败。
+- **owned-listener retry**：快速重启现在对 4010/4000 逐个执行“端口关闭 → 启动 → 校验 listener PID == 新进程 PID”；如不一致会杀掉新进程与残留 listener 并最多重试 3 次，避免旧 Smart Proxy 占端口时误判。
+
+### 文件影响
+- 修改：`scripts/diagnostics/forge_nim_diagnostic.py`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_forge_nim_diagnostic.py -q
+# 9 passed
+python3 -m py_compile scripts/diagnostics/forge_nim_diagnostic.py
+make docs-check
+# Blockers: 0; Warnings: 1（adr/model 架构敏感词提示，已复核无需新增 ADR）
+```
 
 ---
 
