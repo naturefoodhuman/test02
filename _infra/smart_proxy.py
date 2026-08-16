@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-15 17:20:00
+# 创建时间（北京时间）：2026-08-16 10:20:00
 # 修改本文件中的配置比如“FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))“ 后
 # 要重启 bash scripts/forge-start.sh 以使新配置生效
 
@@ -150,16 +150,39 @@ FORGE_STREAM_REMOTE_RETRY_COUNT = int(os.getenv("FORGE_STREAM_REMOTE_RETRY_COUNT
 # transient gateway error, but keeps it client-agnostic and auditable.
 FORGE_AUTO_CONTINUE_ON_API_ERROR = _env_bool("FORGE_AUTO_CONTINUE_ON_API_ERROR", True)
 FORGE_AUTO_CONTINUE_MAX_ATTEMPTS = int(os.getenv("FORGE_AUTO_CONTINUE_MAX_ATTEMPTS", "1"))
-FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS = float(os.getenv("FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS", "900"))
+FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS = float(os.getenv("FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS", "60"))
+FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS = float(os.getenv("FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS", "300"))
+FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS = float(os.getenv("FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS", "5"))
+FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS = float(
+    os.getenv("FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS", "900")
+)
+FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT = _env_bool("FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT", True)
+FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS = int(os.getenv("FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS", "12000"))
 FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS = int(
     os.getenv("FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS", "902752")
 )
+FORGE_AUTO_CONTINUE_STATUS_CODES_RAW = os.getenv("FORGE_AUTO_CONTINUE_STATUS_CODES", "*")
+FORGE_AUTO_CONTINUE_ALL_STATUS_CODES = "*" in {
+    item.strip() for item in FORGE_AUTO_CONTINUE_STATUS_CODES_RAW.split(",")
+}
 FORGE_AUTO_CONTINUE_STATUS_CODES = {
     int(item.strip())
-    for item in os.getenv("FORGE_AUTO_CONTINUE_STATUS_CODES", "429,503,504").split(",")
+    for item in FORGE_AUTO_CONTINUE_STATUS_CODES_RAW.split(",")
     if item.strip().isdigit()
 }
-_auto_continue_counters = {"attempts": 0, "blocked_by_context": 0}
+_auto_continue_counters = {
+    "attempts": 0,
+    "api_error_replays": 0,
+    "timeout_replays": 0,
+    "no_output_replays": 0,
+    "partial_replays": 0,
+    "blocked_by_context": 0,
+}
+_auto_continue_last = {"reason": "", "wait_s": 0.0, "request_id": ""}
+FORGE_REQUEST_EVENT_LOG_PATH = os.getenv("FORGE_REQUEST_EVENT_LOG_PATH", "/tmp/forge_request_events.jsonl")
+FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT = _env_bool("FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT", False)
+# Smart Proxy -> sidecar/upstream read timeout. Keep aligned with the 15min no-output watchdog.
+FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS = float(os.getenv("FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS", "900"))
 
 # 429/503 退避封顶（秒），防止上游给出过大 Retry-After 导致请求长时间挂起。
 _RETRY_AFTER_CAP_SECONDS = 30.0
@@ -693,6 +716,51 @@ def _anthropic_sse(ev, p) -> bytes:
     return f"event: {ev}\ndata: {json.dumps(p, ensure_ascii=False)}\n\n".encode("utf-8")
 
 
+def _latest_user_message_summary(data: dict) -> dict:
+    messages = data.get("messages") or []
+    latest = ""
+    if isinstance(messages, list):
+        for message in reversed(messages):
+            if isinstance(message, dict) and message.get("role") == "user":
+                content = message.get("content", "")
+                if isinstance(content, str):
+                    latest = content
+                elif isinstance(content, list):
+                    latest = "".join(
+                        block.get("text", "") if isinstance(block, dict) else str(block)
+                        for block in content
+                    )
+                else:
+                    latest = str(content or "")
+                break
+    encoded = latest.encode("utf-8", "ignore")
+    out = {
+        "latest_user_sha256": hashlib.sha256(encoded).hexdigest()[:16] if latest else "",
+        "latest_user_chars": len(latest),
+    }
+    if FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT and latest:
+        out["latest_user_preview"] = latest[:500]
+    return out
+
+
+def _record_request_event(kind: str, request_id: str, **fields) -> None:
+    if not FORGE_REQUEST_EVENT_LOG_PATH:
+        return
+    event = {
+        "ts": time.time(),
+        "local_time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        "kind": kind,
+        "request_id": request_id,
+    }
+    event.update(fields)
+    try:
+        with open(FORGE_REQUEST_EVENT_LOG_PATH, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(event, ensure_ascii=False, default=str) + "\n")
+    except Exception:
+        # Diagnostics must never break request handling.
+        pass
+
+
 def _json_bytes(v) -> int:
     try:
         return len(json.dumps(v, ensure_ascii=False).encode("utf-8"))
@@ -1157,7 +1225,7 @@ MODEL_VRAM = {8080: get_memory_required_gb(8080), 8082: get_memory_required_gb(8
 active_servers = {}
 vram_lock = Lock()
 http_client = httpx.AsyncClient(
-    timeout=httpx.Timeout(connect=30.0, read=600.0, write=30.0, pool=30.0),
+    timeout=httpx.Timeout(connect=30.0, read=FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS, write=30.0, pool=30.0),
     limits=httpx.Limits(max_keepalive_connections=10),
 )
 
@@ -1224,16 +1292,48 @@ def _retry_after_seconds(resp, default: float, cap: float | None = None) -> floa
     return _retry_after_seconds_from_value(ra, default, cap=cap)
 
 
-def _retry_after_seconds_from_error_payload(item, default: float) -> float:
+def _is_context_limit_error_text(text: str) -> bool:
+    lower = str(text or "").lower()
+    return (
+        ("accepts at most" in lower and "tokens" in lower)
+        or ("combined input and output tokens" in lower)
+        or ("context_length_exceeded" in lower)
+        or ("maximum context" in lower and "token" in lower)
+        or ("context" in lower and "too large" in lower)
+    )
+
+
+def _auto_continue_status_allowed(status_code: int | None, body_text: str = "") -> bool:
+    if _is_context_limit_error_text(body_text):
+        return False
+    if status_code is None:
+        return True
+    if FORGE_AUTO_CONTINUE_ALL_STATUS_CODES:
+        return True
+    return int(status_code) in FORGE_AUTO_CONTINUE_STATUS_CODES
+
+
+def _auto_continue_wait_from_response(resp, default: float | None = None) -> float:
+    return _retry_after_seconds(
+        resp,
+        default=FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS if default is None else default,
+        cap=FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS,
+    )
+
+
+def _retry_after_seconds_from_error_payload(item, default: float | None = None) -> float:
     """从 sidecar SSE error payload 里解析 'retry after 124.9s'。"""
     if isinstance(item, dict):
         message = str(item.get("message") or item.get("error") or item)
     else:
         message = str(item or "")
+    if _is_context_limit_error_text(message):
+        return 0.0
     match = re.search(r"retry after\s+([0-9]+(?:\.[0-9]+)?)s?", message, re.IGNORECASE)
     if match:
         return min(float(match.group(1)), FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS)
-    return min(default, FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS)
+    base = FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS if default is None else default
+    return min(base, FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS)
 
 
 def _auto_continue_context_too_large(forward_payload: dict) -> tuple[bool, int]:
@@ -1244,6 +1344,30 @@ def _auto_continue_context_too_large(forward_payload: dict) -> tuple[bool, int]:
         return False, 0
     est = _estimate_messages_tokens(messages)
     return est >= FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS, est
+
+
+def _set_auto_continue_last(reason: str, wait_s: float, request_id: str = "") -> None:
+    _auto_continue_last.update({"reason": reason, "wait_s": round(float(wait_s), 3), "request_id": request_id})
+
+
+def _build_partial_continue_payload(base_payload: dict, text_content: str) -> dict:
+    payload = dict(base_payload)
+    messages = list(payload.get("messages") or [])
+    tail = text_content[-FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS:] if text_content else ""
+    messages.append({
+        "role": "assistant",
+        "content": tail,
+    })
+    messages.append({
+        "role": "user",
+        "content": (
+            "上一次回答在流式输出中断。请严格从上面 assistant 已经输出内容之后继续，"
+            "不要重复已经输出过的内容，不要重新执行任何工具。"
+        ),
+    })
+    payload["messages"] = messages
+    payload["stream"] = True
+    return payload
 
 
 # ============================================================
@@ -1306,7 +1430,10 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
                     f"(estimated={context_est}, limit={FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS})"
                 )
                 break
-            if auto_continue and resp.status_code not in FORGE_AUTO_CONTINUE_STATUS_CODES:
+            if auto_continue and not _auto_continue_status_allowed(resp.status_code, err_body):
+                if _is_context_limit_error_text(err_body):
+                    last_exception = "上下文接近超限，请新开会话: " + err_body[:300]
+                    _auto_continue_counters["blocked_by_context"] += 1
                 break
             # 429 喂熔断器：连续 429 达阈值即熔断，打破"重试也 429"的恶性循环。
             # NIM sidecar routes own key-pool/cooldown locally; their 429/503 may
@@ -1315,28 +1442,64 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
             if resp.status_code == 429 and is_remote and not handles_retries:
                 await circuit_breaker.on_429()
             if attempt < max_attempts - 1:
-                wait_cap = FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS if auto_continue else None
-                wait = _retry_after_seconds(resp, default=_backoff_with_jitter(attempt), cap=wait_cap)
                 if auto_continue:
+                    wait = _auto_continue_wait_from_response(resp)
                     _auto_continue_counters["attempts"] += 1
+                    _auto_continue_counters["api_error_replays"] += 1
+                    _set_auto_continue_last(f"http_{resp.status_code}", wait)
                     logger.warning(
                         f"🔁 auto-continue: upstream status {resp.status_code}, "
                         f"wait {wait:.1f}s then replay request ({attempt + 2}/{max_attempts})"
                     )
                 else:
+                    wait = _retry_after_seconds(resp, default=_backoff_with_jitter(attempt))
                     logger.info(f"   退避 {wait:.1f}s 后重试")
                 await asyncio.sleep(wait)
 
-        except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError) as e:
-            last_exception = f"connect_error: {e}"
+        except (
+            httpx.TimeoutException,
+            httpx.ReadError,
+            httpx.ConnectError,
+            httpx.ConnectTimeout,
+            httpx.RemoteProtocolError,
+            httpx.PoolTimeout,
+        ) as e:
+            last_exception = f"{type(e).__name__}: {e}"
             resp = None
-            logger.warning(f"⚠️ 连接异常，第 {attempt + 1}/{max_attempts} 次: {e}")
+            logger.warning(f"⚠️ 远程读/连接异常，第 {attempt + 1}/{max_attempts} 次: {type(e).__name__}: {e}")
+            if auto_continue and context_too_large:
+                _auto_continue_counters["blocked_by_context"] += 1
+                last_exception = (
+                    f"上下文接近超限，请新开会话 "
+                    f"(estimated={context_est}, limit={FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS})"
+                )
+                break
             if attempt < max_attempts - 1:
-                await asyncio.sleep(_backoff_with_jitter(attempt))
+                if auto_continue:
+                    wait = FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS
+                    _auto_continue_counters["attempts"] += 1
+                    _auto_continue_counters["timeout_replays"] += 1
+                    _set_auto_continue_last(type(e).__name__, wait)
+                    logger.warning(
+                        f"🔁 auto-continue: {type(e).__name__}, "
+                        f"wait {wait:.1f}s then replay request ({attempt + 2}/{max_attempts})"
+                    )
+                else:
+                    wait = _backoff_with_jitter(attempt)
+                await asyncio.sleep(wait)
+                continue
+            break
         except Exception as e:
-            last_exception = str(e)
+            last_exception = f"{type(e).__name__}: {e}"
             resp = None
-            logger.warning(f"❌ 非连接类异常，不重试: {type(e).__name__}: {e}")
+            logger.warning(f"❌ 非连接类异常: {type(e).__name__}: {e}")
+            if auto_continue and not context_too_large and attempt < max_attempts - 1:
+                wait = FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS
+                _auto_continue_counters["attempts"] += 1
+                _auto_continue_counters["timeout_replays"] += 1
+                _set_auto_continue_last(type(e).__name__, wait)
+                await asyncio.sleep(wait)
+                continue
             break
 
     return resp, last_exception
@@ -1442,10 +1605,15 @@ async def forge_status():
         "auto_continue": {
             "enabled": FORGE_AUTO_CONTINUE_ON_API_ERROR,
             "max_attempts": FORGE_AUTO_CONTINUE_MAX_ATTEMPTS,
+            "default_wait_seconds": FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS,
             "max_wait_seconds": FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS,
+            "timeout_wait_seconds": FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS,
+            "no_output_timeout_seconds": FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS,
+            "partial_output_enabled": FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT,
             "context_limit_tokens": FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS,
-            "status_codes": sorted(FORGE_AUTO_CONTINUE_STATUS_CODES),
+            "status_codes": "*" if FORGE_AUTO_CONTINUE_ALL_STATUS_CODES else sorted(FORGE_AUTO_CONTINUE_STATUS_CODES),
             "counters": dict(_auto_continue_counters),
+            "last": dict(_auto_continue_last),
         },
         "circuit_breaker": circuit_breaker.stats(),
         "remote_concurrency": {
@@ -1500,6 +1668,16 @@ async def smart_gateway(request: Request, path: str):
     wants_stream = bool(data.get("stream", False))
     request_id = uuid.uuid4().hex[:12]
 	
+
+    _record_request_event(
+        "request_start",
+        request_id,
+        model=model_name,
+        path=norm,
+        stream=wants_stream,
+        body_bytes=len(body),
+        **_latest_user_message_summary(data if isinstance(data, dict) else {}),
+    )
 
     # ---- Patch(addendum): 固定原始工具数，供后续 remote_full / tool_choice_none 的
     # 可观测性记录使用。必须在任何 tools 字段可能被本地分支改写之前取值。
@@ -1701,6 +1879,7 @@ async def smart_gateway(request: Request, path: str):
             f"（estimated={auto_ctx_est}, limit={FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS}）。"
         )
         _auto_continue_counters["blocked_by_context"] += 1
+        _record_request_event("request_context_limit", request_id, estimated_tokens=auto_ctx_est, limit=FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS)
         await tracker.finish(request_id, success=False)
         await tracker.remove(request_id)
         if is_anthropic:
@@ -1805,9 +1984,12 @@ async def smart_gateway(request: Request, path: str):
                 if stream_auto_continue
                 else 1 if nim_sidecar_route else ((FORGE_STREAM_REMOTE_RETRY_COUNT + 1) if is_remote else 1)
             )
+            stream_forward_payload = forward_payload
 
             try:
                 for _stream_attempt in range(stream_attempts):
+                    attempt_started_at = time.time()
+                    last_real_output_at = time.time()
                     # 熔断前置：远程流式请求前检查冷却期，避免裸打上游加剧 429 风暴。
                     if is_remote:
                         cb_wait = await circuit_breaker.before_request()
@@ -1820,7 +2002,7 @@ async def smart_gateway(request: Request, path: str):
                                 await asyncio.sleep(FORGE_STREAM_PING_INTERVAL_SECONDS)
                     queue = asyncio.Queue()
                     producer = asyncio.create_task(
-                        _stream_line_producer(target_url, forward_payload, headers, port_ctx, queue,
+                        _stream_line_producer(target_url, stream_forward_payload, headers, port_ctx, queue,
                                               is_remote=is_remote)
                     )
                     _stream_retry_pending = False
@@ -1834,6 +2016,45 @@ async def smart_gateway(request: Request, path: str):
                                     queue.get(), timeout=FORGE_STREAM_PING_INTERVAL_SECONDS
                                 )
                             except asyncio.TimeoutError:
+                                no_real_output_elapsed = time.time() - (last_real_output_at if emitted_text else attempt_started_at)
+                                no_output_timed_out = (
+                                    FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS > 0
+                                    and no_real_output_elapsed >= FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS
+                                )
+                                if no_output_timed_out and not tool_calls_data:
+                                    if stream_auto_continue and _stream_attempt < stream_attempts - 1:
+                                        wait = FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS
+                                        _auto_continue_counters["attempts"] += 1
+                                        if emitted_text and FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT:
+                                            _auto_continue_counters["partial_replays"] += 1
+                                            stream_forward_payload = _build_partial_continue_payload(forward_payload, text_content)
+                                            reason = "partial_no_output_timeout"
+                                        elif not emitted_text:
+                                            _auto_continue_counters["no_output_replays"] += 1
+                                            reason = "no_output_timeout"
+                                        else:
+                                            stream_error = {
+                                                "message": "stream stalled after tool output; transparent replay disabled",
+                                                "type": "NoOutputTimeout",
+                                            }
+                                            break
+                                        _set_auto_continue_last(reason, wait, request_id)
+                                        logger.warning(
+                                            f"🔁 auto-continue: {reason}, no real output for "
+                                            f"{no_real_output_elapsed:.1f}s, wait {wait:.1f}s then replay "
+                                            f"({_stream_attempt + 2}/{stream_attempts})"
+                                        )
+                                        await asyncio.sleep(wait)
+                                        _stream_retry_pending = True
+                                        break
+                                    stream_error = {
+                                        "message": (
+                                            f"Request timed out after {FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS:.0f}s "
+                                            "without model text/tool output"
+                                        ),
+                                        "type": "NoOutputTimeout",
+                                    }
+                                    break
                                 yield _anthropic_sse("ping", {"type": "ping"})
                                 await tracker.heartbeat(request_id, 0)
                                 continue
@@ -1845,37 +2066,52 @@ async def smart_gateway(request: Request, path: str):
                                 # 一旦 emitted_text/tool_calls_data 已有内容，绝不重试（文档 §12）。
                                 # 读类异常（ReadTimeout/ReadError/RemoteProtocolError 等，常空 message）
                                 # 在未发内容时同样退避重试——这是"空响应/turn 空挂 20 分钟"的真凶。
-                                can_retry = (
+                                body_for_status = str((item or {}).get("body", "")) if isinstance(item, dict) else str(item)
+                                pre_content_retry = (
                                     not emitted_text
                                     and not tool_calls_data
+                                    and stream_auto_continue
                                     and _stream_attempt < stream_attempts - 1
                                     and (
                                         (kind == "http_error"
                                          and isinstance(item, dict)
-                                         and item.get("status") in RETRYABLE_STATUS_CODES)
+                                         and _auto_continue_status_allowed(item.get("status"), body_for_status))
                                         or (kind == "exception"
                                             and isinstance(item, dict)
                                             and item.get("exc_type") in _STREAM_RETRYABLE_EXC_TYPES)
                                     )
                                 )
-                                if can_retry:
+                                partial_retry = (
+                                    emitted_text
+                                    and not tool_calls_data
+                                    and FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT
+                                    and stream_auto_continue
+                                    and _stream_attempt < stream_attempts - 1
+                                )
+                                if pre_content_retry or partial_retry:
                                     if kind == "http_error":
                                         status = item.get("status")
                                         _retry_counters[str(status)] = _retry_counters.get(str(status), 0) + 1
-                                        # 429 喂熔断器：连续 429 达阈值即熔断。
-                                        if status == 429 and is_remote:
-                                            await circuit_breaker.on_429()
                                         label = f"上游 {status}"
                                         wait = _retry_after_seconds_from_value(
                                             item.get("retry_after"),
-                                            default=_backoff_with_jitter(_stream_attempt),
+                                            default=FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS,
+                                            cap=FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS,
                                         )
+                                        _auto_continue_counters["api_error_replays"] += 1
                                     else:  # exception（读类异常）
                                         label = f"读异常 {item.get('exc_type')}"
-                                        wait = _backoff_with_jitter(_stream_attempt)
+                                        wait = FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS
+                                        _auto_continue_counters["timeout_replays"] += 1
+                                    if partial_retry:
+                                        stream_forward_payload = _build_partial_continue_payload(forward_payload, text_content)
+                                        _auto_continue_counters["partial_replays"] += 1
+                                        label = f"partial {label}"
+                                    _auto_continue_counters["attempts"] += 1
+                                    _set_auto_continue_last(label, wait, request_id)
                                     logger.warning(
-                                        f"⚠️ 流式{label}，未发内容，"
-                                        f"第 {_stream_attempt + 1}/{stream_attempts} 次，退避 {wait:.1f}s 重试"
+                                        f"🔁 auto-continue: 流式{label}，"
+                                        f"第 {_stream_attempt + 1}/{stream_attempts} 次，等待 {wait:.1f}s 后重放"
                                     )
                                     await asyncio.sleep(wait)
                                     _stream_retry_pending = True
@@ -1897,26 +2133,43 @@ async def smart_gateway(request: Request, path: str):
                                 continue
                             if isinstance(chunk, dict) and chunk.get("error") and not chunk.get("choices"):
                                 error_payload = chunk.get("error") or chunk
+                                error_text = json.dumps(error_payload, ensure_ascii=False)
                                 can_retry_error_payload = (
-                                    not emitted_text
-                                    and not tool_calls_data
+                                    not tool_calls_data
                                     and stream_auto_continue
                                     and _stream_attempt < stream_attempts - 1
+                                    and not _is_context_limit_error_text(error_text)
                                 )
                                 if can_retry_error_payload:
+                                    if emitted_text and FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT:
+                                        stream_forward_payload = _build_partial_continue_payload(forward_payload, text_content)
+                                        _auto_continue_counters["partial_replays"] += 1
+                                        reason = "partial_sidecar_sse_error"
+                                        wait_default = FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS
+                                    else:
+                                        reason = "sidecar_sse_error"
+                                        wait_default = FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS
                                     wait = _retry_after_seconds_from_error_payload(
                                         error_payload,
-                                        default=_backoff_with_jitter(_stream_attempt),
+                                        default=wait_default,
                                     )
                                     _auto_continue_counters["attempts"] += 1
+                                    _auto_continue_counters["api_error_replays"] += 1
+                                    _set_auto_continue_last(reason, wait, request_id)
                                     logger.warning(
-                                        f"🔁 auto-continue: sidecar SSE error before content, "
+                                        f"🔁 auto-continue: {reason}, "
                                         f"wait {wait:.1f}s then replay stream "
                                         f"({_stream_attempt + 2}/{stream_attempts})"
                                     )
                                     await asyncio.sleep(wait)
                                     _stream_retry_pending = True
                                     break
+                                if _is_context_limit_error_text(error_text):
+                                    _auto_continue_counters["blocked_by_context"] += 1
+                                    error_payload = {
+                                        "message": "上下文接近超限，请新开会话",
+                                        "type": "context_limit",
+                                    }
                                 stream_error = error_payload
                                 break
 
@@ -1939,6 +2192,7 @@ async def smart_gateway(request: Request, path: str):
                                         })
                                         emitted_text = True
                                     text_content += text
+                                    last_real_output_at = time.time()
                                     yield _anthropic_sse("content_block_delta", {
                                         "type": "content_block_delta", "index": 0,
                                         "delta": {"type": "text_delta", "text": text},
@@ -1946,6 +2200,7 @@ async def smart_gateway(request: Request, path: str):
 
                                 tc_list = delta.get("tool_calls")
                                 if tc_list:
+                                    last_real_output_at = time.time()
                                     for tc in tc_list:
                                         idx = tc.get("index", 0)
                                         func = tc.get("function", {}) or {}
@@ -2071,14 +2326,25 @@ async def smart_gateway(request: Request, path: str):
                 })
                 yield _anthropic_sse("message_stop", {"type": "message_stop"})
 
+                _record_request_event(
+                    "request_finish",
+                    request_id,
+                    success=True,
+                    stream=True,
+                    elapsed_s=round(time.time() - tracker.requests.get(request_id, {}).get("start", time.time()), 3) if hasattr(tracker, "requests") else 0,
+                    output_chars=len(text_content),
+                    stop_reason=stop_reason,
+                )
                 await tracker.finish(request_id, success=True)
 
             except asyncio.CancelledError:
                 logger.warning(f"客户端断开连接: model={model_name}")
+                _record_request_event("request_cancelled", request_id, stream=True, model=model_name)
                 await tracker.finish(request_id, success=False)
                 raise
             except Exception as exc:
                 logger.error(f"❌ 流式请求异常: {exc}")
+                _record_request_event("request_error", request_id, stream=True, error_type=type(exc).__name__, error=str(exc))
                 await tracker.finish(request_id, success=False)
                 yield _anthropic_sse("error", {"type": "error", "error": {"type": "api_error", "message": str(exc)}})
             finally:
@@ -2097,13 +2363,29 @@ async def smart_gateway(request: Request, path: str):
 
     if resp is None or resp.status_code != 200:
         logger.error(f"❌ 转发最终失败: {last_exception}")
+        _record_request_event(
+            "request_error",
+            request_id,
+            stream=False,
+            status_code=getattr(resp, "status_code", None),
+            error=str(last_exception),
+        )
         await tracker.finish(request_id, success=False)
         await tracker.remove(request_id)
+        if last_exception and "上下文接近超限" in str(last_exception) and is_anthropic:
+            return JSONResponse({
+                "id": f"msg_{uuid.uuid4().hex}", "type": "message", "role": "assistant",
+                "model": model_name,
+                "content": [{"type": "text", "text": "上下文接近超限，请新开会话"}],
+                "stop_reason": "end_turn",
+                "usage": {"input_tokens": max(1, _json_bytes(forward_payload.get("messages", [])) // 4), "output_tokens": 8},
+            })
         raise HTTPException(status_code=504, detail=f"Backend failed: {last_exception}")
 
     res_json = resp.json()
 
     if not is_anthropic:
+        _record_request_event("request_finish", request_id, success=True, stream=False, output_chars=_json_bytes(res_json))
         await tracker.finish(request_id, success=True)
         await tracker.remove(request_id)
         return JSONResponse(res_json)
@@ -2143,6 +2425,7 @@ async def smart_gateway(request: Request, path: str):
         if out_text:
             output_tokens = max(1, len(out_text) // 4)
 
+    _record_request_event("request_finish", request_id, success=True, stream=False, output_chars=len(str(openai_content or "")), stop_reason=stop_reason)
     await tracker.finish(request_id, success=True)
     await tracker.remove(request_id)
 

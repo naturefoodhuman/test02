@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-15 17:20:00
+# 创建时间（北京时间）：2026-08-16 10:20:00
 
 """NVIDIA NIM sidecar proxy unit tests."""
 
@@ -337,6 +337,9 @@ def test_smart_proxy_has_auto_continue_for_nim_sidecar_api_errors() -> None:
     assert "FORGE_AUTO_CONTINUE_ON_API_ERROR" in source
     assert "FORGE_AUTO_CONTINUE_MAX_ATTEMPTS" in source
     assert "FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS" in source
+    assert "FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS" in source
+    assert "FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS" in source
+    assert "FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS" in source
     assert "FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS" in source
     assert "auto-continue" in source
     assert "1 + FORGE_AUTO_CONTINUE_MAX_ATTEMPTS" in source
@@ -346,9 +349,21 @@ def test_smart_proxy_has_auto_continue_for_nim_sidecar_api_errors() -> None:
 def test_smart_proxy_auto_continue_uses_retry_after_without_short_cap() -> None:
     source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
 
-    assert "cap=wait_cap" in source
-    assert "FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS if auto_continue else None" in source
+    assert "_auto_continue_wait_from_response" in source
+    assert "cap=FORGE_AUTO_CONTINUE_MAX_WAIT_SECONDS" in source
     assert "_retry_after_seconds_from_error_payload" in source
+    assert "FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS" in source
+    assert "FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS" in source
+
+
+def test_smart_proxy_auto_continue_has_no_output_and_partial_replay_guards() -> None:
+    source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
+
+    assert "FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS" in source
+    assert "NoOutputTimeout" in source
+    assert "_build_partial_continue_payload" in source
+    assert "partial_replays" in source
+    assert "FORGE_REQUEST_EVENT_LOG_PATH" in source
 
 
 def test_forward_non_stream_fallback_runs_even_with_one_attempt_budget(

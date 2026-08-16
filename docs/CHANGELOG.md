@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-15 17:20:00
+创建时间（北京时间）：2026-08-16 10:20:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -17,6 +17,32 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 217 轮] 2026-08-16
+
+### 需求变动
+- **Auto-Continue v2**：用户要求除上下文超限外，所有 pre-content API/network/timeout 错误都在 Smart Proxy 层 client-agnostic 自动继续；无 Retry-After 默认等待 60s，等待上限 300s。
+- **15 分钟无真实输出 watchdog**：新增 `FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS=900`；如果未输出任何 text/tool_call 超过 15 分钟，则取消当前 upstream HTTP 请求，等待 `FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS=5` 后重放一次。
+- **部分文本中断续写**：若已经输出文本但尚未产生 tool call，流式中断时构造 continuation payload（携带已输出文本尾部并要求续写且不重复），继续追加到同一 SSE 流；若已经产生 tool call，则不透明重放，避免重复执行工具。
+- **请求事件日志**：新增 `/tmp/forge_request_events.jsonl`，记录 request_start/request_finish/request_error/request_cancelled 的时间、request_id、模型、stream、body_bytes、用户消息 hash/长度、输出长度等，默认不记录原文。
+
+### 文件影响
+- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py _infra/network/tests/unit/test_forge_nim_chain_monitor.py -q
+# 34 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/forge_nim_chain_monitor.py
+make docs-check
+# Blockers: 0; Warnings: 1（adr/fallback/model 架构敏感词提示，已复核无需新增 ADR）
+```
 
 ---
 
