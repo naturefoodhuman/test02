@@ -123,10 +123,33 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             event_worker = EventWorker(bus=pg_bus, session_factory=get_session_factory(s))
             # APC-T014：注入 Normalization worker handler，订阅 events.changed →
             # 归一化 + 纠错链/软删除对派生表的处理。
+            # APC-T017：归一化/软删除成功后触发 State Engine 增量重算（按 baby_id），
+            # 打通 Event→Normalization→State 链路。
+            from .common.clock import SystemClock
+            from .events.infra.repository import SqlAlchemyObservationEventRepository
             from .normalization.worker import NormalizationWorker
+            from .state_engine.engine import StateEngine
+            from .state_engine.infra import SqlAlchemyEventLoader
+            from .state_engine.snapshot_repo import SqlAlchemySnapshotRepository
+
+            async def _state_recompute(baby_id: str) -> None:
+                """归一化后触发 State Engine 重算（独立 session + commit）。"""
+                factory = get_session_factory(s)
+                async with factory() as session:
+                    engine = StateEngine(
+                        event_loader=SqlAlchemyEventLoader(session),
+                        snapshot_repo=SqlAlchemySnapshotRepository(session),
+                        event_repo=SqlAlchemyObservationEventRepository(session),
+                        clock=SystemClock(),
+                    )
+                    await engine.recompute(baby_id)
+                    await session.commit()
 
             event_worker.add_handler(
-                NormalizationWorker(session_factory=get_session_factory(s))
+                NormalizationWorker(
+                    session_factory=get_session_factory(s),
+                    state_recompute=_state_recompute,
+                )
             )
             await event_worker.start()
             event_bus = pg_bus  # 供 shutdown 停止

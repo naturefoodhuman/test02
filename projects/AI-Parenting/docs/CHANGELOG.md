@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.17.0] - 2026-08-16 - APC-T017 Event→Normalization→State 集成链路打通（Epic E02 全部完成）
 - [0.16.0] - 2026-08-16 - APC-T016 State Engine 增量重算 + Snapshot Repo + State API
 - [0.15.0] - 2026-08-16 - APC-T015 Baby State Engine P0 Projection
 - [0.14.0] - 2026-08-15 - APC-T014 去重、纠错链处理与 Normalization Worker
@@ -31,6 +32,30 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.17.0] - 2026-08-16
+
+### Added — APC-T017 Event→Normalization→State 集成链路打通
+
+- **`server/app/normalization/worker.py`**：`NormalizationWorker` 加 `state_recompute: Callable[[str], Awaitable[None]] | None` 回调（可选注入）。归一化成功后用 `event.baby_id` 触发重算；软删除派生行后用 payload `baby_id` 触发重算；重算异常隔离（不阻断归一化，at-least-once 补偿）。
+- **`server/app/main.py`**：装配 `_state_recompute` 闭包（独立 session + StateEngine.recompute + commit）注入 NormalizationWorker，打通 Event→Normalization→State 链路。
+
+### Behavior
+
+- 事件写入 → worker 归一化（写派生表 + 推进 normalized）→ 触发 StateEngine.recompute → upsert derived_baby_state + 推进 projected。
+- soft delete → worker 软删除派生行 → 触发重算 → snapshot 更新（软删除事件不进 24h 窗口）。
+- 纠错链 → worker 软删除旧派生行 + 归一化新事件 → 重算 → snapshot 反映新值。
+
+### Tests
+
+- 集成：3 项（真实 PG：feeding event→feeding_log→derived_baby_state projected / soft delete 后 snapshot 更新 / 纠错链旧派生行软删除+新值）。不 mock DB，worker 手动驱动。
+- 全量：377 passed，ruff/mypy 干净。
+
+### Acceptance
+
+- MVP 服务端记录链路自动完成；soft delete 后 snapshot 更新；测试可重复运行无脏数据依赖。P0-M0 地基验收项达成。Epic E02（权限、事件、同步与派生状态）全部完成。
 
 ---
 

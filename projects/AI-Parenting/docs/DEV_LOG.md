@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-16 · Round 18 · APC-T017 Event→Normalization→State 集成链路打通（worker state_recompute 回调 + main 装配 + 3 端到端集成测试，Epic E02 全部完成）
 - 2026-08-16 · Round 17 · APC-T016 State Engine 增量重算 + Snapshot Repo + State API 完成（StateEngine + snapshot_repo + EventLoader + GET /babies/{id}/state + state:read 权限 + 11 测试）
 - 2026-08-16 · Round 16 · APC-T015 Baby State Engine P0 Projection 完成（5 projection 纯函数 + domain + project_state 聚合 + 19 测试含 hypothesis 确定性）
 - 2026-08-15 · Round 15 · APC-T014 去重、纠错链处理与 Normalization Worker 完成（NormalizationWorker + WorkerContext + soft_delete_by_event + main 装配 + 15 测试）
@@ -29,6 +30,48 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 18 · 2026-08-16 · APC-T017 Event→Normalization→State 集成链路
+
+### 背景
+
+T016 完成 State Engine 重算 + State API，但 worker 归一化后不触发 state 重算——链路断在 Normalization→State。T017 打通：worker 归一化/软删除成功后触发 StateEngine.recompute(baby_id)，端到端验证 Event→Normalization→State。这是 P0-M0 地基验收项。
+
+### 交付
+
+- **`server/app/normalization/worker.py`**：`NormalizationWorker` 加 `state_recompute: Callable[[str], Awaitable[None]] | None` 回调（可选注入，T014 单测默认不接）。
+  - `_handle_upsert`：归一化成功后用 `event.baby_id` 触发重算（比 payload 可靠）。
+  - `_handle_delete`：软删除派生行后用 payload `baby_id` 触发重算（事件已删，用 payload）。
+  - `_trigger_state_recompute`：异常隔离——重算失败不阻断归一化结果（归一化已 commit；重算可由下次事件/recover 补偿）。
+- **`server/app/main.py`**：装配 `_state_recompute` 闭包（独立 session + StateEngine.recompute + commit）注入 NormalizationWorker，打通链路。
+- 测试：`server/tests/integration/test_event_to_state_pipeline.py`（3）。
+
+### 决策与权衡
+
+- **回调注入而非硬依赖**：worker 不直接依赖 StateEngine（职责分离——归一化与派生是不同模块）。`state_recompute` 回调可选注入，T014 单测默认不接（保持 worker 单测不依赖 State Engine），main 装配时注入闭包打通链路。
+- **重算用 event.baby_id 而非 payload baby_id（upsert 路径）**：upsert 时已加载 event，`event.baby_id` 更可靠（payload 可能缺失/不一致）。delete 时 event 已软删除无法加载，用 payload baby_id（trigger payload 含 baby_id）。
+- **重算异常隔离不阻断归一化**：归一化已 commit（派生表已写、processing_status 已推进），重算失败若抛出会阻断 EventBus 消费循环。捕获记日志，重算由下次事件/recover_pending 补偿（at-least-once）。snapshot 旧值或缺失不影响归一化正确性。
+- **手动驱动 worker 而非后台 PG LISTEN**：集成测试手动调 `worker.handle`（模拟 NOTIFY），不后台跑 PG LISTEN——避免 flaky（LISTEN 异步、时序难控）。验证链路逻辑而非传输层。
+- **独立 session 重算**：`_state_recompute` 闭包用独立 session（与归一化 session 分离），重算事务独立 commit。避免与归一化 session 跨事务。
+
+### 测试与验收
+
+- 集成：3 passed（真实 PG AI_parenting_dev：feeding event→feeding_log→derived_baby_state projected/soft delete 后 snapshot 更新奶量 0/纠错链旧派生行软删除+新值 200）。
+- 全量：377 passed，ruff/mypy 干净。
+- 验收：MVP 服务端记录链路自动完成（事件写入→归一化→派生状态）；soft delete 后 snapshot 更新；测试可重复运行无脏数据依赖。P0-M0 地基验收项达成。
+
+### 红线与边界
+
+- 未读取/操作 `.env`；集成测试连独立库 AI_parenting_dev；未碰 `AI-Parenting-Copilot/`。
+- 未改变架构边界（worker 为 §7.1 归一化消费，触发 §2 M06 state_engine 重算，链路符合 §4.1）。
+- 未引入新依赖、新迁移。
+
+### 下一步
+
+Epic E02（权限、事件、同步与派生状态）全部完成。进入 Epic E03 — Rule Engine、AI 编排与安全输出：
+- APC-T018 — Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo（依赖 T004；已满足）。
 
 ---
 

@@ -46,8 +46,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
-from typing import Protocol, runtime_checkable
+from collections.abc import Awaitable, Callable
+from typing import Any, Protocol, runtime_checkable
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -132,11 +132,16 @@ class NormalizationWorker:
         *,
         session_factory: async_sessionmaker[AsyncSession],
         context_factory: Callable[[AsyncSession], WorkerContext] | None = None,
+        state_recompute: Callable[[str], Awaitable[None]] | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._context_factory: Callable[[AsyncSession], WorkerContext] = (
             context_factory or SqlAlchemyWorkerContext
         )
+        # APC-T017：归一化/软删除成功后触发 State Engine 增量重算（按 baby_id）。
+        # 可选注入；None 则不触发（T014 单测默认不接 State Engine）。main 装配时注入
+        # 调 StateEngine.recompute(baby_id) 的闭包，打通 Event→Normalization→State 链路。
+        self._state_recompute = state_recompute
 
     async def __call__(self, payload: EventPayload) -> None:
         """``EventHandler`` 协议入口（``EventWorker`` 以 ``await handler(payload)`` 调用）。
@@ -154,22 +159,23 @@ class NormalizationWorker:
         """
         event_id = payload.get("event_id")
         op = str(payload.get("op", "")).lower()
+        baby_id = payload.get("baby_id")
         if not event_id:
             _logger.warning("normalization.worker.skip no event_id payload=%s", payload)
             return
         try:
             if op == "delete":
-                await self._handle_delete(str(event_id))
+                await self._handle_delete(str(event_id), baby_id)
             else:
                 # insert / update / recover / 未知 op 一律按"处理事件"路径（保守补处理）。
-                await self._handle_upsert(str(event_id))
+                await self._handle_upsert(str(event_id), baby_id)
         except Exception:  # 异常隔离，不阻断消费循环。
             _logger.exception(
                 "normalization.worker.error event_id=%s op=%s", event_id, op
             )
 
-    async def _handle_upsert(self, event_id: str) -> None:
-        """处理 insert/update/recover：去重 → 纠错链 → normalize。"""
+    async def _handle_upsert(self, event_id: str, baby_id: Any = None) -> None:
+        """处理 insert/update/recover：去重 → 纠错链 → normalize → 触发 state 重算。"""
         async with self._session_factory() as session:
             ctx = self._context_factory(session)
             event = await ctx.get_event(event_id)
@@ -194,13 +200,31 @@ class NormalizationWorker:
 
             await ctx.normalize(event)
             await ctx.commit()
+        # APC-T017：归一化成功后触发 State Engine 增量重算（按 event.baby_id，比 payload 可靠）。
+        await self._trigger_state_recompute(event.baby_id)
 
-    async def _handle_delete(self, event_id: str) -> None:
-        """处理 delete：软删除该 event_id 在所有 P0 派生表的行（派生表排除）。"""
+    async def _handle_delete(self, event_id: str, baby_id: Any = None) -> None:
+        """处理 delete：软删除派生行 → 触发 state 重算（派生表排除后重算）。"""
         async with self._session_factory() as session:
             ctx = self._context_factory(session)
             await ctx.soft_delete_event_logs(event_id)
             await ctx.commit()
+        # APC-T017：软删除派生行后触发 State Engine 重算（事件已删，用 payload baby_id）。
+        if baby_id is not None:
+            await self._trigger_state_recompute(str(baby_id))
+
+    async def _trigger_state_recompute(self, baby_id: str) -> None:
+        """触发 State Engine 增量重算（APC-T017，可选）。
+
+        未注入 ``state_recompute`` 时跳过（T014 单测默认不接 State Engine）。
+        重算失败不阻断归一化结果（归一化已 commit；重算可由下次事件/recover 补偿）。
+        """
+        if self._state_recompute is None:
+            return
+        try:
+            await self._state_recompute(baby_id)
+        except Exception:  # 重算失败不阻断归一化；at-least-once 靠后续事件/recover 补偿。
+            _logger.exception("normalization.worker.state_recompute.error baby_id=%s", baby_id)
 
 
 __all__ = ["NormalizationWorker", "SqlAlchemyWorkerContext", "WorkerContext"]
