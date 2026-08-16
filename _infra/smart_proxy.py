@@ -1524,11 +1524,15 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
             err_body = resp.text[:500] if hasattr(resp, "text") else ""
             last_exception = f"HTTP {resp.status_code}: {err_body}"
 
-            if resp.status_code not in RETRYABLE_STATUS_CODES:
+            status_auto_allowed = auto_continue and _auto_continue_status_allowed(resp.status_code, err_body)
+            if resp.status_code not in RETRYABLE_STATUS_CODES and not status_auto_allowed:
+                if auto_continue and _is_context_limit_error_text(err_body):
+                    _auto_continue_counters["blocked_by_context"] += 1
+                    last_exception = "上下文接近超限，请新开会话: " + err_body[:300]
                 logger.warning(f"❌ 不可重试状态码 {resp.status_code}，立即失败")
                 break
 
-            logger.warning(f"⚠️ 可重试状态码 {resp.status_code}，第 {attempt + 1}/{max_attempts} 次")
+            logger.warning(f"⚠️ 可重试/auto-continue 状态码 {resp.status_code}，第 {attempt + 1}/{max_attempts} 次")
             _retry_counters[str(resp.status_code)] = _retry_counters.get(str(resp.status_code), 0) + 1
             if auto_continue and context_too_large:
                 _auto_continue_counters["blocked_by_context"] += 1

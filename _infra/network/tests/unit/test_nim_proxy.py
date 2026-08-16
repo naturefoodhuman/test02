@@ -354,6 +354,8 @@ def test_smart_proxy_auto_continue_uses_retry_after_without_short_cap() -> None:
     assert "_retry_after_seconds_from_error_payload" in source
     assert "FORGE_AUTO_CONTINUE_DEFAULT_WAIT_SECONDS" in source
     assert "FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS" in source
+    assert "status_auto_allowed" in source
+    assert "可重试/auto-continue 状态码" in source
 
 
 def test_smart_proxy_auto_continue_has_no_output_and_partial_replay_guards() -> None:

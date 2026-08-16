@@ -48,7 +48,7 @@ make docs-check
 ## [第 217 轮] 2026-08-16
 
 ### 需求变动
-- **Auto-Continue v2**：用户要求除上下文超限外，所有 pre-content API/network/timeout 错误都在 Smart Proxy 层 client-agnostic 自动继续；无 Retry-After 默认等待 60s，等待上限 300s。
+- **Auto-Continue v2**：用户要求除上下文超限外，所有 pre-content API/network/timeout 错误都在 Smart Proxy 层 client-agnostic 自动继续；无 Retry-After 默认等待 60s，等待上限 300s；非 429/502/503/504 的普通 HTTP 非 2xx 也纳入自动继续，除非命中上下文超限文本。
 - **15 分钟无真实输出 watchdog**：新增 `FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS=900`；如果未输出任何 text/tool_call 超过 15 分钟，则取消当前 upstream HTTP 请求，等待 `FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS=5` 后重放一次。
 - **部分文本中断续写**：若已经输出文本但尚未产生 tool call，流式中断时构造 continuation payload（携带已输出文本尾部并要求续写且不重复），继续追加到同一 SSE 流；若已经产生 tool call，则不透明重放，避免重复执行工具。
 - **请求事件日志**：新增 `/tmp/forge_request_events.jsonl`，记录 request_start/request_finish/request_error/request_cancelled 的时间、request_id、模型、stream、body_bytes、用户消息 hash/长度、输出长度等，默认不记录原文。
