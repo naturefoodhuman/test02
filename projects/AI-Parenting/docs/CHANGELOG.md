@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.15.0] - 2026-08-16 - APC-T015 Baby State Engine P0 Projection
 - [0.14.0] - 2026-08-15 - APC-T014 去重、纠错链处理与 Normalization Worker
 - [0.13.0] - 2026-08-13 - APC-T013 Normalization 表单/语音文本解析与领域派生表写入
 - [0.12.0] - 2026-08-13 - APC-T012 PowerSync 适配、同步契约校验与冲突软提示（Milestone 2 全部完成）
@@ -29,6 +30,39 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.15.0] - 2026-08-16
+
+### Added — APC-T015 Baby State Engine P0 Projection
+
+- **`server/app/state_engine/projections/{feeding,diaper,sleep,temperature,supplement}.py`**：纯函数，输入未删除事件集合 + 参考时间 `now`，输出各域派生指标。
+  - feeding：距上次喂奶秒数 / 24h 奶量（amount_ml 之和，bool 排除）/ 24h 次数。
+  - diaper：24h 湿/脏尿布数（type=wet/dirty/mixed，mixed 同时计入湿与脏）。
+  - sleep：24h 睡眠总秒数（各事件 [start,end] 与窗口 [now-24h,now] 交集之和，未结束 end 取 now）+ 当前会话 start_time。
+  - temperature：24h 最高温（temperature_c，bool/非法排除）。
+  - supplement：距上次补剂秒数 + 名称。
+- **`server/app/state_engine/projections/_common.py`**：`active_events`（过滤软删除+event_type+升序）/`window_events`（24h 窗口）/`seconds_between`/`WINDOW`。
+- **`server/app/state_engine/domain.py`**：`DerivedBabyState` + 5 个 `*Projection` dataclass（frozen）+ `to_snapshot()`（序列化为 `derived_baby_state.snapshot` jsonb，T016 写入用）。
+- **`server/app/state_engine/project.py`**：`project_state(events, now)` 聚合 5 个 projection → `DerivedBabyState`，`source_event_range` 取所有未删除事件最早/最晚 start_time（架构 §6.3）。
+
+### Behavior
+
+- projection 从事件读（架构 §10.1 输入"ObservationEvent 增量"），不从派生表读。
+- 24h 窗口：`start_time ∈ [now-24h, now]`；sleep 长睡眠跨窗口左边界只计窗口内交集。
+- bool 显式排除（bool 是 int 子类，避免 `True` 被当 1.0 计入奶量/体温）。
+- 只派生不告警（告警等级在 rule_engine/notification，架构 §10）；不做医疗判断。
+- T015 不写 DB（`derived_baby_state` upsert 在 APC-T016）。
+
+### Tests
+
+- 单元：19 项（各 projection 边界——空/窗口外/软删除/缺字段/bool 排除/mixed 计数/长睡眠跨窗口交集 + project_state 聚合/source_event_range/to_snapshot 序列化 + hypothesis 确定性 property）。
+- 全量：363 passed，ruff/mypy 干净。
+
+### Acceptance
+
+- P0 派生计算为纯函数；只计算不产生告警等级；给定 fixture 事件集输出稳定 DerivedBabyState。
 
 ---
 

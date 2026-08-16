@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-16 · Round 16 · APC-T015 Baby State Engine P0 Projection 完成（5 projection 纯函数 + domain + project_state 聚合 + 19 测试含 hypothesis 确定性）
 - 2026-08-15 · Round 15 · APC-T014 去重、纠错链处理与 Normalization Worker 完成（NormalizationWorker + WorkerContext + soft_delete_by_event + main 装配 + 15 测试）
 - 2026-08-13 · Round 14 · APC-T013 Normalization 表单/语音文本解析与领域派生表写入完成（form/voice parser + NormalizationService + LogWriter + update_processing_status + 44 测试）
 - 2026-08-13 · Round 13 · APC-T012 PowerSync 适配、同步契约校验与冲突软提示完成（contract_validator + conflict_detector + sync-rules + 55 测试，Milestone 2 全部 DONE）
@@ -27,6 +28,53 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 16 · 2026-08-16 · APC-T015 Baby State Engine P0 Projection
+
+### 背景
+
+T014 完成 Normalization Worker（事件 → 派生表）。T015 进入 State Engine：消费 ObservationEvent 增量，派生 DerivedBabyState 快照（架构 §10.1）。T015 范围是 P0 projection 纯函数（feeding/diaper/sleep/temperature/supplement），只计算不产生告警等级，不写 DB（upsert 在 T016）。
+
+### 交付
+
+- **`server/app/state_engine/projections/{feeding,diaper,sleep,temperature,supplement}.py`**：纯函数，输入未删除事件集合 + 参考时间 `now`，输出各域派生指标。
+  - feeding：距上次喂奶秒数（最近未删除 feeding 事件 start_time 距 now）/24h 奶量（amount_ml 之和，bool 排除）/24h 次数。
+  - diaper：24h 湿/脏尿布数（type=wet/dirty/mixed，mixed 同时计入湿与脏）。
+  - sleep：24h 睡眠总秒数（各事件 [start,end] 与窗口 [now-24h,now] 交集之和，未结束 end 取 now）+ 当前会话 start_time。
+  - temperature：24h 最高温（temperature_c，bool/非法排除）。
+  - supplement：距上次补剂秒数 + 名称。
+- **`server/app/state_engine/projections/_common.py`**：`active_events`（过滤软删除+event_type+升序）/`window_events`（24h 窗口）/`seconds_between`/`WINDOW`。
+- **`server/app/state_engine/domain.py`**：`DerivedBabyState` + 5 个 `*Projection` dataclass（frozen）+ `to_snapshot()`（序列化为 derived_baby_state.snapshot jsonb）。
+- **`server/app/state_engine/project.py`**：`project_state(events, now)` 聚合 5 个 projection → DerivedBabyState，`source_event_range` 取所有未删除事件最早/最晚 start_time（架构 §6.3）。
+- 测试：`server/tests/unit/state_engine/test_projections.py`（19）。
+
+### 决策与权衡
+
+- **projection 从事件读，不从派生表读**：架构 §10.1 输入"ObservationEvent 增量"，M06 state_engine ← events。派生表是 normalization 产物 + 溯源，State Engine 消费事件本身。这样 projection 纯函数输入统一（ObservationEvent），不耦合派生表 ORM，T016 增量重算时按 baby 加载事件即可。
+- **纯函数 + frozen dataclass**：projection 无副作用、无 IO、确定性，便于 hypothesis property 测试 + T016 幂等重算。frozen dataclass 防 accidental mutation。
+- **24h 窗口语义**：`in_window` 判 `start_time ∈ [now-24h, now]`。sleep 特殊：长睡眠跨窗口左边界（start 在窗口外、end 在窗口内）只计窗口内交集（`_overlap_seconds`），避免长睡眠被整条排除或整条计入。
+- **bool 排除**：`isinstance(x, bool)` 在 `isinstance(x, (int,float))` 之前判断——bool 是 int 子类，`True` 会被当 1.0 计入奶量/体温，必须显式排除（与 T013 form parser 一致）。
+- **只派生不告警**：体温阈值告警在 rule_engine（T021），State Engine 只算 max_c_24h，不判阈值。严格遵守架构 §10 边界。
+- **source_event_range**：取所有未删除事件最早/最晚 start_time，写入 snapshot 便于审计追溯（架构 §6.3 snapshot 含 computed_at 与 source event range）。
+- **T015 不写 DB**：projection 纯函数 + project_state 聚合，不碰 derived_baby_state 表。upsert + processing_status=projected 推进在 T016，保持任务边界清晰。
+
+### 测试与验收
+
+- 单元：19 passed（各 projection 边界——空/窗口外/软删除/缺字段/bool 排除/mixed 计数/长睡眠跨窗口交集 + project_state 聚合/source_event_range/to_snapshot 序列化 + hypothesis 确定性 property：同一事件集多次投影结果一致）。
+- 全量：363 passed，ruff/mypy 干净。
+- 验收：P0 派生计算为纯函数；只计算不产生告警等级；给定 fixture 事件集输出稳定 DerivedBabyState。
+
+### 红线与边界
+
+- 未读取/操作 `.env`；未碰 `AI-Parenting-Copilot/`；未引入新依赖（hypothesis 已在 dev deps）。
+- 未改变架构边界（state_engine 为 §2 M06 派生层，只派生不告警）。
+- 未引入新迁移（T015 不写 DB；derived_baby_state 表在 T004 已建）。
+
+### 下一步
+
+APC-T016 — State Engine 投影规则与 derived_baby_state upsert（依赖 T015；已满足）。增量重算 engine + snapshot repo upsert + processing_status 推进 projected；幂等重算。
 
 ---
 

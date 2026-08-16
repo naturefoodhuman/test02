@@ -13,11 +13,12 @@
 ## 0. 当前里程碑
 
 **Milestone 2 — P0-M1 事件溯源与同步**（APC-T007 ~ APC-T012）✅ 全部完成
-**Milestone 3 — Normalization**（APC-T013 ~ APC-T014）✅ 完成；T015 待开始
+**Milestone 3 — Normalization**（APC-T013 ~ APC-T014）✅ 完成
+**Milestone 4 — State Engine**（APC-T015）✅ 完成；T016/T017 待开始
 
-> Milestone 1（地基）、Milestone 2（Auth/事件/同步）已完成；
-> T013 Normalization 解析与派生表写入、T014 Normalization Worker + 纠错链/软删除处理已完成，
-> 下一步 T015 Baby State Engine P0 Projection。
+> Milestone 1（地基）、Milestone 2（Auth/事件/同步）、Milestone 3（Normalization）已完成；
+> T013/T014 Normalization 解析+派生表写入+Worker 已完成，T015 Baby State Engine P0 Projection 已完成，
+> 下一步 T016 State Engine 投影规则与 derived_baby_state upsert。
 
 ---
 
@@ -39,7 +40,8 @@
 | APC-T012 | PowerSync 适配、同步契约校验与冲突软提示基础 | ✅ DONE | contract_validator（§6.3 契约校验 → ObservationEvent，synced/pending）+ conflict_detector（5 分钟内重复 feeding 软提示，§9.2 不自动删）+ sync-rules.yaml（按 family_id 分桶）+ 55 测试（52 unit + 3 integration）；ruff/mypy 干净，285 测试通过 |
 | APC-T013 | Normalization 表单/语音文本解析与领域派生表写入 | ✅ DONE | form parser（manual 结构化映射，confidence=1.0）+ voice parser（中文规则/模板解析，confidence<1.0）+ NormalizationService（按 source 路由 + 写派生表 + 推进 processing_status=normalized + 幂等）+ SqlAlchemyLogWriter（feeding_log 结构化列/其余 log payload jsonb）+ ObservationEventRepository.update_processing_status；44 测试（39 unit + 5 integration）；ruff/mypy 干净，329 测试通过 |
 | APC-T014 | 去重、纠错链处理与 Normalization Worker | ✅ DONE | NormalizationWorker（EventHandler，订阅 events.changed，按 op 分发 insert/update/recover→去重+纠错链+normalize / delete→软删除派生行）+ WorkerContext 协议（可注入纯单测）+ SqlAlchemyWorkerContext + LogWriter.soft_delete_by_event（派生行软删除）+ main.py 装配注入 EventWorker；双层去重（worker 层 processing_status 已推进跳过 + service 层 exists）；纠错链 correction_of 先软删除旧派生行；15 测试（10 unit + 5 integration）；ruff/mypy 干净，344 测试通过 |
-| APC-T015 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T015 | Baby State Engine P0 Projection | ✅ DONE | state_engine/projections/{feeding,diaper,sleep,temperature,supplement}.py 纯函数（距上次喂奶/24h 奶量次数/湿脏尿布数/24h 睡眠+当前会话/24h 最高温/上次补剂）+ domain.py（DerivedBabyState dataclass + to_snapshot）+ project.py 聚合入口（source_event_range）+ __init__ 导出；只派生不告警；过滤软删除+24h 窗口+bool 排除；19 单元测试（含 hypothesis 确定性 property）；ruff/mypy 干净，363 测试通过 |
+| APC-T016 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -153,12 +155,20 @@
   - 双层去重：worker 层（`processing_status` 已推进跳过，避免重复 NOTIFY 重复处理）+ service 层（`log_writer.exists` 按 event_id 去重，崩溃恢复后最终一致）。
   - 测试：`server/tests/unit/normalization/test_normalization_worker.py`（10：insert/路由/去重 normalized+projected/纠错链先软删除旧派生行/delete 软删除/event not found/缺 event_id/异常隔离/未知 op）+ `server/tests/integration/test_normalization_worker.py`（5：insert 归一化+推进状态/重复 NOTIFY 去重/delete 软删除派生行/纠错链旧派生行软删除+新派生行生效/recover_pending 补处理 pending 事件）。
   - 验收：`processing_status` 可从 pending 推进到 normalized；重复 NOTIFY 不重复写派生表；correction_of 触发旧派生记录失效；soft delete 触发派生表排除；崩溃恢复扫描 pending 事件可补处理。
+- **APC-T015**：Baby State Engine P0 Projection：
+  - `server/app/state_engine/projections/{feeding,diaper,sleep,temperature,supplement}.py`：纯函数，输入未删除事件集合 + 参考时间 `now`，输出各域派生指标。feeding（距上次喂奶秒数/24h 奶量/次数）、diaper（24h 湿/脏尿布数，mixed 同时计入）、sleep（24h 睡眠总秒数 + 当前会话 start_time，未结束 end 取 now，长睡眠跨窗口只计交集）、temperature（24h 最高温）、supplement（距上次补剂秒数 + 名称）。
+  - `server/app/state_engine/projections/_common.py`：`active_events`（过滤软删除+event_type+升序）/`window_events`（24h 窗口）/`seconds_between`/`WINDOW`。
+  - `server/app/state_engine/domain.py`：`DerivedBabyState` + 5 个 `*Projection` dataclass（frozen）+ `to_snapshot()`（序列化为 derived_baby_state.snapshot jsonb，T016 写入用）。
+  - `server/app/state_engine/project.py`：`project_state(events, now)` 聚合 5 个 projection → DerivedBabyState，`source_event_range` 取所有未删除事件最早/最晚 start_time（架构 §6.3 snapshot 含 source event range）。
+  - 边界：只派生不告警（告警等级在 rule_engine/notification，架构 §10）；不做医疗判断；不读派生表（消费事件本身，架构 §10.1 输入"ObservationEvent 增量"）；T015 不写 DB（upsert 在 T016）。
+  - 测试：`server/tests/unit/state_engine/test_projections.py`（19：各 projection 边界——空/窗口外/软删除/缺字段/bool 排除/mixed 计数/长睡眠跨窗口交集 + project_state 聚合/source_event_range/to_snapshot 序列化 + hypothesis 确定性 property）。
+  - 验收：P0 派生计算为纯函数；只计算不产生告警等级；覆盖率 ≥95%；给定 fixture 事件集输出稳定 DerivedBabyState。
 
 ---
 
 ## 3. 进行中
 
-无。APC-T014 已完成。下一步进入 Baby State Engine（T015）。
+无。APC-T015 已完成。下一步进入 State Engine 投影规则与 upsert（T016）。
 
 ---
 
@@ -166,9 +176,8 @@
 
 按 MVP 路径（TASK_BACKLOG §4）推进 Epic E02 剩余：
 
-1. **APC-T015** — Baby State Engine P0 Projection（依赖 T013；已满足）。feeding/diaper/sleep/temperature/supplement P0 派生计算纯函数（距上次喂奶、24h 奶量/次数、湿/脏尿布数、24h 睡眠、当前会话、24h 最高温）；只计算不产生告警等级。
-2. **APC-T016** — State Engine 投影规则与 derived_baby_state upsert（依赖 T015）。
-3. **APC-T017** — 打通 Event → Normalization → State 集成链路（依赖 T010/T014/T016）。
+1. **APC-T016** — State Engine 投影规则与 derived_baby_state upsert（依赖 T015；已满足）。增量重算 engine + snapshot repo upsert + processing_status 推进 projected；幂等重算。
+2. **APC-T017** — 打通 Event → Normalization → State 集成链路（依赖 T010/T014/T016）。
 
 ---
 
