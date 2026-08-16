@@ -1,0 +1,15 @@
+$ git worktree add --detach /tmp/forge_diag_push_forge_nim_chain_20260816_112348_78356 HEAD
+exit_code=0
+[stdout]
+HEAD 现在位于 932bbd0 docs(t014): 补齐 Normalization Worker 外部记忆
+
+[stderr]
+准备工作区（分离头指针 932bbd0）
+
+
+$ git checkout --orphan diagnostics/forge-nim-forge_nim_chain_20260816_112348
+exit_code=0
+[stderr]
+切换到一个新分支 'diagnostics/forge-nim-forge_nim_chain_20260816_112348'
+
+
