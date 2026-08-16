@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-16 10:20:00
+# 创建时间（北京时间）：2026-08-16 13:30:00
 # 修改本文件中的配置比如“FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))“ 后
 # 要重启 bash scripts/forge-start.sh 以使新配置生效
 
@@ -157,7 +157,7 @@ FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS = float(
     os.getenv("FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS", "900")
 )
 FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT = _env_bool("FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT", True)
-FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS = int(os.getenv("FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS", "12000"))
+FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS = int(os.getenv("FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS", "30000"))
 FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS = int(
     os.getenv("FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS", "902752")
 )
@@ -183,6 +183,14 @@ FORGE_REQUEST_EVENT_LOG_PATH = os.getenv("FORGE_REQUEST_EVENT_LOG_PATH", "/tmp/f
 FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT = _env_bool("FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT", False)
 # Smart Proxy -> sidecar/upstream read timeout. Keep aligned with the 15min no-output watchdog.
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS = float(os.getenv("FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS", "900"))
+# NVIDIA hosted GLM-5.2 currently reports an effective combined input+output
+# ceiling around 202749 tokens. Keep output budget intact; compact input first,
+# then ask the user to start a new session if input still cannot fit.
+FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS = int(os.getenv("FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS", "202749"))
+FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS = int(os.getenv("FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS", "2048"))
+FORGE_UPSTREAM_COMBINED_GUARD_ENABLED = _env_bool("FORGE_UPSTREAM_COMBINED_GUARD_ENABLED", True)
+_combined_budget_counters = {"pass": 0, "compacted": 0, "rejected": 0}
+_combined_budget_last = {"action": "pass", "input_before": 0, "input_after": 0, "max_tokens": 0}
 
 # 429/503 退避封顶（秒），防止上游给出过大 Retry-After 导致请求长时间挂起。
 _RETRY_AFTER_CAP_SECONDS = 30.0
@@ -918,6 +926,105 @@ def _compact_messages(messages: list, keep_recent_turns: int, trunc_tool_result_
     return out
 
 
+
+def _force_compact_messages_to_budget(
+    messages: list,
+    target_tokens: int,
+    keep_recent_turns: int,
+    trunc_tool_result_chars: int,
+) -> list:
+    """Deterministically shrink messages to a target input-token estimate.
+
+    This is intentionally conservative and LLM-free: preserve system messages and
+    the newest turns first, drop older middle history, and insert a short marker.
+    It is used only when NVIDIA's combined input+output limit would otherwise
+    reject the request. If even the preserved tail is too large, the caller will
+    reject and ask for a new session instead of cutting output tokens.
+    """
+    if not isinstance(messages, list) or not messages:
+        return list(messages or [])
+    target_tokens = max(1, int(target_tokens))
+    # Phase 1: regular structured compaction with a smaller tool-result cap.
+    compacted = _compact_messages(
+        messages,
+        max(1, keep_recent_turns),
+        max(200, min(trunc_tool_result_chars, 800)),
+    )
+    if _estimate_messages_tokens(compacted) <= target_tokens:
+        return compacted
+
+    system_msgs = [m for m in compacted if isinstance(m, dict) and m.get("role") == "system"]
+    non_system = [m for m in compacted if not (isinstance(m, dict) and m.get("role") == "system")]
+    marker = {
+        "role": "system",
+        "content": (
+            "[FORGE context guard] Older middle history was omitted locally to fit NVIDIA's "
+            "combined input+output token limit. Continue from the preserved recent turns."
+        ),
+    }
+    # Try keeping fewer and fewer recent messages. Do not drop all context unless
+    # forced; preserve at least the latest user turn when possible.
+    for tail_count in [keep_recent_turns * 2, keep_recent_turns, 4, 2, 1]:
+        tail_count = max(1, int(tail_count))
+        tail = non_system[-tail_count:] if non_system else []
+        candidate = system_msgs + [marker] + tail
+        candidate = _compact_messages(candidate, keep_recent_turns=1, trunc_tool_result_chars=400)
+        if _estimate_messages_tokens(candidate) <= target_tokens:
+            return candidate
+    return system_msgs + [marker] + (non_system[-1:] if non_system else [])
+
+
+def _apply_upstream_combined_budget(forward_payload: dict):
+    """Fit request input to NVIDIA combined input+output limit without cutting output.
+
+    Returns (action, input_before, input_after, max_tokens, limit, target_input, hint).
+    action ∈ {"pass", "compacted", "rejected"}.
+    """
+    if not FORGE_UPSTREAM_COMBINED_GUARD_ENABLED or FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS <= 0:
+        messages = forward_payload.get("messages")
+        est = _estimate_messages_tokens(messages) if isinstance(messages, list) else 0
+        return ("pass", est, est, int(forward_payload.get("max_tokens", 0) or 0), 0, 0, "")
+    messages = forward_payload.get("messages")
+    if not isinstance(messages, list) or not messages:
+        return ("pass", 0, 0, int(forward_payload.get("max_tokens", 0) or 0), FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS, 0, "")
+    try:
+        max_tokens = int(forward_payload.get("max_tokens", 0) or 0)
+    except Exception:
+        max_tokens = 0
+    limit = int(FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS)
+    safety = max(0, int(FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS))
+    target_input = max(1, limit - max_tokens - safety)
+    est_before = _estimate_messages_tokens(messages)
+    if est_before <= target_input:
+        return ("pass", est_before, est_before, max_tokens, limit, target_input, "")
+
+    compacted = _compact_messages(messages, FORGE_CTX_KEEP_RECENT_TURNS, FORGE_CTX_TRUNC_TOOL_RESULT_CHARS)
+    est_after = _estimate_messages_tokens(compacted)
+    if est_after > target_input:
+        compacted = _force_compact_messages_to_budget(
+            compacted,
+            target_tokens=target_input,
+            keep_recent_turns=FORGE_CTX_KEEP_RECENT_TURNS,
+            trunc_tool_result_chars=FORGE_CTX_TRUNC_TOOL_RESULT_CHARS,
+        )
+        est_after = _estimate_messages_tokens(compacted)
+
+    if est_after <= target_input:
+        forward_payload["messages"] = compacted
+        hint = (
+            f"⚠️ 上下文接近 NVIDIA 上游 combined token 限制 "
+            f"({est_before}+{max_tokens}>{limit})，已优先压缩 input "
+            f"({est_before}→{est_after})，保留 output max_tokens={max_tokens}。"
+        )
+        return ("compacted", est_before, est_after, max_tokens, limit, target_input, hint)
+
+    hint = (
+        "上下文接近超限，请新开会话"
+        f"（NVIDIA combined limit={limit}, estimated_input={est_after}, "
+        f"requested_output={max_tokens}, target_input≤{target_input}）。"
+    )
+    return ("rejected", est_before, est_after, max_tokens, limit, target_input, hint)
+
 def _apply_context_budget(forward_payload: dict):
     """转发前应用上下文预算 guard。原地修改 forward_payload["messages"]。
 
@@ -1629,6 +1736,13 @@ async def forge_status():
             "counters": dict(_ctx_budget_counters),
             "last": dict(_ctx_budget_last),
         },
+        "combined_budget": {
+            "enabled": FORGE_UPSTREAM_COMBINED_GUARD_ENABLED,
+            "limit_tokens": FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS,
+            "safety_tokens": FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS,
+            "counters": dict(_combined_budget_counters),
+            "last": dict(_combined_budget_last),
+        },
         "routing": {
             "allow_unknown_model_fallback": FORGE_ALLOW_UNKNOWN_MODEL_FALLBACK,
         },
@@ -1871,6 +1985,52 @@ async def smart_gateway(request: Request, path: str):
         msgs_now = forward_payload.get("messages")
         if isinstance(msgs_now, list):
             forward_payload["messages"] = [_compact_hint_msg] + msgs_now
+
+    _combined_action, _combined_before, _combined_after, _combined_max_out, _combined_limit, _combined_target, _combined_hint = _apply_upstream_combined_budget(forward_payload)
+    _combined_budget_counters[_combined_action] = _combined_budget_counters.get(_combined_action, 0) + 1
+    _combined_budget_last.update({
+        "action": _combined_action,
+        "input_before": _combined_before,
+        "input_after": _combined_after,
+        "max_tokens": _combined_max_out,
+        "limit": _combined_limit,
+        "target_input": _combined_target,
+    })
+    if _combined_action == "compacted":
+        logger.warning(f"🧩 [{request_id}] combined budget compacted: {_combined_hint}")
+        msgs_now = forward_payload.get("messages")
+        if isinstance(msgs_now, list):
+            forward_payload["messages"] = [{"role": "system", "content": _combined_hint}] + msgs_now
+    elif _combined_action == "rejected":
+        logger.error(f"🛑 [{request_id}] combined budget rejected: {_combined_hint}")
+        _record_request_event("request_context_limit", request_id, reason="combined_budget", input_tokens=_combined_after, max_tokens=_combined_max_out, limit=_combined_limit)
+        await tracker.finish(request_id, success=False)
+        await tracker.remove(request_id)
+        if is_anthropic:
+            if wants_stream:
+                async def combined_limit_event_stream():
+                    msg_id = f"msg_{uuid.uuid4().hex}"
+                    yield _anthropic_sse("message_start", {
+                        "type": "message_start",
+                        "message": {
+                            "id": msg_id, "type": "message", "role": "assistant", "model": model_name,
+                            "content": [], "stop_reason": None, "stop_sequence": None,
+                            "usage": {"input_tokens": int(_combined_after), "output_tokens": 0},
+                        },
+                    })
+                    yield _anthropic_sse("content_block_start", {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}})
+                    yield _anthropic_sse("content_block_delta", {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": _combined_hint}})
+                    yield _anthropic_sse("content_block_stop", {"type": "content_block_stop", "index": 0})
+                    yield _anthropic_sse("message_delta", {"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": None}, "usage": {"output_tokens": max(1, len(_combined_hint) // 4)}})
+                    yield _anthropic_sse("message_stop", {"type": "message_stop"})
+                return StreamingResponse(combined_limit_event_stream(), media_type="text/event-stream")
+            return JSONResponse({
+                "id": f"msg_{uuid.uuid4().hex}", "type": "message", "role": "assistant", "model": model_name,
+                "content": [{"type": "text", "text": _combined_hint}],
+                "stop_reason": "end_turn",
+                "usage": {"input_tokens": int(_combined_after), "output_tokens": max(1, len(_combined_hint) // 4)},
+            })
+        raise HTTPException(status_code=400, detail=_combined_hint)
 
     auto_ctx_too_large, auto_ctx_est = _auto_continue_context_too_large(forward_payload)
     if auto_ctx_too_large:

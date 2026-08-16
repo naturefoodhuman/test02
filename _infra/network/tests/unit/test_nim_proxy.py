@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-16 10:20:00
+# 创建时间（北京时间）：2026-08-16 13:30:00
 
 """NVIDIA NIM sidecar proxy unit tests."""
 
@@ -364,6 +364,18 @@ def test_smart_proxy_auto_continue_has_no_output_and_partial_replay_guards() -> 
     assert "_build_partial_continue_payload" in source
     assert "partial_replays" in source
     assert "FORGE_REQUEST_EVENT_LOG_PATH" in source
+
+
+def test_smart_proxy_has_upstream_combined_token_guard() -> None:
+    source = Path("_infra/smart_proxy.py").read_text(encoding="utf-8")
+
+    assert "FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS" in source
+    assert "FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS" in source
+    assert "_apply_upstream_combined_budget" in source
+    assert "_force_compact_messages_to_budget" in source
+    assert "combined_budget" in source
+    assert "保留 output max_tokens" in source
+    assert "上下文接近超限，请新开会话" in source
 
 
 def test_forward_non_stream_fallback_runs_even_with_one_attempt_budget(

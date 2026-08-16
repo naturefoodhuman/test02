@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-16 10:20:00
+创建时间（北京时间）：2026-08-16 13:30:00
 -->
 
 # CHANGELOG —— 需求增删改 + 变动说明
@@ -17,6 +17,31 @@
 - **当前 Network 测试基线**：358 passed, 3 skipped, 44 warnings。
 - **当前 AI Parenting Copilot 测试基线**：`make test` → `180 passed, 8 deselected, 1 warning`；用户 Mac `make db-integration-test` → `5 passed, 1 warning`。
 - **历史条目说明**：早期条目保留为审计历史，可能引用已归档或已删除文件；不要把历史条目当作当前状态。
+
+---
+
+## [第 218 轮] 2026-08-16
+
+### 需求变动
+- **NVIDIA combined token guard**：针对上游 `accepts at most 202749 combined input and output tokens` 错误，新增 `FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749` 与 safety margin。Smart Proxy 转发前先判断 `estimated_input + requested_max_tokens + safety` 是否超过上游限制。
+- **优先压 input，不砍 output**：combined guard 保留请求的 output `max_tokens`，优先对 input messages 做确定性压缩/中间历史裁剪；压缩后仍无法满足限制时，返回“上下文接近超限，请新开会话”。
+- **Partial continuation tail 默认增大**：`FORGE_AUTO_CONTINUE_PARTIAL_TAIL_CHARS` 默认从 12000 调整到 30000，便于已输出部分文本后续写。
+
+### 文件影响
+- 修改：`_infra/smart_proxy.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py _infra/network/tests/unit/test_forge_nim_chain_monitor.py -q
+# 35 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/forge_nim_chain_monitor.py
+make docs-check
+# Blockers: 0; Warnings: 1（fallback/model/routing 架构敏感词提示，已复核无需新增 ADR）
+```
 
 ---
 

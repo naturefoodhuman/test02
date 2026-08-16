@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-16 10:20:00
+创建时间（北京时间）：2026-08-16 13:30:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -82,6 +82,9 @@ export FORGE_AUTO_CONTINUE_STATUS_CODES="*"
 export FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT=1
 export FORGE_REQUEST_EVENT_LOG_PATH="/tmp/forge_request_events.jsonl"
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS=900
+FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749
+FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS=2048
+FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
 ```
 
 如需同级 fallback：
@@ -268,8 +271,14 @@ FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS=902752
 FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT=1
 FORGE_REQUEST_EVENT_LOG_PATH="/tmp/forge_request_events.jsonl"
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS=900
+FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749
+FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS=2048
+FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
 FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT=0
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS=900
+FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749
+FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS=2048
+FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
 ```
 
 
@@ -282,6 +291,29 @@ FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS=900
 ```
 
 限制：如果模型已经向客户端输出了文本或 tool call，Smart Proxy 不会透明重放，避免重复执行工具或打乱 transcript。
+
+
+### NVIDIA combined token guard
+
+NVIDIA hosted GLM-5.2 can reject a request with a combined input+output limit, e.g. `accepts at most 202749 combined input and output tokens`. Smart Proxy therefore preflights:
+
+```text
+estimated_input + requested_max_tokens + safety <= FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS
+```
+
+The guard **does not cut output tokens first**. It preserves `max_tokens`, compacts input history deterministically, and only asks for a new session if input still cannot fit:
+
+```bash
+FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749
+FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS=2048
+FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
+```
+
+If the guard cannot fit input under the target budget, the response is:
+
+```text
+上下文接近超限，请新开会话
+```
 
 ## 参数调优
 
