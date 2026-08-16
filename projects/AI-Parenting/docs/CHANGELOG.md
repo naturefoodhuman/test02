@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.19.0] - 2026-08-17 - APC-T019 规则 Admin API（validate/upload/activate/list + audit，规则治理闭环）
 - [0.18.0] - 2026-08-17 - APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo（进入 Epic E03）
 - [0.17.0] - 2026-08-16 - APC-T017 Event→Normalization→State 集成链路打通（Epic E02 全部完成）
 - [0.16.0] - 2026-08-16 - APC-T016 State Engine 增量重算 + Snapshot Repo + State API
@@ -33,6 +34,28 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.19.0] - 2026-08-17
+
+### Added — APC-T019 规则 Admin API
+
+- **`server/app/rule_engine/api/routes.py`**：`/api/v1/rules` 路由——`POST /policies:validate`（校验 YAML 不入库）、`POST /policies`（上传新版本）、`POST /policies:activate`（激活旧版本自动关闭）、`GET /policies`（列出版本）。
+- **`server/app/rule_engine/evidence_repo.py`**：加 `list_policies`（按 policy_type/region 过滤，version 升序）。
+- **`server/app/di.py`**：`RulesContext`（EvidencePolicyRepository + AuditService 共享请求 session）+ `get_rules_context_dep`（yield 后统一 commit）。
+- **`server/app/main.py`**：注册 rules router。
+- 测试：14 integration（RBAC + validate + upload + activate + list + audit）。
+
+### Behavior
+
+- 规则变更仅 Admin（`rule:configure` / `rule:activate`，架构 §19）；mutating 操作（上传/激活）写 audit_log（§10.4 不可绕过，追溯变更人/版本）；激活新版本时旧版本 `effective_to` 自动关闭（§13.2）；version 严格递增（§18）。
+- 非法 YAML / 缺字段 / 非递增 version / 未找到版本 → 400（ValidationError）。
+
+### Schema/API
+
+- 新增 API：`POST /api/v1/rules/policies:validate`、`POST /api/v1/rules/policies`、`POST /api/v1/rules/policies:activate`、`GET /api/v1/rules/policies`。
+- 无 schema 变更（evidence_policy / audit_log 表在 T004 已建）。
 
 ---
 

@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-17 · Round 20 · APC-T019 规则 Admin API 完成（/api/v1/rules validate/upload/activate/list + RulesContext 共享 session + audit 留痕 + 14 integration，规则治理闭环可用）
 - 2026-08-17 · Round 19 · APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo 完成（domain models + 纯函数求值 kernel + 注册表 + YAML 加载器 + EvidencePolicy 仓储版本化+缓存失效 + 示例规则包 + DI 装配 + 45 unit/golden + 6 integration，进入 Epic E03）
 - 2026-08-16 · Round 18 · APC-T017 Event→Normalization→State 集成链路打通（worker state_recompute 回调 + main 装配 + 3 端到端集成测试，Epic E02 全部完成）
 - 2026-08-16 · Round 17 · APC-T016 State Engine 增量重算 + Snapshot Repo + State API 完成（StateEngine + snapshot_repo + EventLoader + GET /babies/{id}/state + state:read 权限 + 11 测试）
@@ -31,6 +32,43 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 20 · 2026-08-17 · APC-T019 规则 Admin API（validate/upload/activate/list + audit）
+
+### 背景
+
+T018 完成 Rule Engine 地基后，T019 建规则治理闭环：通过 API 校验/上传/激活规则包并审计。架构 §13.2 流程：YAML→validate→activate→audit；§19 权限 `rule:configure`/`rule:activate` 仅 Admin；§10.4 mutating 操作接 audit 不可绕过；§18 规则库版本化保留历史。
+
+### 交付
+
+- **`server/app/rule_engine/api/routes.py`**（新建）：`/api/v1/rules` 路由——`POST /policies:validate`（校验 YAML 不入库）、`POST /policies`（上传新版本 validate+upsert）、`POST /policies:activate`（激活旧版本自动关闭）、`GET /policies`（列出版本）。`_parse_pack`（YAML→RulePack+hash，非法抛 ValidationError 400）；`_map_repo_error`（evidence_repo ValueError→ValidationError 400）。
+- **`server/app/rule_engine/evidence_repo.py`**：加 `list_policies`（按 policy_type/region 过滤，version 升序）。
+- **`server/app/di.py`**：`RulesContext`（EvidencePolicyRepository + AuditService 共享请求 session）+ `get_rules_context_dep`（yield 后统一 commit，规则写入与审计同事务提交）。
+- **`server/app/main.py`**：注册 rules router。
+- 测试：`server/tests/integration/test_rules_api.py`（14：RBAC Viewer 403×3 + 无 token 401 + validate ok/非法/缺字段 + upload 新版本+旧版本关闭/非递增 + activate 回滚/未找到 + list 过滤 + audit upload/activate 留痕）。
+
+### 决策与权衡
+
+- **RulesContext 共享 session + yield 后统一 commit**：与 EventContext 同精神（§10.4）。evidence_repo 与 AuditService 均 flush 不 commit；`get_rules_context_dep` 在 yield 结束后 `await session.commit()`，mutating 操作的规则版本写入与审计写入同事务提交，避免跨 session 不一致窗口。只读操作（list/validate）commit 无副作用。
+- **ValueError→ValidationError(400) 映射在路由层**：evidence_repo 用 ValueError 表达业务约束（version 递增、UNIQUE、未找到）；路由层 `_map_repo_error` 统一映射为 ValidationError(400)（§9.1 输入校验失败），保留原始消息供定位。`_parse_pack` 的 YAML/Pydantic 错误也映射 ValidationError。未用 NotFoundError(404)——保持简单，未找到版本属输入校验范畴。
+- **audit_log append-only 不可清（§22.2 PG trigger）**：测试发现 `DELETE FROM audit_log` 被 trigger 拒绝（memory `apc-t006`）。测试改用唯一 actor（`new_id()`）按 actor 过滤自己写入的 audit 记录，不删表。evidence_policy 可删（无 append-only trigger），测试间清空避免 version 递增校验误报。
+- **跨 loop engine 问题**：fixture 里 `asyncio.run(_cleanup_tables())` 后必须再 `db_module.reset_db()` 释放 engine，否则 TestClient 请求时复用绑定到已关闭 loop 的连接 → "Future attached to a different loop"（与 test_state_engine 同模式）。
+- **upload 端点扩展**：T019 任务只列 validate/activate，但 activate 需先有版本存在。加 `POST /policies` 上传（validate+upsert）作为 activate 前提，覆盖验收"可通过 API 激活规则包"（§0.5 自主推进范围）。
+- **audit 测试纯 asyncio.run**：HTTP 端到端测试（RBAC/validate/upload/activate/list）用 TestClient；audit 落库测试用纯 asyncio.run（直接构造 RulesContext 调 evidence_repo+audit），避免 TestClient 块内 asyncio.run 查 DB 的跨 loop 问题。两测试各司其职。
+
+### 测试与验收
+
+- `make lint`（ruff check + format --check）全绿；`make typecheck`（mypy 171 文件）全绿。
+- `make test`（unit + golden）：345 passed。integration（rules+evidence+state）：25 passed。
+- 验收：可通过 API 激活规则包并追溯变更人/版本（audit_log rule_version + actor + resource）；非 Admin（Viewer）被拒 403；无 token 401；激活新版本后旧版本 effective_to 自动关闭；非递增 version 被拒 400。
+
+### 已知限制 / 下一步
+
+- T019 未注册具体 RuleModule（T020~T023 各规则域接入时 `registry.register`）；RuleRegistry 仍为空。
+- audit_log 在测试中累积（append-only 不可清），生产无影响；测试 DB 可接受。
+- 下一步 T020~T023：用药/分诊/阈值/疫苗/生长规则域（各实现 RuleModule + 规则包 YAML + golden tests，注册到 RuleRegistry）。
 
 ---
 

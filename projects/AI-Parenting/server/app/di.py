@@ -274,8 +274,7 @@ async def get_evidence_policy_repo_dep(
     """FastAPI 依赖：按请求构造 SqlAlchemyEvidencePolicyRepository（APC-T018）。
 
     请求作用域（持有请求级 ``AsyncSession``）；``Clock`` 从 container 取进程级单例。
-    供 T019 Rules Admin API（validate/activate/audit）与规则求值时取当前生效版本。
-    事务边界在调用方（service 层 commit，架构 §5.2）。
+    供规则求值时取当前生效版本。事务边界在调用方（service 层 commit，架构 §5.2）。
     """
     from .db import get_session_factory
     from .rule_engine.evidence_repo import SqlAlchemyEvidencePolicyRepository
@@ -286,9 +285,49 @@ async def get_evidence_policy_repo_dep(
         yield SqlAlchemyEvidencePolicyRepository(session, clock=container.clock)
 
 
+# ---- Rules Admin API 依赖工厂（APC-T019：RulesContext 共享 session）----
+
+
+@dataclass
+class RulesContext:
+    """Rules 请求作用域上下文（EvidencePolicyRepository + AuditService 共享同一 session）。
+
+    与 ``EventContext`` 同精神（§10.4）：mutating 操作（上传/激活）的审计写入与规则
+    版本写入在同一事务提交，避免跨 session 不一致窗口。``EvidencePolicyRepository``
+    与 ``AuditService`` 均 flush 不 commit；事务提交在 ``get_rules_context_dep``
+    yield 后统一 ``commit``（请求结束，架构 §5.2 事务边界）。
+    """
+
+    evidence_repo: EvidencePolicyRepository
+    audit_service: AuditService
+
+
+async def get_rules_context_dep(request: Request) -> AsyncGenerator[RulesContext, None]:
+    """FastAPI 依赖：按请求构造 RulesContext（EvidencePolicyRepository + AuditService 共享 session）。
+
+    两者共享请求级 ``AsyncSession``；``Clock`` 从 container 取进程级单例。
+    ``evidence_repo`` / ``audit_service`` 均 flush 不 commit；yield 后统一 ``commit``
+    （mutating 操作的规则写入与审计同事务提交，§10.4 不可绕过）。只读操作（list/validate）
+    commit 无副作用。
+    """
+    from .db import get_session_factory
+    from .observability.audit import AuditService
+    from .rule_engine.evidence_repo import SqlAlchemyEvidencePolicyRepository
+
+    container = _container_from_request(request)
+    factory = get_session_factory(container.settings)
+    async with factory() as session:
+        yield RulesContext(
+            evidence_repo=SqlAlchemyEvidencePolicyRepository(session, clock=container.clock),
+            audit_service=AuditService(session, container.clock),
+        )
+        await session.commit()
+
+
 __all__ = [
     "Container",
     "EventContext",
+    "RulesContext",
     "build_container",
     "get_auth_service_dep",
     "get_clock_dep",
@@ -298,6 +337,7 @@ __all__ = [
     "get_evidence_policy_repo_dep",
     "get_principal_dep",
     "get_rule_registry_dep",
+    "get_rules_context_dep",
     "get_session_dep",
     "get_settings_dep",
     "reset_container",

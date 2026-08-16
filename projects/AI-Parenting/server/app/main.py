@@ -229,6 +229,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(state_router)
 
+    # Rules Admin API（APC-T019）：/api/v1/rules（validate/upload/activate/list + audit）。
+    from .rule_engine.api.routes import router as rules_router
+
+    app.include_router(rules_router)
+
     return app
 
 

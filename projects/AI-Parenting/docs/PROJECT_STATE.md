@@ -46,7 +46,8 @@
 | APC-T016 | State Engine 增量重算 + Snapshot Repo + State API | ✅ DONE | state_engine/engine.py（StateEngine.recompute 幂等全量重算 + 推进 processing_status=projected + get_state 只读）+ snapshot_repo.py（SnapshotRepository Protocol + SqlAlchemySnapshotRepository upsert ON CONFLICT + get 反序列化）+ infra.py（SqlAlchemyEventLoader 按 baby 加载未删除事件）+ api/routes.py（GET /api/v1/babies/{id}/state 只读鉴权 state:read + baby 归属校验 404 + 懒重算）+ auth domain 加 state:read 权限 + common/clock FixedClock + main 注册 router；11 测试（6 engine unit + 5 integration：重算+upsert+projected/幂等/API 200/404 跨家/401 无 token）；ruff/mypy 干净，374 测试通过 |
 | APC-T017 | Event→Normalization→State 集成链路 | ✅ DONE | NormalizationWorker 加 state_recompute 回调（归一化/软删除成功后触发 StateEngine.recompute(baby_id)，打通链路）+ main 装配注入 _state_recompute 闭包（独立 session + commit）+ test_event_to_state_pipeline.py 3 集成测试（feeding event→feeding_log→derived_baby_state projected/soft delete 后 snapshot 更新/纠错链旧派生行软删除+新值）；ruff/mypy 干净，377 测试通过 |
 | APC-T018 | Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo | ✅ DONE | domain/models（RuleResult/RuleInput/RuleContext/RuleModule Protocol + Rule/RulePack YAML schema Pydantic）+ kernel（纯函数求值，9 算子+字段路径+evaluate_pack 首匹配）+ registry（按 domain 注册/调度 RuleModule）+ loader（YAML→RulePack+sha256 hash 自校验+CLI）+ evidence_repo（upsert version 递增校验+activate 旧版本自动关闭+get_current L1 TTLCache 5min+写入即 invalidate 杜绝 stale rule）+ config/rules/triage/base-1.yaml 示例包+README + DI 装配 RuleRegistry 单例 + get_evidence_policy_repo_dep 请求作用域工厂 + make rules-validate + 45 测试（39 unit+6 golden）+ 6 integration；ruff/mypy 干净，351 unit+golden / 11 integration 通过 |
-| APC-T019 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T019 | 规则 Admin API：validate / activate / audit | ✅ DONE | /api/v1/rules 路由（POST /policies:validate 校验不入库 + POST /policies 上传新版本 rule:configure + POST /policies:activate 激活旧版本自动关闭 rule:activate + GET /policies 列出版本）+ RulesContext（EvidencePolicyRepository + AuditService 共享请求 session，yield 后统一 commit）+ evidence_repo.list_policies + 路由层 ValueError→ValidationError(400) 映射 + main 注册 router + 14 integration 测试（RBAC Viewer 403/无 token 401/validate/upload 递增+旧版本关闭/activate 回滚旧版本/list 过滤/audit 留痕追溯变更人版本）；ruff/mypy 干净，345 unit+golden / 25 integration 通过 |
+| APC-T020 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -193,12 +194,19 @@
   - `server/app/di.py`：Container 加 `rule_registry` 进程级单例（启动期注册 RuleModule，T020+ 接入）+ `get_rule_registry_dep` / `get_evidence_policy_repo_dep`（请求作用域，供 T019 Admin API）。
   - 测试：`server/tests/unit/rule_engine/`（test_kernel 算子/字段/AND/首匹配 + test_loader YAML/hash/CLI + test_registry register/evaluate/KeyError + test_evidence_repo 缓存命中/invalidate）39 unit + `server/tests/golden/rules/test_rule_pack_golden.py` 6 golden（红/橙/黄/无匹配/边界/缺字段）+ `server/tests/integration/test_evidence_repo.py` 6（upsert 递增+旧版本关闭/拒绝非递增/get_current 缓存/activate 回滚旧版本/未知版本报错/invalidate 后重查）。
   - 验收：`make rules-validate` 校验规则包通过；RuleRegistry 能按 domain 调用 RuleModule；EvidencePolicy 版本化 + 缓存写入即失效；非法/缺字段规则包被 Pydantic 拦截。
+- **APC-T019**：规则 Admin API（validate / upload / activate / list + audit）：
+  - `server/app/rule_engine/api/routes.py`：`/api/v1/rules` 路由——`POST /policies:validate`（校验 YAML 不入库，rule:configure）、`POST /policies`（上传新版本 validate+upsert，rule:configure，audit）、`POST /policies:activate`（激活指定版本，旧版本 effective_to 自动关闭，rule:activate，audit）、`GET /policies`（列出版本，当前生效+历史，rule:configure）。`_parse_pack`（YAML→RulePack+hash，非法抛 ValidationError 400）；`_map_repo_error`（evidence_repo ValueError→ValidationError 400）。
+  - `server/app/rule_engine/evidence_repo.py`：加 `list_policies`（按 policy_type/region 过滤，version 升序）。
+  - `server/app/di.py`：`RulesContext`（EvidencePolicyRepository + AuditService 共享请求 session）+ `get_rules_context_dep`（yield 后统一 commit，mutating 操作的规则写入与审计同事务提交，§10.4 不可绕过）。
+  - `server/app/main.py`：注册 rules router。
+  - 测试：`server/tests/integration/test_rules_api.py`（14：RBAC Viewer 403×3 + 无 token 401 + validate ok/非法 YAML 400/缺字段 400 + upload 新版本+旧版本关闭 + 非递增 400 + activate 回滚旧版本 + 未找到 400 + list 过滤 + audit upload/activate 留痕追溯变更人版本）。
+  - 验收：可通过 API 激活规则包并追溯变更人/版本（audit_log rule_version + actor + resource）；非 Admin 被拒；激活新版本后旧版本失效。规则治理闭环可用。
 
 ---
 
 ## 3. 进行中
 
-无。APC-T018 已完成，Epic E03 已启动（Rule Engine Kernel 就绪）。下一步推进 T019（规则 Admin API）。
+无。APC-T019 已完成，规则治理闭环（validate/upload/activate/list + audit）可用。下一步推进 T020~T023（规则域：用药/分诊/阈值/疫苗/生长）。
 
 ---
 
@@ -206,9 +214,8 @@
 
 按 MVP 路径（TASK_BACKLOG §4）推进 Epic E03 — Rule Engine、AI 编排与安全输出：
 
-1. **APC-T019** — 规则 Admin API：validate / activate / audit（依赖 T018，已满足）。`/api/v1/rules` 规则包验证、激活（旧版本 effective_to 自动关闭）、Admin 鉴权 + 审计。
-2. **APC-T020 ~ T023** — 用药/分诊/阈值/疫苗/生长规则域（各实现 RuleModule + 规则包 YAML + golden tests）。
-3. **APC-T024 ~ T030** — Model Gateway / Privacy / Memory / Orchestrator / Dose Interceptor / P0 Copilots。
+1. **APC-T020 ~ T023** — 用药/分诊/阈值/疫苗/生长规则域（各实现 RuleModule + 规则包 YAML + golden tests，注册到 RuleRegistry）。
+2. **APC-T024 ~ T030** — Model Gateway / Privacy / Memory / Orchestrator / Dose Interceptor / P0 Copilots。
 
 ---
 

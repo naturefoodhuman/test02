@@ -66,6 +66,15 @@ class EvidencePolicyRepository(Protocol):
         """清当前生效缓存（写入/激活后调用，杜绝 stale rule，§11 铁律）。"""
         ...
 
+    async def list_policies(
+        self,
+        *,
+        policy_type: str | None = None,
+        region: str | None = None,
+    ) -> list[EvidencePolicyOrm]:
+        """列出规则版本（当前生效 + 历史），支持按 policy_type/region 过滤。"""
+        ...
+
 
 class SqlAlchemyEvidencePolicyRepository:
     """``EvidencePolicyRepository`` 的 SQLAlchemy 实现（APC-T018）。
@@ -190,6 +199,24 @@ class SqlAlchemyEvidencePolicyRepository:
     def invalidate(self, policy_type: str, region: str) -> None:
         """清当前生效缓存（写入/激活后调用，杜绝 stale rule，§11 铁律）。"""
         self._cache.pop((policy_type, region), None)
+
+    async def list_policies(
+        self,
+        *,
+        policy_type: str | None = None,
+        region: str | None = None,
+    ) -> list[EvidencePolicyOrm]:
+        """列出规则版本（当前生效 + 历史），按 policy_type/region 过滤，version 升序。"""
+        stmt = select(EvidencePolicyOrm).order_by(
+            EvidencePolicyOrm.policy_type,
+            EvidencePolicyOrm.region,
+            EvidencePolicyOrm.version,
+        )
+        if policy_type is not None:
+            stmt = stmt.where(EvidencePolicyOrm.policy_type == policy_type)
+        if region is not None:
+            stmt = stmt.where(EvidencePolicyOrm.region == region)
+        return list((await self._session.execute(stmt)).scalars().all())
 
     async def _max_version(self, policy_type: str, region: str) -> int | None:
         """取 (policy_type, region) 当前最大 version（无记录返回 None）。"""
