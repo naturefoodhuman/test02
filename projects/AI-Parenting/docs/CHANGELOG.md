@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.16.0] - 2026-08-16 - APC-T016 State Engine 增量重算 + Snapshot Repo + State API
 - [0.15.0] - 2026-08-16 - APC-T015 Baby State Engine P0 Projection
 - [0.14.0] - 2026-08-15 - APC-T014 去重、纠错链处理与 Normalization Worker
 - [0.13.0] - 2026-08-13 - APC-T013 Normalization 表单/语音文本解析与领域派生表写入
@@ -30,6 +31,39 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.16.0] - 2026-08-16
+
+### Added — APC-T016 State Engine 增量重算 + Snapshot Repo + State API
+
+- **`server/app/state_engine/engine.py`**：`StateEngine.recompute(baby_id, now)` 全量重算——加载该 baby 未删除事件 → `project_state` → `snapshot_repo.upsert`；幂等（纯函数 + upsert 覆盖）；推进该 baby 所有 `normalized` 事件到 `projected`（§6.2 双状态机）；`get_state` 只读。`EventLoader` Protocol。
+- **`server/app/state_engine/snapshot_repo.py`**：`SnapshotRepository` Protocol + `SqlAlchemySnapshotRepository`（`upsert` ON CONFLICT (baby_id) DO UPDATE 单行 per baby；`get` 反序列化 snapshot jsonb → DerivedBabyState）。
+- **`server/app/state_engine/infra.py`**：`SqlAlchemyEventLoader` 按 baby_id 加载所有未删除事件（升序）。
+- **`server/app/state_engine/api/routes.py`**：`GET /api/v1/babies/{baby_id}/state` 只读——鉴权 `state:read` + baby 归属校验（baby.family_id == principal.family_id，否则 404 不泄露存在性）+ 无快照懒重算。
+- **`server/app/auth/domain.py`**：`_PERMISSIONS` 加 `state:read`（ADMIN/CAREGIVER/VIEWER）。
+- **`server/app/common/clock.py`**：`FixedClock`（测试用固定时钟）。
+
+### API
+
+- `GET /api/v1/babies/{baby_id}/state`：返回最新 `DerivedBabyState`（feeding/diaper/sleep/temperature/supplement + computed_at + source_event_range）。需 `state:read`；跨家 baby 返回 404；无快照触发懒重算。
+
+### Behavior
+
+- 重算幂等：同一事件集 + 同一 now 多次重算结果一致（upsert 覆盖）。
+- `processing_status` 推进 `projected`：重算后该 baby 所有 `normalized` 事件标记 `projected`（§6.2 双状态机，与 sync_status 独立）。
+- baby 归属校验返回 404（不泄露存在性，§19）。
+
+### Tests
+
+- 单元：6 项（StateEngine 重算/幂等/推进 projected/空事件/get）。
+- 集成：5 项（真实 PG：重算+upsert+projected/幂等覆盖单行/API 200/API 404 跨家/API 401 无 token）。
+- 全量：374 passed，ruff/mypy 干净。
+
+### Acceptance
+
+- `GET /api/v1/babies/{id}/state` 返回最新 DerivedBabyState；重算幂等；snapshot 含 computed_at 与 source event range。
 
 ---
 

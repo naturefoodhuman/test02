@@ -57,6 +57,7 @@ _PERMISSIONS: dict[Role, frozenset[str]] = {
         {
             "event:write",  # 记录
             "event:read",  # 查看
+            "state:read",  # 派生状态查看（APC-T016）
             "alert:ack",  # 确认告警
             "rule:configure",  # 配置医疗/系统规则
             "rule:activate",  # 激活规则版本
@@ -73,8 +74,8 @@ _PERMISSIONS: dict[Role, frozenset[str]] = {
         }
     ),
     # V2 预留：Caregiver/Viewer 权限表在 §26.1 V2 阶段填充；P0 阶段 deny 受限方法。
-    Role.CAREGIVER: frozenset({"event:write", "event:read"}),
-    Role.VIEWER: frozenset({"event:read", "media:read"}),
+    Role.CAREGIVER: frozenset({"event:write", "event:read", "state:read"}),
+    Role.VIEWER: frozenset({"event:read", "media:read", "state:read"}),
 }
 
 

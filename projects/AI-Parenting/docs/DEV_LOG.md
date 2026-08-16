@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-16 · Round 17 · APC-T016 State Engine 增量重算 + Snapshot Repo + State API 完成（StateEngine + snapshot_repo + EventLoader + GET /babies/{id}/state + state:read 权限 + 11 测试）
 - 2026-08-16 · Round 16 · APC-T015 Baby State Engine P0 Projection 完成（5 projection 纯函数 + domain + project_state 聚合 + 19 测试含 hypothesis 确定性）
 - 2026-08-15 · Round 15 · APC-T014 去重、纠错链处理与 Normalization Worker 完成（NormalizationWorker + WorkerContext + soft_delete_by_event + main 装配 + 15 测试）
 - 2026-08-13 · Round 14 · APC-T013 Normalization 表单/语音文本解析与领域派生表写入完成（form/voice parser + NormalizationService + LogWriter + update_processing_status + 44 测试）
@@ -28,6 +29,52 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 17 · 2026-08-16 · APC-T016 State Engine 增量重算 + Snapshot Repo + State API
+
+### 背景
+
+T015 完成 P0 projection 纯函数。T016 落地重算服务、`derived_baby_state` upsert、State API，使 `GET /api/v1/babies/{id}/state` 可消费（架构 §15）。T016 依赖 T015（projection）+ T006（audit，未直接用——State API 只读）。
+
+### 交付
+
+- **`server/app/state_engine/engine.py`**：`StateEngine.recompute(baby_id, now)` 全量重算——`EventLoader.load_by_baby` → `project_state` → `snapshot_repo.upsert`；幂等（纯函数 + upsert 覆盖）；推进该 baby 所有 `normalized` 事件到 `projected`（§6.2 双状态机）；`get_state` 只读。`EventLoader` Protocol（可注入替身）。
+- **`server/app/state_engine/snapshot_repo.py`**：`SnapshotRepository` Protocol + `SqlAlchemySnapshotRepository`（`upsert` ON CONFLICT (baby_id) DO UPDATE 单行 per baby §6.1；`get` 反序列化 snapshot jsonb → DerivedBabyState，与 `to_snapshot` 对称）。
+- **`server/app/state_engine/infra.py`**：`SqlAlchemyEventLoader` 按 baby_id 加载所有未删除事件（升序，复用 events infra `_from_orm`）。
+- **`server/app/state_engine/api/routes.py`**：`GET /api/v1/babies/{baby_id}/state` 只读——鉴权 `state:read` + baby 归属校验（baby.family_id == principal.family_id，否则 404 不泄露存在性 §19）+ 无快照懒重算。`BabyStateResponse` 投影。
+- **`server/app/auth/domain.py`**：`_PERMISSIONS` 加 `state:read`（ADMIN/CAREGIVER/VIEWER；SYSTEM 不需）。
+- **`server/app/common/clock.py`**：`FixedClock`（测试用固定时钟，DI 替身）。
+- **`server/app/main.py`**：注册 state router。
+- 测试：`server/tests/unit/state_engine/test_state_engine.py`（6）+ `server/tests/integration/test_state_engine.py`（5）。
+
+### 决策与权衡
+
+- **EventLoader 抽象**：engine 需"按 baby 加载全部未删除事件"，现有 `ObservationEventRepository.query` 有 `limit` 语义不明确"全部"。引入 `EventLoader` Protocol + `SqlAlchemyEventLoader`（直接查 ORM 无 limit），使 engine 可注入替身纯单测，且语义明确。
+- **重算后推进 processing_status=projected**：§6.2 双状态机 `pending→normalized→projected`。State Engine 重算成功后该 baby 的 `normalized` 事件标记 `projected`（已进入派生快照）。只推进 `normalized`（不推进 `pending`——未归一化事件不应进快照；不重复推进 `projected`）。
+- **baby 归属校验 404 而非 403**：查 baby 的 family_id 与 principal.family_id 比对，不匹配返回 404（不泄露 baby 存在性，§19 隐私）。比 403 更保守。
+- **懒重算**：API 无快照时触发一次 `recompute`（首次查询兜底）。T017 接 worker 后由 worker 驱动增量重算，API 只读。懒重算用 SystemClock（真实时间），故测试 seed 事件 start_time 用相对当前时间（避免未来时间落在窗口外）。
+- **FixedClock 加入 clock.py**：测试基础设施通用价值，使时间相关逻辑可注入固定时钟纯单测（engine 单元测试用）。
+- **API 测试跨 event loop**：TestClient 与 `asyncio.run(seed)` 在不同 loop，共享 `get_session_factory` 单例 engine 会跨 loop 报错。seed 末尾 `dispose_db` + `reset_db` 释放 engine，TestClient 请求时重建绑定其 loop。
+
+### 测试与验收
+
+- 单元：6 passed（重算 upsert+推进 projected/幂等/已 projected 跳过推进/空事件仍 upsert/get 无快照 None/get 返回快照）。
+- 集成：5 passed（真实 PG AI_parenting_dev：重算+upsert+projected/幂等覆盖单行/API 200 返回快照/API 404 跨家/API 401 无 token）。
+- 全量：374 passed，ruff/mypy 干净。
+- 验收：`GET /api/v1/babies/{id}/state` 返回最新 DerivedBabyState；重算幂等；snapshot 含 computed_at 与 source event range。
+
+### 红线与边界
+
+- 未读取/操作 `.env`；集成测试连独立库 AI_parenting_dev；未碰 `AI-Parenting-Copilot/`。
+- 未改变架构边界（state_engine 为 §2 M06 派生层，只派生不告警；State API 只读）。
+- 未引入新迁移（derived_baby_state 表在 T004 已建）。
+- 新增 `state:read` 权限（RBAC allow-list 扩展，未削弱现有权限）。
+
+### 下一步
+
+APC-T017 — 打通 Event → Normalization → State 集成链路（依赖 T010/T014/T016；已满足）。事件写入→归一化→派生状态端到端集成测试；soft delete 后 snapshot 更新；P0-M0 地基验收项。
 
 ---
 

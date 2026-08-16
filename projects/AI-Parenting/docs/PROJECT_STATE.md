@@ -14,11 +14,11 @@
 
 **Milestone 2 — P0-M1 事件溯源与同步**（APC-T007 ~ APC-T012）✅ 全部完成
 **Milestone 3 — Normalization**（APC-T013 ~ APC-T014）✅ 完成
-**Milestone 4 — State Engine**（APC-T015）✅ 完成；T016/T017 待开始
+**Milestone 4 — State Engine**（APC-T015 ~ APC-T016）✅ 完成；T017 待开始
 
 > Milestone 1（地基）、Milestone 2（Auth/事件/同步）、Milestone 3（Normalization）已完成；
-> T013/T014 Normalization 解析+派生表写入+Worker 已完成，T015 Baby State Engine P0 Projection 已完成，
-> 下一步 T016 State Engine 投影规则与 derived_baby_state upsert。
+> T013/T014 Normalization 解析+派生表写入+Worker 已完成，T015 P0 Projection、T016 重算+Snapshot Repo+State API 已完成，
+> 下一步 T017 打通 Event→Normalization→State 集成链路。
 
 ---
 
@@ -41,7 +41,8 @@
 | APC-T013 | Normalization 表单/语音文本解析与领域派生表写入 | ✅ DONE | form parser（manual 结构化映射，confidence=1.0）+ voice parser（中文规则/模板解析，confidence<1.0）+ NormalizationService（按 source 路由 + 写派生表 + 推进 processing_status=normalized + 幂等）+ SqlAlchemyLogWriter（feeding_log 结构化列/其余 log payload jsonb）+ ObservationEventRepository.update_processing_status；44 测试（39 unit + 5 integration）；ruff/mypy 干净，329 测试通过 |
 | APC-T014 | 去重、纠错链处理与 Normalization Worker | ✅ DONE | NormalizationWorker（EventHandler，订阅 events.changed，按 op 分发 insert/update/recover→去重+纠错链+normalize / delete→软删除派生行）+ WorkerContext 协议（可注入纯单测）+ SqlAlchemyWorkerContext + LogWriter.soft_delete_by_event（派生行软删除）+ main.py 装配注入 EventWorker；双层去重（worker 层 processing_status 已推进跳过 + service 层 exists）；纠错链 correction_of 先软删除旧派生行；15 测试（10 unit + 5 integration）；ruff/mypy 干净，344 测试通过 |
 | APC-T015 | Baby State Engine P0 Projection | ✅ DONE | state_engine/projections/{feeding,diaper,sleep,temperature,supplement}.py 纯函数（距上次喂奶/24h 奶量次数/湿脏尿布数/24h 睡眠+当前会话/24h 最高温/上次补剂）+ domain.py（DerivedBabyState dataclass + to_snapshot）+ project.py 聚合入口（source_event_range）+ __init__ 导出；只派生不告警；过滤软删除+24h 窗口+bool 排除；19 单元测试（含 hypothesis 确定性 property）；ruff/mypy 干净，363 测试通过 |
-| APC-T016 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T016 | State Engine 增量重算 + Snapshot Repo + State API | ✅ DONE | state_engine/engine.py（StateEngine.recompute 幂等全量重算 + 推进 processing_status=projected + get_state 只读）+ snapshot_repo.py（SnapshotRepository Protocol + SqlAlchemySnapshotRepository upsert ON CONFLICT + get 反序列化）+ infra.py（SqlAlchemyEventLoader 按 baby 加载未删除事件）+ api/routes.py（GET /api/v1/babies/{id}/state 只读鉴权 state:read + baby 归属校验 404 + 懒重算）+ auth domain 加 state:read 权限 + common/clock FixedClock + main 注册 router；11 测试（6 engine unit + 5 integration：重算+upsert+projected/幂等/API 200/404 跨家/401 无 token）；ruff/mypy 干净，374 测试通过 |
+| APC-T017 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -163,12 +164,22 @@
   - 边界：只派生不告警（告警等级在 rule_engine/notification，架构 §10）；不做医疗判断；不读派生表（消费事件本身，架构 §10.1 输入"ObservationEvent 增量"）；T015 不写 DB（upsert 在 T016）。
   - 测试：`server/tests/unit/state_engine/test_projections.py`（19：各 projection 边界——空/窗口外/软删除/缺字段/bool 排除/mixed 计数/长睡眠跨窗口交集 + project_state 聚合/source_event_range/to_snapshot 序列化 + hypothesis 确定性 property）。
   - 验收：P0 派生计算为纯函数；只计算不产生告警等级；覆盖率 ≥95%；给定 fixture 事件集输出稳定 DerivedBabyState。
+- **APC-T016**：State Engine 增量重算 + Snapshot Repo + State API：
+  - `server/app/state_engine/engine.py`：`StateEngine.recompute(baby_id, now)` 全量重算——加载该 baby 未删除事件 → `project_state` → `snapshot_repo.upsert`；幂等（纯函数 + upsert 覆盖）；推进该 baby 所有 `normalized` 事件到 `projected`（§6.2 双状态机）；`get_state` 只读。
+  - `server/app/state_engine/snapshot_repo.py`：`SnapshotRepository` Protocol + `SqlAlchemySnapshotRepository`（`upsert` ON CONFLICT (baby_id) DO UPDATE 单行 per baby §6.1；`get` 反序列化 snapshot jsonb → DerivedBabyState）。
+  - `server/app/state_engine/infra.py`：`SqlAlchemyEventLoader` 按 baby_id 加载所有未删除事件（升序）。
+  - `server/app/state_engine/api/routes.py`：`GET /api/v1/babies/{baby_id}/state` 只读——鉴权 `state:read` + baby 归属校验（baby.family_id == principal.family_id，否则 404 不泄露存在性 §19）+ 无快照懒重算。
+  - `server/app/auth/domain.py`：`_PERMISSIONS` 加 `state:read`（ADMIN/CAREGIVER/VIEWER）。
+  - `server/app/common/clock.py`：`FixedClock`（测试用固定时钟）。
+  - `server/app/main.py`：注册 state router。
+  - 测试：`server/tests/unit/state_engine/test_state_engine.py`（6：重算 upsert+推进 projected/幂等/已 projected 跳过推进/空事件仍 upsert/get 无快照 None/get 返回快照）+ `server/tests/integration/test_state_engine.py`（5：真实 PG 重算+upsert+projected/幂等覆盖单行/API 200 返回快照/API 404 跨家/API 401 无 token）。
+  - 验收：`GET /api/v1/babies/{id}/state` 返回最新 DerivedBabyState；重算幂等；snapshot 含 computed_at 与 source event range。
 
 ---
 
 ## 3. 进行中
 
-无。APC-T015 已完成。下一步进入 State Engine 投影规则与 upsert（T016）。
+无。APC-T016 已完成。下一步进入 Event→Normalization→State 集成链路（T017）。
 
 ---
 
@@ -176,8 +187,7 @@
 
 按 MVP 路径（TASK_BACKLOG §4）推进 Epic E02 剩余：
 
-1. **APC-T016** — State Engine 投影规则与 derived_baby_state upsert（依赖 T015；已满足）。增量重算 engine + snapshot repo upsert + processing_status 推进 projected；幂等重算。
-2. **APC-T017** — 打通 Event → Normalization → State 集成链路（依赖 T010/T014/T016）。
+1. **APC-T017** — 打通 Event → Normalization → State 集成链路（依赖 T010/T014/T016；已满足）。事件写入→归一化→派生状态端到端集成测试；soft delete 后 snapshot 更新；P0-M0 地基验收项。
 
 ---
 

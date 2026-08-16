@@ -32,6 +32,19 @@ class SystemClock:
         return datetime.now(tz=UTC)
 
 
+class FixedClock:
+    """固定时钟（测试用），始终返回构造时给定的时间。
+
+    依赖注入替身，使时间相关逻辑可脱离系统时钟测试（架构 §5 DI）。
+    """
+
+    def __init__(self, fixed: datetime) -> None:
+        self._fixed = ensure_aware(fixed)
+
+    def now(self) -> datetime:
+        return self._fixed
+
+
 # 默认时钟单例（进程级）。测试应通过 DI 注入替身，不直接改此全局。
 _default_clock: Clock = SystemClock()
 
@@ -64,6 +77,7 @@ def ensure_aware(dt: datetime) -> datetime:
 
 __all__ = [
     "Clock",
+    "FixedClock",
     "SystemClock",
     "ensure_aware",
     "get_clock",

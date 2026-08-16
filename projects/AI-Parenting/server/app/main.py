@@ -201,6 +201,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(events_router)
 
+    # State API（APC-T016）：/api/v1/babies/{id}/state（只读派生状态）。
+    from .state_engine.api.routes import router as state_router
+
+    app.include_router(state_router)
+
     return app
 
 
