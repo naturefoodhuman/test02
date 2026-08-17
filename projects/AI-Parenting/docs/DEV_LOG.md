@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-17 · Round 22 · APC-T021 Triage 与 Alert Threshold Rule Domain 完成（TriageRuleModule 体温阈值+危险信号升级+mmWave 降级+就医建议 + ThresholdRuleModule 趋势双条件+单点不触发 + 规则包 + 29 测试 + main 注册，安全规则先于业务接入）
 - 2026-08-17 · Round 21 · APC-T020 MedicationRuleModule 完成（用药校验链路 9 步 + 占位参数包 + 12 unit + golden + main 启动期注册，Rule Engine 首个域落地）
 - 2026-08-17 · Round 20 · APC-T019 规则 Admin API 完成（/api/v1/rules validate/upload/activate/list + RulesContext 共享 session + audit 留痕 + 14 integration，规则治理闭环可用）
 - 2026-08-17 · Round 19 · APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo 完成（domain models + 纯函数求值 kernel + 注册表 + YAML 加载器 + EvidencePolicy 仓储版本化+缓存失效 + 示例规则包 + DI 装配 + 45 unit/golden + 6 integration，进入 Epic E03）
@@ -33,6 +34,59 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 22 · 2026-08-17 · APC-T021 Triage 与 Alert Threshold Rule Domain（分诊 + 趋势双条件 + mmWave 约束）
+
+**Task ID**: APC-T021（分诊规则域 + 告警阈值规则域：TriageRuleModule + ThresholdRuleModule + 规则包 + golden/unit + 注册）
+
+**What changed**
+- `server/app/rule_engine/domains/triage.py`：新增 `TriageRuleModule`（`domain="triage"`），实现 `RuleModule` Protocol。体温阈值复用 `kernel.evaluate_pack`（规则包 YAML 首匹配，3 月龄以下 ≥38°C red / ≥39°C orange / 38~39°C yellow），叠加三层：①危险信号（`variables.danger_signals`，白名单 8 项：抽搐/呼吸困难/前囟膨隆/皮肤花纹/反应低下/持续呕吐/出血点/发绀）命中即升级 `red`（PRD §11.10）；②mmWave 单信号约束——`signal_source=="mmwave"` 时 `red` 降级 `orange`（§13.2 不单独触发红色医疗告警）；③就医建议 `advice`（按 alert_level）。输出 Alert candidate：`alert_level` + `danger_signals` + `advice` + `evidence`。
+- `server/app/rule_engine/domains/thresholds.py`：新增 `ThresholdRuleModule`（`domain="thresholds"`），实现 `RuleModule` Protocol。趋势双条件（PRD §12.3）：`consecutive_days >= min_days` 且 `abs(deviation_pct) >= deviation_pct` 同时满足才触发；单点异常（consecutive_days=1 或偏离不足）→ `info` 不触发（趋势类避免单点触发）。参数从规则包 YAML 加载（每条 rule=一个 metric，`conditions` 匹配 `variables.metric`）。mmWave 单信号最多 `orange`（§13.2）。输出 Alert candidate：`alert_level` + `metric` + `deviation_pct` + `consecutive_days` + `advice`。
+- `config/rules/triage/base-1.yaml`：升级分诊规则包（增补危险信号/mmWave 约束说明，体温阈值规则不变，T018 golden 用例保持通过）。
+- `config/rules/thresholds/base-1.yaml`：新增告警阈值规则包 v1（feeding_amount orange 连续≥2天偏离≥20%、wet_diaper_count yellow 连续≥2天偏离≥30%、sleep_fragmentation yellow 连续≥3天偏离≥25%）。
+- `server/app/main.py`：`_register_rule_modules` 重构为通用 `_register(pack_path, module_cls, label)`，注册 medication/triage/thresholds 三域；thresholds 包从 `config/rules/thresholds/base-1.yaml` 加载（与其他域一致，rules-validate 覆盖）。
+- `server/app/rule_engine/domains/__init__.py`：导出 `TriageRuleModule`、`ThresholdRuleModule`。
+- `server/tests/golden/rules/test_triage_rules.py`：6 golden（红/橙/黄/正常/危险信号升级 red/mmWave 降级 orange）。
+- `server/tests/golden/rules/test_threshold_rules.py`：5 golden（双条件命中 orange/单点不触发/偏离不足/湿尿布 yellow/未知 metric）。
+- `server/tests/unit/rule_engine/domains/test_triage.py`：9 unit（体温阈值/危险信号升级/未知信号过滤/mmWave 约束/字符串形式危险信号/evidence policy_version）。
+- `server/tests/unit/rule_engine/domains/test_thresholds.py`：9 unit（双条件命中/单点不触发/偏离不足/正偏离/湿尿布/未知 metric/缺 metric/mmWave 降级/evidence）。
+
+**Why**
+- APC-T021 要求安全规则先于业务接入（架构 §14：Rule Engine 必须先有 golden 用例）。分诊与阈值是告警链路的源头（T031 Alert API、T033 Notification Orchestrator 消费 Alert.level），必须先落地规则裁决者。
+- 3 月龄以下 ≥38°C 强红线（PRD §11.9）是医疗安全铁律，必须由 Rule Engine 独占（架构 §10.2），且不优先给药（与 medication 域的"3 月龄以下发热 ≥38°C 触发红色分诊不优先给药"呼应）。
+- mmWave 单信号不触发红色医疗告警（§13.2）是辅助监测层的安全边界——mmWave 仅"辅助安心层"，异常只提示"请人工查看"，不承诺预防 SIDS、不替代成人照护。本约束在 triage 和 thresholds 两域都实现（双保险）。
+- 趋势双条件（PRD §12.3）避免单点误触发——黄色/橙色告警需"连续 N 天 + 偏离 X%"同时满足，阈值可调（规则包 YAML），防止一次异常数据就强打扰用户。
+- 危险信号白名单（已知 key 才升 red）防止恶意/误传未知 key 滥升红色告警。
+
+**Files touched**
+- `server/app/rule_engine/domains/triage.py`（新增）
+- `server/app/rule_engine/domains/thresholds.py`（新增）
+- `server/app/rule_engine/domains/__init__.py`（修改：导出两个新模块）
+- `config/rules/triage/base-1.yaml`（修改：增补说明）
+- `config/rules/thresholds/base-1.yaml`（新增）
+- `server/app/main.py`（修改：`_register_rule_modules` 重构 + 注册 triage/thresholds）
+- `server/tests/golden/rules/test_triage_rules.py`（新增）
+- `server/tests/golden/rules/test_threshold_rules.py`（新增）
+- `server/tests/unit/rule_engine/domains/test_triage.py`（新增）
+- `server/tests/unit/rule_engine/domains/test_thresholds.py`（新增）
+- `docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`docs/TASK_BACKLOG.md`（同步）
+
+**Tests run**
+- `make rules-validate`：3 包 OK（medication/triage/thresholds）。
+- `make lint`：ruff check + format --check 干净。
+- `make typecheck`：mypy 182 文件 0 错误。
+- `make test` + golden：487 passed（T020 后 452，新增 35）。
+
+**Known limitations**
+- 危险信号清单为非穷尽白名单（PRD §11.10 列出主要项），完整清单可经规则包 YAML 扩展（当前硬编码在 `_DANGER_SIGNAL_REASONS`，V1 可改为规则包驱动）。
+- thresholds 趋势参数（min_days/deviation_pct）由规则包 YAML 配置，但"连续天数"与"偏离幅度"的输入由调用方（State Engine / Scheduler）计算并传入 `variables`，本域只做双条件判定。
+- mmWave 约束在 triage 和 thresholds 两域分别实现（双保险），未来若引入统一 signal_source 策略可抽公共层。
+
+**Next step**
+- APC-T022 Vaccine Planner Rule Domain（中国疫苗规则 P0：计划/逾期/已完成/跳过 + EvidencePolicy 版本化 + cn-nip-2024.yaml + golden）。
+- APC-T023 Growth Rule Domain 与 WHO 百分位（WHO 0-5 岁百分位 + 趋势提醒 + who-0-5.yaml + golden）。
 
 ---
 

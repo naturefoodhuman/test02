@@ -1,21 +1,27 @@
 # 创建/修改该文件的LLM大模型：Claude Opus 4.8
-# 创建时间（北京时间）：2026-08-16 00:00:00
+# 创建时间（北京时间）：2026-08-16 00:00:00（APC-T018 示例；APC-T021 增补危险信号）
 #
-# 示例规则包：triage（分诊体温阈值），APC-T018 golden 测试用。
-# 依据：ARCHITECTURE_FINAL §10.2（3 月龄以下 ≥38°C 强红线；趋势类双条件）。
-# 注意：本包为 kernel/loader/registry 的示例与测试夹具，真实分诊规则在 APC-T021 细化。
+# 分诊规则包（APC-T021）：体温阈值 + 危险信号。
+# 依据：ARCHITECTURE_FINAL §10.2（3 月龄以下 ≥38°C 强红线；趋势类双条件）；
+#       FINAL_PRD §11.9（红线：3 月龄及以下 ≥38°C 触发红色分诊，不优先给药）、§11.10（危险信号）。
+#
+# 体温阈值规则由 kernel.evaluate_pack 首匹配求值（TriageRuleModule 叠加危险信号/mmWave 约束）。
+# 危险信号由 TriageRuleModule 直接处理（variables.danger_signals），不在此 YAML 重复。
 
 policy_type: triage
 region: CN
 version: 1
 effective_from: 2026-08-16T00:00:00+08:00
-source: "示例规则（PRD §11.9/§11.10 摘要）"
+source: "PRD §11.9/§11.10 摘要 + 国家儿童发热指南"
 rule_text: |
   3 月龄以下（baby_age_days < 90）体温 ≥38°C 为强红线（block + alert_level=red）。
   3 月龄以上体温 ≥39°C 为橙色告警（warn + alert_level=orange）。
   3 月龄以上体温 38~39°C 为黄色提醒（warn + alert_level=yellow）。
+  危险信号（抽搐/呼吸困难/前囟膨隆/皮肤花纹/反应低下/持续呕吐/出血点/发绀）命中即升级红色。
+  mmWave 单信号不触发红色医疗告警（最多橙色）。
 display_text: |
   婴儿体温分诊：3 月以下 ≥38°C 立即就医；3 月以上 ≥39°C 尽快就医；38~39°C 观察并咨询医生。
+  危险信号命中立即就医。mmWave 单信号仅辅助提示。
 rules:
   - rule_id: fever_under_3mo_red
     conditions:

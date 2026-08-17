@@ -16,11 +16,12 @@
 **Milestone 3 — Normalization**（APC-T013 ~ APC-T014）✅ 完成
 **Milestone 4 — State Engine**（APC-T015 ~ APC-T017）✅ 全部完成；Epic E02 收尾
 **Milestone 5 — Rule Engine Kernel**（APC-T018）✅ 完成；进入 Epic E03
+**Milestone 6 — 规则域**（APC-T020 ~ APC-T021）进行中
 
 > Milestone 1（地基）、Milestone 2（Auth/事件/同步）、Milestone 3（Normalization）、Milestone 4（State Engine）已完成；
 > T013/T014 Normalization、T015 P0 Projection、T016 重算+State API、T017 Event→Normalization→State 端到端集成链路已完成。
-> Epic E02（权限、事件、同步与派生状态）全部完成。Epic E03 进行中：T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo、T019 Rules Admin API、T020 MedicationRuleModule 已完成。
-> 下一步推进 T021~T023（triage/vaccine/growth/thresholds 规则域）。
+> Epic E02（权限、事件、同步与派生状态）全部完成。Epic E03 进行中：T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo、T019 Rules Admin API、T020 MedicationRuleModule、T021 Triage/Threshold 规则域已完成。
+> 下一步推进 T022~T023（vaccine/growth 规则域）。
 
 ---
 
@@ -48,7 +49,8 @@
 | APC-T018 | Rule Engine Kernel、Loader、Registry 与 EvidencePolicy Repo | ✅ DONE | domain/models（RuleResult/RuleInput/RuleContext/RuleModule Protocol + Rule/RulePack YAML schema Pydantic）+ kernel（纯函数求值，9 算子+字段路径+evaluate_pack 首匹配）+ registry（按 domain 注册/调度 RuleModule）+ loader（YAML→RulePack+sha256 hash 自校验+CLI）+ evidence_repo（upsert version 递增校验+activate 旧版本自动关闭+get_current L1 TTLCache 5min+写入即 invalidate 杜绝 stale rule）+ config/rules/triage/base-1.yaml 示例包+README + DI 装配 RuleRegistry 单例 + get_evidence_policy_repo_dep 请求作用域工厂 + make rules-validate + 45 测试（39 unit+6 golden）+ 6 integration；ruff/mypy 干净，351 unit+golden / 11 integration 通过 |
 | APC-T019 | 规则 Admin API：validate / activate / audit | ✅ DONE | /api/v1/rules 路由（POST /policies:validate 校验不入库 + POST /policies 上传新版本 rule:configure + POST /policies:activate 激活旧版本自动关闭 rule:activate + GET /policies 列出版本）+ RulesContext（EvidencePolicyRepository + AuditService 共享请求 session，yield 后统一 commit）+ evidence_repo.list_policies + 路由层 ValueError→ValidationError(400) 映射 + main 注册 router + 14 integration 测试（RBAC Viewer 403/无 token 401/validate/upload 递增+旧版本关闭/activate 回滚旧版本/list 过滤/audit 留痕追溯变更人版本）；ruff/mypy 干净，345 unit+golden / 25 integration 通过 |
 | APC-T020 | 用药规则域 MedicationRuleModule（校验链路） | ✅ DONE | rule_engine/domains/medication.py（MedicationRuleModule 实现 RuleModule Protocol，domain="medication"）校验链路：选药→未知体重 block→体重过旧 warn→月龄禁忌 block（doctor_override 时 warn）→占位参数 block→计算 mg（mg_per_kg×weight，max_single_dose_mg 上限）→未知浓度 block 不出 ml→换算 ml→给药间隔 block→24h 上限 block（SAFETY_MARGIN 10%）；dose_mg/dose_ml 只在 allow 产出（架构 §10.2 唯一剂量裁决者）+ config/rules/medication/base-1.yaml 占位参数包（mg_per_kg=0 待医生确认，安全关键不凭空计算）+ main._register_rule_modules 启动期加载规则包注册到 RuleRegistry（加载失败不阻断启动）+ 14 unit（各校验分支）+ golden（占位包生产行为 params_pending block）；ruff/mypy 干净，静态检查通过 |
-| APC-T021 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T021 | Triage 与 Alert Threshold Rule Domain | ✅ DONE | rule_engine/domains/triage.py（TriageRuleModule domain="triage"：体温阈值复用 kernel.evaluate_pack 首匹配 + 危险信号升级 red + mmWave 单信号降级 orange §13.2 + 就医建议 advice）+ rule_engine/domains/thresholds.py（ThresholdRuleModule domain="thresholds"：趋势双条件 consecutive_days≥min_days 且 abs(deviation_pct)≥deviation_pct，单点不触发 PRD §12.3 + mmWave 约束）+ config/rules/triage/base-1.yaml 升级（增补危险信号说明）+ config/rules/thresholds/base-1.yaml（feeding/wet_diaper/sleep 趋势双条件包）+ main._register 通用注册（medication/triage/thresholds）+ 6 golden triage + 5 golden thresholds + 9 unit triage + 9 unit thresholds；ruff/mypy 干净，rules-validate 3 包 OK，487 测试通过 |
+| APC-T022 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -207,7 +209,7 @@
 
 ## 3. 进行中
 
-无。APC-T020 已完成：MedicationRuleModule 校验链路（未知体重/体重过旧/月龄禁忌/占位参数/未知浓度/给药间隔/24h 上限，dose 只在 allow 产出）+ 占位规则包 `config/rules/medication/base-1.yaml` + golden/unit 测试 + 启动期注册到 RuleRegistry。下一步推进 T021~T023（分诊/阈值/疫苗/生长规则域）。
+无。APC-T021 已完成：TriageRuleModule（体温阈值 + 危险信号升级 red + mmWave 单信号降级 orange + 就医建议）+ ThresholdRuleModule（趋势双条件 consecutive_days + deviation_pct，单点不触发 + mmWave 约束）+ config/rules/triage/base-1.yaml 升级 + config/rules/thresholds/base-1.yaml + golden/unit 测试 + main 启动期注册。下一步推进 T022~T023（疫苗/生长规则域）。
 
 ---
 
@@ -215,7 +217,7 @@
 
 按 MVP 路径（TASK_BACKLOG §4）推进 Epic E03 — Rule Engine、AI 编排与安全输出：
 
-1. **APC-T021 ~ T023** — 分诊/阈值/疫苗/生长规则域（各实现 RuleModule + 规则包 YAML + golden tests，注册到 RuleRegistry）。APC-T020（用药）已完成。
+1. **APC-T022 ~ T023** — 疫苗/生长规则域（各实现 RuleModule + 规则包 YAML + golden tests，注册到 RuleRegistry）。APC-T020（用药）、T021（分诊/阈值）已完成。
 2. **APC-T024 ~ T030** — Model Gateway / Privacy / Memory / Orchestrator / Dose Interceptor / P0 Copilots。
 
 ---

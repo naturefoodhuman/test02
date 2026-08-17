@@ -72,27 +72,37 @@ def _register_rule_modules(container: Container) -> None:
     启动期执行（lifespan startup），运行期 RuleRegistry 只读。规则包加载失败不阻断启动
     （该域 evaluate 时抛 KeyError，调用方处理；架构 §13.5 插件化）。
 
-    当前注册：medication（APC-T020）。triage/vaccine/growth/thresholds 在 T021~T023 接入。
+    当前注册：medication（APC-T020）、triage/thresholds（APC-T021）。
+    vaccine/growth 在 T022/T023 接入。
     """
 
     from .rule_engine.domains.medication import MedicationRuleModule
+    from .rule_engine.domains.thresholds import ThresholdRuleModule
+    from .rule_engine.domains.triage import TriageRuleModule
     from .rule_engine.loader import load_pack
     from .settings import CONFIG_DIR
 
     rules_dir = CONFIG_DIR / "rules"
     registry = container.rule_registry
 
-    # medication 域（APC-T020）。
-    med_pack_path = rules_dir / "medication" / "base-1.yaml"
-    if med_pack_path.is_file():
+    def _register(pack_path, module_cls, label):
+        # 通用注册：加载规则包 → 构造 RuleModule → register。失败不阻断启动。
+        if not pack_path.is_file():
+            logger.warning("%s rule pack not found: %s", label, pack_path)
+            return
         try:
-            pack = load_pack(med_pack_path)
-            registry.register(MedicationRuleModule(pack))
-            logger.info("rule module registered: medication@%s", pack.version)
+            pack = load_pack(pack_path)
+            registry.register(module_cls(pack))
+            logger.info("rule module registered: %s@%s", label, pack.version)
         except Exception as exc:  # 规则包加载失败不阻断启动。
-            logger.warning("medication rule pack load failed: %s", exc)
-    else:
-        logger.warning("medication rule pack not found: %s", med_pack_path)
+            logger.warning("%s rule pack load failed: %s", label, exc)
+
+    # medication 域（APC-T020）。
+    _register(rules_dir / "medication" / "base-1.yaml", MedicationRuleModule, "medication")
+    # triage 域（APC-T021）：体温阈值 + 危险信号 + mmWave 约束。
+    _register(rules_dir / "triage" / "base-1.yaml", TriageRuleModule, "triage")
+    # thresholds 域（APC-T021）：趋势双条件（config/rules/thresholds/base-1.yaml）。
+    _register(rules_dir / "thresholds" / "base-1.yaml", ThresholdRuleModule, "thresholds")
 
 
 # ---- Health 响应模型 ----

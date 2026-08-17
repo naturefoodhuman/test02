@@ -1,0 +1,75 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-17 00:00:00
+#
+# 告警阈值规则包（APC-T021）：趋势双条件（连续 N 天 + 偏离 X%）。
+# 依据：ARCHITECTURE_FINAL §10.2（告警阈值规则：喂养/尿布/睡眠趋势双条件）；
+#       FINAL_PRD §12.3（黄色/橙色告警默认需"连续 N 天"或"偏离 X%"双条件，阈值可调；
+#       趋势类避免单点触发）；§13.2（mmWave 不单独触发红色医疗告警）。
+#
+# 每条 rule = 一个 metric：
+#   conditions: [{op: eq, field: variables.metric, value: <metric>}]  # 匹配指标名
+#   action.outputs: 趋势参数
+#     min_days        —— 连续天数下限（默认 1，单点不触发）
+#     deviation_pct   —— 偏离幅度下限（百分比，abs 取值）
+#     alert_level     —— 命中后告警等级（yellow/orange；red 由医疗规则产出，趋势不直出 red）
+#
+# 输入（variables）：
+#   metric            —— 指标名（匹配 rule）
+#   consecutive_days  —— 已连续偏离天数
+#   deviation_pct     —— 当前偏离幅度（百分比，可负）
+#   signal_source     —— 信号来源（mmwave 时受 §13.2 约束）
+
+policy_type: thresholds
+region: CN
+version: 1
+effective_from: 2026-08-17T00:00:00+08:00
+source: "PRD §12.3 趋势双条件 + §11.8 mmWave 约束"
+rule_text: |
+  告警阈值规则（PRD §12.3）：
+  - 黄色/橙色告警默认需"连续 N 天"且"偏离 X%"双条件同时满足。
+  - 趋势类避免单点触发（consecutive_days=1 或偏离不足 → info）。
+  - mmWave 单信号不触发红色医疗告警（最多橙色，§13.2）。
+display_text: |
+  趋势告警：连续 N 天偏离 X% 双条件。单点异常不触发。mmWave 单信号最多橙色。
+rules:
+  - rule_id: feeding_drop_trend
+    conditions:
+      - op: eq
+        field: variables.metric
+        value: feeding_amount
+    action:
+      verdict: warn
+      outputs:
+        min_days: 2
+        deviation_pct: 20.0
+        alert_level: orange
+      reason_code: feeding_drop_trend
+      evidence_text: "奶量连续下降趋势（连续 ≥2 天，偏离 ≥20%）橙色告警（PRD §12.3）"
+
+  - rule_id: wet_diaper_drop_trend
+    conditions:
+      - op: eq
+        field: variables.metric
+        value: wet_diaper_count
+    action:
+      verdict: warn
+      outputs:
+        min_days: 2
+        deviation_pct: 30.0
+        alert_level: yellow
+      reason_code: wet_diaper_drop_trend
+      evidence_text: "湿尿布连续减少趋势（连续 ≥2 天，偏离 ≥30%）黄色提醒"
+
+  - rule_id: sleep_fragmentation_trend
+    conditions:
+      - op: eq
+        field: variables.metric
+        value: sleep_fragmentation
+    action:
+      verdict: warn
+      outputs:
+        min_days: 3
+        deviation_pct: 25.0
+        alert_level: yellow
+      reason_code: sleep_fragmentation_trend
+      evidence_text: "睡眠碎片化趋势（连续 ≥3 天，偏离 ≥25%）黄色提醒"

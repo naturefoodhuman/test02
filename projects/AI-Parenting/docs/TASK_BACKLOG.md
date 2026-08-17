@@ -710,7 +710,7 @@
 - **涉及模块**：rule_engine, notification
 - **涉及文件**：
   - 新建：`server/app/rule_engine/domains/triage.py`, `thresholds.py`
-  - 新建：`config/rules/triage/base.yaml`, `config/alert_thresholds.yaml`
+  - 新建：`config/rules/triage/base-1.yaml`（升级）, `config/rules/thresholds/base-1.yaml`
   - 新建：`server/tests/golden/rules/test_triage_rules.py`, `test_threshold_rules.py`
 - **实现要求**：
   - 3 月龄以下 ≥38°C 强红线。

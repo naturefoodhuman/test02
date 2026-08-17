@@ -13,5 +13,11 @@
 """
 
 from .medication import MedicationRuleModule
+from .thresholds import ThresholdRuleModule
+from .triage import TriageRuleModule
 
-__all__ = ["MedicationRuleModule"]
+__all__ = [
+    "MedicationRuleModule",
+    "ThresholdRuleModule",
+    "TriageRuleModule",
+]
