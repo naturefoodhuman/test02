@@ -1,0 +1,14 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-17 00:00:00
+#
+# 模型目录（APC-T024）：引用工厂根 config/models.yaml（Factory-first，不复制实现）。
+# 依据：ENGINEERING_DESIGN §8.2（config/models.yaml 引用工厂根同名文件）；
+#       ARCHITECTURE_FINAL §11.8（复用工厂 Smart Proxy 4000）。
+#
+# 本项目的 routing_plans.yaml 的 model 字段指向工厂根 models.yaml 的 key
+# （如 mtplx-qwen36-27b）。实际模型定义、provider、base_url 在工厂根维护，
+# 本文件仅作占位与文档引用，不重复定义模型。
+
+# 引用：工厂根 config/models.yaml（本项目通过 Smart Proxy 4000 调用，不直连）。
+# 本地模型由工厂 Smart Proxy 统一调度；本项目 routing_plans 只选 plan → model key。
+reference: "工厂根 config/models.yaml（Factory-first 复用）"

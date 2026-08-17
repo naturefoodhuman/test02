@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.24.0] - 2026-08-17 - APC-T024 Model Gateway Smart Proxy 客户端与 Routing Plan（项目内唯一 LLM/VLM 入口）
 - [0.23.0] - 2026-08-17 - APC-T023 Growth Rule Domain 与 WHO 百分位（百分位计算 + 趋势提醒 + 不诊断；Epic E03 规则域全部落地）
 - [0.22.0] - 2026-08-17 - APC-T022 Vaccine Planner Rule Domain（中国 NIP 程序 + 提醒策略 + 已接种/跳过排除）
 - [0.21.0] - 2026-08-17 - APC-T021 Triage 与 Alert Threshold Rule Domain（分诊红线 + 危险信号 + 趋势双条件 + mmWave 约束）
@@ -38,6 +39,33 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.24.0] - 2026-08-17
+
+### Added — APC-T024 Model Gateway Smart Proxy 客户端与 Routing Plan
+
+- **`server/app/model_gateway/domain.py`**：`ModelClient` Protocol（`chat(plan, messages, tools=None)` + `vision(plan, image, prompt)`）+ `ModelResponse`（content/usage/model/plan/raw）+ `RoutingPlan`（key/model/max_tokens/temperature/is_vision）。项目内唯一 LLM/VLM 入口（架构 §11.8）。
+- **`server/app/model_gateway/routing.py`**：`load_plans(path)` 读 `config/routing_plans.yaml` → `dict[str, RoutingPlan]`；`get_plan(key)` 缺 key 抛 `KeyError`（与 RuleRegistry 一致）。
+- **`server/app/model_gateway/client.py`**：
+  - `SmartProxyModelClient`：HTTP POST `gateway_base_url/v1/messages`（Anthropic Messages API 兼容），按 plan 取 RoutingPlan 组装请求体。`chat` 超时 30s，`vision` 超时 60s（APC-T024 规格）。超时/HTTP 错/非 2xx → `ModelError`（不静默吞错）。vision 按 base64 内嵌 image+text block。chat 调 vision-only plan 防御性拒绝。
+  - `FakeModelClient`：测试用，返回固定 `ModelResponse`，不联网，记录调用历史供断言。CI 默认用它（§0.5 安全：禁调真实模型）。
+- **`config/routing_plans.yaml`**：8 个 plan（copilot.triage/proactive/medication/vaccine/growth/family_memory + vision.jaundice/milestone），`model` 指向工厂根 `config/models.yaml` 的 `mtplx-qwen36-27b`（Factory-first 复用，不复制实现）。
+- **`config/models.yaml`**：引用工厂根同名文件（§8.2），不重复定义模型。
+- **`server/app/di.py`**：`Container.model_client` 字段 + `_build_model_client(s)` 按 `use_fake_client` 选 Fake/SmartProxy（dev 默认 Fake，prod 加载 routing_plans + SmartProxy）。
+
+### Tests — APC-T024
+
+- `server/tests/unit/model_gateway/test_model_gateway.py`（16）：routing plan 解析（keys/vision flag/缺 key/缺文件）、FakeModelClient（chat 占位/自定义响应/vision 记录/tools 记录）、SmartProxyModelClient（httpx MockTransport：chat 成功/超时/HTTP 错/非 2xx/vision 成功/vision plan 拒绝/缺 plan）、超时规格（30s/60s）。
+- 全量 551 passed（T023 后 535，新增 16）；ruff/mypy 干净。
+
+### Security — APC-T024
+
+- 项目内唯一 LLM/VLM 入口：Orchestrator/Copilot/Camera 只注入 `ModelClient`，禁止任何模块直连云模型（架构 §11.8）。
+- dev 默认 `FakeModelClient`（不联网），CI 禁调真实模型（§0.5）。
+- 模型调用失败显式抛 `ModelError`，不静默吞错（调用方处理，审计可追溯）。
+- 超时规格：文本 30s / 视觉 60s（APC-T024），避免长推理阻塞本进程事件循环（§1.3 进程拓扑：重推理外发工厂 Smart Proxy）。
 
 ---
 

@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-17 · Round 25 · APC-T024 Model Gateway Smart Proxy 客户端与 Routing Plan 完成（ModelClient Protocol chat/vision + SmartProxyModelClient 工厂 4000 Anthropic 兼容 chat 30s/vision 60s + FakeModelClient 测试不联网 + routing.py 8 plan + DI 装配 + 16 unit，项目内唯一 LLM/VLM 入口落地）
 - 2026-08-17 · Round 24 · APC-T023 Growth Rule Domain 与 WHO 百分位完成（GrowthRuleModule 百分位计算 + 趋势提醒 + 不诊断 + who-0-5.yaml 14 锚点 P0 fixture + 27 测试 + main 注册；Epic E03 规则域全部落地，5 RuleModule 注册）
 - 2026-08-17 · Round 23 · APC-T022 Vaccine Planner Rule Domain 完成（VaccineRuleModule 中国 NIP 程序 + 提醒策略 5 级 + 已接种/跳过排除 + 剂次标识拆分 + region 优先 + cn-nip-2024.yaml 13 剂次 + 21 测试 + main 注册）
 - 2026-08-17 · Round 22 · APC-T021 Triage 与 Alert Threshold Rule Domain 完成（TriageRuleModule 体温阈值+危险信号升级+mmWave 降级+就医建议 + ThresholdRuleModule 趋势双条件+单点不触发 + 规则包 + 29 测试 + main 注册，安全规则先于业务接入）
@@ -36,6 +37,54 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 25 · 2026-08-17 · APC-T024 Model Gateway Smart Proxy 客户端与 Routing Plan（项目内唯一 LLM/VLM 入口）
+
+**Task ID**: APC-T024（Model Gateway：ModelClient Protocol + SmartProxyModelClient + FakeModelClient + routing + DI 装配 + unit 测试）
+
+**What changed**
+- `server/app/model_gateway/domain.py`：`ModelClient` Protocol（`chat(plan, messages, tools=None)` + `vision(plan, image, prompt)`）+ `ModelResponse`（content/usage/model/plan/raw）+ `RoutingPlan`（key/model/max_tokens/temperature/is_vision）。项目内唯一 LLM/VLM 入口（架构 §11.8）。
+- `server/app/model_gateway/routing.py`：`load_plans(path)` 读 `config/routing_plans.yaml` → `dict[str, RoutingPlan]`；`get_plan(key)` 缺 key 抛 `KeyError`（与 RuleRegistry 一致）。
+- `server/app/model_gateway/client.py`：
+  - `SmartProxyModelClient`：HTTP POST `gateway_base_url/v1/messages`（Anthropic Messages API 兼容），按 plan 取 RoutingPlan 组装请求体。`chat` 超时 30s，`vision` 超时 60s。超时/HTTP 错/非 2xx → `ModelError`（不静默吞错）。vision 按 base64 内嵌 image+text block。chat 调 vision-only plan 防御性拒绝。懒创建 httpx.AsyncClient，`aclose()` 关闭。
+  - `FakeModelClient`：测试用，返回固定 `ModelResponse`，不联网，记录调用历史供断言。
+- `config/routing_plans.yaml`：8 个 plan（copilot.triage/proactive/medication/vaccine/growth/family_memory + vision.jaundice/milestone），`model` 指向工厂根 `mtplx-qwen36-27b`。
+- `config/models.yaml`：引用工厂根同名文件（§8.2），不重复定义模型。
+- `server/app/di.py`：`Container.model_client` 字段 + `_build_model_client(s)` 按 `use_fake_client` 选 Fake/SmartProxy。
+- `server/tests/unit/model_gateway/test_model_gateway.py`：16 unit（routing 解析/vision flag/缺 key/缺文件/Fake chat/vision/tools/SmartProxy chat 成功/超时/HTTP 错/非 2xx/vision 成功/vision plan 拒绝/缺 plan/超时规格）。
+
+**Why**
+- APC-T024 要求项目内唯一 LLM/VLM 入口（架构 §11.8），Orchestrator/Copilot/Camera 只注入 ModelClient，禁止任何模块直连云模型。这是 Factory-first 原则（§1.2）：复用工厂 Smart Proxy 4000，不复制模型实现。
+- 超时规格文本 30s/视觉 60s（APC-T024）：重推理外发工厂 Smart Proxy，不占本进程事件循环（§1.3 进程拓扑）。
+- dev 默认 `FakeModelClient`（`use_fake_client=True`）：CI 禁调真实模型（§0.5 安全），测试不依赖外部模型后端。
+- `ModelError` 显式抛错而非静默吞错：调用方（Orchestrator）可降级处理，审计可追溯。
+- routing plan 与 RuleRegistry 一致的 KeyError 语义：缺 plan key 抛错，调用方处理（架构 §13.5 插件化）。
+
+**Files touched**
+- `server/app/model_gateway/domain.py`（新增）
+- `server/app/model_gateway/routing.py`（新增）
+- `server/app/model_gateway/client.py`（新增）
+- `config/routing_plans.yaml`（新增）
+- `config/models.yaml`（新增）
+- `server/app/di.py`（修改：model_client 字段 + _build_model_client）
+- `server/tests/unit/model_gateway/__init__.py`（新增）
+- `server/tests/unit/model_gateway/test_model_gateway.py`（新增）
+- `docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`（同步）
+
+**Tests run**
+- `make lint`：ruff check + format --check 干净。
+- `make typecheck`：mypy 193 文件 0 错误。
+- `make test`：551 passed（T023 后 535，新增 16）。
+
+**Known limitations**
+- SmartProxyModelClient 实际调用工厂 Smart Proxy 4000 的 Anthropic Messages API 兼容端点；工厂 Smart Proxy 在线（端口 4000 已监听），但本项目 dev 默认 Fake，未做端到端真实模型集成测试（留待 T028 Orchestrator 集成）。
+- routing plan 的 `model` 指向工厂根 `config/models.yaml` 的 key；若工厂模型变更，本项目 routing_plans 需同步（Factory-first 耦合）。
+- tools 参数已透传到请求体，但工具调用结果解析（tool_use block）留待 T028 Orchestrator 实现工具循环时补充。
+
+**Next step**
+- APC-T025 Privacy Gateway 适配层与云出站安全测试（复用 `_infra/network/privacy`，云端出站前脱敏）。
 
 ---
 

@@ -52,7 +52,8 @@
 | APC-T021 | Triage 与 Alert Threshold Rule Domain | ✅ DONE | rule_engine/domains/triage.py（TriageRuleModule domain="triage"：体温阈值复用 kernel.evaluate_pack 首匹配 + 危险信号升级 red + mmWave 单信号降级 orange §13.2 + 就医建议 advice）+ rule_engine/domains/thresholds.py（ThresholdRuleModule domain="thresholds"：趋势双条件 consecutive_days≥min_days 且 abs(deviation_pct)≥deviation_pct，单点不触发 PRD §12.3 + mmWave 约束）+ config/rules/triage/base-1.yaml 升级（增补危险信号说明）+ config/rules/thresholds/base-1.yaml（feeding/wet_diaper/sleep 趋势双条件包）+ main._register 通用注册（medication/triage/thresholds）+ 6 golden triage + 5 golden thresholds + 9 unit triage + 9 unit thresholds；ruff/mypy 干净，rules-validate 3 包 OK，487 测试通过 |
 | APC-T022 | Vaccine Planner Rule Domain | ✅ DONE | rule_engine/domains/vaccine.py（VaccineRuleModule domain="vaccine"：规则包 YAML schedule 定义国家免疫规划程序，evaluate 输入 baby_age_days + variables.vaccine_records + vaccine_region → 每个待办疫苗 due_date/status/alert_level；提醒策略 PRD §11.12 提前14天 upcoming/提前3天 due_soon/当天 due/逾期3天蓝/逾期14天黄；已 completed/skipped 排除，delayed 仍待办；剂次标识 "name:dose" 拆分为 vaccine+dose 与 records 元组对齐；region variables 优先 ctx 兜底默认 CN）+ config/rules/vaccine/cn-nip-2024.yaml（中国 NIP P0：乙肝3剂/卡介苗/脊灰3剂/百白破4剂/麻腮风2剂，13 剂次）+ main 注册 vaccine 域 + 7 golden（新生儿/14天/3天/逾期蓝/逾期黄/已接种跳过排除/远期 planned）+ 14 unit（到期/逾期/已接种排除/跳过排除/delayed 保留/dict 形式/排序/region 优先/自费标记/evidence）；ruff/mypy 干净，rules-validate 4 包 OK，508 测试通过 |
 | APC-T023 | Growth Rule Domain 与 WHO 百分位 | ✅ DONE | rule_engine/domains/growth.py（GrowthRuleModule domain="growth"：规则包 YAML 定义 WHO 0-5 岁百分位参考表，按 sex+measure 分条，每条含关键月龄 P3/P15/P50/P85/P97 锚点；evaluate 输入 baby_age_days + sex + measure + value + history → percentile（正态 CDF 近似）+ z_score + trend；插值在锚点间线性；趋势 current-earliest(history) 变化 ≥25 个百分点 → rising/declining 黄色提醒，单点不触发；限制 PRD §11.13 只提醒不诊断）+ config/rules/growth/who-0-5.yaml（P0 简化 fixture 14 锚点：male/female × weight_kg/length_cm/head_circumference_cm，上线前替换为权威 WHO 数据）+ main 注册 growth 域 + 11 golden（P50/插值/高百分位/低百分位/趋势上升下降/平稳/缺输入/未知 measure）+ 16 unit（P50/插值/高/低/缺 sex/value/未知 measure/未知 sex/趋势上升下降平稳/list[float] history/不诊断/evidence）；ruff/mypy 干净，rules-validate 5 包 OK，535 测试通过 |
-| APC-T024 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
+| APC-T024 | Model Gateway Smart Proxy 客户端与 Routing Plan | ✅ DONE | model_gateway/domain.py（ModelClient Protocol chat/vision + ModelResponse + RoutingPlan）+ model_gateway/routing.py（load_plans 读 config/routing_plans.yaml → dict[str,RoutingPlan]，get_plan 缺 key 抛 KeyError）+ model_gateway/client.py（SmartProxyModelClient HTTP POST gateway_base_url/v1/messages Anthropic 兼容，chat 30s/vision 60s，超时/HTTP 错/非 2xx → ModelError；vision base64 内嵌 image+text block；chat 调 vision plan 防御性拒绝；FakeModelClient 测试用不联网，记录调用历史）+ config/routing_plans.yaml（8 plan：copilot.triage/proactive/medication/vaccine/growth/family_memory + vision.jaundice/milestone，model 指向工厂根 mtplx-qwen36-27b）+ config/models.yaml（引用工厂根，不复制）+ di.py Container.model_client + _build_model_client 按 use_fake_client 选 Fake/SmartProxy + 16 unit（routing 解析/vision flag/缺 key/缺文件/Fake chat/vision/tools/SmartProxy chat 成功/超时/HTTP 错/非 2xx/vision 成功/vision plan 拒绝/缺 plan/超时规格）；ruff/mypy 干净，551 测试通过 |
+| APC-T025 ~ T059 | 后续里程碑 | ⬜ TODO | 见 TASK_BACKLOG |
 
 状态图例：✅ DONE / 🔄 IN_PROGRESS / ⬜ TODO / ⛔ BLOCKED
 
@@ -211,7 +212,7 @@
 
 ## 3. 进行中
 
-无。APC-T023 已完成：GrowthRuleModule（WHO 0-5 岁百分位 + 趋势提醒 + 不诊断）+ config/rules/growth/who-0-5.yaml（14 锚点 P0 fixture）+ golden/unit 测试 + main 注册。**Epic E03 规则域全部落地**（medication/triage/thresholds/vaccine/growth）。下一步推进 T024~T030（Model Gateway / Privacy / Memory / Orchestrator / Dose Interceptor / P0 Copilots）。
+无。APC-T024 已完成：ModelClient Protocol + SmartProxyModelClient（工厂 Smart Proxy 4000，chat 30s/vision 60s）+ FakeModelClient（测试不联网）+ routing.py（config/routing_plans.yaml 8 plan）+ DI 装配（按 use_fake_client 选）。项目内唯一 LLM/VLM 入口落地。下一步推进 T025（Privacy Gateway 适配层）。
 
 ---
 
@@ -219,7 +220,7 @@
 
 按 MVP 路径（TASK_BACKLOG §4）推进 Epic E03 — Rule Engine、AI 编排与安全输出：
 
-1. **APC-T024 ~ T030** — Model Gateway / Privacy / Memory / Orchestrator / Dose Interceptor / P0 Copilots。规则域（T020-T023）已全部完成，5 个 RuleModule 注册到 RuleRegistry。
+1. **APC-T025 ~ T030** — Privacy / Memory / Copilot Base / Orchestrator / Dose Interceptor / P0 Copilots。规则域（T020-T023）、Model Gateway（T024）已完成。
 2. **APC-T031 ~ T034** — Alert API / Notification Orchestrator（消费 Rule Engine 产出的 Alert.level）。
 
 ---

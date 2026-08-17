@@ -36,8 +36,11 @@ from .auth.service.password import Pbkdf2PasswordHasher
 from .common.clock import Clock, SystemClock
 from .common.errors import AuthError
 from .common.event_bus import EventBus, InMemoryEventBus
+from .model_gateway.client import FakeModelClient, SmartProxyModelClient
+from .model_gateway.domain import ModelClient
+from .model_gateway.routing import load_plans
 from .rule_engine.registry import RuleRegistry
-from .settings import Settings, get_settings
+from .settings import CONFIG_DIR, Settings, get_settings
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,7 +67,10 @@ class Container:
     password_hasher: PasswordHasher
     # RuleRegistry 进程级单例（APC-T018）：启动期注册 RuleModule（T020+ 接入），运行期只读。
     rule_registry: RuleRegistry
-    # 预留：model_client / notification_channels 等，后续任务填充。
+    # ModelClient 进程级单例（APC-T024）：项目内唯一 LLM/VLM 入口（架构 §11.8）。
+    # dev 用 FakeModelClient（不联网）；prod 用 SmartProxyModelClient（工厂 Smart Proxy 4000）。
+    model_client: ModelClient
+    # 预留：notification_channels 等，后续任务填充。
     _extras: dict[str, object] = field(default_factory=dict)
 
     def override(self, key: str, value: object) -> None:
@@ -98,6 +104,9 @@ def build_container(settings: Settings | None = None) -> Container:
     password_hasher: PasswordHasher = Pbkdf2PasswordHasher(iterations=s.auth.password_iterations)
     # RuleRegistry 进程级单例（APC-T018）：启动期注册 RuleModule（T020+ 接入），运行期只读。
     rule_registry = RuleRegistry()
+    # ModelClient 进程级单例（APC-T024）：项目内唯一 LLM/VLM 入口。
+    # dev 用 FakeModelClient（不联网，CI 安全）；prod 用 SmartProxyModelClient（工厂 4000）。
+    model_client = _build_model_client(s)
     return Container(
         settings=s,
         clock=clock,
@@ -105,7 +114,20 @@ def build_container(settings: Settings | None = None) -> Container:
         jwt_service=jwt_service,
         password_hasher=password_hasher,
         rule_registry=rule_registry,
+        model_client=model_client,
     )
+
+
+def _build_model_client(s: Settings) -> ModelClient:
+    """按 Settings.models 选 ModelClient（APC-T024）。
+
+    ``use_fake_client=True``（dev 默认）→ FakeModelClient（不联网）；
+    否则 → SmartProxyModelClient（加载 config/routing_plans.yaml，POST 工厂 4000）。
+    """
+    if s.models.use_fake_client:
+        return FakeModelClient()
+    plans = load_plans(CONFIG_DIR / "routing_plans.yaml")
+    return SmartProxyModelClient(base_url=s.models.gateway_base_url, plans=plans)
 
 
 def get_container() -> Container:

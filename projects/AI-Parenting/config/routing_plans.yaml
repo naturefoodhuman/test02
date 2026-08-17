@@ -1,0 +1,62 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-17 00:00:00
+#
+# 路由计划（APC-T024）：项目专属 LLM/VLM 路由。
+# 依据：ENGINEERING_DESIGN §5.8、§8.2；ARCHITECTURE_FINAL §11.8（单一入口 Smart Proxy 4000）。
+#
+# plan key → RoutingPlan（model/max_tokens/temperature/is_vision）。
+# model 指向工厂根 config/models.yaml 的模型 key（Factory-first 复用，不复制实现）。
+# Orchestrator/Copilot/Camera 只注入 ModelClient，按 plan key 调用，禁止直连云模型。
+
+plans:
+  # ── Copilot 文本对话 plan ──
+  copilot.triage:
+    model: mtplx-qwen36-27b
+    max_tokens: 1024
+    temperature: 0.3
+    description: "分诊 Copilot（解释规则与风险，不诊断/不开药）"
+
+  copilot.proactive:
+    model: mtplx-qwen36-27b
+    max_tokens: 768
+    temperature: 0.3
+    description: "主动提醒 Copilot（喂奶/哄睡/疫苗/体检/晨报）"
+
+  copilot.medication:
+    model: mtplx-qwen36-27b
+    max_tokens: 512
+    temperature: 0.2
+    description: "用药安全 Copilot（执行器，剂量由 Rule Engine 产出）"
+
+  copilot.vaccine:
+    model: mtplx-qwen36-27b
+    max_tokens: 512
+    temperature: 0.3
+    description: "疫苗规划 Copilot（解释待办与提醒）"
+
+  copilot.growth:
+    model: mtplx-qwen36-27b
+    max_tokens: 512
+    temperature: 0.3
+    description: "生长 Copilot（解释百分位与趋势，不诊断）"
+
+  copilot.family_memory:
+    model: mtplx-qwen36-27b
+    max_tokens: 512
+    temperature: 0.4
+    description: "家庭记忆 Copilot（M2 家庭偏好问答）"
+
+  # ── 视觉 plan（vision 路径，超时 60s）──
+  vision.jaundice:
+    model: mtplx-qwen36-27b
+    max_tokens: 512
+    temperature: 0.2
+    is_vision: true
+    description: "黄疸照片视觉理解（同位置趋势对比，不诊断）"
+
+  vision.milestone:
+    model: mtplx-qwen36-27b
+    max_tokens: 512
+    temperature: 0.3
+    is_vision: true
+    description: "发育里程碑照片观察"
