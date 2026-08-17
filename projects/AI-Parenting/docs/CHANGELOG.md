@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.23.0] - 2026-08-17 - APC-T023 Growth Rule Domain 与 WHO 百分位（百分位计算 + 趋势提醒 + 不诊断；Epic E03 规则域全部落地）
 - [0.22.0] - 2026-08-17 - APC-T022 Vaccine Planner Rule Domain（中国 NIP 程序 + 提醒策略 + 已接种/跳过排除）
 - [0.21.0] - 2026-08-17 - APC-T021 Triage 与 Alert Threshold Rule Domain（分诊红线 + 危险信号 + 趋势双条件 + mmWave 约束）
 - [0.20.0] - 2026-08-17 - APC-T020 MedicationRuleModule（用药校验链路 + 占位参数包 + 启动期注册）
@@ -37,6 +38,38 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.23.0] - 2026-08-17
+
+### Added — APC-T023 Growth Rule Domain 与 WHO 百分位
+
+- **`server/app/rule_engine/domains/growth.py`**：`GrowthRuleModule`（`domain="growth"`），实现 `RuleModule` Protocol。规则包 YAML 定义 WHO 0–5 岁百分位参考表（按 `sex` + `measure` 分条，每条含关键月龄 P3/P15/P50/P85/P97 锚点）。`evaluate` 输入 `baby_age_days` + `variables.sex` + `variables.measure`（weight_kg/length_cm/head_circumference_cm）+ `variables.value` + `variables.history`，输出 `percentile` + `z_score` + `trend` + `evidence`。
+- **百分位计算**：按 `baby_age_days` 在参考表锚点间线性插值取 P50 与 sigma 代理（`(P50-P3)/1.881`）；`z_score = (value - P50) / sigma`；`percentile` 由 z_score 经正态 CDF 近似（`math.erf`）。
+- **趋势提醒**（PRD §11.13）：`history` 近 30 天百分位序列（支持 `list[dict]` 含 age_days+percentile，或 `list[float]`），`delta = current - earliest(history)`，`abs(delta) >= 25` → `rising`/`declining` 黄色提醒；单点或 delta 不足 → `stable` 无提醒。
+- **限制**（PRD §11.13）：只做趋势提醒，不基于单次记录诊断营养不良或发育异常——单次低/高百分位 `verdict=info`，不出 `warn`/`block`。
+- **`config/rules/growth/who-0-5.yaml`**：WHO 0-5 岁百分位 P0 简化 fixture（14 锚点：male/female × weight_kg 0/6/12/24 月 + length_cm 0/12 月 + head_circumference_cm 0/12 月）。接口兼容完整 WHO LMS 表——V1 可替换为 LMS 参数精确计算（经 `/api/v1/rules` 上传新版本）。数值为示例量级，上线前须替换为权威 WHO 数据。
+- **`server/app/main.py`**：`_register_rule_modules` 注册 growth 域（`config/rules/growth/who-0-5.yaml`）。Epic E03 规则域全部接入（medication/triage/thresholds/vaccine/growth）。
+- **`server/app/rule_engine/domains/__init__.py`**：导出 `GrowthRuleModule`。
+
+### Tests — APC-T023
+
+- `server/tests/golden/rules/test_growth_rules.py`（11）：男/女 P50、6 月插值、3 月插值、高百分位（P97）、低百分位（P3）、趋势上升/下降、平稳、缺 value、未知 measure。
+- `server/tests/unit/rule_engine/domains/test_growth.py`（16）：P50 锚点/插值/高/低/缺 sex/缺 value/未知 measure/未知 sex/趋势上升/下降/平稳/list[float] history/不诊断/evidence policy_version。
+- 全量 535 passed（T022 后 508，新增 27）；`make rules-validate` 5 包 OK；ruff/mypy 干净。
+
+### Notes — APC-T023
+
+- WHO 百分位参考表为 P0 简化 fixture（关键月龄锚点，近似值），接口兼容完整 WHO LMS 表——V1 经规则包 YAML 上传 LMS 参数即可精确计算，无需改代码（架构 §13.5 插件化）。
+- 趋势提醒阈值 `TREND_DELTA_PCT=25`（百分位变化 25 个百分点）可经规则包 `outputs.trend_delta_pct` 配置。
+- 生长 `verdict=info`（reminder，不阻断），趋势命中 `warn`（黄色提醒）；不诊断、不替代医生（PRD §11.13 限制）。
+
+### Milestone — Epic E03 规则域全部落地
+
+- 5 个 RuleModule 注册到 RuleRegistry：medication（T020）、triage（T021）、thresholds（T021）、vaccine（T022）、growth（T023）。
+- 5 个规则包 YAML 经 `make rules-validate` 校验通过。
+- Rule Engine 已具备为 Alert API（T031）/ Notification Orchestrator（T033）/ Copilots（T030）产出 Alert.level + evidence 的能力。
 
 ---
 

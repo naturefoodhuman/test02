@@ -1,0 +1,171 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-17 00:00:00
+#
+# 生长规则包（APC-T023）：WHO 0–5 岁百分位参考表（P0 简化 fixture）。
+# 依据：FINAL_PRD §11.13（WHO 百分位 0~5 岁，按性别，体重/身长/头围）；
+#       ARCHITECTURE_FINAL §10.2（生长规则：WHO 百分位、按性别、趋势提醒）。
+#
+# ⚠️ 本包为 P0 简化 fixture（关键月龄 P3/P15/P50/P85/P97 锚点，近似值），
+#    接口兼容完整 WHO LMS 表——V1 可替换为 LMS 参数精确计算（经 /api/v1/rules 上传新版本）。
+#    数值为示例量级（非精确 WHO 表），仅用于 P0 链路验证；上线前须替换为权威 WHO 数据。
+#
+# 每条 rule = 一个 (sex, measure, age_months) 锚点：
+#   conditions: [{op: eq, field: variables.sex, value: <male|female>},
+#                {op: eq, field: variables.measure, value: <weight_kg|length_cm|head_circumference_cm>}]
+#   action.outputs: age_months + p3/p15/p50/p85/p97（该月龄该指标的百分位值）
+#
+# 输入（variables）：
+#   sex     —— male / female
+#   measure —— weight_kg / length_cm / head_circumference_cm
+#   value   —— 当前测量值
+#   history —— 近 30 天记录（list[dict] 含 age_days+percentile，或 list[float] 百分位序列）
+
+policy_type: growth
+region: CN
+version: 1
+effective_from: 2026-08-17T00:00:00+08:00
+source: "WHO 0-5 岁百分位 P0 简化 fixture（PRD §11.13，上线前替换为权威 WHO 数据）"
+rule_text: |
+  生长规则（PRD §11.13）：
+  - WHO 0–5 岁百分位，按性别，体重/身长/头围。
+  - 近 30 天趋势，与出生数据对比。
+  - 百分位异常变化提醒（变化 ≥25 个百分点）。
+  限制：只做趋势提醒，不基于单次记录诊断营养不良或发育异常。
+display_text: |
+  生长百分位（WHO 0-5 岁，按性别）：体重/身长/头围。趋势提醒，不诊断。
+rules:
+  # ---- male / weight_kg ----
+  - rule_id: male_weight_0m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 0, p3: 2.5, p15: 3.0, p50: 3.3, p85: 3.7, p97: 4.0}
+      reason_code: male_weight_0m
+      evidence_text: "男 0 月体重百分位锚点"
+  - rule_id: male_weight_6m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 6, p3: 6.4, p15: 7.1, p50: 7.9, p85: 8.7, p97: 9.5}
+      reason_code: male_weight_6m
+      evidence_text: "男 6 月体重百分位锚点"
+  - rule_id: male_weight_12m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 12, p3: 8.6, p15: 9.2, p50: 9.6, p85: 10.8, p97: 11.7}
+      reason_code: male_weight_12m
+      evidence_text: "男 12 月体重百分位锚点"
+  - rule_id: male_weight_24m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 24, p3: 10.8, p15: 11.7, p50: 12.2, p85: 13.5, p97: 14.6}
+      reason_code: male_weight_24m
+      evidence_text: "男 24 月体重百分位锚点"
+
+  # ---- female / weight_kg ----
+  - rule_id: female_weight_0m
+    conditions:
+      - {op: eq, field: variables.sex, value: female}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 0, p3: 2.4, p15: 2.8, p50: 3.2, p85: 3.6, p97: 3.9}
+      reason_code: female_weight_0m
+      evidence_text: "女 0 月体重百分位锚点"
+  - rule_id: female_weight_6m
+    conditions:
+      - {op: eq, field: variables.sex, value: female}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 6, p3: 5.8, p15: 6.4, p50: 7.3, p85: 8.0, p97: 8.7}
+      reason_code: female_weight_6m
+      evidence_text: "女 6 月体重百分位锚点"
+  - rule_id: female_weight_12m
+    conditions:
+      - {op: eq, field: variables.sex, value: female}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 12, p3: 7.8, p15: 8.5, p50: 8.9, p85: 10.0, p97: 10.9}
+      reason_code: female_weight_12m
+      evidence_text: "女 12 月体重百分位锚点"
+  - rule_id: female_weight_24m
+    conditions:
+      - {op: eq, field: variables.sex, value: female}
+      - {op: eq, field: variables.measure, value: weight_kg}
+    action:
+      verdict: info
+      outputs: {age_months: 24, p3: 10.0, p15: 10.8, p50: 11.5, p85: 12.7, p97: 13.7}
+      reason_code: female_weight_24m
+      evidence_text: "女 24 月体重百分位锚点"
+
+  # ---- male / length_cm ----
+  - rule_id: male_length_0m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: length_cm}
+    action:
+      verdict: info
+      outputs: {age_months: 0, p3: 46.1, p15: 48.0, p50: 49.9, p85: 51.8, p97: 53.7}
+      reason_code: male_length_0m
+      evidence_text: "男 0 月身长百分位锚点"
+  - rule_id: male_length_12m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: length_cm}
+    action:
+      verdict: info
+      outputs: {age_months: 12, p3: 71.0, p15: 73.0, p50: 75.7, p85: 78.1, p97: 80.5}
+      reason_code: male_length_12m
+      evidence_text: "男 12 月身长百分位锚点"
+
+  # ---- female / length_cm ----
+  - rule_id: female_length_0m
+    conditions:
+      - {op: eq, field: variables.sex, value: female}
+      - {op: eq, field: variables.measure, value: length_cm}
+    action:
+      verdict: info
+      outputs: {age_months: 0, p3: 45.4, p15: 47.0, p50: 49.1, p85: 51.0, p97: 52.9}
+      reason_code: female_length_0m
+      evidence_text: "女 0 月身长百分位锚点"
+  - rule_id: female_length_12m
+    conditions:
+      - {op: eq, field: variables.sex, value: female}
+      - {op: eq, field: variables.measure, value: length_cm}
+    action:
+      verdict: info
+      outputs: {age_months: 12, p3: 69.0, p15: 71.0, p50: 73.8, p85: 76.1, p97: 78.4}
+      reason_code: female_length_12m
+      evidence_text: "女 12 月身长百分位锚点"
+
+  # ---- male / head_circumference_cm ----
+  - rule_id: male_head_0m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: head_circumference_cm}
+    action:
+      verdict: info
+      outputs: {age_months: 0, p3: 32.4, p15: 33.5, p50: 34.5, p85: 35.5, p97: 36.6}
+      reason_code: male_head_0m
+      evidence_text: "男 0 月头围百分位锚点"
+  - rule_id: male_head_12m
+    conditions:
+      - {op: eq, field: variables.sex, value: male}
+      - {op: eq, field: variables.measure, value: head_circumference_cm}
+    action:
+      verdict: info
+      outputs: {age_months: 12, p3: 44.2, p15: 45.2, p50: 46.2, p85: 47.2, p97: 48.2}
+      reason_code: male_head_12m
+      evidence_text: "男 12 月头围百分位锚点"

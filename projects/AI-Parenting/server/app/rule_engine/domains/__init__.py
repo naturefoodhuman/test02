@@ -12,12 +12,14 @@
 （开闭原则，架构 §13.5）。新增域 = 实现模块 + 规则包 YAML + register。
 """
 
+from .growth import GrowthRuleModule
 from .medication import MedicationRuleModule
 from .thresholds import ThresholdRuleModule
 from .triage import TriageRuleModule
 from .vaccine import VaccineRuleModule
 
 __all__ = [
+    "GrowthRuleModule",
     "MedicationRuleModule",
     "ThresholdRuleModule",
     "TriageRuleModule",

@@ -72,10 +72,11 @@ def _register_rule_modules(container: Container) -> None:
     启动期执行（lifespan startup），运行期 RuleRegistry 只读。规则包加载失败不阻断启动
     （该域 evaluate 时抛 KeyError，调用方处理；架构 §13.5 插件化）。
 
-    当前注册：medication（APC-T020）、triage/thresholds（APC-T021）、vaccine（APC-T022）。
-    growth 在 T023 接入。
+    当前注册：medication（APC-T020）、triage/thresholds（APC-T021）、vaccine（APC-T022）、
+    growth（APC-T023）。Epic E03 规则域全部接入。
     """
 
+    from .rule_engine.domains.growth import GrowthRuleModule
     from .rule_engine.domains.medication import MedicationRuleModule
     from .rule_engine.domains.thresholds import ThresholdRuleModule
     from .rule_engine.domains.triage import TriageRuleModule
@@ -106,6 +107,8 @@ def _register_rule_modules(container: Container) -> None:
     _register(rules_dir / "thresholds" / "base-1.yaml", ThresholdRuleModule, "thresholds")
     # vaccine 域（APC-T022）：中国国家免疫规划程序（cn-nip-2024.yaml）。
     _register(rules_dir / "vaccine" / "cn-nip-2024.yaml", VaccineRuleModule, "vaccine")
+    # growth 域（APC-T023）：WHO 0-5 岁百分位 + 趋势提醒（who-0-5.yaml）。
+    _register(rules_dir / "growth" / "who-0-5.yaml", GrowthRuleModule, "growth")
 
 
 # ---- Health 响应模型 ----
