@@ -26,6 +26,7 @@ from typing import Any
 
 import httpx
 
+from ..privacy.adapter import PrivacyAdapter
 from .domain import ModelResponse, RoutingPlan
 from .routing import get_plan
 
@@ -43,6 +44,9 @@ class SmartProxyModelClient:
 
     单一入口 ``gateway_base_url/v1/messages``（Anthropic Messages API 兼容）。
     按需注入 ``httpx.AsyncClient``（测试可注入 mock）；生产用模块级单例。
+
+    APC-T025：可选注入 ``PrivacyAdapter``，云端出站前脱敏 messages 文本（PII → 占位）+
+    媒体阻断（vision 图像字节）+ canary 泄露检测（响应回显即阻断）。
     """
 
     def __init__(
@@ -50,12 +54,15 @@ class SmartProxyModelClient:
         base_url: str,
         plans: dict[str, RoutingPlan],
         client: httpx.AsyncClient | None = None,
+        privacy: PrivacyAdapter | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._plans = plans
         # 测试可注入 mock client；生产懒创建（避免启动期开连接）。
         self._client = client
         self._owns_client = client is None
+        # APC-T025：可选 PrivacyAdapter，云端出站前脱敏 + 媒体阻断 + canary 检测。
+        self._privacy = privacy
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:
@@ -75,17 +82,31 @@ class SmartProxyModelClient:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]] | None = None,
     ) -> ModelResponse:
-        """文本对话（超时 30s）。按 plan 取 RoutingPlan，POST /v1/messages。"""
+        """文本对话（超时 30s）。按 plan 取 RoutingPlan，POST /v1/messages。
+
+        APC-T025：若注入 PrivacyAdapter，出站前脱敏 messages 文本（PII → 占位），
+        响应回来后 canary 泄露检测。
+        """
         rp = get_plan(self._plans, plan)
         if rp.is_vision:
             # chat 不应走 vision plan；防御性报错。
             raise ModelError(f"plan {plan} is vision-only, use vision() instead")
-        body = _build_body(rp, messages, tools=tools)
-        return await self._post(rp, body, timeout=CHAT_TIMEOUT)
+        canary: str | None = None
+        outbound_messages = messages
+        if self._privacy is not None:
+            outbound_messages, canary = _redact_messages(self._privacy, messages)
+        body = _build_body(rp, outbound_messages, tools=tools)
+        return await self._post(rp, body, timeout=CHAT_TIMEOUT, canary=canary)
 
     async def vision(self, plan: str, image: bytes, prompt: str) -> ModelResponse:
-        """视觉理解（超时 60s）。image 为原始字节，按 base64 内嵌。"""
+        """视觉理解（超时 60s）。image 为原始字节，按 base64 内嵌。
+
+        APC-T025：若注入 PrivacyAdapter 且 allow_cloud_egress=True，媒体字节出站阻断
+        （PRD §19 媒体不出站）；本地 Smart Proxy（allow_cloud_egress=False）不阻断。
+        """
         rp = get_plan(self._plans, plan)
+        if self._privacy is not None:
+            self._privacy.check_media(image)
         import base64
 
         b64 = base64.b64encode(image).decode("ascii")
@@ -104,8 +125,13 @@ class SmartProxyModelClient:
         body = _build_body(rp, messages, tools=None)
         return await self._post(rp, body, timeout=VISION_TIMEOUT)
 
-    async def _post(self, rp: RoutingPlan, body: dict[str, Any], timeout: float) -> ModelResponse:
-        """POST /v1/messages → ModelResponse；网络/超时/非 2xx → ModelError。"""
+    async def _post(
+        self, rp: RoutingPlan, body: dict[str, Any], timeout: float, canary: str | None = None
+    ) -> ModelResponse:
+        """POST /v1/messages → ModelResponse；网络/超时/非 2xx → ModelError。
+
+        APC-T025：响应回来后，若 canary 非空，检测云端是否回显 canary（泄露阻断）。
+        """
         client = self._get_client()
         try:
             resp = await client.post("/v1/messages", json=body, timeout=timeout)
@@ -117,7 +143,41 @@ class SmartProxyModelClient:
             raise ModelError(
                 f"model request failed (plan={rp.key}, status={resp.status_code}): {resp.text[:200]}"
             )
-        return _parse_response(resp.json(), rp)
+        result = _parse_response(resp.json(), rp)
+        if canary and self._privacy is not None:
+            self._privacy.verify_canary(result.content, canary)
+        return result
+
+
+def _redact_messages(
+    privacy: PrivacyAdapter, messages: list[dict[str, Any]]
+) -> tuple[list[dict[str, Any]], str]:
+    """脱敏 messages 文本内容（APC-T025）。
+
+    遍历 messages，对 ``content`` 为 str 的脱敏；对 list[{"type":"text","text":...}] 脱敏 text block。
+    返回 (脱敏后 messages, canary)。canary 植入最后一条 user 消息末尾。
+    """
+    canary = ""
+    redacted: list[dict[str, Any]] = []
+    for msg in messages:
+        new_msg = dict(msg)
+        content = new_msg.get("content")
+        if isinstance(content, str):
+            result = privacy.redact_outbound(content)
+            new_msg["content"] = result.redacted
+            canary = result.canary
+        elif isinstance(content, list):
+            new_blocks: list[dict[str, Any]] = []
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    r = privacy.redact_outbound(str(block.get("text", "")))
+                    new_blocks.append({**block, "text": r.redacted})
+                    canary = r.canary
+                else:
+                    new_blocks.append(block)
+            new_msg["content"] = new_blocks
+        redacted.append(new_msg)
+    return redacted, canary
 
 
 def _build_body(

@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-17 · Round 26 · APC-T025 Privacy Gateway 适配层与云出站安全测试完成（PrivacyAdapter PII 脱敏+canary+媒体阻断+出站策略 + config/privacy_policy.yaml 对齐工厂 schema + ModelClient 接入 privacy + 21 security 测试；设计决策：venv 隔离代码层独立实现，配置层复用工厂 schema）
 - 2026-08-17 · Round 25 · APC-T024 Model Gateway Smart Proxy 客户端与 Routing Plan 完成（ModelClient Protocol chat/vision + SmartProxyModelClient 工厂 4000 Anthropic 兼容 chat 30s/vision 60s + FakeModelClient 测试不联网 + routing.py 8 plan + DI 装配 + 16 unit，项目内唯一 LLM/VLM 入口落地）
 - 2026-08-17 · Round 24 · APC-T023 Growth Rule Domain 与 WHO 百分位完成（GrowthRuleModule 百分位计算 + 趋势提醒 + 不诊断 + who-0-5.yaml 14 锚点 P0 fixture + 27 测试 + main 注册；Epic E03 规则域全部落地，5 RuleModule 注册）
 - 2026-08-17 · Round 23 · APC-T022 Vaccine Planner Rule Domain 完成（VaccineRuleModule 中国 NIP 程序 + 提醒策略 5 级 + 已接种/跳过排除 + 剂次标识拆分 + region 优先 + cn-nip-2024.yaml 13 剂次 + 21 测试 + main 注册）
@@ -37,6 +38,52 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 26 · 2026-08-17 · APC-T025 Privacy Gateway 适配层与云出站安全测试（PII 脱敏 + canary + 媒体阻断 + ModelClient 接入）
+
+**Task ID**: APC-T025（Privacy Gateway 适配层：PrivacyAdapter + privacy_policy.yaml + ModelClient 接入 + security 测试）
+
+**What changed**
+- `server/app/privacy/adapter.py`：新增 `PrivacyAdapter` 云端出站前脱敏 + canary + 媒体阻断。
+  - `redact_outbound(text)`：正则识别中国 PII（手机号 `1[3-9]\d{9}`、身份证 18 位、邮箱）→ 占位替换（`[PHONE]`/`[IDCARD]`/`[EMAIL]`）；canary token 植入脱敏文本末尾。数字边界 `(?<!\d)/(?!\d)` 替代 `\b`（对中文友好，`\b` 在中文字符边界不工作）。
+  - `check_media(payload)`：媒体魔术字节阻断（jpeg/png/gif/ico/webm/wav/mkv/mp4/mp3/ogg/flac）。
+  - `check_egress_allowed()`：`allow_cloud_egress=False` → 拒绝一切云端出站。
+  - `verify_canary(cloud_response, canary)`：云端响应回显 canary → `PrivacyError` 泄露阻断。
+- `config/privacy_policy.yaml`：新增，schema 对齐工厂根同名文件（配置层复用，§19）。
+- `server/app/model_gateway/client.py`：`SmartProxyModelClient` 接入 `PrivacyAdapter`（可选注入）。`chat` 出站前 `_redact_messages` 脱敏 messages 文本（str content 与 list text block）+ canary；`vision` `check_media` 媒体阻断；`_post` 后 `verify_canary` 泄露检测。未注入 privacy 向后兼容。
+- `server/tests/security/test_privacy_adapter.py`：21 security 测试（PII 脱敏/canary 泄露/媒体阻断/出站策略/ModelClient 接入各分支）。
+
+**Why**
+- APC-T025 要求云端出站前脱敏 + 媒体阻断 + canary 泄露检测（PRD §19）。这是隐私安全铁律：本地优先，云端出站必须脱敏，媒体不出站。
+- canary 机制：脱敏文本植入随机 canary token，云端响应若回显该 token → 泄露（云端不应在响应里回显请求植入的标记）。这是工厂 `CanaryTokenMonitor` 的轻量实现。
+- 数字边界 `(?<!\d)/(?!\d)` 替代 `\b`：`\b` 是 `\w`/`\W` 边界，中文是 `\w`，所以"是138"中间无 `\b` 边界，手机号漏匹配。数字边界只看数字，对中文文本友好。
+- ModelClient 接入 privacy 是可选注入（向后兼容 T024）：dev 默认 FakeModelClient 不需 privacy；prod SmartProxyModelClient 注入 privacy 后自动脱敏。这保持 T024 测试不变。
+
+**Design Decision（需用户知晓）**
+- 本项目 venv 与工厂 `_infra` 隔离（`import _infra.network.privacy_gateway` 失败，工厂依赖 Presidio/spaCy 本项目未装）。故 `PrivacyAdapter` 代码层独立实现轻量脱敏（正则），**配置层 `config/privacy_policy.yaml` 对齐工厂同名文件 schema**（配置复用，§19）。未来工厂依赖就绪可切换到工厂 `PrivacyGateway` 实现（接口对齐）。这符合"不复制工厂 privacy 实现"的精神——复用工厂配置 schema 与脱敏策略，而非复制其 Presidio/spaCy 管道代码。
+
+**Files touched**
+- `server/app/privacy/adapter.py`（新增）
+- `config/privacy_policy.yaml`（新增）
+- `server/app/model_gateway/client.py`（修改：接入 PrivacyAdapter）
+- `server/tests/security/__init__.py`（新增）
+- `server/tests/security/test_privacy_adapter.py`（新增）
+- `docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`（同步）
+
+**Tests run**
+- `make lint`：ruff check + format --check 干净。
+- `make typecheck`：mypy 195 文件 0 错误。
+- `make test`：572 passed（T024 后 551，新增 21）。
+
+**Known limitations**
+- 轻量脱敏仅覆盖手机/身份证/邮箱（正则）；姓名/地址需 NER（Presidio/spaCy），P0 用占位标记由调用方预标记。V1 接入工厂 `PrivacyGateway` 可补全。
+- canary 植入文本末尾（可见标记 `[CNRY_xxx]`），非"不可见水印"；V1 可改为零宽字符或独立通道。
+- 媒体阻断基于魔术字节前缀，覆盖常见格式；罕见格式可能漏判（V1 扩展 `_MEDIA_MAGIC`）。
+
+**Next step**
+- APC-T026 Memory Store M1-M5 与 Local RAG 适配（复用工厂 Local RAG，五层记忆 M1 硬事实 PG / M2 家庭偏好 / M3 行为基线 / M4 近 72h / M5 语义检索）。
 
 ---
 

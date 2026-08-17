@@ -1,0 +1,40 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-17 00:00:00
+#
+# 隐私策略（APC-T025）：云端出站脱敏 + 媒体阻断 + canary 泄露检测。
+# 依据：ARCHITECTURE_FINAL §19（隐私，复用工厂 privacy_policy.yaml schema）；
+#       FINAL_PRD §19（本地优先，云端出站脱敏，媒体不出站）；
+#       ENGINEERING_DESIGN §2 M14、§8。
+#
+# 本文件 schema 对齐工厂根 config/privacy_policy.yaml（配置层复用，§19）。
+# 本项目 venv 与工厂 _infra 隔离，代码层由 server/app/privacy/adapter.py 独立实现轻量脱敏。
+
+# 出站策略
+redact_on_outbound: true        # 云端出站前强制脱敏（PII → 占位）
+allow_cloud_egress: false        # dev 默认禁止云端出站（仅本地模型）；prod 经审批可开
+canary_prefix: "CNRY"            # canary token 前缀（脱敏文本植入，泄露检测）
+
+# PII 类型 → 占位（与工厂 privacy_gateway PIIType 对齐）
+pii_placeholders:
+  phone: "PHONE"
+  id_card: "IDCARD"
+  email: "EMAIL"
+  name: "NAME"
+  address: "ADDR"
+
+# 媒体出站阻断（PRD §19：视频/图片/音频/原始媒体不得发往云端）
+media_egress_blocked:
+  - jpeg
+  - png
+  - gif
+  - ico
+  - webm
+  - wav
+  - mkv
+  - mp4
+  - mp3
+  - ogg
+  - flac
+
+# 说明：本项目 P0 仅对文本 chat 路径脱敏；vision 路径的图像经 Smart Proxy 本地模型
+# 处理（allow_cloud_egress=false 时不出站），媒体字节本身由 check_media 阻断。

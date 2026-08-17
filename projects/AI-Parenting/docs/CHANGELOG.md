@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.25.0] - 2026-08-17 - APC-T025 Privacy Gateway 适配层与云出站安全测试（PII 脱敏 + canary + 媒体阻断 + ModelClient 接入）
 - [0.24.0] - 2026-08-17 - APC-T024 Model Gateway Smart Proxy 客户端与 Routing Plan（项目内唯一 LLM/VLM 入口）
 - [0.23.0] - 2026-08-17 - APC-T023 Growth Rule Domain 与 WHO 百分位（百分位计算 + 趋势提醒 + 不诊断；Epic E03 规则域全部落地）
 - [0.22.0] - 2026-08-17 - APC-T022 Vaccine Planner Rule Domain（中国 NIP 程序 + 提醒策略 + 已接种/跳过排除）
@@ -39,6 +40,36 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.25.0] - 2026-08-17
+
+### Added — APC-T025 Privacy Gateway 适配层与云出站安全测试
+
+- **`server/app/privacy/adapter.py`**：`PrivacyAdapter` 云端出站前脱敏 + canary + 媒体阻断。
+  - `redact_outbound(text)`：正则识别中国 PII（手机号 `1[3-9]\d{9}`、身份证 18 位、邮箱）→ 占位替换（`[PHONE]`/`[IDCARD]`/`[EMAIL]`）；canary token 植入脱敏文本末尾。数字边界 `(?<!\d)/(?!\d)` 替代 `\b`（对中文友好）。
+  - `check_media(payload)`：媒体魔术字节阻断（jpeg/png/gif/ico/webm/wav/mkv/mp4/mp3/ogg/flac），视频/图片/音频/原始媒体不得发往云端（PRD §19）。
+  - `check_egress_allowed()`：`allow_cloud_egress=False`（dev 默认）→ 拒绝一切云端出站。
+  - `verify_canary(cloud_response, canary)`：云端响应回显 canary → `PrivacyError` 泄露阻断。
+- **`config/privacy_policy.yaml`**：schema 对齐工厂根同名文件（配置层复用，§19）。`redact_on_outbound`/`allow_cloud_egress=false`/`canary_prefix`/`pii_placeholders`/`media_egress_blocked`。
+- **`server/app/model_gateway/client.py`**：`SmartProxyModelClient` 接入 `PrivacyAdapter`（可选注入）。`chat` 出站前 `_redact_messages` 脱敏 messages 文本（str content 与 list text block）+ canary；`vision` `check_media` 媒体阻断；`_post` 后 `verify_canary` 泄露检测。未注入 privacy 向后兼容（T024 行为不变）。
+
+### Tests — APC-T025
+
+- `server/tests/security/test_privacy_adapter.py`（21）：PII 脱敏（手机/身份证/邮箱/多 PII/无 PII/canary 生成/禁用脱敏）、canary 泄露阻断/无泄露通过、媒体阻断（4 类型参数化/空媒体/文本通过）、出站策略（禁/允）、ModelClient 接入（chat 脱敏 PII 不出站/canary 泄露阻断/vision 媒体阻断/无 privacy 向后兼容）。
+- 全量 572 passed（T024 后 551，新增 21）；ruff/mypy 干净。
+
+### Security — APC-T025
+
+- 云端出站前强制脱敏：手机号/身份证/邮箱 PII → 占位，原始 PII 不出站（APC-T025 验收）。
+- canary 泄露检测：脱敏文本植入 canary token，云端响应回显即阻断（PRD §19）。
+- 媒体出站阻断：视频/图片/音频/原始媒体字节不得发往云端（PRD §19）。
+- 出站策略：`allow_cloud_egress=False`（dev 默认）拒绝一切云端出站，仅本地模型。
+
+### Design Decision — APC-T025（需用户知晓）
+
+本项目 venv 与工厂 `_infra` 隔离（无法 `import _infra.network.privacy_gateway`，工厂依赖 Presidio/spaCy 本项目未装），故 `PrivacyAdapter` 代码层独立实现轻量脱敏（正则），**配置层 `config/privacy_policy.yaml` 对齐工厂同名文件 schema**（配置复用，§19）。未来工厂依赖就绪可切换到工厂 `PrivacyGateway` 实现（接口对齐）。这符合"不复制工厂 privacy 实现"的精神——复用工厂的配置 schema 与脱敏策略，而非复制其 Presidio/spaCy 管道代码。
 
 ---
 
