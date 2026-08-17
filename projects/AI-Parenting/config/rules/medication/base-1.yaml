@@ -1,0 +1,65 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-17 00:00:00
+#
+# 用药规则包（APC-T020）：药物参数表（占位，待医生确认）。
+# 依据：FINAL_PRD §11.11.2/§11.11.3/§11.11.4；ARCHITECTURE_FINAL §10.2；ENGINEERING_DESIGN §7.4。
+#
+# ⚠️ 安全关键：mg_per_kg / max_24h_mg_per_kg / max_single_dose_mg 当前为占位 0，
+#    MedicationRuleModule 见到 0 即 block（params_pending），不出剂量。
+#    真实数值须由医生/药师确认后填入，经 /api/v1/rules 上传新版本激活（§13.2）。
+#    系统不凭空编造医疗数值（PRD §11.11.1：具体剂量需医生/药师确认）。
+#
+# 每条 rule = 一个药物：
+#   conditions: [{op: eq, field: variables.drug, value: <drug>}]  # 匹配药物名
+#   action.outputs: 药物参数
+#     mg_per_kg          —— 单次 mg/kg（占位 0，待医生确认）
+#     min_age_months     —— 最小月龄（低于则 block，除非 doctor_override）
+#     interval_hours     —— 最小给药间隔（小时）
+#     max_24h_mg_per_kg  —— 24h 上限 mg/kg（占位 0，待医生确认）
+#     max_single_dose_mg —— 单次最大 mg（0 表示不设上限）
+
+policy_type: medication
+region: CN
+version: 1
+effective_from: 2026-08-17T00:00:00+08:00
+source: "占位参数（待医生/药师确认，PRD §11.11.1）"
+rule_text: |
+  用药安全规则（PRD §11.11）：
+  - 未知体重不出剂量；未知浓度不出 ml；体重过旧要求更新。
+  - 布洛芬 <6 月龄默认锁定（仅 doctor_override 模式 allow）。
+  - 接近 24h 上限阻止重复给药。
+  - 药物 mg/kg 参数待医生确认，占位 0 时 block 不出剂量。
+display_text: |
+  用药安全校验：体重/浓度/月龄/间隔/24h 上限。药物剂量参数待医生确认后填入。
+rules:
+  - rule_id: ibuprofen_params
+    conditions:
+      - op: eq
+        field: variables.drug
+        value: ibuprofen
+    action:
+      verdict: info
+      outputs:
+        mg_per_kg: 0
+        min_age_months: 6
+        interval_hours: 6
+        max_24h_mg_per_kg: 0
+        max_single_dose_mg: 0
+      reason_code: ibuprofen_params
+      evidence_text: "布洛芬参数（占位待医生确认，PRD §11.11.4：<6月龄默认锁定）"
+
+  - rule_id: acetaminophen_params
+    conditions:
+      - op: eq
+        field: variables.drug
+        value: acetaminophen
+    action:
+      verdict: info
+      outputs:
+        mg_per_kg: 0
+        min_age_months: 2
+        interval_hours: 4
+        max_24h_mg_per_kg: 0
+        max_single_dose_mg: 0
+      reason_code: acetaminophen_params
+      evidence_text: "对乙酰氨基酚参数（占位待医生确认）"

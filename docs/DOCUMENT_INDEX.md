@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 16:38:19
+创建时间（北京时间）：2026-08-17 09:00:05
 -->
 
 # Document Index（自动生成）
@@ -93,6 +93,7 @@
 | `diagnostics/local_runtime_benchmark/20260626_164855/report.md` | diagnostic-output | runtime-artifact |
 | `diagnostics/local_runtime_benchmark/20260626_181952/report.md` | diagnostic-output | runtime-artifact |
 | `docker/README.md` | root-doc | reference |
+| `docs/429_REMEDIATION_2026-08-04.md` | supporting-doc | reference |
 | `docs/AGENT_HANDOFF_SUMMARY.md` | supporting-doc | reference |
 | `docs/CHANGELOG.md` | SSOT | current |
 | `docs/DECISIONS.md` | supporting-doc | reference |
@@ -100,6 +101,7 @@
 | `docs/DEV_LOG.md` | SSOT | current |
 | `docs/DOCUMENT_GOVERNANCE_AUTOMATION_PLAN.md` | governance | current |
 | `docs/DOCUMENT_INDEX.md` | governance | current |
+| `docs/ENV_CONFIG_GUIDE.md` | supporting-doc | reference |
 | `docs/GOVERNANCE_CHECK_2026-06-16.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-06-17.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-06-25.md` | governance | current |
@@ -107,8 +109,10 @@
 | `docs/GOVERNANCE_CHECK_2026-07-01.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-07-07.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_2026-07-08.md` | governance | current |
+| `docs/GOVERNANCE_CHECK_2026-08-17.md` | governance | current |
 | `docs/GOVERNANCE_CHECK_LATEST.md` | governance | current |
 | `docs/LOCAL_MODEL_RUNTIME_TUNING.md` | supporting-doc | reference |
+| `docs/NIM_PROXY_RUNBOOK.md` | supporting-doc | reference |
 | `docs/PROJECT_STATE.md` | SSOT | current |
 | `docs/RETRO.md` | supporting-doc | reference |
 | `docs/SEARCH_ENGINE_RISK_CONTROL_REPORT.md` | supporting-doc | reference |
@@ -136,11 +140,45 @@
 | `profiles/README.md` | root-doc | reference |
 | `profiles/ai-private-github/README.md` | root-doc | reference |
 | `profiles/ai-public/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/android/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/android/src/native_modules/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/config/rules/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/ADR/ADR-001-project-bootstrap.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/ARCHITECTURE_COMPLIANCE_AUDIT.md` | root-doc | reference |
 | `projects/AI-Parenting-Copilot/docs/ARCHITECTURE_FINAL.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/BACKUP_RESTORE_RUNBOOK.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/CHANGELOG.md` | log | current |
+| `projects/AI-Parenting-Copilot/docs/DEV_LOG.md` | log | current |
 | `projects/AI-Parenting-Copilot/docs/ENGINEERING_DESIGN.md` | root-doc | reference |
 | `projects/AI-Parenting-Copilot/docs/FINAL_PRD.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/HANDOFF.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/IMPLEMENTATION_GAP_REPORT.md` | root-doc | reference |
 | `projects/AI-Parenting-Copilot/docs/PROJECT_DOSSIER_V5.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/PROJECT_STATE.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/RELEASE_CHECKLIST_P0.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/RELEASE_READINESS_REPORT.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/RUNBOOK_BACKUP_RESTORE.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/RUNBOOK_DEPLOYMENT.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/docs/RUNBOOK_LOCAL_API.md` | root-doc | reference |
 | `projects/AI-Parenting-Copilot/docs/TASK_BACKLOG.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/firmware/esp32c6/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/runtime/exports/01KZ412D2RDK5BXG1BQBHSNPMY.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/runtime/exports/01KZ41VRDJEP2RSPDNWPFRJ25P.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/server/migrations/README.md` | root-doc | reference |
+| `projects/AI-Parenting-Copilot/tests/e2e/test_mvp_feeding_roundtrip.md` | root-doc | reference |
+| `projects/AI-Parenting/.claude/CLAUDE.md` | root-doc | reference |
+| `projects/AI-Parenting/README.md` | root-doc | reference |
+| `projects/AI-Parenting/config/rules/README.md` | root-doc | reference |
+| `projects/AI-Parenting/docs/ADR/ADR-001-project-bootstrap.md` | root-doc | reference |
+| `projects/AI-Parenting/docs/ARCHITECTURE_FINAL.md` | root-doc | reference |
+| `projects/AI-Parenting/docs/CHANGELOG.md` | log | current |
+| `projects/AI-Parenting/docs/DEV_LOG.md` | log | current |
+| `projects/AI-Parenting/docs/ENGINEERING_DESIGN.md` | root-doc | reference |
+| `projects/AI-Parenting/docs/FINAL_PRD.md` | root-doc | reference |
+| `projects/AI-Parenting/docs/HANDOFF.md` | root-doc | reference |
+| `projects/AI-Parenting/docs/PROJECT_STATE.md` | root-doc | reference |
+| `projects/AI-Parenting/docs/TASK_BACKLOG.md` | root-doc | reference |
 | `projects/_TEMPLATE/.claude/CLAUDE.md` | root-doc | reference |
 | `projects/_TEMPLATE/.claude/agents/coder.md` | root-doc | reference |
 | `projects/_TEMPLATE/.claude/agents/reviewer.md` | root-doc | reference |

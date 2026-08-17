@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode - Execution Lead Engineer
-创建时间（北京时间）：2026-07-08 16:38:19
+创建时间（北京时间）：2026-08-17 09:00:05
 -->
 
 # Agent Handoff Summary（自动生成）
@@ -26,17 +26,17 @@
 
 ## 3. 最新提交
 
-- `14c84ac docs(factory): add current asset dossier V5`
-- `7d227f9 docs(factory): refresh manual and full demo for FEOS MVP`
-- `ae43ea4 fix(FEOS): keep clipboard export evidence collection minimal`
-- `6bfff5a fix(scripts): preserve executable bits after FEOS workflow update`
-- `7e0b9e5 feat(FEOS-048-056): add observability e2e workflows and governance entrypoints`
+- `946f00c feat(t019): 规则 Admin API（validate/upload/activate/list + audit）`
+- `1c7ce18 feat(t018): Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo`
+- `b148cb3 fix(infra): retry diagnostic restart on stale listener`
+- `63e8b1d fix(infra): include non-retryable statuses in auto continue`
+- `06bc911 fix(infra): add upstream combined token guard`
 
 ## 4. 治理健康
 
-- Blockers: 3
-- Warnings: 4
-- Changed files: 23
+- Blockers: 1
+- Warnings: 3
+- Changed files: 11
 - 最新完整报告：`docs/GOVERNANCE_CHECK_LATEST.md`
 
 ## 5. 当前自动化命令

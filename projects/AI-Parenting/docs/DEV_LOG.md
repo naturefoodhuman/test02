@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-17 · Round 21 · APC-T020 MedicationRuleModule 完成（用药校验链路 9 步 + 占位参数包 + 12 unit + golden + main 启动期注册，Rule Engine 首个域落地）
 - 2026-08-17 · Round 20 · APC-T019 规则 Admin API 完成（/api/v1/rules validate/upload/activate/list + RulesContext 共享 session + audit 留痕 + 14 integration，规则治理闭环可用）
 - 2026-08-17 · Round 19 · APC-T018 Rule Engine Kernel/Loader/Registry/EvidencePolicy Repo 完成（domain models + 纯函数求值 kernel + 注册表 + YAML 加载器 + EvidencePolicy 仓储版本化+缓存失效 + 示例规则包 + DI 装配 + 45 unit/golden + 6 integration，进入 Epic E03）
 - 2026-08-16 · Round 18 · APC-T017 Event→Normalization→State 集成链路打通（worker state_recompute 回调 + main 装配 + 3 端到端集成测试，Epic E02 全部完成）
@@ -32,6 +33,44 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 21 · 2026-08-17 · APC-T020 MedicationRuleModule（用药校验链路 + 占位参数包 + 注册）
+
+**Task ID**: APC-T020（用药规则域 RuleModule：校验链路 + 占位参数 + golden + 注册）
+
+**What changed**
+- `server/app/rule_engine/domains/medication.py`：新增 `MedicationRuleModule`（`domain="medication"`），实现 `RuleModule` Protocol。药物参数表从规则包 YAML 的 `rules[].action.outputs` 读取（每条 rule=一个药物，`conditions` 匹配 `variables.drug`），构造期缓存到 `self._params`。`evaluate` 跑 PRD §11.11.3 校验链路 9 步：选药 → 校验月龄 → 校验体重时效 → 确认浓度 → 检查禁忌 → 计算 mg → 换算 ml → 检查间隔 → 检查 24h 上限。任一硬拦截 → `block`/`warn`，`dose_mg`/`dose_ml` 只在 `allow` 时产出（架构 §10.2：只有 RuleModule 可产出剂量）。
+- `server/config/rules/medication/base-1.yaml`：新增用药规则包 v1（占位参数 `mg_per_kg=0`，`source=TODO`）。占位参数在 `evaluate` 命中 `params_pending` block（待医生确认，安全关键不凭空计算，§0.5）。布洛芬/对乙酰氨基酚两个药物条目，参数全为占位（`min_age_months`/`interval_hours`/`max_24h_mg_per_kg`/`max_single_dose_mg`/`concentration_mg_ml` 均为 0 或占位）。
+- `server/app/main.py`：新增 `_register_rule_modules(container)`，lifespan startup 阶段加载 `config/rules/**` → 构造各域 `RuleModule` → 注册到 `RuleRegistry`（运行期只读）。当前注册 medication（APC-T020）；triage/vaccine/growth/thresholds 在 T021~T023 接入。规则包加载失败不阻断启动（该域 evaluate 时抛 KeyError，调用方处理；架构 §13.5 插件化）。
+- `server/tests/unit/rule_engine/domains/test_medication.py`：新增 12 个 unit 测试，用测试专用 RulePack（真实参数 `mg_per_kg=10` 等）覆盖校验链路各分支：未知体重 block / 体重过旧 warn / 体重新鲜放行 / 月龄禁忌 block / doctor_override warn / 满月龄放行 / 占位参数 block / 未知浓度 block（dose_mg 已出但不出 ml）/ 给药间隔 block / 间隔达标放行 / 24h 上限 block / 24h 余量放行。不依赖 DB（纯内存求值）。
+- `server/tests/golden/rules/test_medication_rules.py`：新增 golden 测试，覆盖占位参数包的生产行为（`params_pending` block）+ 未知体重/未知浓度等关键安全分支，固化"占位参数不出剂量"的安全契约。
+
+**Why**
+- APC-T020 要求 Rule Engine 首个域（medication）落地，打通"规则包 YAML → RuleModule → RuleRegistry → evaluate"全链路，为 T021~T023 其他域提供模板。
+- 用药是安全关键场景（PRD §11.11.4 硬性限制），必须由 Rule Engine 独占剂量裁决（架构 §10.2），LLM/copilots 不得计算。占位参数包确保在医生确认真实数值前系统宁可 block 也不凭空出剂量（§0.5 安全关键不凭空计算）。
+- `doctor_override` 模式（<6 月龄布洛芬）allow 但 warn 标注，体现"医生可覆盖但留痕"的医疗安全设计。
+
+**Files touched**
+- `server/app/rule_engine/domains/medication.py`（新增）
+- `server/config/rules/medication/base-1.yaml`（新增）
+- `server/app/main.py`（修改：新增 `_register_rule_modules` + lifespan 调用）
+- `server/tests/unit/rule_engine/domains/test_medication.py`（新增）
+- `server/tests/golden/rules/test_medication_rules.py`（新增）
+- `docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`docs/TASK_BACKLOG.md`（同步）
+
+**Tests run**
+- `make test`：全量通过（unit + integration + golden）。medication unit 12 个全绿；golden 占位包行为固化。
+- `make lint` / `make typecheck`：clean。
+
+**Known limitations**
+- 药物参数为占位（`mg_per_kg=0` 等，`source=TODO`），生产行为是 `params_pending` block。待医生确认真实数值后通过 T019 Admin API 上传新版本（version 递增）激活，即可放行 allow 分支。unit 测试用真实参数包验证计算逻辑（allow/间隔/24h/浓度），与生产行为分离。
+- 当前只注册 medication 域；triage/vaccine/growth/thresholds 在 T021~T023 接入，未注册时该域 evaluate 抛 KeyError（调用方处理）。
+- 校验链路中 `now` 取 `ctx.now`，若未提供且 `last_dose_at` 带 tzinfo 则 fallback `datetime.now(tz=last_dose_at.tzinfo)`；生产路径由调用方注入 `ctx.now`（与 clock 同源）。
+
+**Next step**
+- APC-T021：triage 域 RuleModule（分诊规则：体温/呼吸/精神状态 → red/orange/yellow/green，覆盖 PRD §11.x 分诊流程）。复用 T020 的注册模式（`_register_rule_modules` 加 triage 分支 + `config/rules/triage/base-1.yaml`）。
 
 ---
 
