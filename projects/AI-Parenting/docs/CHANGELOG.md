@@ -45,7 +45,7 @@
 - **`server/app/rule_engine/domains/medication.py`**：`MedicationRuleModule`（`domain="medication"`），实现 `RuleModule` Protocol。药物参数表从规则包 YAML `rules[].action.outputs` 读取（每条 rule=一个药物）。`evaluate` 跑 PRD §11.11.3 校验链路 9 步：选药 → 月龄 → 体重时效 → 浓度 → 禁忌 → mg → ml → 间隔 → 24h 上限。`dose_mg`/`dose_ml` 只在 allow 时产出（架构 §10.2：只有 RuleModule 可产出剂量）。
 - **`server/config/rules/medication/base-1.yaml`**：用药规则包 v1（占位参数 `mg_per_kg=0`，`source=TODO`）。占位参数命中 `params_pending` block（待医生确认，安全关键不凭空计算，§0.5）。
 - **`server/app/main.py`**：`_register_rule_modules(container)`，lifespan startup 加载 `config/rules/**` → 构造各域 RuleModule → 注册到 RuleRegistry（运行期只读）。当前注册 medication；triage/vaccine/growth/thresholds 在 T021~T023 接入。
-- 测试：12 unit（校验链路各分支）+ golden（占位包生产行为固化）。
+- 测试：12 unit（校验链路各分支）+ golden（占位包生产行为固化）。测试目录包标记 `__init__.py`（`tests/golden/rules/`、`tests/unit/rule_engine/domains/`）。
 
 ### Behavior
 
