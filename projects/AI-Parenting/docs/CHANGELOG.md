@@ -13,6 +13,7 @@
 
 ## Latest Index
 
+- [0.22.0] - 2026-08-17 - APC-T022 Vaccine Planner Rule Domain（中国 NIP 程序 + 提醒策略 + 已接种/跳过排除）
 - [0.21.0] - 2026-08-17 - APC-T021 Triage 与 Alert Threshold Rule Domain（分诊红线 + 危险信号 + 趋势双条件 + mmWave 约束）
 - [0.20.0] - 2026-08-17 - APC-T020 MedicationRuleModule（用药校验链路 + 占位参数包 + 启动期注册）
 - [0.19.0] - 2026-08-17 - APC-T019 规则 Admin API（validate/upload/activate/list + audit，规则治理闭环）
@@ -36,6 +37,33 @@
 - [0.2.1] - 2026-08-10 - APC-T002 修订：异常类名对齐 ENGINEERING_DESIGN §9.1
 - [0.2.0] - 2026-08-10 - APC-T002 FastAPI 应用壳与公共基础类型
 - [0.1.0] - 2026-08-02 - APC-T001 项目骨架初始化
+
+---
+
+## [0.22.0] - 2026-08-17
+
+### Added — APC-T022 Vaccine Planner Rule Domain
+
+- **`server/app/rule_engine/domains/vaccine.py`**：`VaccineRuleModule`（`domain="vaccine"`），实现 `RuleModule` Protocol。规则包 YAML 定义国家免疫规划程序（`schedule`：每条 rule=一个疫苗剂次，`conditions` 匹配 `variables.vaccine` 剂次标识 `"name:dose"`，`outputs` 存 `recommended_age_days`/`dose`/`is_nip`）。`evaluate` 输入 `baby_age_days` + `variables.vaccine_records`（已接种/跳过，支持 list[dict] 与 dict 两种形式）+ `vaccine_region`，输出每个待办疫苗的 `due_date`/`status`/`alert_level`/`days_offset`。
+- **提醒策略**（PRD §11.12）：提前 14 天 `upcoming`（可预约）/ 提前 3 天 `due_soon`（准备）/ 当天 `due`（接种）/ 逾期 3 天 `overdue` 蓝色 / 逾期 14 天 `overdue` 黄色 / 远期 `planned` 无提醒。
+- **疫苗状态**（§5.4）：已 `completed`/`skipped` 的剂次排除出待办；`delayed` 仍保留待办（未完成）。
+- **剂次标识拆分**：`"name:dose"` → `vaccine=name` + `dose=N`，与 `vaccine_records` 的 `(vaccine, dose)` 元组对齐。
+- **region 优先级**：`variables.vaccine_region` 优先（baby.vaccine_region 权威，调用方注入），`ctx.region` 兜底，默认 CN（PRD §11.12）。
+- **`config/rules/vaccine/cn-nip-2024.yaml`**：中国国家免疫规划程序 P0 简化版（13 剂次：乙肝 3 剂/卡介苗 1 剂/脊灰 3 剂/百白破 4 剂/麻腮风 2 剂）。完整程序经 `/api/v1/rules` 上传新版本激活（§13.2）。
+- **`server/app/main.py`**：`_register_rule_modules` 注册 vaccine 域（`config/rules/vaccine/cn-nip-2024.yaml`）。
+- **`server/app/rule_engine/domains/__init__.py`**：导出 `VaccineRuleModule`。
+
+### Tests — APC-T022
+
+- `server/tests/golden/rules/test_vaccine_rules.py`（7）：新生儿当天 due / 14 天 upcoming / 3 天 due_soon / 逾期 3 天蓝 / 逾期 15 天黄 / 已 completed+skipped 排除 / 远期 planned。
+- `server/tests/unit/rule_engine/domains/test_vaccine.py`（14）：到期/逾期/已接种排除/跳过排除/delayed 保留/dict 形式 records/排序/region variables 优先/region ctx 兜底/自费 is_nip 标记/evidence policy_version。
+- 全量 508 passed（T021 后 487，新增 21）；`make rules-validate` 4 包 OK；ruff/mypy 干净。
+
+### Notes — APC-T022
+
+- 早产/低体重儿接种：PRD §11.12 要求保留胎龄和早产标记（baby 模型已有 `gestational_age_weeks`/`is_preterm`），稳定早产儿按实际月龄接种——本 P0 版本按实际天龄计算（`baby_age_days`），早产调整策略（`preterm_policy`）留待 V1 规则包配置。
+- 自费疫苗（`is_nip=False`）仍产出待办，标记区分；自费与国家免疫规划衔接规则可配置（PRD §11.12 已知要求）。
+- 疫苗待办 `verdict=info`（reminder，不阻断），alert_level 供 Notification Orchestrator（T033）消费。
 
 ---
 

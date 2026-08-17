@@ -12,6 +12,7 @@
 
 ## Latest Index
 
+- 2026-08-17 · Round 23 · APC-T022 Vaccine Planner Rule Domain 完成（VaccineRuleModule 中国 NIP 程序 + 提醒策略 5 级 + 已接种/跳过排除 + 剂次标识拆分 + region 优先 + cn-nip-2024.yaml 13 剂次 + 21 测试 + main 注册）
 - 2026-08-17 · Round 22 · APC-T021 Triage 与 Alert Threshold Rule Domain 完成（TriageRuleModule 体温阈值+危险信号升级+mmWave 降级+就医建议 + ThresholdRuleModule 趋势双条件+单点不触发 + 规则包 + 29 测试 + main 注册，安全规则先于业务接入）
 - 2026-08-17 · Round 21 · APC-T020 MedicationRuleModule 完成（用药校验链路 9 步 + 占位参数包 + 12 unit + golden + main 启动期注册，Rule Engine 首个域落地）
 - 2026-08-17 · Round 20 · APC-T019 规则 Admin API 完成（/api/v1/rules validate/upload/activate/list + RulesContext 共享 session + audit 留痕 + 14 integration，规则治理闭环可用）
@@ -34,6 +35,52 @@
 - 2026-08-10 · Round 03 · APC-T003 本地基础设施 Docker Compose 与 Alembic 初始化完成
 - 2026-08-10 · Round 02 · APC-T002 FastAPI 应用壳与公共基础类型完成（含 §9.1 异常类名对齐修订）
 - 2026-08-02 · Round 01 · APC-T001 项目骨架初始化完成
+
+---
+
+## Round 23 · 2026-08-17 · APC-T022 Vaccine Planner Rule Domain（中国 NIP 程序 + 提醒策略 + 已接种排除）
+
+**Task ID**: APC-T022（疫苗规划规则域 RuleModule：国家免疫规划程序 + 提醒策略 + golden/unit + 注册）
+
+**What changed**
+- `server/app/rule_engine/domains/vaccine.py`：新增 `VaccineRuleModule`（`domain="vaccine"`），实现 `RuleModule` Protocol。规则包 YAML 定义国家免疫规划程序（`schedule`：每条 rule=一个疫苗剂次，`conditions` 匹配 `variables.vaccine` 剂次标识 `"name:dose"`，`outputs` 存 `recommended_age_days`/`dose`/`is_nip`）。`evaluate` 输入 `baby_age_days` + `variables.vaccine_records`（已接种/跳过，支持 list[dict] 与 dict 两种形式）+ `vaccine_region`，输出每个待办疫苗的 `due_date`/`status`/`alert_level`/`days_offset`，按 `days_offset` 升序排序（最紧迫在前）。
+- 提醒策略（PRD §11.12）：提前 14 天 `upcoming`（可预约）/ 提前 3 天 `due_soon`（准备）/ 当天 `due`（接种）/ 逾期 3 天 `overdue` 蓝色 / 逾期 14 天 `overdue` 黄色 / 远期 `planned` 无提醒。疫苗状态（§5.4）：已 `completed`/`skipped` 排除；`delayed` 仍待办。
+- 剂次标识拆分：`_split_identifier("name:dose")` → `(vaccine_name, dose)`，与 `vaccine_records` 的 `(vaccine, dose)` 元组对齐。region 优先级：`variables.vaccine_region` 优先（baby.vaccine_region 权威），`ctx.region` 兜底，默认 CN。
+- `config/rules/vaccine/cn-nip-2024.yaml`：新增中国国家免疫规划程序 P0 简化版（13 剂次：乙肝 3 剂 0/30/180 天、卡介苗 1 剂 0 天、脊灰 3 剂 60/90/120 天、百白破 4 剂 90/120/150/540 天、麻腮风 2 剂 240/540 天）。完整程序经 `/api/v1/rules` 上传新版本激活（§13.2）。
+- `server/app/main.py`：`_register_rule_modules` 注册 vaccine 域。
+- `server/app/rule_engine/domains/__init__.py`：导出 `VaccineRuleModule`。
+- `server/tests/golden/rules/test_vaccine_rules.py`：7 golden（新生儿当天 due / 14 天 upcoming / 3 天 due_soon / 逾期 3 天蓝 / 逾期 15 天黄 / 已 completed+skipped 排除 / 远期 planned）。
+- `server/tests/unit/rule_engine/domains/test_vaccine.py`：14 unit（到期/逾期/已接种排除/跳过排除/delayed 保留/dict 形式 records/排序/region variables 优先/region ctx 兜底/自费 is_nip 标记/evidence policy_version）。
+
+**Why**
+- APC-T022 要求疫苗规则域落地，为中国国家免疫规划程序提供版本化、可更新的规则库（PRD §11.12：百白破等程序变更通过规则库更新）。疫苗待办是 Scheduler（T036 晨报/疫苗到期）和 Vaccine Planner Copilot（T030）的输入源。
+- 提醒策略 5 级（提前 14/3 天、当天、逾期 3/14 天）对应 PRD §11.12 的蓝/黄色提醒分级，alert_level 供 Notification Orchestrator（T033）消费。
+- 剂次标识 `"name:dose"` 拆分使 `vaccine` 字段与 `vaccine_records` 元组对齐，避免调用方拼接/拆分字符串的歧义。
+- region 优先级 `variables > ctx > CN` 体现 baby.vaccine_region 是权威来源（调用方从 baby 档案注入），ctx.region 仅作规则包默认区域兜底。
+- 已 completed/skipped 排除、delayed 保留——区分"已完成/主动跳过"与"延迟未接种"，后者仍需提醒补种。
+
+**Files touched**
+- `server/app/rule_engine/domains/vaccine.py`（新增）
+- `server/app/rule_engine/domains/__init__.py`（修改：导出 VaccineRuleModule）
+- `config/rules/vaccine/cn-nip-2024.yaml`（新增）
+- `server/app/main.py`（修改：注册 vaccine 域）
+- `server/tests/golden/rules/test_vaccine_rules.py`（新增）
+- `server/tests/unit/rule_engine/domains/test_vaccine.py`（新增）
+- `docs/DEV_LOG.md`、`docs/CHANGELOG.md`、`docs/PROJECT_STATE.md`、`docs/TASK_BACKLOG.md`（同步）
+
+**Tests run**
+- `make rules-validate`：4 包 OK（medication/triage/thresholds/vaccine）。
+- `make lint`：ruff check + format --check 干净。
+- `make typecheck`：mypy 185 文件 0 错误。
+- `make test` + golden：508 passed（T021 后 487，新增 21）。
+
+**Known limitations**
+- 早产/低体重儿接种：PRD §11.12 要求保留胎龄和早产标记（baby 模型已有 `gestational_age_weeks`/`is_preterm`），稳定早产儿按实际月龄接种——本 P0 版本按实际天龄计算（`baby_age_days`），早产调整策略（`preterm_policy`）留待 V1 规则包配置。
+- 本规则包为 P0 简化版（13 剂次主要疫苗），完整国家免疫规划程序（含 A 群流脑、乙脑、甲肝等）需经 `/api/v1/rules` 上传新版本激活。
+- 自费疫苗（`is_nip=False`）已支持标记，但自费与国家免疫规划衔接规则（PRD §11.12 已知要求）留待 V1 配置。
+
+**Next step**
+- APC-T023 Growth Rule Domain 与 WHO 百分位（WHO 0-5 岁百分位计算 + 趋势提醒 + who-0-5.yaml + golden）。
 
 ---
 

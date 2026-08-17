@@ -15,9 +15,11 @@
 from .medication import MedicationRuleModule
 from .thresholds import ThresholdRuleModule
 from .triage import TriageRuleModule
+from .vaccine import VaccineRuleModule
 
 __all__ = [
     "MedicationRuleModule",
     "ThresholdRuleModule",
     "TriageRuleModule",
+    "VaccineRuleModule",
 ]

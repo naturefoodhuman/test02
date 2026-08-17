@@ -1,0 +1,220 @@
+# 创建/修改该文件的LLM大模型：Claude Opus 4.8
+# 创建时间（北京时间）：2026-08-17 00:00:00
+#
+# 疫苗规则包（APC-T022）：中国国家免疫规划程序（NIP）2024 P0 版本。
+# 依据：FINAL_PRD §11.12（中国国家免疫规划 + 自费疫苗衔接，版本化，支持未来更新）；
+#       ARCHITECTURE_FINAL §10.2、§5.4（疫苗状态 planned/completed/delayed/skipped）。
+#
+# ⚠️ 本包为 P0 简化版（主要剂次），完整国家免疫规划程序需经 /api/v1/rules 上传新版本
+#    激活（§13.2）。百白破等程序变更通过规则库更新（PRD §11.12 已知要求）。
+#    稳定早产/低体重儿按实际月龄接种（PRD §11.12），胎龄和早产标记在宝宝档案保留。
+#
+# 每条 rule = 一个疫苗剂次：
+#   conditions: [{op: eq, field: variables.vaccine, value: <vaccine:dose>}]  # 剂次标识
+#   action.outputs: 剂次参数
+#     recommended_age_days —— 推荐接种天龄（出生后天数）
+#     dose                 —— 剂次序号
+#     is_nip                —— 是否国家免疫规划（true）/ 自费（false）
+#
+# 输入（variables）：
+#   vaccine_records —— 已接种/跳过记录（list[dict] 或 dict，见 vaccine.py _collect_records）
+#   vaccine_region   —— 接种地区（默认 CN，与 baby.vaccine_region 对齐）
+
+policy_type: vaccine
+region: CN
+version: 1
+effective_from: 2024-01-01T00:00:00+08:00
+source: "中国国家免疫规划程序 2024 P0 简化版（PRD §11.12）"
+rule_text: |
+  中国国家免疫规划程序（P0 简化版，PRD §11.12）：
+  - 乙肝疫苗：出生 / 1 月 / 6 月（第 1/2/3 剂）。
+  - 卡介苗：出生（1 剂）。
+  - 脊灰疫苗：2 月 / 3 月 / 4 月（第 1/2/3 剂）。
+  - 百白破疫苗：3 月 / 4 月 / 5 月 / 18 月（第 1/2/3/4 剂）。
+  - 麻腮风疫苗：8 月 / 18 月（第 1/2 剂）。
+  提醒策略：提前14天可预约 / 提前3天准备 / 当天接种 / 逾期3天蓝 / 逾期14天黄。
+  稳定早产/低体重儿按实际月龄接种；胎龄和早产标记在宝宝档案保留。
+display_text: |
+  中国国家免疫规划程序（P0）：乙肝/卡介苗/脊灰/百白破/麻腮风。提醒按到期日分级。
+rules:
+  - rule_id: hepb_dose1
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: hepb:1
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 0
+        dose: 1
+        is_nip: true
+      reason_code: hepb_dose1
+      evidence_text: "乙肝疫苗第 1 剂：出生后 24h 内（国家免疫规划）"
+
+  - rule_id: hepb_dose2
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: hepb:2
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 30
+        dose: 2
+        is_nip: true
+      reason_code: hepb_dose2
+      evidence_text: "乙肝疫苗第 2 剂：1 月龄（国家免疫规划）"
+
+  - rule_id: hepb_dose3
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: hepb:3
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 180
+        dose: 3
+        is_nip: true
+      reason_code: hepb_dose3
+      evidence_text: "乙肝疫苗第 3 剂：6 月龄（国家免疫规划）"
+
+  - rule_id: bcg_dose1
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: bcg:1
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 0
+        dose: 1
+        is_nip: true
+      reason_code: bcg_dose1
+      evidence_text: "卡介苗：出生后接种（国家免疫规划）"
+
+  - rule_id: polio_dose1
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: polio:1
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 60
+        dose: 1
+        is_nip: true
+      reason_code: polio_dose1
+      evidence_text: "脊灰疫苗第 1 剂：2 月龄（国家免疫规划）"
+
+  - rule_id: polio_dose2
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: polio:2
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 90
+        dose: 2
+        is_nip: true
+      reason_code: polio_dose2
+      evidence_text: "脊灰疫苗第 2 剂：3 月龄（国家免疫规划）"
+
+  - rule_id: polio_dose3
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: polio:3
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 120
+        dose: 3
+        is_nip: true
+      reason_code: polio_dose3
+      evidence_text: "脊灰疫苗第 3 剂：4 月龄（国家免疫规划）"
+
+  - rule_id: dtap_dose1
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: dtap:1
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 90
+        dose: 1
+        is_nip: true
+      reason_code: dtap_dose1
+      evidence_text: "百白破疫苗第 1 剂：3 月龄（国家免疫规划）"
+
+  - rule_id: dtap_dose2
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: dtap:2
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 120
+        dose: 2
+        is_nip: true
+      reason_code: dtap_dose2
+      evidence_text: "百白破疫苗第 2 剂：4 月龄（国家免疫规划）"
+
+  - rule_id: dtap_dose3
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: dtap:3
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 150
+        dose: 3
+        is_nip: true
+      reason_code: dtap_dose3
+      evidence_text: "百白破疫苗第 3 剂：5 月龄（国家免疫规划）"
+
+  - rule_id: dtap_dose4
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: dtap:4
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 540
+        dose: 4
+        is_nip: true
+      reason_code: dtap_dose4
+      evidence_text: "百白破疫苗第 4 剂：18 月龄（国家免疫规划）"
+
+  - rule_id: mmr_dose1
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: mmr:1
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 240
+        dose: 1
+        is_nip: true
+      reason_code: mmr_dose1
+      evidence_text: "麻腮风疫苗第 1 剂：8 月龄（国家免疫规划）"
+
+  - rule_id: mmr_dose2
+    conditions:
+      - op: eq
+        field: variables.vaccine
+        value: mmr:2
+    action:
+      verdict: info
+      outputs:
+        recommended_age_days: 540
+        dose: 2
+        is_nip: true
+      reason_code: mmr_dose2
+      evidence_text: "麻腮风疫苗第 2 剂：18 月龄（国家免疫规划）"
