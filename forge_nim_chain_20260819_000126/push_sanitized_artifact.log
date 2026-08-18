@@ -1,0 +1,15 @@
+$ git worktree add --detach /tmp/forge_diag_push_forge_nim_chain_20260819_000126_64332 HEAD
+exit_code=0
+[stdout]
+HEAD 现在位于 cc54857 feat(t025): Privacy Gateway 适配层与云出站安全测试（PII 脱敏+canary+媒体阻断）
+
+[stderr]
+准备工作区（分离头指针 cc54857）
+
+
+$ git checkout --orphan diagnostics/forge-nim-forge_nim_chain_20260819_000126
+exit_code=0
+[stderr]
+切换到一个新分支 'diagnostics/forge-nim-forge_nim_chain_20260819_000126'
+
+
