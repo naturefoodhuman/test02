@@ -20,6 +20,33 @@
 
 ---
 
+## [第 220 轮] 2026-08-19
+
+### 需求变动
+- **远程等待队列超时**：链路监控显示多个 Smart Proxy active request 长时间 `status=waiting, bytes=0`，而 4010 key 均处于 cooldown，说明请求可能卡在 Smart Proxy remote concurrency / sidecar queue 等待阶段，未触发流式 no-output watchdog。新增 `FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS=900`，包住非流式远程请求的 semaphore 等待与 4010 响应等待。
+- **stale tracker 清理**：新增 `FORGE_TRACKER_STALE_REQUEST_SECONDS=1800`，清理长时间无进展的 tracker 记录并写入 `/tmp/forge_request_events.jsonl` 的 `request_stale_pruned` 事件。
+- **链路监控增强**：`forge_nim_chain_monitor.py` 现在采集 `/tmp/forge_request_events.jsonl` 尾部，并识别 `SMART_STALE_WAITING_REQUESTS` 与 auto-continue/stale-prune 活动。
+
+### 文件影响
+- 修改：`_infra/smart_proxy.py`
+- 修改：`scripts/diagnostics/forge_nim_chain_monitor.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`_infra/network/tests/unit/test_forge_nim_chain_monitor.py`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py _infra/network/tests/unit/test_forge_nim_chain_monitor.py -q
+# 38 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/forge_nim_chain_monitor.py
+make docs-check
+# Blockers: 0; Warnings: 1（model 架构敏感词提示，已复核无需新增 ADR）
+```
+
+---
+
 ## [第 219 轮] 2026-08-16
 
 ### 需求变动

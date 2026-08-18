@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-16 13:30:00
+创建时间（北京时间）：2026-08-19 00:40:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -82,6 +82,8 @@ export FORGE_AUTO_CONTINUE_STATUS_CODES="*"
 export FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT=1
 export FORGE_REQUEST_EVENT_LOG_PATH="/tmp/forge_request_events.jsonl"
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS=900
+FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS=900
+FORGE_TRACKER_STALE_REQUEST_SECONDS=1800
 FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749
 FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS=2048
 FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
@@ -271,11 +273,15 @@ FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS=902752
 FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT=1
 FORGE_REQUEST_EVENT_LOG_PATH="/tmp/forge_request_events.jsonl"
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS=900
+FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS=900
+FORGE_TRACKER_STALE_REQUEST_SECONDS=1800
 FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749
 FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS=2048
 FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
 FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT=0
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS=900
+FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS=900
+FORGE_TRACKER_STALE_REQUEST_SECONDS=1800
 FORGE_UPSTREAM_COMBINED_LIMIT_TOKENS=202749
 FORGE_UPSTREAM_COMBINED_SAFETY_TOKENS=2048
 FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
@@ -292,6 +298,13 @@ FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
 
 限制：如果模型已经向客户端输出了文本或 tool call，Smart Proxy 不会透明重放，避免重复执行工具或打乱 transcript。
 
+
+
+### Smart Proxy remote queue / stale waiting guard
+
+`FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS=900` bounds the whole Smart Proxy remote operation, including time spent waiting for the Smart Proxy remote concurrency semaphore and the 4010 sidecar response. This prevents stale `status=waiting, bytes=0` requests from staying active for tens of minutes when the NVIDIA side is in cooldown.
+
+`FORGE_TRACKER_STALE_REQUEST_SECONDS=1800` is an observability cleanup guard: if a tracked request has emitted no progress for too long, it is pruned from `/_forge/status` and logged to `/tmp/forge_request_events.jsonl` as `request_stale_pruned`.
 
 ### NVIDIA combined token guard
 

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-12 10:20:00
+# 创建时间（北京时间）：2026-08-19 00:40:00
 
 """Tests for FORGE NIM chain monitor classification."""
 
@@ -97,6 +97,32 @@ def test_classify_detects_busy_keys() -> None:
     findings = classify_snapshot(_snapshot(smart, nim))
 
     assert any(item.code == "NIM_KEYS_BUSY" for item in findings)
+
+
+def test_classify_detects_stale_waiting_requests() -> None:
+    smart = {
+        "active_requests": 1,
+        "total_requests": 10,
+        "total_errors": 0,
+        "requests": [
+            {"id": "abc", "status": "waiting", "elapsed_s": 1200, "bytes": 0, "chunks": 0}
+        ],
+        "retry": {"retry_counters": {}},
+        "circuit_breaker": {"state": "closed"},
+    }
+    nim = {"request_count": 10, "retry_count": 0, "settings": {}, "pool": {"keys": []}}
+
+    findings = classify_snapshot(_snapshot(smart, nim))
+
+    assert any(item.code == "SMART_STALE_WAITING_REQUESTS" for item in findings)
+
+
+def test_chain_monitor_collects_request_event_log_tail() -> None:
+    source = Path("scripts/diagnostics/forge_nim_chain_monitor.py").read_text(encoding="utf-8")
+
+    assert "REQUEST_EVENT_LOG" in source
+    assert "request_events_tail.log" in source
+    assert "REQUEST_EVENT_AUTO_CONTINUE_ACTIVITY" in source
 
 
 def test_summarize_samples_computes_deltas() -> None:

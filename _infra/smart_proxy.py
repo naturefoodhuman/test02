@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-16 13:30:00
+# 创建时间（北京时间）：2026-08-19 00:40:00
 # 修改本文件中的配置比如“FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))“ 后
 # 要重启 bash scripts/forge-start.sh 以使新配置生效
 
@@ -183,6 +183,12 @@ FORGE_REQUEST_EVENT_LOG_PATH = os.getenv("FORGE_REQUEST_EVENT_LOG_PATH", "/tmp/f
 FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT = _env_bool("FORGE_REQUEST_EVENT_LOG_INCLUDE_TEXT", False)
 # Smart Proxy -> sidecar/upstream read timeout. Keep aligned with the 15min no-output watchdog.
 FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS = float(os.getenv("FORGE_SMART_PROXY_READ_TIMEOUT_SECONDS", "900"))
+FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS = float(
+    os.getenv("FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS", str(FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS))
+)
+FORGE_TRACKER_STALE_REQUEST_SECONDS = float(
+    os.getenv("FORGE_TRACKER_STALE_REQUEST_SECONDS", str(max(FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS * 2, 1800)))
+)
 # NVIDIA hosted GLM-5.2 currently reports an effective combined input+output
 # ceiling around 202749 tokens. Keep output budget intact; compact input first,
 # then ask the user to start a new session if input still cannot fit.
@@ -421,6 +427,23 @@ class ActiveTracker:
             if req.get("status") in {"done", "error"}
             and now - float(req.get("finished_at", req.get("last", now))) > ttl
         ]
+        active_ttl = max(0.0, FORGE_TRACKER_STALE_REQUEST_SECONDS)
+        if active_ttl > 0:
+            for rid, req in list(self.requests.items()):
+                if req.get("status") in {"done", "error"}:
+                    continue
+                idle = now - float(req.get("last", req.get("start", now)))
+                elapsed = now - float(req.get("start", now))
+                if idle > active_ttl and elapsed > active_ttl:
+                    stale.append(rid)
+                    self.total_errors += 1
+                    _record_request_event(
+                        "request_stale_pruned",
+                        rid,
+                        elapsed_s=round(elapsed, 3),
+                        idle_s=round(idle, 3),
+                        status=req.get("status"),
+                    )
         for rid in stale:
             self.requests.pop(rid, None)
 
@@ -1508,13 +1531,20 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
 
         try:
             port_ctx = _local_port_guard(target_port) if (not is_remote) else _NullContext()
-            # 远程请求受并发信号量约束（NIM 免费档并发 ~5），本地请求不限。
-            if is_remote:
-                async with _remote_concurrency, port_ctx:
-                    resp = await http_client.post(target_url, json=forward_payload, headers=headers)
-            else:
+
+            async def _send_once():
+                # 远程请求受并发信号量约束；wait_for below also bounds time spent
+                # waiting for that semaphore, preventing stale "waiting" trackers.
+                if is_remote:
+                    async with _remote_concurrency, port_ctx:
+                        return await http_client.post(target_url, json=forward_payload, headers=headers)
                 async with port_ctx:
-                    resp = await http_client.post(target_url, json=forward_payload, headers=headers)
+                    return await http_client.post(target_url, json=forward_payload, headers=headers)
+
+            if is_remote and FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS > 0:
+                resp = await asyncio.wait_for(_send_once(), timeout=FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS)
+            else:
+                resp = await _send_once()
 
             if resp.status_code == 200:
                 if is_remote:
@@ -1568,6 +1598,7 @@ async def _forward_with_retries(target_url: str, forward_payload: dict, headers:
                 await asyncio.sleep(wait)
 
         except (
+            asyncio.TimeoutError,
             httpx.TimeoutException,
             httpx.ReadError,
             httpx.ConnectError,
@@ -1721,6 +1752,8 @@ async def forge_status():
             "timeout_wait_seconds": FORGE_AUTO_CONTINUE_TIMEOUT_WAIT_SECONDS,
             "no_output_timeout_seconds": FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS,
             "partial_output_enabled": FORGE_AUTO_CONTINUE_PARTIAL_OUTPUT,
+            "remote_operation_timeout_seconds": FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS,
+            "tracker_stale_request_seconds": FORGE_TRACKER_STALE_REQUEST_SECONDS,
             "context_limit_tokens": FORGE_AUTO_CONTINUE_CONTEXT_LIMIT_TOKENS,
             "status_codes": "*" if FORGE_AUTO_CONTINUE_ALL_STATUS_CODES else sorted(FORGE_AUTO_CONTINUE_STATUS_CODES),
             "counters": dict(_auto_continue_counters),

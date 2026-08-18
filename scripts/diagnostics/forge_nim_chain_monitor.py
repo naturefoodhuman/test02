@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-12 10:20:00
+# 创建时间（北京时间）：2026-08-19 00:40:00
 
 """Monitor and classify the FORGE Smart Proxy -> NIM sidecar -> NVIDIA chain.
 
@@ -44,6 +44,7 @@ NIM_STATS_URL = "http://127.0.0.1:4010/stats"
 NIM_HEALTH_URL = "http://127.0.0.1:4010/healthz"
 SMART_LOG = Path("/tmp/forge_smart_proxy.log")
 NIM_LOG = Path("/tmp/forge_nim_proxy.log")
+REQUEST_EVENT_LOG = Path(os.getenv("FORGE_REQUEST_EVENT_LOG_PATH", "/tmp/forge_request_events.jsonl"))
 
 
 @dataclass(slots=True)
@@ -118,7 +119,7 @@ def total_key_value(keys: list[dict[str, Any]], name: str) -> int:
     return sum(int(key.get(name, 0) or 0) for key in keys)
 
 
-def classify_snapshot(snapshot: ChainSnapshot, smart_log_tail: str = "", nim_log_tail: str = "") -> list[ChainFinding]:
+def classify_snapshot(snapshot: ChainSnapshot, smart_log_tail: str = "", nim_log_tail: str = "", request_events_tail: str = "") -> list[ChainFinding]:
     findings: list[ChainFinding] = []
     smart = snapshot.smart_status if isinstance(snapshot.smart_status, dict) else {}
     nim = snapshot.nim_stats if isinstance(snapshot.nim_stats, dict) else {}
@@ -133,6 +134,28 @@ def classify_snapshot(snapshot: ChainSnapshot, smart_log_tail: str = "", nim_log
     max_attempts = int(settings.get("max_attempts_per_request", 0) or 0)
     read_timeout = float(settings.get("read_timeout_seconds", 0) or 0)
     wall_timeout = float(settings.get("request_wall_timeout_seconds", 0) or 0)
+
+
+    active_items = smart.get("requests") if isinstance(smart.get("requests"), list) else []
+    stale_waiting = [
+        item for item in active_items
+        if isinstance(item, dict)
+        and float(item.get("elapsed_s", 0) or 0) >= 900
+        and int(item.get("bytes", 0) or 0) == 0
+    ]
+    if stale_waiting:
+        findings.append(
+            ChainFinding(
+                level="high",
+                code="SMART_STALE_WAITING_REQUESTS",
+                message="Smart Proxy has long-running waiting requests with no model bytes emitted.",
+                evidence={"requests": stale_waiting[:10]},
+                recommendation=(
+                    "Pull latest code with FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS and tracker stale pruning; "
+                    "restart 4000/4010. These requests are usually queued/non-stream waits, not useful model output."
+                ),
+            )
+        )
 
     if snapshot.smart_health.get("_error") or snapshot.nim_health.get("_error"):
         findings.append(
@@ -279,6 +302,19 @@ def classify_snapshot(snapshot: ChainSnapshot, smart_log_tail: str = "", nim_log
             )
         )
 
+    if request_events_tail:
+        req_counts = count_patterns(request_events_tail)
+        if "request_stale_pruned" in request_events_tail or "no_output" in request_events_tail:
+            findings.append(
+                ChainFinding(
+                    level="medium",
+                    code="REQUEST_EVENT_AUTO_CONTINUE_ACTIVITY",
+                    message="Request event log contains auto-continue/no-output/stale-prune activity.",
+                    evidence={"pattern_counts": req_counts},
+                    recommendation="Inspect /tmp/forge_request_events.jsonl or the artifact request_events_tail.log for per-turn timing.",
+                )
+            )
+
     if smart_total and nim_request_count == 0:
         findings.append(
             ChainFinding(
@@ -362,6 +398,7 @@ def collect_static_context(root: Path, output_dir: Path) -> None:
                 ],
                 cwd=root,
             ),
+            "request_event_log_path": str(REQUEST_EVENT_LOG),
             "pid_files": {
                 "smart": Path("/tmp/forge_smart_proxy.pid").read_text(encoding="utf-8", errors="replace").strip()
                 if Path("/tmp/forge_smart_proxy.pid").exists()
@@ -475,11 +512,13 @@ def main(argv: list[str] | None = None) -> int:
     latest = samples[-1]
     smart_tail = read_tail(SMART_LOG, args.tail_lines)
     nim_tail = read_tail(NIM_LOG, args.tail_lines)
+    request_events_tail = read_tail(REQUEST_EVENT_LOG, args.tail_lines)
     write_text(output_dir / "forge_smart_proxy_tail.log", smart_tail)
     write_text(output_dir / "forge_nim_proxy_tail.log", nim_tail)
-    write_json(output_dir / "log_pattern_counts.json", {"smart": count_patterns(smart_tail), "nim": count_patterns(nim_tail)})
+    write_text(output_dir / "request_events_tail.log", request_events_tail)
+    write_json(output_dir / "log_pattern_counts.json", {"smart": count_patterns(smart_tail), "nim": count_patterns(nim_tail), "request_events": count_patterns(request_events_tail)})
 
-    findings = classify_snapshot(latest, smart_tail, nim_tail)
+    findings = classify_snapshot(latest, smart_tail, nim_tail, request_events_tail)
     sample_summary = summarize_samples(samples)
     write_json(output_dir / "findings.json", [asdict(item) for item in findings])
     write_json(output_dir / "sample_summary.json", sample_summary)
