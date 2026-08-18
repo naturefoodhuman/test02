@@ -1,0 +1,38 @@
+{
+  "sample_count": 121,
+  "started_local": "2026-08-18 22:33:47 +0800",
+  "ended_local": "2026-08-18 23:03:50 +0800",
+  "smart_total_requests_delta": 5,
+  "smart_total_errors_delta": 2,
+  "nim_request_count_delta": 6,
+  "nim_retry_count_delta": 6,
+  "final_active_requests": 5,
+  "final_keys": [
+    {
+      "key_id": "key-1",
+      "available_in_seconds": 243.779,
+      "in_cooldown": true,
+      "recent_rpm": 0,
+      "rpm_limit": 20,
+      "concurrency_limit": 1,
+      "in_flight": 0,
+      "semaphore_locked": false,
+      "consecutive_429": 40,
+      "success_count": 916,
+      "error_count": 112
+    },
+    {
+      "key_id": "key-2",
+      "available_in_seconds": 181.879,
+      "in_cooldown": true,
+      "recent_rpm": 0,
+      "rpm_limit": 20,
+      "concurrency_limit": 1,
+      "in_flight": 0,
+      "semaphore_locked": false,
+      "consecutive_429": 39,
+      "success_count": 792,
+      "error_count": 124
+    }
+  ]
+}
