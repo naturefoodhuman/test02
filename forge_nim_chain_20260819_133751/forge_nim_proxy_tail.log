@@ -1,0 +1,165 @@
+INFO:     Started server process [18930]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:4010 (Press CTRL+C to quit)
+INFO:     127.0.0.1:61093 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61124 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61124 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61124 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61124 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61124 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61135 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61135 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61135 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61145 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61145 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61145 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61203 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61203 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61203 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61214 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61214 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61214 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61285 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61285 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61285 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61293 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61293 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61409 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61409 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61409 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61414 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61414 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61414 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61414 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61464 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61464 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61464 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61464 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61534 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61534 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61534 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61578 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61578 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61578 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61586 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61586 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61586 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61607 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61607 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61607 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61621 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61621 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61621 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61667 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61667 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61667 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61674 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61674 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61715 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61715 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61721 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61721 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62143 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62707 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62707 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62707 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62707 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62768 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62768 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62768 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62821 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62826 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62887 - "POST /v1/chat/completions HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:62909 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62911 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62916 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62918 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62921 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62923 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62926 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62928 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62930 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62932 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62936 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62938 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62940 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62942 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62949 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62951 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62957 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62959 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62962 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62964 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62967 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62969 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62971 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62973 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62975 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62977 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62981 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62983 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62986 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62988 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62994 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62996 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62997 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63000 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63002 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63005 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63007 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63009 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63011 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63020 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63022 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63031 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63033 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63036 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63038 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63041 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63043 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63045 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63047 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63049 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63051 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63055 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63057 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63059 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63061 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63064 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63066 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63068 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63070 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63073 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63075 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63080 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63082 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63083 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63086 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63088 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63090 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63092 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63096 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63098 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63101 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63103 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63105 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63107 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63113 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63115 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63119 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63121 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63123 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63125 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63127 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63129 - "GET /stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63132 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63134 - "GET /stats HTTP/1.1" 200 OK

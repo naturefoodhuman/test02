@@ -1,0 +1,15 @@
+$ git worktree add --detach /tmp/forge_diag_push_forge_nim_chain_20260819_133751_34677 HEAD
+exit_code=0
+[stdout]
+HEAD 现在位于 2d798e5 fix(infra): bound remote wait and monitor request events
+
+[stderr]
+准备工作区（分离头指针 2d798e5）
+
+
+$ git checkout --orphan diagnostics/forge-nim-forge_nim_chain_20260819_133751
+exit_code=0
+[stderr]
+切换到一个新分支 'diagnostics/forge-nim-forge_nim_chain_20260819_133751'
+
+

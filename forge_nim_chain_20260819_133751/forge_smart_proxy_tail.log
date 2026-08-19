@@ -1,0 +1,423 @@
+2026-08-19 10:49:39,649 [INFO]: 📋 路由表加载完成: 6 本地, 21 远程
+INFO:     Started server process [20662]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
+📦 .env 加载了 0 个环境变量
+INFO:     127.0.0.1:61098 - "GET /_forge/health HTTP/1.1" 200 OK
+2026-08-19 10:50:31,674 [INFO]: 📏 [c9b71ee8175c] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=102582
+INFO:     127.0.0.1:61105 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:50:31,679 [INFO]: 🚀 拉起真机模型 (Port 8080)...
+tab 1 of window id 8085
+2026-08-19 10:51:01,977 [INFO]: HTTP Request: POST http://127.0.0.1:8080/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:51:01,978 [INFO]: 🎯 工具选择 mode=stage1 selected=['Read', 'Agent']
+2026-08-19 10:51:01,978 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=stage1, names=['Read', 'Bash', 'Edit', 'Agent'])
+2026-08-19 10:51:01,983 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:51:04,567 [INFO]: 📏 [8c5d3a6c2f47] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=121225
+INFO:     127.0.0.1:61105 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:51:04,572 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 10:51:04,572 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 10:51:04,583 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:51:08,148 [INFO]: 🧮 count_tokens 估算 12628（绕过模型推理）
+INFO:     127.0.0.1:61129 - "POST /v1/messages/count_tokens?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:51:08,150 [INFO]: 🧮 count_tokens 估算 21638（绕过模型推理）
+INFO:     127.0.0.1:61130 - "POST /v1/messages/count_tokens?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:51:08,263 [INFO]: 📏 [f0586a58fcf3] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=271726
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:51:08,272 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 10:51:08,273 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 10:51:08,285 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:51:14,062 [INFO]: 📏 [338a98e97a5d] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=298932
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:51:14,073 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 10:51:14,073 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 10:51:14,083 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:51:19,751 [INFO]: 📏 [d45c7f41b0c6] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=310544
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:51:19,765 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 10:51:19,765 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 10:51:19,776 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:51:20,051 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 10:52:20,075 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:52:24,449 [INFO]: 📏 [2fd18d0f5f17] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=320743
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:52:24,460 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 10:52:24,460 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 10:52:24,472 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:52:30,101 [INFO]: 📏 [1084e62aa33a] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=332756
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 10:52:30,115 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 10:52:30,115 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 10:52:30,125 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 10:52:30,458 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 10:53:30,478 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:01:26,691 [INFO]: 📏 [2fddd72c00de] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=346738
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:01:26,705 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:01:26,705 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:01:26,716 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:01:34,486 [INFO]: 📏 [0aa96e7ae1f7] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=355166
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:01:34,500 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:01:34,500 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:01:34,514 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:01:34,787 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:02:34,813 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:02:41,966 [INFO]: 📏 [59c34caee154] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=358785
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:02:41,981 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:02:41,981 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:02:41,990 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:02:46,999 [INFO]: 📏 [434d9ccbf66b] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=362255
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:02:47,013 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:02:47,014 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:02:47,022 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:02:47,286 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:03:47,325 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:11:41,402 [INFO]: 📏 [98fe7f32dc27] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=362976
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:11:41,415 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:11:41,415 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:11:41,424 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:12:15,218 [INFO]: 📏 [1ba50c0a0014] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=373471
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:12:15,234 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:12:15,234 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:12:15,247 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:12:15,514 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:13:15,537 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:13:19,372 [INFO]: 📏 [0dfee36b8812] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=375692
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:13:19,386 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:13:19,387 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:13:19,394 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:13:31,359 [INFO]: 📏 [734404f89dcf] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=382848
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:13:31,376 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:13:31,376 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:13:31,384 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:13:31,664 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:14:31,687 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:22:37,129 [INFO]: 📏 [f37a9caf078c] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=390481
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:22:37,142 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:22:37,143 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:22:37,152 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:22:37,440 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:23:37,471 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:24:13,344 [INFO]: 📏 [f0ed4e8c7f62] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=402031
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:24:13,360 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:24:13,360 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:24:13,373 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:24:16,422 [INFO]: 📏 [2719809ed74a] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=403021
+INFO:     127.0.0.1:61129 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:24:16,442 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:24:16,442 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:24:16,458 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:24:16,732 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:25:16,756 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:32:38,348 [ERROR]: ❌ 后端流式错误: {'message': '{"status":429,"title":"Too Many Requests"}', 'type': 'HTTP429', 'model': 'z-ai/glm-5.2'}
+2026-08-19 11:32:38,424 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:32:38,425 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:32:38,425 [INFO]: 📏 [dfaacac3aef6] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=403007
+2026-08-19 11:34:24,601 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61448 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:34:24,702 [INFO]: 📏 [aaece218bd41] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=405427
+INFO:     127.0.0.1:61448 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:34:24,719 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:34:24,719 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:34:24,731 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:34:45,539 [INFO]: 📏 [f9b8c913d3e7] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=417466
+INFO:     127.0.0.1:61448 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:34:45,557 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:34:45,558 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:34:45,573 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:34:45,837 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:35:45,857 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:42:39,103 [ERROR]: ❌ 后端流式错误: {'message': '{"status":429,"title":"Too Many Requests"}', 'type': 'HTTP429', 'model': 'z-ai/glm-5.2'}
+2026-08-19 11:42:39,193 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:42:39,194 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:42:39,194 [INFO]: 📏 [4c6c111c81dd] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=417452
+2026-08-19 11:44:59,094 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:44:59,197 [INFO]: 📏 [ce4673c420d6] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=421741
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:44:59,214 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:44:59,214 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:44:59,227 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:45:01,389 [INFO]: 📏 [04aa2d237079] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=424393
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:45:01,407 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:45:01,407 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Read', 'Edit', 'Agent'])
+2026-08-19 11:45:01,421 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:45:01,685 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:46:01,676 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:52:49,632 [INFO]: 📏 [939d10c66410] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=426136
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:52:49,648 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:52:49,648 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 11:52:49,664 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:52:57,255 [INFO]: 📏 [102a6e384b92] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=427281
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:52:57,276 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:52:57,276 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 11:52:57,290 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:52:57,734 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:53:57,757 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:55:07,052 [INFO]: 📏 [a7841d412c69] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=433321
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:55:07,069 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:55:07,069 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 11:55:07,085 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:55:11,638 [INFO]: 📏 [d9269cc3fcb5] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=435605
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 11:55:11,651 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 11:55:11,651 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 11:55:11,659 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 11:55:11,997 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 11:56:12,018 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:03:07,091 [INFO]: 📏 [b52cbbe9eaa5] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=436772
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:03:07,112 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:03:07,112 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:03:07,128 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:03:13,359 [INFO]: 📏 [10cdb50ae5c3] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=438552
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:03:13,377 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:03:13,378 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:03:13,395 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:03:13,673 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 12:04:13,692 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:05:25,005 [INFO]: 📏 [903195655ad9] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=440922
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:05:25,024 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:05:25,025 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:05:25,032 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:05:28,884 [INFO]: 📏 [96c7aca427c4] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=443105
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:05:28,903 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:05:28,903 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:05:28,919 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:05:29,213 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 12:06:29,235 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:13:24,896 [INFO]: 📏 [c8fa6a365680] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=444434
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:13:24,913 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:13:24,913 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:13:24,928 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:13:29,759 [INFO]: 📏 [3191cd345a87] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=447471
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:13:29,779 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:13:29,779 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:13:29,794 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:13:30,076 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 12:14:30,096 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:15:37,542 [INFO]: 📏 [f826de05cbcb] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=459881
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:15:37,558 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:15:37,558 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:15:37,571 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:15:40,199 [INFO]: 📏 [1b97652dcc45] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=460928
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:15:40,215 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:15:40,215 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:15:40,225 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:15:40,498 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 12:16:40,512 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:23:35,284 [INFO]: 📏 [a8205f0678d8] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=461711
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:23:35,300 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:23:35,301 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:23:35,312 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:23:36,136 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 12:24:36,150 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:25:51,976 [INFO]: 📏 [164c4c93e4f2] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=463874
+INFO:     127.0.0.1:61520 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:25:51,996 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:25:51,996 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:25:52,014 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:25:52,462 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+2026-08-19 12:26:52,480 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:33:38,400 [ERROR]: ❌ 后端流式错误: {'message': '{"status":429,"title":"Too Many Requests"}', 'type': 'HTTP429', 'model': 'z-ai/glm-5.2'}
+2026-08-19 12:33:38,474 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:33:38,474 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:33:38,475 [INFO]: 📏 [672de68c5e00] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 12:35:53,402 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 12:35:53,403 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 12:35:53,403 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 12:38:39,131 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:38:39,131 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:38:39,133 [INFO]: 📏 [ddb1c35dd9b1] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 12:43:40,190 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 12:43:40,198 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 2/2 次
+2026-08-19 12:43:40,198 [ERROR]: ❌ 转发最终失败: HTTP 429: {"status":429,"title":"Too Many Requests"}
+INFO:     127.0.0.1:62046 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-19 12:43:40,248 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:43:40,248 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:43:40,250 [INFO]: 📏 [f96312cffb93] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 12:45:55,503 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 12:45:55,513 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 12:45:55,513 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 12:48:42,748 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:48:42,749 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:48:42,750 [INFO]: 📏 [02f415cd7401] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 12:53:47,099 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:53:47,100 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:53:47,101 [INFO]: 📏 [88e35c880892] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 12:53:48,891 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 12:53:51,745 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:62197 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 12:53:52,047 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 12:53:52,055 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 12:53:52,056 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 12:55:57,368 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 12:55:57,375 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 12:55:57,375 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 12:58:55,855 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 12:58:55,856 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 12:58:55,857 [INFO]: 📏 [a173e9b37546] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 13:03:59,426 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:62464 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 13:04:06,290 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:62512 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 13:04:06,597 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:04:06,598 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 13:04:06,598 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 13:04:12,249 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 13:04:12,249 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 13:04:12,251 [INFO]: 📏 [65396eb665eb] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 13:06:01,236 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:06:01,244 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 13:06:01,245 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 13:09:44,655 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 13:09:44,656 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 13:09:44,657 [INFO]: 📏 [db97e837075a] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 13:14:15,801 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:62680 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 13:14:17,320 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:62706 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-19 13:14:17,619 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:14:17,621 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 13:14:17,621 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 13:15:22,085 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 13:15:22,085 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 13:15:22,088 [INFO]: 📏 [6e18f031e39f] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 13:16:02,297 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:16:02,304 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 2/2 次
+2026-08-19 13:16:02,304 [ERROR]: ❌ 转发最终失败: HTTP 429: {"status":429,"title":"Too Many Requests"}
+2026-08-19 13:20:58,661 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 13:20:58,663 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 13:20:58,664 [INFO]: 📏 [efb1a1ee1b2a] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 13:24:25,372 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 13:24:25,670 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:24:25,671 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 13:24:25,672 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 13:26:04,080 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:26:04,082 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 2/2 次
+2026-08-19 13:26:04,082 [ERROR]: ❌ 转发最终失败: HTTP 429: {"status":429,"title":"Too Many Requests"}
+INFO:     127.0.0.1:62788 - "POST /v1/messages?beta=true HTTP/1.1" 504 Gateway Timeout
+2026-08-19 13:26:32,075 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Agent']
+2026-08-19 13:26:32,076 [INFO]: 🪚 tool reduction: 25 -> 4 (mode=cache, names=['Bash', 'Edit', 'Read', 'Agent'])
+2026-08-19 13:26:32,079 [INFO]: 📏 [6b9355e3bb49] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=4 body_bytes=463860
+2026-08-19 13:34:27,592 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:34:27,593 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 1/2 次
+2026-08-19 13:34:27,593 [WARNING]: 🔁 auto-continue: upstream status 429, wait 60.0s then replay request (2/2)
+2026-08-19 13:36:06,516 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-08-19 13:36:06,517 [WARNING]: ⚠️ 可重试/auto-continue 状态码 429，第 2/2 次
+2026-08-19 13:36:06,517 [ERROR]: ❌ 转发最终失败: HTTP 429: {"status":429,"title":"Too Many Requests"}
+INFO:     127.0.0.1:62908 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62910 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62915 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62917 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62920 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62922 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62925 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62927 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62929 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62931 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62935 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62937 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62939 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62941 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62948 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62950 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62956 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62958 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62961 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62963 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62966 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62968 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62970 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62972 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62974 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62976 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62980 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62982 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62985 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62987 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-19 13:41:31,557 [INFO]: 📏 [7b4d6a866608] model=claude-opus-4-8 remote=True deferred=True tools_in_payload=0 body_bytes=463906
+INFO:     127.0.0.1:62990 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62993 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62995 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-19 13:41:41,627 [INFO]: HTTP Request: POST http://127.0.0.1:8080/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-19 13:41:41,627 [INFO]: 🎯 工具选择 mode=stage1 selected=[]
+2026-08-19 13:41:41,627 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=stage1, names=['Bash', 'Edit', 'Read'])
+2026-08-19 13:41:41,633 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:62999 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63001 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63004 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63006 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63008 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63010 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63019 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63021 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63030 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63032 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63035 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63037 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63040 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63042 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63044 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63046 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63048 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63050 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63054 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63056 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63058 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63060 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-19 13:44:29,406 [WARNING]: 🔁 auto-continue: sidecar_sse_error, wait 60.0s then replay stream (2/2)
+INFO:     127.0.0.1:63063 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63065 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63067 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63069 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63072 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63074 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63079 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63081 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-19 13:45:29,423 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:63085 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63087 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63089 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63091 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63095 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63097 - "GET /_forge/status HTTP/1.1" 200 OK
+2026-08-19 13:46:07,273 [ERROR]: ❌ 后端流式错误: {'message': '{"status":429,"title":"Too Many Requests"}', 'type': 'HTTP429', 'model': 'z-ai/glm-5.2'}
+2026-08-19 13:46:07,351 [INFO]: 🎯 工具选择 mode=cache selected=[]
+2026-08-19 13:46:07,352 [INFO]: 🪚 tool reduction: 25 -> 3 (mode=cache, names=['Bash', 'Edit', 'Read'])
+2026-08-19 13:46:07,352 [INFO]: 📏 [04c770bdfe40] model=claude-opus-4-8 remote=True deferred=False tools_in_payload=3 body_bytes=463892
+INFO:     127.0.0.1:63100 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63102 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63104 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63106 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63112 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63114 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63118 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63120 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63122 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63124 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63126 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63128 - "GET /_forge/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63131 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63133 - "GET /_forge/status HTTP/1.1" 200 OK
