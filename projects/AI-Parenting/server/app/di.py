@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from .events.service.idempotency import EventService
+    from .memory.domain import CorrectionStore, MemoryStore
     from .observability.audit import AuditService
     from .rule_engine.evidence_repo import EvidencePolicyRepository
 
@@ -70,6 +71,9 @@ class Container:
     # ModelClient 进程级单例（APC-T024）：项目内唯一 LLM/VLM 入口（架构 §11.8）。
     # dev 用 FakeModelClient（不联网）；prod 用 SmartProxyModelClient（工厂 Smart Proxy 4000）。
     model_client: ModelClient
+    # M5 纠错记忆仓储进程级单例（APC-T026）：FakeRagStore（dev/CI）或 ForgeRagStore（工厂 RAG）。
+    # 进程级——M5 纠错记忆独立 SQLite 向量库，非请求作用域 PG 数据，跨请求共享。
+    correction_store: CorrectionStore
     # 预留：notification_channels 等，后续任务填充。
     _extras: dict[str, object] = field(default_factory=dict)
 
@@ -107,6 +111,8 @@ def build_container(settings: Settings | None = None) -> Container:
     # ModelClient 进程级单例（APC-T024）：项目内唯一 LLM/VLM 入口。
     # dev 用 FakeModelClient（不联网，CI 安全）；prod 用 SmartProxyModelClient（工厂 4000）。
     model_client = _build_model_client(s)
+    # M5 纠错记忆仓储进程级单例（APC-T026）：Fake/Forge RAG adapter。
+    correction_store = _build_correction_store(s)
     return Container(
         settings=s,
         clock=clock,
@@ -115,6 +121,7 @@ def build_container(settings: Settings | None = None) -> Container:
         password_hasher=password_hasher,
         rule_registry=rule_registry,
         model_client=model_client,
+        correction_store=correction_store,
     )
 
 
@@ -128,6 +135,19 @@ def _build_model_client(s: Settings) -> ModelClient:
         return FakeModelClient()
     plans = load_plans(CONFIG_DIR / "routing_plans.yaml")
     return SmartProxyModelClient(base_url=s.models.gateway_base_url, plans=plans)
+
+
+def _build_correction_store(s: Settings) -> CorrectionStore:
+    """按 Settings.memory 选 M5 纠错记忆仓储（APC-T026）。
+
+    ``use_fake_rag=True``（dev 默认）→ FakeRagStore（内存关键词重叠检索，不依赖 ollama）；
+    否则 → ForgeRagStore（工厂 Local RAG，sys.path 注入 + 延迟导入，需 ollama BGE-M3）。
+    """
+    from .memory.rag_adapter import FakeRagStore, ForgeRagStore
+
+    if s.memory.use_fake_rag:
+        return FakeRagStore()
+    return ForgeRagStore(db_path=s.memory.rag_db_path, factory_root=s.memory.factory_root)
 
 
 def get_container() -> Container:
@@ -305,6 +325,29 @@ async def get_evidence_policy_repo_dep(
     factory = get_session_factory(container.settings)
     async with factory() as session:
         yield SqlAlchemyEvidencePolicyRepository(session, clock=container.clock)
+
+
+# ---- Memory 依赖工厂（APC-T026：请求作用域 MemoryStore）----
+
+
+async def get_memory_store_dep(request: Request) -> AsyncGenerator[MemoryStore, None]:
+    """FastAPI 依赖：按请求构造 SqlAlchemyMemoryStore（APC-T026）。
+
+    请求作用域（持有请求级 ``AsyncSession``）；``Clock`` 从 container 取进程级单例；
+    ``correction_store`` 从 container 取进程级 M5 单例（Fake/Forge RAG）。
+    Orchestrator 经此一次性获取 MemorySnapshot（架构 §4.3 健康类回答前注入完整五层）。
+    """
+    from .db import get_session_factory
+    from .memory.store import SqlAlchemyMemoryStore
+
+    container = _container_from_request(request)
+    factory = get_session_factory(container.settings)
+    async with factory() as session:
+        yield SqlAlchemyMemoryStore(
+            session=session,
+            clock=container.clock,
+            correction_store=container.correction_store,
+        )
 
 
 # ---- Rules Admin API 依赖工厂（APC-T019：RulesContext 共享 session）----

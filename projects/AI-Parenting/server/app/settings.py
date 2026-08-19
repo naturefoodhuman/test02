@@ -96,6 +96,25 @@ class NotificationSettings(BaseSettings):
     escalation_minutes: list[int] = Field(default_factory=lambda: [1, 3, 9])
 
 
+class MemorySettings(BaseSettings):
+    """五层长期记忆配置（架构 §6.5，APC-T026）。
+
+    M5 复用工厂 Local RAG（``_infra/network/local_rag``）；dev/CI 用 FakeRagStore
+    （不依赖 ollama，与 FakeModelClient 一致的 CI 安全策略）。
+    """
+
+    # dev/CI 用 FakeRagStore（内存关键词重叠检索）；工厂 ollama BGE-M3 就绪后置 False。
+    use_fake_rag: bool = True
+    # 工厂 RAG SQLite 路径（use_fake_rag=False 时生效）。
+    rag_db_path: str = "runtime/rag_corrections.db"
+    # 工厂根路径（sys.path 注入用，默认仓库根）。
+    factory_root: str = str(PROJECT_ROOT.parent.parent)
+    # M3 基线窗口天数（默认 14 天，架构 §6.5 行为基线）。
+    baseline_window_days: int = 14
+    # M4 短期上下文窗口小时（默认 72h，架构 §6.5 / PRD §9）。
+    short_context_hours: int = 72
+
+
 class ObservabilitySettings(BaseSettings):
     """可观测性配置（架构 §22）。"""
 
@@ -174,6 +193,7 @@ class Settings(BaseSettings):
     http: HttpSettings = Field(default_factory=HttpSettings)
     models: ModelsSettings = Field(default_factory=ModelsSettings)
     privacy: PrivacySettings = Field(default_factory=PrivacySettings)
+    memory: MemorySettings = Field(default_factory=MemorySettings)
     notification: NotificationSettings = Field(default_factory=NotificationSettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
     auth: AuthSettings = Field(default_factory=AuthSettings)
