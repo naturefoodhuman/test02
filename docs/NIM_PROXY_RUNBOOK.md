@@ -1,6 +1,6 @@
 <!--
 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-创建时间（北京时间）：2026-08-19 00:40:00
+创建时间（北京时间）：2026-08-19 14:20:00
 -->
 
 # NVIDIA NIM Proxy Runbook
@@ -63,6 +63,8 @@ export NIM_PROXY_REQUEST_WALL_TIMEOUT_SECONDS=600
 export NIM_PROXY_MAX_ATTEMPTS_PER_REQUEST=1
 export NIM_PROXY_SESSION_AFFINITY=0
 export FORGE_REMOTE_MAX_CONCURRENCY=1
+FORGE_REMOTE_SINGLEFLIGHT=1
+export FORGE_REMOTE_SINGLEFLIGHT=1
 export FORGE_CTX_SOFT_TOKENS=12000
 export FORGE_CTX_KEEP_RECENT_TURNS=4
 export FORGE_CTX_TRUNC_TOOL_RESULT_CHARS=800
@@ -299,6 +301,17 @@ FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
 限制：如果模型已经向客户端输出了文本或 tool call，Smart Proxy 不会透明重放，避免重复执行工具或打乱 transcript。
 
 
+
+
+### Duplicate request singleflight
+
+Claude Code / cc-connect may resubmit the same non-stream request after a client-side timeout. Without deduplication, each retry becomes a new NVIDIA request and can amplify 429/cooldown. With:
+
+```bash
+FORGE_REMOTE_SINGLEFLIGHT=1
+```
+
+Smart Proxy deduplicates identical in-flight non-stream NIM requests by payload hash. Later identical callers wait for the first in-flight upstream result instead of creating another NVIDIA request. Diagnostics write `singleflight_create` / `singleflight_join` to `/tmp/forge_request_events.jsonl`, and chain monitor reports `REPEATED_IDENTICAL_REQUESTS` when it sees repeated payloads.
 
 ### Smart Proxy remote queue / stale waiting guard
 

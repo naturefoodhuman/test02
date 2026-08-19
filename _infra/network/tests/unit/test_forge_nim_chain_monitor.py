@@ -1,10 +1,11 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-19 00:40:00
+# 创建时间（北京时间）：2026-08-19 14:20:00
 
 """Tests for FORGE NIM chain monitor classification."""
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -14,8 +15,10 @@ if str(_REPO_ROOT) not in sys.path:
 
 from scripts.diagnostics.forge_nim_chain_monitor import (  # noqa: E402
     ChainSnapshot,
+    analyze_request_events,
     classify_snapshot,
     count_patterns,
+    parse_request_events_tail,
     summarize_samples,
 )
 
@@ -123,6 +126,37 @@ def test_chain_monitor_collects_request_event_log_tail() -> None:
     assert "REQUEST_EVENT_LOG" in source
     assert "request_events_tail.log" in source
     assert "REQUEST_EVENT_AUTO_CONTINUE_ACTIVITY" in source
+
+
+def test_request_event_analysis_detects_repeated_identical_requests() -> None:
+    raw = "\n".join(
+        json_line
+        for json_line in [
+            '{"kind":"request_start","request_id":"a","local_time":"t1","latest_user_sha256":"x","body_bytes":100,"stream":false,"model":"m","path":"/v1/messages","latest_user_chars":2}',
+            '{"kind":"request_start","request_id":"b","local_time":"t2","latest_user_sha256":"x","body_bytes":100,"stream":false,"model":"m","path":"/v1/messages","latest_user_chars":2}',
+            '{"kind":"request_start","request_id":"c","local_time":"t3","latest_user_sha256":"x","body_bytes":100,"stream":false,"model":"m","path":"/v1/messages","latest_user_chars":2}',
+            '{"kind":"request_error","request_id":"a","status_code":429,"error":"HTTP 429"}',
+        ]
+    )
+    analysis = analyze_request_events(parse_request_events_tail(raw))
+
+    assert analysis["request_start_count"] == 3
+    assert analysis["request_error_count"] == 1
+    assert analysis["repeated_requests"][0]["count"] == 3
+
+
+def test_classify_uses_request_event_duplicates() -> None:
+    smart = {"active_requests": 0, "total_requests": 3, "total_errors": 1, "retry": {"retry_counters": {}}, "circuit_breaker": {"state": "closed"}}
+    nim = {"request_count": 3, "retry_count": 1, "settings": {}, "pool": {"keys": []}}
+    tail = "\n".join([
+        '{"kind":"request_start","request_id":"a","latest_user_sha256":"x","body_bytes":100,"stream":false,"model":"m","path":"/v1/messages"}',
+        '{"kind":"request_start","request_id":"b","latest_user_sha256":"x","body_bytes":100,"stream":false,"model":"m","path":"/v1/messages"}',
+        '{"kind":"request_start","request_id":"c","latest_user_sha256":"x","body_bytes":100,"stream":false,"model":"m","path":"/v1/messages"}',
+    ])
+
+    findings = classify_snapshot(_snapshot(smart, nim), request_events_tail=tail)
+
+    assert any(item.code == "REPEATED_IDENTICAL_REQUESTS" for item in findings)
 
 
 def test_summarize_samples_computes_deltas() -> None:

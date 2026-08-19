@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-19 00:40:00
+# 创建时间（北京时间）：2026-08-19 14:20:00
 
 """Monitor and classify the FORGE Smart Proxy -> NIM sidecar -> NVIDIA chain.
 
@@ -97,6 +97,77 @@ def count_patterns(text: str) -> dict[str, int]:
     }
     return {name: len(re.findall(pattern, text, flags=re.IGNORECASE)) for name, pattern in patterns.items()}
 
+
+
+
+def parse_request_events_tail(text: str) -> list[dict[str, Any]]:
+    events: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            item = json.loads(line)
+        except Exception:
+            continue
+        if isinstance(item, dict):
+            events.append(item)
+    return events
+
+
+def analyze_request_events(events: list[dict[str, Any]]) -> dict[str, Any]:
+    starts: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    errors: list[dict[str, Any]] = []
+    finishes: list[dict[str, Any]] = []
+    singleflight_joins = 0
+    for event in events:
+        kind = event.get("kind")
+        if kind == "request_start":
+            key = (
+                event.get("latest_user_sha256") or "<empty>",
+                event.get("body_bytes"),
+                event.get("stream"),
+                event.get("model"),
+                event.get("path"),
+            )
+            starts.setdefault(key, []).append(event)
+        elif kind == "request_error":
+            errors.append(event)
+        elif kind == "request_finish":
+            finishes.append(event)
+        elif kind == "singleflight_join":
+            singleflight_joins += 1
+    repeated = []
+    for key, items in starts.items():
+        if len(items) >= 3:
+            repeated.append(
+                {
+                    "count": len(items),
+                    "latest_user_sha256": key[0],
+                    "body_bytes": key[1],
+                    "stream": key[2],
+                    "model": key[3],
+                    "path": key[4],
+                    "first_local_time": items[0].get("local_time"),
+                    "last_local_time": items[-1].get("local_time"),
+                    "request_ids": [item.get("request_id") for item in items[-10:]],
+                    "latest_user_chars": items[-1].get("latest_user_chars"),
+                }
+            )
+    repeated.sort(key=lambda item: item["count"], reverse=True)
+    error_types: dict[str, int] = {}
+    for error in errors:
+        label = str(error.get("status_code") or error.get("error") or "unknown")[:120]
+        error_types[label] = error_types.get(label, 0) + 1
+    return {
+        "event_count": len(events),
+        "request_start_count": sum(len(items) for items in starts.values()),
+        "request_finish_count": len(finishes),
+        "request_error_count": len(errors),
+        "singleflight_join_count": singleflight_joins,
+        "repeated_requests": repeated[:10],
+        "error_types": error_types,
+    }
 
 def collect_snapshot() -> ChainSnapshot:
     return ChainSnapshot(
@@ -304,14 +375,38 @@ def classify_snapshot(snapshot: ChainSnapshot, smart_log_tail: str = "", nim_log
 
     if request_events_tail:
         req_counts = count_patterns(request_events_tail)
+        event_analysis = analyze_request_events(parse_request_events_tail(request_events_tail))
         if "request_stale_pruned" in request_events_tail or "no_output" in request_events_tail:
             findings.append(
                 ChainFinding(
                     level="medium",
                     code="REQUEST_EVENT_AUTO_CONTINUE_ACTIVITY",
                     message="Request event log contains auto-continue/no-output/stale-prune activity.",
-                    evidence={"pattern_counts": req_counts},
+                    evidence={"pattern_counts": req_counts, "event_analysis": event_analysis},
                     recommendation="Inspect /tmp/forge_request_events.jsonl or the artifact request_events_tail.log for per-turn timing.",
+                )
+            )
+        if event_analysis.get("repeated_requests"):
+            findings.append(
+                ChainFinding(
+                    level="high",
+                    code="REPEATED_IDENTICAL_REQUESTS",
+                    message="Request event log shows repeated identical request payloads, likely client retries after timeouts.",
+                    evidence=event_analysis,
+                    recommendation=(
+                        "Pull latest Smart Proxy with FORGE_REMOTE_SINGLEFLIGHT=1 to deduplicate identical non-stream retries; "
+                        "if repeats persist, inspect whether Claude Code/Feishu client is resubmitting after its own timeout."
+                    ),
+                )
+            )
+        elif event_analysis.get("request_error_count", 0) > 0:
+            findings.append(
+                ChainFinding(
+                    level="medium",
+                    code="REQUEST_EVENT_ERRORS",
+                    message="Request event log contains recent request errors.",
+                    evidence=event_analysis,
+                    recommendation="Inspect request_events_tail.log for exact per-request timing and error type.",
                 )
             )
 

@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-19 00:40:00
+# 创建时间（北京时间）：2026-08-19 14:20:00
 # 修改本文件中的配置比如“FORGE_CTX_MAX_TOKENS = int(os.getenv("FORGE_CTX_MAX_TOKENS", "502752"))“ 后
 # 要重启 bash scripts/forge-start.sh 以使新配置生效
 
@@ -189,6 +189,13 @@ FORGE_REMOTE_OPERATION_TIMEOUT_SECONDS = float(
 FORGE_TRACKER_STALE_REQUEST_SECONDS = float(
     os.getenv("FORGE_TRACKER_STALE_REQUEST_SECONDS", str(max(FORGE_AUTO_CONTINUE_NO_OUTPUT_TIMEOUT_SECONDS * 2, 1800)))
 )
+# Deduplicate identical non-stream remote requests. Claude Code may retry a
+# timed-out non-stream turn every few minutes with the same payload; without
+# singleflight those duplicates become separate NVIDIA requests and amplify 429s.
+FORGE_REMOTE_SINGLEFLIGHT = _env_bool("FORGE_REMOTE_SINGLEFLIGHT", True)
+_remote_singleflight_tasks: dict[str, asyncio.Task] = {}
+_remote_singleflight_lock = asyncio.Lock()
+_remote_singleflight_counters = {"created": 0, "joined": 0, "errors": 0}
 # NVIDIA hosted GLM-5.2 currently reports an effective combined input+output
 # ceiling around 202749 tokens. Keep output budget intact; compact input first,
 # then ask the user to start a new session if input still cannot fit.
@@ -797,6 +804,35 @@ def _json_bytes(v) -> int:
         return len(json.dumps(v, ensure_ascii=False).encode("utf-8"))
     except Exception:
         return 0
+
+
+def _remote_singleflight_key(target_url: str, forward_payload: dict) -> str:
+    payload = {"target_url": target_url, "payload": forward_payload}
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
+async def _run_remote_singleflight(key: str, request_id: str, coro_factory):
+    async with _remote_singleflight_lock:
+        task = _remote_singleflight_tasks.get(key)
+        if task is None or task.done():
+            task = asyncio.create_task(coro_factory())
+            _remote_singleflight_tasks[key] = task
+            _remote_singleflight_counters["created"] += 1
+            _record_request_event("singleflight_create", request_id, key=key[:16])
+        else:
+            _remote_singleflight_counters["joined"] += 1
+            _record_request_event("singleflight_join", request_id, key=key[:16])
+    try:
+        return await asyncio.shield(task)
+    except Exception:
+        _remote_singleflight_counters["errors"] += 1
+        raise
+    finally:
+        if task.done():
+            async with _remote_singleflight_lock:
+                if _remote_singleflight_tasks.get(key) is task:
+                    _remote_singleflight_tasks.pop(key, None)
 
 
 # ============================================================
@@ -1763,6 +1799,11 @@ async def forge_status():
         "remote_concurrency": {
             "max": FORGE_REMOTE_MAX_CONCURRENCY,
         },
+        "remote_singleflight": {
+            "enabled": FORGE_REMOTE_SINGLEFLIGHT,
+            "inflight": len(_remote_singleflight_tasks),
+            "counters": dict(_remote_singleflight_counters),
+        },
         "context_budget": {
             "max_tokens": FORGE_CTX_MAX_TOKENS,
             "soft_tokens": FORGE_CTX_SOFT_TOKENS,
@@ -2554,9 +2595,24 @@ async def smart_gateway(request: Request, path: str):
         )
 
     # ============ 非流式响应 ============
-    resp, last_exception = await _forward_with_retries(
-        target_url, forward_payload, headers, is_remote, target_port, handles_retries=nim_sidecar_route
-    )
+    if nim_sidecar_route and FORGE_REMOTE_SINGLEFLIGHT:
+        _sf_key = _remote_singleflight_key(target_url, forward_payload)
+        resp, last_exception = await _run_remote_singleflight(
+            _sf_key,
+            request_id,
+            lambda: _forward_with_retries(
+                target_url,
+                forward_payload,
+                headers,
+                is_remote,
+                target_port,
+                handles_retries=nim_sidecar_route,
+            ),
+        )
+    else:
+        resp, last_exception = await _forward_with_retries(
+            target_url, forward_payload, headers, is_remote, target_port, handles_retries=nim_sidecar_route
+        )
 
     if resp is None or resp.status_code != 200:
         logger.error(f"❌ 转发最终失败: {last_exception}")

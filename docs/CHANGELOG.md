@@ -20,6 +20,32 @@
 
 ---
 
+## [第 221 轮] 2026-08-19
+
+### 需求变动
+- **重复请求去重**：诊断显示 Claude Code/飞书在 timeout 后会以相同 payload 重复发起 non-stream 请求，导致多个相同请求分别打到 NVIDIA 并放大 429/cooldown。新增 `FORGE_REMOTE_SINGLEFLIGHT=1`，对相同 in-flight non-stream NIM 请求按 payload hash 去重，后续相同请求等待首个 upstream 结果，不再创建新的 NVIDIA 请求。
+- **请求事件分析增强**：`forge_nim_chain_monitor.py` 现在解析 `/tmp/forge_request_events.jsonl`，识别 `REPEATED_IDENTICAL_REQUESTS`、错误类型分布、singleflight join 次数，便于判断循环是否来自客户端重复提交还是 Smart Proxy auto-continue。
+
+### 文件影响
+- 修改：`_infra/smart_proxy.py`
+- 修改：`scripts/diagnostics/forge_nim_chain_monitor.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`_infra/network/tests/unit/test_forge_nim_chain_monitor.py`
+- 修改：`.env.example`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py _infra/network/tests/unit/test_forge_nim_chain_monitor.py -q
+# 41 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/forge_nim_chain_monitor.py
+make docs-check
+# Blockers: 0; Warnings: 1（model 架构敏感词提示，已复核无需新增 ADR）
+```
+
+---
+
 ## [第 220 轮] 2026-08-19
 
 ### 需求变动
