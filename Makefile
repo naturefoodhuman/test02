@@ -127,7 +127,7 @@ forge-nim-vscode-glm-slow-watch:
 	@python3 scripts/diagnostics/forge_nim_diagnostic.py --profile glm-slow --restart --vscode-watch --watch-seconds $${WATCH_SECONDS:-1800} --interval $${INTERVAL:-15} --push-sanitized-artifact
 
 forge-nim-chain-snapshot:
-	@python3 scripts/diagnostics/forge_nim_chain_monitor.py --push-sanitized-artifact
+	@python3 scripts/diagnostics/forge_nim_chain_monitor.py --tail-lines $${TAIL_LINES:-2000} --push-sanitized-artifact
 
 forge-nim-chain-watch:
-	@python3 scripts/diagnostics/forge_nim_chain_monitor.py --duration $${DURATION:-600} --interval $${INTERVAL:-15} --push-sanitized-artifact
+	@python3 scripts/diagnostics/forge_nim_chain_monitor.py --duration $${DURATION:-180} --interval $${INTERVAL:-10} --tail-lines $${TAIL_LINES:-2000} --push-sanitized-artifact

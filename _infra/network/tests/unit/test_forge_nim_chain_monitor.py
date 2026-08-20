@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-19 14:20:00
+# 创建时间（北京时间）：2026-08-20 12:20:00
 
 """Tests for FORGE NIM chain monitor classification."""
 
@@ -81,6 +81,25 @@ def test_classify_detects_upstream_cooldown_and_long_attempts() -> None:
     assert "NVIDIA_UPSTREAM_429_COOLDOWN" in codes
     assert "SMART_SEES_429_FROM_NIM" in codes
     assert "LONG_TIMEOUT_WITH_MULTIPLE_ATTEMPTS" in codes
+
+
+def test_classify_detects_unhealthy_nim_key() -> None:
+    smart = {"active_requests": 0, "total_requests": 10, "total_errors": 1, "retry": {"retry_counters": {}}, "circuit_breaker": {"state": "closed"}}
+    nim = {
+        "request_count": 10,
+        "retry_count": 8,
+        "settings": {},
+        "pool": {
+            "keys": [
+                {"key_id": "key-1", "success_count": 20, "error_count": 1, "consecutive_429": 0},
+                {"key_id": "key-2", "success_count": 0, "error_count": 80, "consecutive_429": 80},
+            ]
+        },
+    }
+
+    findings = classify_snapshot(_snapshot(smart, nim))
+
+    assert any(item.code == "NIM_KEY_HEALTH_IMBALANCE" for item in findings)
 
 
 def test_classify_detects_busy_keys() -> None:

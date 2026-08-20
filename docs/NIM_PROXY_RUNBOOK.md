@@ -161,7 +161,8 @@ curl http://127.0.0.1:4010/stats
 make forge-nim-chain-snapshot
 
 # 当前链路观察窗口：默认观察 10 分钟，每 15 秒采样一次；适合 Claude Code 卡住时运行
-DURATION=600 INTERVAL=15 make forge-nim-chain-watch
+DURATION=180 INTERVAL=10 make forge-nim-chain-watch
+# 如需更多历史事件：TAIL_LINES=5000 make forge-nim-chain-snapshot
 
 # 当前配置下，仅跑 4010/4000 最小 non-stream 探针
 make forge-nim-diagnostic
@@ -302,6 +303,11 @@ FORGE_UPSTREAM_COMBINED_GUARD_ENABLED=1
 
 
 
+
+
+### Unhealthy key handling
+
+If one NVIDIA key has many consecutive 429s while another key keeps succeeding, prefer the healthier key. The sidecar key picker now sorts by `consecutive_429` and error ratio before fairness, so a key like `success_count=0, consecutive_429=80` will not be preferred just because it has lower total usage. The chain monitor reports `NIM_KEY_HEALTH_IMBALANCE` when it detects this pattern.
 
 ### Duplicate request singleflight
 

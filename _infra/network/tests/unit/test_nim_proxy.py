@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-19 14:20:00
+# 创建时间（北京时间）：2026-08-20 12:20:00
 
 """NVIDIA NIM sidecar proxy unit tests."""
 
@@ -137,6 +137,23 @@ def test_forward_non_stream_returns_busy_when_all_keys_are_locked() -> None:
         assert b"busy" in body
 
     asyncio.run(scenario())
+
+
+def test_key_pool_prefers_healthier_key_over_underused_429_key() -> None:
+    settings = _settings(session_affinity=False, per_key_rpm=100)
+    pool = NIMKeyPool(["k1", "k2"], settings)
+    key1, key2 = pool.keys
+    key1.success_count = 200
+    key1.error_count = 5
+    key1.consecutive_429 = 0
+    key2.success_count = 0
+    key2.error_count = 80
+    key2.consecutive_429 = 80
+
+    selected = pool.pick_now("same-session")
+
+    assert selected is not None
+    assert selected.key_id == "key-1"
 
 
 def test_forward_non_stream_retries_after_429_with_next_key(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -20,6 +20,34 @@
 
 ---
 
+## [第 222 轮] 2026-08-20
+
+### 需求变动
+- **NIM key 健康度选择修正**：诊断显示 key-2 `success_count=0/error_count=80/consecutive_429=80`，但旧 picker 因 key-2 总使用量更低仍可能优先选择它，持续放大 429。现在 key picker 先按 `consecutive_429` 与错误率排序，再考虑使用量公平性，优先使用健康 key。
+- **历史事件诊断增强**：`forge_nim_chain_monitor.py` 默认 tail-lines 从 500 提到 2000，Make 入口改为 `DURATION=180 INTERVAL=10`，并支持 `TAIL_LINES` 覆盖；新增 `NIM_KEY_HEALTH_IMBALANCE` 诊断。
+
+### 文件影响
+- 修改：`_infra/nim_proxy.py`
+- 修改：`scripts/diagnostics/forge_nim_chain_monitor.py`
+- 修改：`_infra/network/tests/unit/test_nim_proxy.py`
+- 修改：`_infra/network/tests/unit/test_forge_nim_chain_monitor.py`
+- 修改：`Makefile`
+- 修改：`docs/NIM_PROXY_RUNBOOK.md`
+- 修改：`docs/CHANGELOG.md`
+
+### 验证
+```bash
+python3 -m pytest _infra/network/tests/unit/test_nim_proxy.py _infra/network/tests/unit/test_nim_proxy_tuning.py _infra/network/tests/unit/test_forge_nim_chain_monitor.py -q
+# 43 passed, 1 skipped
+python3 -m py_compile _infra/nim_proxy.py _infra/smart_proxy.py scripts/diagnostics/nim_proxy_tuning.py scripts/diagnostics/forge_nim_chain_monitor.py
+make -n forge-nim-chain-watch
+make -n forge-nim-chain-snapshot
+make docs-check
+# Blockers: 0; Warnings: 1（model 架构敏感词提示，已复核无需新增 ADR）
+```
+
+---
+
 ## [第 221 轮] 2026-08-19
 
 ### 需求变动

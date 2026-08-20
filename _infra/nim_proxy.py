@@ -1,5 +1,5 @@
 # 创建/修改该文件的LLM大模型：Arena.ai Agent Mode
-# 创建时间（北京时间）：2026-08-11 18:20:00
+# 创建时间（北京时间）：2026-08-20 12:20:00
 
 """NVIDIA NIM OpenAI-compatible sidecar proxy.
 
@@ -282,17 +282,18 @@ class NIMKeyPool:
 
         # Do not sort only by key_id: when requests are spaced more than 60s
         # apart, recent_rpm is often 0 for every key and key-1 wins forever.
-        # Prefer lower in-flight load, then lower recent RPM, then lower lifetime
-        # usage/error count so a cold key catches up quickly. A tiny round-robin
-        # cursor breaks perfect ties without exposing raw key material.
+        # First prefer healthy keys: a key with many consecutive 429s may be
+        # account/model-quota exhausted even after its cooldown expires. Only use
+        # such a key when no healthier key is currently available.
         candidate_ids = {id(key) for key in candidates}
         ordered = sorted(
             ((index, key) for index, key in enumerate(self.keys) if id(key) in candidate_ids),
             key=lambda item: (
                 item[1].in_flight,
+                item[1].consecutive_429,
+                item[1].error_count / max(1, item[1].success_count + item[1].error_count),
                 len(item[1].request_times),
                 item[1].success_count + item[1].error_count,
-                item[1].error_count,
                 (item[0] - self._cursor) % len(self.keys),
             ),
         )
