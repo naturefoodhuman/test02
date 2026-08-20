@@ -1,0 +1,44 @@
+{
+  "smart": {
+    "http_429": 0,
+    "http_503": 0,
+    "http_504": 0,
+    "read_timeout": 4,
+    "remote_protocol_error": 0,
+    "no_key_available": 0,
+    "busy": 0,
+    "rate_limit": 0,
+    "client_disconnect": 1,
+    "bind_in_use": 0,
+    "context_compacted": 0,
+    "context_rejected": 0
+  },
+  "nim": {
+    "http_429": 0,
+    "http_503": 0,
+    "http_504": 0,
+    "read_timeout": 0,
+    "remote_protocol_error": 0,
+    "no_key_available": 0,
+    "busy": 0,
+    "rate_limit": 0,
+    "client_disconnect": 0,
+    "bind_in_use": 0,
+    "context_compacted": 0,
+    "context_rejected": 0
+  },
+  "request_events": {
+    "http_429": 164,
+    "http_503": 0,
+    "http_504": 0,
+    "read_timeout": 0,
+    "remote_protocol_error": 0,
+    "no_key_available": 0,
+    "busy": 0,
+    "rate_limit": 0,
+    "client_disconnect": 0,
+    "bind_in_use": 0,
+    "context_compacted": 0,
+    "context_rejected": 0
+  }
+}

@@ -1,0 +1,15 @@
+$ git worktree add --detach /tmp/forge_diag_push_forge_nim_chain_20260820_215934_74338 HEAD
+exit_code=0
+[stdout]
+HEAD 现在位于 ca114ff feat(t029): Dose Interceptor 剂量拦截器（mg/ml/滴自由输出拦截→安全话术+审计）
+
+[stderr]
+准备工作区（分离头指针 ca114ff）
+
+
+$ git checkout --orphan diagnostics/forge-nim-forge_nim_chain_20260820_215934
+exit_code=0
+[stderr]
+切换到一个新分支 'diagnostics/forge-nim-forge_nim_chain_20260820_215934'
+
+

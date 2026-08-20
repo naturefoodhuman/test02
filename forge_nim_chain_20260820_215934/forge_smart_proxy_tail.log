@@ -1,0 +1,68 @@
+2026-08-20 14:18:43,383 [INFO]: 📋 路由表加载完成: 6 本地, 21 远程
+INFO:     Started server process [58290]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:4000 (Press CTRL+C to quit)
+📦 .env 加载了 0 个环境变量
+INFO:     127.0.0.1:56444 - "GET /_forge/health HTTP/1.1" 200 OK
+2026-08-20 14:23:20,321 [INFO]: 📏 [0b65996bab03] model=claude-opus-4-8-1m remote=True deferred=True tools_in_payload=0 body_bytes=99622
+INFO:     127.0.0.1:56507 - "POST /v1/messages?beta=true HTTP/1.1" 200 OK
+2026-08-20 14:23:20,325 [INFO]: 🚀 拉起真机模型 (Port 8080)...
+tab 1 of window id 8731
+2026-08-20 14:23:50,832 [INFO]: HTTP Request: POST http://127.0.0.1:8080/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-20 14:23:50,832 [INFO]: 🎯 工具选择 mode=stage1 selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:23:50,833 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=stage1, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:23:50,838 [INFO]: HTTP Request: POST http://127.0.0.1:4010/v1/chat/completions "HTTP/1.1 200 OK"
+2026-08-20 14:28:20,341 [WARNING]: 客户端断开连接: model=claude-opus-4-8-1m
+2026-08-20 14:28:20,389 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:28:20,389 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:28:20,390 [INFO]: 📏 [4f0f97c46df0] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 14:32:57,001 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:32:57,001 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:32:57,001 [INFO]: 📏 [6e25e56ea13f] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 14:37:58,035 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:37:58,036 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:37:58,036 [INFO]: 📏 [4228f72010a2] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 14:43:00,483 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:43:00,483 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:43:00,484 [INFO]: 📏 [9e5b223ac18a] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 14:43:20,416 [WARNING]: ⚠️ 远程读/连接异常，第 1/2 次: ReadTimeout: 
+2026-08-20 14:43:20,417 [WARNING]: 🔁 auto-continue: ReadTimeout, wait 5.0s then replay request (2/2)
+2026-08-20 14:48:05,309 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:48:05,310 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:48:05,310 [INFO]: 📏 [fbbde79f3fb9] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 14:53:13,675 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:53:13,676 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:53:13,676 [INFO]: 📏 [bddd137fbfbc] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 14:58:25,426 [WARNING]: ⚠️ 远程读/连接异常，第 2/2 次: TimeoutError: 
+2026-08-20 14:58:25,429 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 14:58:25,432 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 14:58:25,433 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 14:58:25,434 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 14:58:25,434 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 14:58:25,435 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 14:58:33,220 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 14:58:33,221 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 14:58:33,221 [INFO]: 📏 [0f81ab357474] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 15:04:11,411 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 15:04:11,412 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 15:04:11,412 [INFO]: 📏 [7e2e80f89ed4] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 15:09:47,127 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 15:09:47,128 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 15:09:47,129 [INFO]: 📏 [f7d3e9d2257a] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 15:13:33,223 [WARNING]: ⚠️ 远程读/连接异常，第 1/2 次: ReadTimeout: 
+2026-08-20 15:13:33,224 [WARNING]: 🔁 auto-continue: ReadTimeout, wait 5.0s then replay request (2/2)
+2026-08-20 15:15:19,917 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 15:15:19,918 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 15:15:19,918 [INFO]: 📏 [d52f8bf6efbb] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 15:20:54,616 [INFO]: 🎯 工具选择 mode=cache selected=['Read', 'Bash', 'TodoWrite']
+2026-08-20 15:20:54,618 [INFO]: 🪚 tool reduction: 24 -> 4 (mode=cache, names=['Read', 'Bash', 'Edit', 'TodoWrite'])
+2026-08-20 15:20:54,618 [INFO]: 📏 [2e792359d9aa] model=claude-opus-4-8-1m remote=True deferred=False tools_in_payload=4 body_bytes=99608
+2026-08-20 15:28:38,240 [WARNING]: ⚠️ 远程读/连接异常，第 2/2 次: TimeoutError: 
+2026-08-20 15:28:38,242 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 15:28:38,244 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 15:28:38,245 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 15:28:38,245 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+2026-08-20 15:28:38,246 [ERROR]: ❌ 转发最终失败: TimeoutError: 
+INFO:     127.0.0.1:59515 - "GET /_forge/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59517 - "GET /_forge/status HTTP/1.1" 200 OK
